@@ -16,11 +16,41 @@ This document provides a comprehensive, production-tested deployment guide for *
 
 ---
 
-## 2. Option A: Docker Compose Deployment (Fastest)
+## 2. Option A: Automated 1-Command Production Installer (Recommended)
+
+On any clean Ubuntu 22.04+ or Debian 12+ VPS:
+
+```bash
+git clone https://github.com/Blackwellcode/nachtsilo-hub.git /tmp/nachtsilo
+cd /tmp/nachtsilo
+sudo ./install.sh
+```
+
+### What the installer handles automatically:
+- Installs all apt dependencies (`ffmpeg`, `python3-venv`, `nginx`, `sqlite3`).
+- Sets up system user `nachtsilo` and directories (`/opt/nachtsilo`, `/var/lib/nachtsilo`).
+- Generates cryptographically secure secrets in `/etc/nachtsilo/env`.
+- Deploys and enables systemd daemons (`nachtsilo-webui.service`, `nachtsilo-recorder.service`).
+- Configures Nginx with `X-Accel-Redirect` byte-range media offloading.
+- **Registers the global Linux management command** `/usr/local/bin/nachtsilo`:
+
+```bash
+nachtsilo status       # Check daemons and live health
+nachtsilo logs webui   # View WebUI log stream
+nachtsilo logs recorder# View Stream Recorder log stream
+nachtsilo restart      # Restart application daemons
+nachtsilo demo         # Run standalone sandbox demo mode
+nachtsilo update       # Pull updates, upgrade dependencies, and reload
+nachtsilo check        # Validate Python syntax & Nginx configurations
+```
+
+---
+
+## 3. Option B: Docker Compose Deployment
 
 ### Step 1: Clone Repository & Prepare Environment
 ```bash
-git clone https://github.com/your-org/nachtsilo-hub.git
+git clone https://github.com/Blackwellcode/nachtsilo-hub.git
 cd nachtsilo-hub
 cp .env.example .env
 ```
@@ -40,7 +70,7 @@ Access the application at `http://localhost:8090` (proxied by Nginx) or directly
 
 ---
 
-## 3. Option B: Bare-Metal Production Deployment (Ubuntu/Debian)
+## 4. Option C: Manual Bare-Metal Deployment (Ubuntu/Debian)
 
 ### Step 1: Install System Dependencies
 ```bash
@@ -66,7 +96,7 @@ sudo chmod 755 /opt/streamvault
 
 ### Step 3: Deploy Application Code
 ```bash
-sudo -u streamvault git clone https://github.com/your-org/nachtsilo-hub.git /opt/streamvault/app
+sudo -u streamvault git clone https://github.com/Blackwellcode/nachtsilo-hub.git /opt/streamvault/app
 cd /opt/streamvault/app
 sudo -u streamvault python3 -m venv /opt/streamvault/venv
 sudo -u streamvault /opt/streamvault/venv/bin/pip install --upgrade pip

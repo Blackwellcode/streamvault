@@ -84,6 +84,36 @@ flowchart TD
 
 ---
 
+## ⚡ 1-Command Linux Installation & System Registration
+
+For production installations on Ubuntu 22.04+ or Debian 12+, run the automated installer:
+
+```bash
+# Clone and run the turnkey installer:
+git clone https://github.com/Blackwellcode/nachtsilo-hub.git /tmp/nachtsilo
+cd /tmp/nachtsilo && sudo ./install.sh
+```
+
+The installer automatically:
+1. Installs all system dependencies (`ffmpeg`, `python3-venv`, `nginx`, `sqlite3`).
+2. Configures the isolated service user and directories (`/opt/nachtsilo`, `/var/lib/nachtsilo`).
+3. Registers systemd services (`nachtsilo-webui.service`, `nachtsilo-recorder.service`).
+4. Configures Nginx with `X-Accel-Redirect` kernel video offload.
+5. **Registers the global Linux management command** `/usr/local/bin/nachtsilo`:
+
+```bash
+# Manage your installation from anywhere:
+nachtsilo status       # Check daemons, health, and RAM-disk
+nachtsilo logs all     # Follow live daemon logs
+nachtsilo restart      # Restart services
+nachtsilo demo         # Launch standalone demo mode
+nachtsilo update       # Pull Git updates, upgrade deps, and restart
+nachtsilo config       # Edit /etc/nachtsilo/env
+nachtsilo check        # Validate Python syntax & Nginx integrity
+```
+
+---
+
 ## 🚀 Quickstart (Demo Mode in 60 Seconds)
 
 You can launch the full application locally with zero configuration or external API keys:
@@ -95,7 +125,7 @@ You can launch the full application locally with zero configuration or external 
 ### 2. Setup & Launch
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/nachtsilo-hub.git
+git clone https://github.com/Blackwellcode/nachtsilo-hub.git
 cd nachtsilo-hub
 
 # Create virtual environment

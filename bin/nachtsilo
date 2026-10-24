@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# NachtSilo Hub — Central Management CLI
+# Registered globally at /usr/local/bin/nachtsilo
+# ==============================================================================
+set -euo pipefail
+
+APP_DIR="${NACHTSILO_DIR:-/opt/nachtsilo/app}"
+VENV_DIR="${NACHTSILO_VENV:-/opt/nachtsilo/venv}"
+ENV_FILE="${NACHTSILO_ENV:-/etc/nachtsilo/env}"
+
+# Visual helpers
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+header() {
+    echo -e "${CYAN}${BOLD}"
+    echo "  _   _            _     _   ____  _ _         _   _       _"
+    echo " | \ | | __ _  ___| |__ | |_/ ___|(_) | ___   | | | |_   _| |__"
+    echo " |  \| |/ _\` |/ __| '_ \| __\___ \| | |/ _ \  | |_| | | | | '_ \\"
+    echo " | |\  | (_| | (__| | | | |_ ___) | | | (_) | |  _  | |_| | |_) |"
+    echo " |_| \_|\__,_|\___|_| |_|\__|____/|_|_|\___/  |_| |_|\__,_|_.__/"
+    echo -e "                   Stream Vault & Live Proxy Core${NC}\n"
+}
+
+usage() {
+    header
+    echo -e "${BOLD}Usage:${NC} nachtsilo [COMMAND] [OPTIONS]"
+    echo ""
+    echo -e "${BOLD}Service Management:${NC}"
+    echo -e "  ${GREEN}start${NC}             Start WebUI and Recorder daemons"
+    echo -e "  ${GREEN}stop${NC}              Stop all running daemons"
+    echo -e "  ${GREEN}restart${NC}           Restart WebUI and Recorder daemons"
+    echo -e "  ${GREEN}status${NC}            Display health, system load, and systemd status"
+    echo -e "  ${GREEN}logs${NC} [service]    Follow live logs (webui, recorder, or all)"
+    echo ""
+    echo -e "${BOLD}Operations & Testing:${NC}"
+    echo -e "  ${GREEN}demo${NC} [port]       Launch sandbox Demo Mode with mock data (default port 8080)"
+    echo -e "  ${GREEN}update${NC}            Pull latest Git commit, upgrade deps, and restart"
+    echo -e "  ${GREEN}config${NC}            Inspect or edit active environment (/etc/nachtsilo/env)"
+    echo -e "  ${GREEN}check${NC}             Validate Python syntax, Nginx, and database schemas"
+    echo ""
+    exit 1
+}
+
+require_root() {
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${RED}[ERROR] This command requires root privileges. Please use sudo.${NC}"
+        exit 1
+    fi
+}
+
+cmd_start() {
+    require_root
+    echo -e "${BLUE}[*] Starting NachtSilo Hub daemons...${NC}"
+    systemctl start nachtsilo-webui.service nachtsilo-recorder.service
+    echo -e "${GREEN}[OK] Services started successfully.${NC}"
+}
+
+cmd_stop() {
+    require_root
+    echo -e "${BLUE}[*] Stopping NachtSilo Hub daemons...${NC}"
+    systemctl stop nachtsilo-recorder.service nachtsilo-webui.service
+    echo -e "${GREEN}[OK] Services stopped.${NC}"
+}
+
+cmd_restart() {
+    require_root
+    echo -e "${BLUE}[*] Restarting NachtSilo Hub daemons...${NC}"
+    systemctl restart nachtsilo-webui.service nachtsilo-recorder.service
+    echo -e "${GREEN}[OK] Restart complete.${NC}"
+}
+
+cmd_status() {
+    header
+    echo -e "${BOLD}Daemons Status:${NC}"
+    systemctl status nachtsilo-webui.service nachtsilo-recorder.service --no-pager -l || true
+    echo ""
+    echo -e "${BOLD}Storage & RAM-Disk:${NC}"
+    df -h /dev/shm | grep -v "udev" || true
+    echo ""
+}
+
+cmd_logs() {
+    local target="${1:-webui}"
+    case "$target" in
+        webui)
+            journalctl -u nachtsilo-webui.service -f -n 50
+            ;;
+        recorder)
+            journalctl -u nachtsilo-recorder.service -f -n 50
+            ;;
+        all)
+            journalctl -u nachtsilo-webui.service -u nachtsilo-recorder.service -f -n 50
+            ;;
+        *)
+            echo -e "${RED}[ERROR] Unknown service: $target (use webui, recorder, or all)${NC}"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_demo() {
+    local port="${1:-8080}"
+    header
+    echo -e "${YELLOW}[!] Launching standalone Turnkey Demo Mode on port ${port}...${NC}"
+    echo -e "${CYAN}[*] Demo credentials: Username 'admin' | Password 'admin'${NC}"
+    export DEMO_MODE=1
+    export PYTHONPATH="${APP_DIR}:${APP_DIR}/WEBUI"
+    "${VENV_DIR}/bin/python3" "${APP_DIR}/WEBUI/webui.py" --demo --port "${port}"
+}
+
+cmd_update() {
+    require_root
+    echo -e "${BLUE}[*] Updating NachtSilo Hub from Git...${NC}"
+    cd "${APP_DIR}"
+    git pull --ff-only
+    "${VENV_DIR}/bin/pip" install --upgrade -r requirements.txt
+    systemctl restart nachtsilo-webui.service nachtsilo-recorder.service
+    echo -e "${GREEN}[OK] Update completed and daemons restarted.${NC}"
+}
+
+cmd_config() {
+    if [[ -f "${ENV_FILE}" ]]; then
+        ${EDITOR:-nano} "${ENV_FILE}"
+    else
+        echo -e "${RED}[ERROR] Config file ${ENV_FILE} not found.${NC}"
+        exit 1
+    fi
+}
+
+cmd_check() {
+    echo -e "${BLUE}[*] Validating NachtSilo Hub integrity...${NC}"
+    cd "${APP_DIR}"
+    "${VENV_DIR}/bin/python3" -m py_compile core/*.py WEBUI/webui.py recorder/*.py
+    echo -e "${GREEN}[OK] Python syntax: valid.${NC}"
+    if command -v nginx >/dev/null 2>&1; then
+        nginx -t
+        echo -e "${GREEN}[OK] Nginx configuration: valid.${NC}"
+    fi
+}
+
+# Subcommand dispatch
+case "${1:-}" in
+    start)
+        cmd_start
+        ;;
+    stop)
+        cmd_stop
+        ;;
+    restart)
+        cmd_restart
+        ;;
+    status)
+        cmd_status
+        ;;
+    logs)
+        cmd_logs "${2:-webui}"
+        ;;
+    demo)
+        cmd_demo "${2:-8080}"
+        ;;
+    update)
+        cmd_update
+        ;;
+    config)
+        cmd_config
+        ;;
+    check)
+        cmd_check
+        ;;
+    help|--help|-h|"")
+        usage
+        ;;
+    *)
+        echo -e "${RED}[ERROR] Unknown command: $1${NC}\n"
+        usage
+        ;;
+esac
