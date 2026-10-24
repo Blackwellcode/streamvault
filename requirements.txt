@@ -1,0 +1,16 @@
+# NachtSilo Hub / StreamVault - Core Requirements
+Flask>=3.0.0,<3.2.0
+Flask-Limiter>=3.5.0
+Werkzeug>=3.0.0,<3.2.0
+Jinja2>=3.1.2
+requests>=2.31.0
+streamlink>=8.0.0
+yt-dlp>=2024.1.0
+redis>=5.0.0
+limits>=3.10.0
+markupsafe>=2.1.0
+gunicorn>=21.2.0; sys_platform != "win32"
+playwright>=1.40.0
+pycryptodome>=3.20.0
+lxml>=5.0.0
+typing-extensions>=4.8.0

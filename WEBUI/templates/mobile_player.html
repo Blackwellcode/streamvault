@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ filename }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+</head>
+<body class="page-mobile-player landscape-chat-open {{ theme_class }} ns-platform">
+  <div class="video-container">
+    <div class="overlay-header">
+      <a href="{{ back_url }}" class="back-btn" aria-label="Zurück"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
+      <div class="overlay-header-meta">
+        <span class="overlay-stream-name">{{ display_name or streamer }}</span>
+      </div>
+      <div class="overlay-header-actions">
+        <button type="button" class="mobile-landscape-chat-toggle" id="landscapeChatToggle" aria-label="Chat ausklappen" aria-pressed="false" title="Chat ausklappen">
+          <span class="landscape-chat-toggle-closed-content">
+            <svg class="landscape-chat-pill-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <svg class="landscape-chat-pill-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span class="landscape-chat-pill-text">Chat</span>
+          </span>
+          <span class="landscape-chat-toggle-open-content">
+            <svg class="landscape-chat-collapse-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <span class="landscape-chat-collapse-text">Vollbild</span>
+          </span>
+          <svg class="landscape-chat-icon landscape-chat-icon-expand" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M19 4v16"/><path d="M14 12H5"/><path d="M9 8l-4 4 4 4"/>
+          </svg>
+          <svg class="landscape-chat-icon landscape-chat-icon-collapse" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M5 4v16"/><path d="M10 12h9"/><path d="M15 8l4 4-4 4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <video
+      id="player"
+      controls
+      controlsList="nofullscreen nodownload" disablePictureInPicture
+      preload="metadata"
+      playsinline
+      webkit-playsinline
+      x-webkit-airplay="allow"
+      src="{{ media_url }}"
+      data-media-title="{{ vod_display_title or filename }}"
+      data-media-artist="{{ display_name or streamer }}"
+      data-media-album="NachtSilo Tube"
+      data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
+      data-media-live="{{ 'true' if is_live else 'false' }}"
+    ></video>
+    {% if not is_live %}
+    <div id="vodSlotBusy" class="vod-slot-busy" hidden>
+      <div class="vod-slot-busy-card">
+        <strong>VOD gerade voll</strong>
+        <p data-slot-message>{{ vod_slot.message if vod_slot else '' }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="mobile-vod-details">
+    <div class="vod-details-main">
+      <div class="vod-title-cluster">
+        <a href="{{ back_url or url_for('index') }}" class="mobile-portrait-back-btn" aria-label="Zurück zur Übersicht" title="Zurück">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </a>
+        <div class="vod-kicker">
+          {% if is_live %}
+          <span class="twitch-live-pill">LIVE</span>
+          {% endif %}
+        </div>
+        <h1 class="vod-display-title">{{ display_name or streamer }}</h1>
+      </div>
+      {% if not is_live and vod_display_title %}
+      <p class="mobile-vod-stream-title">{{ vod_display_title }}</p>
+      {% endif %}
+
+    </div>
+    <div class="vod-details-side">
+      <dl class="vod-facts">
+        <div><dt>Spiel</dt><dd>{{ vod_category or '—' }}</dd></div>
+        <div><dt>Zuschauer</dt><dd>{% if vod_viewer_count_str %}{{ vod_viewer_count_str }}{% else %}—{% endif %}</dd></div>
+      </dl>
+    </div>
+    <div class="vod-file-actions" aria-label="Aktionen">
+      <button type="button" class="vod-inline-tool mobile-action-btn" id="livePlayPauseBtn" aria-label="Wiedergabe pausieren" title="Wiedergabe pausieren">
+        <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+          <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+        </svg>
+        <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+        <span class="btn-label">Pause</span>
+      </button>
+
+      <button type="button" class="vod-inline-tool mobile-action-btn" id="liveMuteBtn" aria-label="Stummschalten" title="Stummschalten">
+        <svg class="icon-unmute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg class="icon-mute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span class="btn-label">Ton</span>
+      </button>
+
+      
+
+
+      <button
+        type="button"
+        class="vod-inline-tool mobile-action-btn ns-cast-trigger"
+        data-ns-cast-url="{{ media_url }}"
+        data-ns-cast-live="{{ '1' if is_live else '0' }}"
+        data-ns-cast-type="{{ 'application/vnd.apple.mpegurl' if (is_live or is_hls) else 'video/mp4' }}"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
+          <line x1="2" y1="20" x2="2.01" y2="20"></line>
+        </svg>
+        <span class="btn-label">An TV senden</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CHAT REPLAY (TV PARITY: NO COMMENTS ON MOBILE) -->
+  <div class="chat-container chat-panel-tabs">
+    <div class="twitch-mobile-chat-head chat-tabs-head">
+      <div class="chat-tab-row" role="tablist" aria-label="Chat Replay">
+        <button type="button" class="chat-tab is-active" data-chat-tab="chat" role="tab" aria-selected="true" aria-controls="chatPaneChat" id="chatTabChat">Chat Replay</button>
+      </div>
+    </div>
+
+    <div id="chatPaneChat" class="chat-tab-pane" data-chat-pane="chat" role="tabpanel" aria-labelledby="chatTabChat">
+      <div id="chatEmpty" class="twitch-chat-empty compact">{% if chat_url %}Chat wird geladen…{% else %}Kein aufgezeichneter Chat für dieses VOD vorhanden.{% endif %}</div>
+      <div id="chatList" class="chat-list"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1" defer></script>
+  <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='mobile_landscape_chat.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='vod_debug.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='vod_playback.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='vod_seek_hover.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='vod_watch_slot.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='chat_emotes.js', v=ASSET_VERSION) }}" defer></script>
+  <script>
+    // Tab switching logic: strict display toggling
+    (function () {
+      const tabBtns = document.querySelectorAll('.chat-tab-row [data-chat-tab]');
+      const tabPanes = document.querySelectorAll('.chat-tab-pane[data-chat-pane]');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-chat-tab');
+          tabBtns.forEach(b => {
+            const active = b === btn;
+            b.classList.toggle('is-active', active);
+            b.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+          tabPanes.forEach(pane => {
+            const match = pane.getAttribute('data-chat-pane') === target;
+            if (match) {
+              pane.removeAttribute('hidden');
+              pane.classList.remove('is-hidden');
+              pane.style.setProperty('display', 'flex', 'important');
+            } else {
+              pane.setAttribute('hidden', '');
+              pane.classList.add('is-hidden');
+              pane.style.setProperty('display', 'none', 'important');
+            }
+          });
+          if (target === 'chat' && typeof scrollChatToBottom === 'function') {
+            scrollChatToBottom();
+          }
+        });
+      });
+
+      // Sync comment count into tab badge
+      const countEl = document.getElementById('vodCommentsCount');
+      const countTabEl = document.getElementById('vodCommentsCountTab');
+      if (countEl && countTabEl) {
+        const obs = new MutationObserver(() => {
+          countTabEl.textContent = countEl.textContent || '0';
+        });
+        obs.observe(countEl, { childList: true, characterData: true, subtree: true });
+      }
+    })();
+
+    const video = document.getElementById('player');
+    window.__NACHTSILO_CSRF = {{ csrf_token()|tojson }};
+    window.NACHTSILO_VOD_DEBUG_DEFAULT = false; // Fast & lightweight by default
+    window.NachtSiloVodDebug?.attach(video, {
+      streamer: {{ streamer|tojson }},
+      filename: {{ filename|tojson }},
+      drive: {{ 'true' if drive_only else 'false' }},
+      asset: {{ ASSET_VERSION|tojson }},
+      mobile: true
+    });
+    window.NachtSiloMediaSession?.attach(video, {live: {{ 'true' if is_live else 'false' }}});
+    {% if not is_live and vod_slot %}
+    window.NachtSiloVodSlot?.attach(video, {{ vod_slot|tojson }});
+    {% endif %}
+    const chatList = document.getElementById('chatList');
+    const chatEmpty = document.getElementById('chatEmpty');
+    const isLive = {{ 'true' if is_live else 'false' }};
+    const isHls = {{ 'true' if is_hls else 'false' }};
+    const mediaUrl = {{ media_url|tojson }};
+    window.NachtSiloCast?.bindVideo(video, {
+      url: mediaUrl,
+      live: isLive,
+      contentType: (isLive || isHls) ? "application/vnd.apple.mpegurl" : "video/mp4"
+    });
+    if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(video)) {
+      video.src = mediaUrl;
+    }
+    const chatUrl = "{{ chat_url }}";
+    const vodPositionKey = {{ watch_key|tojson }};
+    const legacyVodPositionKey = 'vod_pos_v2_{{ filename }}';
+    const vodDoneKey = {{ done_key|tojson }};
+    const vodUrlStart = parseFloat(new URLSearchParams(window.location.search).get('t'));
+    const requestedVodStart = Number.isFinite(vodUrlStart) ? vodUrlStart : NaN;
+    let vodAutoplayAttempted = false;
+
+    function vodUserPaused() {
+        if (typeof video._nachtSiloPlaybackUserPaused === 'function'
+            && video._nachtSiloPlaybackUserPaused()) {
+            return true;
+        }
+        return typeof video._nachtSiloUserPaused === 'function'
+            && video._nachtSiloUserPaused();
+    }
+
+    function playVodFromCurrentPosition() {
+        if (vodUserPaused() || video.ended) return;
+        function kick(muted) {
+            if (vodUserPaused() || video.ended) return null;
+            video.muted = !!muted;
+            if (!muted) {
+                video.defaultMuted = false;
+                video.removeAttribute('muted');
+            } else {
+                video.setAttribute('muted', '');
+            }
+            return video.play();
+        }
+        function unmuteIfNeeded() {
+            if (vodUserPaused()) return;
+            video.muted = false;
+            video.defaultMuted = false;
+            video.removeAttribute('muted');
+        }
+        const playPromise = kick(false);
+        if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+                if (vodUserPaused()) return;
+                const quietStart = kick(true);
+                if (quietStart && typeof quietStart.then === 'function') {
+                    quietStart.then(unmuteIfNeeded).catch(() => {});
+                }
+            });
+        }
+        window.setTimeout(() => {
+            if (video.ended || !video.paused || vodUserPaused()) return;
+            const quietStart = kick(true);
+            if (quietStart && typeof quietStart.then === 'function') {
+                quietStart.then(unmuteIfNeeded).catch(() => {});
+            }
+        }, 220);
+    }
+
+    function setVodCurrentTime(seconds) {
+        if (!Number.isFinite(seconds)) return;
+        video.currentTime = Math.max(0, seconds);
+    }
+
+    function installSeekPlaybackKick() {
+        let seekPlayIntent = false;
+        let seekKickTimer = null;
+        let quietUntil = 0;
+        function queueSeekKick(delay) {
+            window.clearTimeout(seekKickTimer);
+            seekKickTimer = window.setTimeout(() => {
+                if (!seekPlayIntent || video.ended || vodUserPaused()) return;
+                if (Date.now() < quietUntil) return;
+                if (!video.paused && video.readyState >= 3 && !video.seeking) return;
+                quietUntil = Date.now() + 160;
+                playVodFromCurrentPosition();
+            }, delay);
+        }
+        function armPlayIntent() {
+            if (vodUserPaused()) return;
+            seekPlayIntent = true;
+        }
+        video._nachtSiloArmSeekPlayIntent = armPlayIntent;
+        video.addEventListener('play', armPlayIntent);
+        video.addEventListener('pause', () => {
+            if (!video.seeking && vodUserPaused()) {
+                seekPlayIntent = false;
+            }
+        });
+        video.addEventListener('seeking', () => {
+            if (!video.ended) {
+                seekPlayIntent = true;
+            }
+        });
+        ['seeked', 'canplay', 'loadeddata'].forEach(eventName => {
+            video.addEventListener(eventName, () => {
+                if (seekPlayIntent && !video.ended) {
+                    queueSeekKick(eventName === 'seeked' ? 40 : 120);
+                }
+            });
+        });
+        video.addEventListener('playing', () => {
+            window.clearTimeout(seekKickTimer);
+        });
+    }
+    if (!isLive) {
+        installSeekPlaybackKick();
+        window.NachtSiloVodPlayback?.guard(video, {
+          knownDuration: {{ (vod_duration_sec or 0)|float }},
+          setCurrentTime: setVodCurrentTime,
+          play: playVodFromCurrentPosition
+        });
+        window.NachtSiloSeekHover?.attach(video, {
+          knownDuration: {{ (vod_duration_sec or 0)|float }}
+        });
+    }
+
+    function attemptVodAutoplay() {
+        if (vodAutoplayAttempted) return;
+        vodAutoplayAttempted = true;
+        if (typeof video._nachtSiloArmSeekPlayIntent === 'function') {
+            video._nachtSiloArmSeekPlayIntent();
+        }
+        if (typeof video._nachtSiloRequestPlay === 'function') {
+            video._nachtSiloRequestPlay();
+        } else {
+            playVodFromCurrentPosition();
+        }
+    }
+
+    if (isHls) {
+        if (window.Hls && Hls.isSupported()) {
+            const hls = new Hls({
+              enableWorker: true,
+              lowLatencyMode: false,
+              backBufferLength: 90,
+              startPosition: !isLive ? (Number.isFinite(requestedVodStart) ? requestedVodStart : -1) : -1
+            });
+            let hlsNetworkRecoveries = 0;
+            let hlsMediaRecoveries = 0;
+            hls.loadSource(mediaUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.ERROR, function (_event, data) {
+              if (!data || !data.fatal) return;
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && hlsNetworkRecoveries < 5) {
+                hlsNetworkRecoveries += 1;
+                hls.startLoad();
+                return;
+              }
+              if (data.type === Hls.ErrorTypes.MEDIA_ERROR && hlsMediaRecoveries < 2) {
+                hlsMediaRecoveries += 1;
+                hls.recoverMediaError();
+                return;
+              }
+              hls.destroy();
+              if (!isLive) {
+                video.src = mediaUrl;
+                video.load();
+                playVodFromCurrentPosition();
+              }
+            });
+            hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
+              if (hls.audioTracks && hls.audioTracks.length) {
+                hls.audioTrack = 0;
+              }
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = mediaUrl;
+        }
+    } else {
+        if (!video.getAttribute('src')) {
+            video.src = mediaUrl;
+        }
+    }
+
+    if (!isLive) {
+        const key = vodPositionKey;
+        const RESUME_END_GUARD_SEC = 30;
+        let resumeReady = false;
+        let lastSavedSecond = -1;
+
+        function handleVodMetadata() {
+            const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+            const canStartFromUrl = Number.isFinite(requestedVodStart)
+              && requestedVodStart > 1
+              && (!hasDuration || requestedVodStart < video.duration - 1);
+
+            if (!canStartFromUrl) {
+              resumeReady = true;
+              attemptVodAutoplay();
+              return;
+            }
+
+            let initialSeekFinished = false;
+            function finishInitialSeek() {
+              if (initialSeekFinished) return;
+              initialSeekFinished = true;
+              resumeReady = true;
+              attemptVodAutoplay();
+            }
+            video.addEventListener('seeked', finishInitialSeek, {once: true});
+            setVodCurrentTime(requestedVodStart);
+            window.setTimeout(finishInitialSeek, 900);
+        }
+
+        if (video.readyState >= 1) {
+            handleVodMetadata();
+        } else {
+            video.addEventListener('loadedmetadata', handleVodMetadata, {once: true});
+            window.setTimeout(() => {
+                if (!vodAutoplayAttempted) attemptVodAutoplay();
+            }, 0);
+            window.setTimeout(() => {
+                if (!vodAutoplayAttempted) attemptVodAutoplay();
+                else if (video.paused) playVodFromCurrentPosition();
+            }, 900);
+        }
+
+        video.addEventListener('timeupdate', () => {
+            if (!resumeReady || !Number.isFinite(video.currentTime) || video.currentTime <= 1) return;
+
+            const currentSecond = Math.floor(video.currentTime);
+            if (Number.isFinite(video.duration)
+                && video.duration - video.currentTime <= RESUME_END_GUARD_SEC) {
+              localStorage.setItem(vodDoneKey, '1');
+              localStorage.removeItem(key);
+              localStorage.removeItem(legacyVodPositionKey);
+              lastSavedSecond = -1;
+              return;
+            }
+
+            if (lastSavedSecond < 0 || currentSecond - lastSavedSecond >= 5) {
+              localStorage.removeItem(vodDoneKey);
+              localStorage.setItem(key, String(video.currentTime));
+              localStorage.removeItem(legacyVodPositionKey);
+              lastSavedSecond = currentSecond;
+            }
+        });
+        video.addEventListener('ended', () => {
+          localStorage.setItem(vodDoneKey, '1');
+          localStorage.removeItem(key);
+          localStorage.removeItem(legacyVodPositionKey);
+        });
+    }
+
+    // Chat Logic (Simplified for Mobile) with sticky auto-scroll
+    let lastTime = 0;
+    let messages = [];
+    let seenMessages = new Set();
+    let autoScrollChat = true;
+    let suppressChatScroll = false;
+    window.NachtSiloChat?.loadEmotes({{ streamer|tojson }});
+    window.NachtSiloChat?.loadBadges({{ streamer|tojson }});
+
+    function chatAtBottom(thresholdPx) {
+      if (!chatList) return true;
+      const gap = chatList.scrollHeight - chatList.scrollTop - chatList.clientHeight;
+      return gap <= (thresholdPx == null ? 72 : thresholdPx);
+    }
+
+    function scrollChatToBottom() {
+      if (!chatList) return;
+      suppressChatScroll = true;
+      const stick = () => { chatList.scrollTop = chatList.scrollHeight; };
+      stick();
+      requestAnimationFrame(() => {
+        stick();
+        requestAnimationFrame(() => {
+          stick();
+          suppressChatScroll = false;
+        });
+      });
+    }
+
+    chatList?.addEventListener('scroll', () => {
+      if (suppressChatScroll) return;
+      autoScrollChat = chatAtBottom();
+    }, { passive: true });
+
+    document.body?.addEventListener('nachtsilo:landscape-chat', (ev) => {
+      if (!ev?.detail?.open) return;
+      if (autoScrollChat) scrollChatToBottom();
+    });
+    
+    async function updateChat() {
+        if (!chatUrl) return;
+        let url = chatUrl;
+        let currentTime = isLive ? 0 : (video.currentTime || 0);
+        
+        if (!isLive && currentTime + 5 < lastTime) {
+            lastTime = 0;
+            messages = [];
+            seenMessages.clear();
+            chatList.innerHTML = '';
+            autoScrollChat = true;
+        }
+        
+        if(isLive) {
+             url += '?since=' + lastTime;
+        } else {
+             const endTime = Math.max(lastTime + 10, currentTime + 10);
+             url += '?start=' + lastTime + '&end=' + endTime;
+        }
+        
+        try {
+            const res = await fetch(url);
+            if(res.ok) {
+                const data = await res.json();
+                if (data && data.length > 0 && chatEmpty) {
+                    chatEmpty.hidden = true;
+                }
+                data.forEach(msg => {
+                    const rewardId = msg.reward && msg.reward.id ? msg.reward.id : '';
+                    const eventType = msg.event && msg.event.type ? msg.event.type : '';
+                    const eventPart = eventType ? `event|${eventType}|` : '';
+                    const rewardPart = rewardId ? `reward|${rewardId}|` : '';
+                    const key = isLive
+                      ? `${msg.t}|${msg.user}|${eventPart}${rewardPart}${msg.msg || ''}`
+                      : `${msg.rel}|${msg.user}|${eventPart}${rewardPart}${msg.msg || ''}`;
+                    if(seenMessages.has(key)) return;
+                    seenMessages.add(key);
+                    if(isLive) {
+                        renderMsg(msg);
+                        lastTime = Math.max(lastTime, msg.t);
+                    } else {
+                        messages.push(msg);
+                    }
+                });
+            }
+        } catch(e) {
+            console.error('Mobile chat fetch error', e);
+        }
+        
+        if(!isLive) {
+            while(messages.length > 0 && messages[0].rel <= currentTime) {
+                renderMsg(messages.shift());
+            }
+            lastTime = currentTime;
+        }
+
+        if (autoScrollChat) scrollChatToBottom();
+        
+        // Intelligent polling: poll slower when paused on mobile to conserve CPU/battery
+        const pollInterval = isLive ? 2000 : (video && video.paused ? 5000 : 1000);
+        setTimeout(updateChat, pollInterval);
+    }
+
+    video.addEventListener('play', () => { updateChat(); });
+    video.addEventListener('seeked', () => { updateChat(); });
+    
+    function renderMsg(msg) {
+        if (!chatList) return;
+        if (chatEmpty) chatEmpty.hidden = true;
+        const div = document.createElement('div');
+        div.className = window.NachtSiloChat ? window.NachtSiloChat.chatLineClassName(msg) : 'chat-line';
+        const timestamp = !isLive && Number.isFinite(Number(msg.rel))
+          ? `<span class="t">${formatVodTime(msg.rel)}</span>`
+          : '';
+        const message = window.NachtSiloChat ? window.NachtSiloChat.renderMessageHtml(msg) : (msg.msg || '');
+        if (msg.event) {
+          div.innerHTML = `${timestamp}<span class="m">${message}</span>`;
+        } else {
+          const user = window.NachtSiloChat ? window.NachtSiloChat.escapeHtml(msg.user || '') : (msg.user || '');
+          const userColor = (window.NachtSiloChat && window.NachtSiloChat.userColor(msg.color)) || '#a970ff';
+          const badges = window.NachtSiloChat ? window.NachtSiloChat.renderBadgesHtml(msg) : '';
+          const userSuffix = msg.reward ? '' : ':';
+          div.innerHTML = `${timestamp}<span class="chat-badges">${badges}</span><span class="u" style="color:${userColor}">${user}${userSuffix}</span><span class="m">${message}</span>`;
+        }
+        chatList.appendChild(div);
+        
+        while (chatList.children.length > 100) {
+          const first = chatList.firstChild;
+          if (!first) break;
+          const keepBottom = autoScrollChat;
+          const prevHeight = chatList.scrollHeight;
+          const prevTop = chatList.scrollTop;
+          chatList.removeChild(first);
+          if (!keepBottom) {
+            chatList.scrollTop = Math.max(0, prevTop - (prevHeight - chatList.scrollHeight));
+          }
+        }
+    }
+
+    
+    async function shareItem(btn, url, route) {
+      btn.style.opacity = '0.5';
+      try {
+        const fd = new FormData();
+        fd.append('csrf_token', '{{ csrf_token() }}');
+        fd.append('route', route);
+        const res = await fetch(url, {method:'POST', body:fd});
+        const data = await res.json();
+        if(data.ok && data.url) {
+          await navigator.clipboard.writeText(data.url);
+          alert('Link kopiert: ' + data.url);
+        } else {
+          alert('Fehler beim Teilen: ' + (data.message || 'Unbekannter Fehler'));
+        }
+      } catch(e) {
+        alert('Fehler: ' + e);
+      } finally {
+        btn.style.opacity = '1';
+      }
+    }
+
+    function formatVodTime(sec) {
+        const total = Math.max(0, Math.floor(Number(sec) || 0));
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const seconds = total % 60;
+        return [hours, minutes, seconds]
+          .map(value => String(value).padStart(2, '0'))
+          .join(':');
+    }
+    
+    updateChat();
+  </script>
+</body>
+</html>

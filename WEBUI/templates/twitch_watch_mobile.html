@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LIVE {{ display_name }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+</head>
+<body class="page-mobile-player page-twitch-watch-mobile landscape-chat-open {{ theme_class }} ns-platform" data-channel="{{ channel }}">
+  <div class="video-container">
+    <div class="overlay-header">
+      <a href="{{ url_for('index') }}" class="back-btn" aria-label="Zurück"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
+      <div class="overlay-header-meta">
+        <span class="twitch-live-pill" id="livePillOverlay" {% if not is_live %}hidden{% endif %}>LIVE</span>
+        <span class="overlay-stream-name" id="watchDisplayNameOverlay">{{ display_name }}</span>
+      </div>
+      <div class="overlay-header-actions">
+        <button type="button" class="mobile-landscape-chat-toggle" id="landscapeChatToggle" aria-label="Chat ausklappen" aria-pressed="false" title="Chat ausklappen">
+          <span class="landscape-chat-toggle-closed-content">
+            <svg class="landscape-chat-pill-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <svg class="landscape-chat-pill-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span class="landscape-chat-pill-text">Chat</span>
+          </span>
+          <span class="landscape-chat-toggle-open-content">
+            <svg class="landscape-chat-collapse-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <span class="landscape-chat-collapse-text">Vollbild</span>
+          </span>
+          <svg class="landscape-chat-icon landscape-chat-icon-expand" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M19 4v16"/><path d="M14 12H5"/><path d="M9 8l-4 4 4 4"/>
+          </svg>
+          <svg class="landscape-chat-icon landscape-chat-icon-collapse" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M5 4v16"/><path d="M10 12h9"/><path d="M15 8l4 4-4 4"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="twitch-mobile-player-frame twitch-player-frame">
+      {% if use_hls_proxy %}
+      <div id="proxyWait" class="twitch-proxy-wait is-visible" aria-live="polite">
+        <div class="twitch-proxy-wait-card">
+          <strong>Live über Server</strong>
+          <p id="proxyWaitText">{% if live_oauth_enabled %}Server lädt Stream (Turbo, ohne Viewer-Liste)…{% else %}Server lädt Stream…{% endif %}</p>
+          <p id="proxyStatus" class="twitch-proxy-status">Verbinden…</p>
+        </div>
+      </div>
+      <video
+        id="proxyPlayer"
+        class="twitch-proxy-video"
+        autoplay
+        muted
+        playsinline
+        webkit-playsinline
+        disablePictureInPicture
+        preload="auto"
+        x-webkit-airplay="allow"
+      ></video>
+      <button type="button" id="liveTapUnmute" class="live-tap-unmute" aria-label="Ton einschalten" hidden>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <span>Ton an</span>
+      </button>
+      {% else %}
+      <iframe
+        src="{{ player_url }}"
+        title="LIVE {{ display_name }} (ohne Twitch-Login)"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowfullscreen
+        credentialless
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+      {% endif %}
+    </div>
+  </div>
+    <div class="mobile-vod-details">
+    <div class="vod-details-main">
+      <div class="vod-title-cluster">
+        <a href="{{ url_for('index') }}" class="mobile-portrait-back-btn" aria-label="Zurück zur Übersicht" title="Zurück">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </a>
+        <div class="vod-kicker">
+          <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>LIVE</span>
+        </div>
+        <h1 class="vod-display-title" id="watchDisplayName">{{ display_name }}</h1>
+      </div>
+      <dl class="vod-facts">
+        <div><dt>Spiel</dt><dd id="watchGame">{{ game_name or '—' }}</dd></div>
+        <div><dt>Zuschauer</dt><dd id="watchViewers">{% if is_live %}{{ viewer_count }}{% else %}—{% endif %}</dd></div>
+      </dl>
+    </div>
+    <div class="vod-file-actions" aria-label="Aktionen">
+      <button type="button" class="vod-inline-tool mobile-action-btn" id="livePlayPauseBtn" aria-label="Wiedergabe pausieren" title="Wiedergabe pausieren">
+        <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+          <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+        </svg>
+        <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+        <span class="btn-label">Pause</span>
+      </button>
+
+      <button type="button" class="vod-inline-tool mobile-action-btn" id="liveMuteBtn" aria-label="Stummschalten" title="Stummschalten">
+        <svg class="icon-unmute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg class="icon-mute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span class="btn-label">Ton</span>
+      </button>
+
+      {% if session.user_role == 'admin' %}
+      <button
+        type="button"
+        id="btnInstantClip"
+        class="vod-inline-tool mobile-action-btn mobile-clip-tool"
+        data-clip-source="live"
+        data-instant-url="{{ url_for('clip_instant', streamer=proxy_key or channel) }}"
+        aria-label="Clip erstellen"
+        title="Clip erstellen"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="6" r="3"></circle>
+          <circle cx="6" cy="18" r="3"></circle>
+          <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+          <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+          <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+        </svg>
+        <span class="btn-label">Clip</span>
+      </button>
+      {% endif %}
+
+      <button
+        type="button"
+        class="vod-inline-tool ns-cast-trigger mobile-action-btn"
+        data-ns-cast-url="{{ hls_playlist_url or '' }}"
+        data-ns-cast-ensure="{{ cast_ensure_url }}"
+        data-ns-cast-live="1"
+        data-ns-cast-type="application/vnd.apple.mpegurl"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
+          <line x1="2" y1="20" x2="2.01" y2="20"></line>
+        </svg>
+        <span class="btn-label">An TV</span>
+      </button>
+    </div>
+  </div>
+  <div class="chat-container{% if show_tube_chat %} chat-panel-tabs{% endif %}">
+    {% if show_tube_chat %}
+    <div class="twitch-mobile-chat-head chat-tabs-head">
+      <div class="chat-tab-row" role="tablist" aria-label="Chat">
+        <button type="button" class="chat-tab is-active" data-chat-tab="twitch" role="tab" aria-selected="true" aria-controls="chatPaneTwitch" id="chatTabTwitch">Twitch</button>
+        <button type="button" class="chat-tab" data-chat-tab="tube" role="tab" aria-selected="false" aria-controls="chatPaneTube" id="chatTabTube">Tube</button>
+      </div>
+    </div>
+    <div id="chatPaneTwitch" class="chat-tab-pane" data-chat-pane="twitch" role="tabpanel" aria-labelledby="chatTabTwitch">
+      <div class="chat-pane-toolbar">
+        <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
+      </div>
+      <div id="chatEmpty" class="twitch-chat-empty compact">Chat wird geladen…</div>
+      <div id="chatList" class="chat-list"></div>
+    </div>
+    <div id="chatPaneTube" class="chat-tab-pane" data-chat-pane="tube" role="tabpanel" aria-labelledby="chatTabTube" hidden>
+      <div class="chat-pane-toolbar">
+        <div class="tube-chat-mod-actions">
+          {% if tube_chat_can_moderate %}
+          <button id="tubeChatClearBtn" class="chat-toggle tube-mod-btn" type="button" title="Tube-Chat leeren">Leeren</button>
+          {% endif %}
+          <button id="tubeChatAutoToggle" class="chat-toggle" type="button">Auto</button>
+        </div>
+      </div>
+      <div id="tubeChatList" class="chat-list" data-can-moderate="{{ '1' if tube_chat_can_moderate else '0' }}">
+        <div id="tubeChatEmpty" class="twitch-chat-empty compact">Noch keine Tube-Nachrichten. Schreib die Erste!</div>
+      </div>
+      <form id="tubeChatForm" class="tube-chat-compose" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="sr-only" for="tubeChatInput">Tube-Chat Nachricht</label>
+        <input id="tubeChatInput" name="msg" type="text" maxlength="400" placeholder="Als {{ tube_chat_username }} schreiben…" required>
+        <button type="submit" class="tube-chat-send" title="Senden" aria-label="Senden">➔</button>
+      </form>
+      <div id="tubeChatError" class="tube-chat-error" hidden></div>
+    </div>
+    {% else %}
+    <div class="twitch-mobile-chat-head">
+      <span>Live Chat</span>
+      <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
+    </div>
+    <div id="chatEmpty" class="twitch-chat-empty compact">Chat wird geladen…</div>
+    <div id="chatList" class="chat-list"></div>
+    {% endif %}
+  </div>
+  <h2 id="watchTitle" class="sr-only">{{ title or display_name }}</h2>
+  <span id="offlinePill" hidden></span>
+  <div id="offlineBanner" hidden></div>
+<script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+<script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
+<script src="{{ url_for('static', filename='mobile_landscape_chat.js', v=ASSET_VERSION) }}"></script>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat Export - {{ user|e }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+</head>
+<body class="page-chat-export {{ theme_class }} ns-platform">
+<div class="container">
+  <h1>Chat History: {{ user|e }}</h1>
+  
+  {% for group in grouped_results %}
+  <div class="vod-group">
+    <div class="vod-header">
+        <span>{{ group.streamer|e }}</span>
+        <span style="color:#adadb8; font-weight:normal;">{{ group.date|e }}</span>
+    </div>
+    <div class="chat-list">
+      {% for msg in group.messages %}
+      <div class="chat-line">
+        <span class="time">{{ msg.timestamp|e }}</span>
+        <span class="user" style="color: {{ msg.color }}">{{ msg.user|e }}</span>:
+        <span class="msg">{{ msg.msg|e }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  
+  <div class="footer">Exported by NachtSilo Tube</div>
+</div>
+</body>
+</html>

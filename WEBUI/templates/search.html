@@ -1,0 +1,91 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Chat-Tracker & Globale Suche — NachtSilo Vault{% endblock %}
+{% block page_title %}Chat-Tracker & Globale Suche{% endblock %}
+{% block page_subtitle %}Volltextsuche in Chat-Logs, Metadaten und VOD-Archiven{% endblock %}
+
+{% block header_actions %}
+  <a href="{{ url_for('index') }}" class="ns-btn ns-btn-secondary">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Zurück zum Dashboard
+  </a>
+{% endblock %}
+
+{% block content %}
+  <!-- Global Search Panel -->
+  <section class="ns-card-panel" style="margin-bottom: 24px;">
+    <div class="ns-panel-head">
+      <h2>Volltext-Suchabfrage</h2>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">Streamer, VODs & Chatverläufe</span>
+    </div>
+    <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px;">
+        <input name="global" placeholder="Suchbegriff (z.B. Spielername, Chatnachricht, Datum)..." value="{{ global_query }}" class="ns-input-field" style="width: 100%;">
+      </div>
+      <button type="submit" class="ns-btn ns-btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Suchen
+      </button>
+    </form>
+  </section>
+
+  <!-- Results View -->
+  {% if results or vod_results %}
+  <section>
+    <div class="ns-section-header">
+      <h2>Gefundene Treffer</h2>
+    </div>
+
+    {% if vod_results %}
+    <h3 style="font-size: 14px; font-weight: 700; color: var(--ns-text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em;">VOD-Aufnahmen ({{ vod_results|length }})</h3>
+    <div class="ns-video-grid" style="margin-bottom: 32px;">
+      {% for f in vod_results %}
+      <article class="ns-video-card">
+        <div class="ns-thumb-frame">
+          <a href="{{ url_for('vod_view', streamer=f.streamer, filename=f.filename) }}">
+            <img src="{{ f.thumb_url }}" alt="" loading="lazy">
+          </a>
+        </div>
+        <div class="ns-video-meta">
+          <a href="{{ url_for('vod_view', streamer=f.streamer, filename=f.filename) }}" class="ns-video-title">{{ f.display_title or f.filename }}</a>
+          <div class="ns-video-subline">
+            <span>{{ f.streamer }}</span> • <span>{{ f.date_str }}</span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if results %}
+    <h3 style="font-size: 14px; font-weight: 700; color: var(--ns-text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em;">Chat-Nachrichten</h3>
+    <div class="ns-card-panel" style="padding: 0; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--ns-border-subtle); color: var(--ns-text-muted);">
+            <th style="padding: 12px 16px;">Zeitpunkt</th>
+            <th style="padding: 12px 16px;">Kanal</th>
+            <th style="padding: 12px 16px;">Nutzer</th>
+            <th style="padding: 12px 16px;">Nachricht</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in results %}
+          <tr style="border-bottom: 1px solid var(--ns-border-subtle);">
+            <td style="padding: 10px 16px; font-family: var(--ns-font-mono); color: var(--ns-text-muted); font-size: 11px;">{{ r.time }}</td>
+            <td style="padding: 10px 16px; font-weight: 600; color: var(--ns-text-primary);">{{ r.streamer }}</td>
+            <td style="padding: 10px 16px; color: var(--ns-brand-crimson); font-weight: 600;">{{ r.username }}</td>
+            <td style="padding: 10px 16px; color: var(--ns-text-secondary);">{{ r.message }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+  {% elif global_query %}
+  <div class="ns-card-panel" style="text-align: center; padding: 40px; color: var(--ns-text-muted);">
+    Keine Übereinstimmungen für "{{ global_query }}" gefunden.
+  </div>
+  {% endif %}
+{% endblock %}

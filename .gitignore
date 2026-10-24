@@ -1,0 +1,64 @@
+# Environment & Secrets
+.env
+/etc/streamrecorder/env
+*.env
+*.token
+*.cfg
+*.key
+*.pem
+*.crt
+.twitch_token
+
+# Python & Virtual Environments
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Application Runtime Data & Media (NEVER commit live recordings or databases!)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+files/
+.thumbs/
+.meta/
+.hls/
+.hls_live/
+.vodcache/
+.gunicorn/
+*.mp4
+*.ts
+*.m3u8
+*.chat.json
+*.chat.jsonl
+*.lock
+*.pid
+.streamrecorder.pid
+
+# Logs
+logs/
+*.log
+*.log.*
+*.gz
+
+# Node & Frontend
+node_modules/
+package-lock.json
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.bak
+*.bak_*

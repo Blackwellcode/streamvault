@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NachtSilo Tube · AGB</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-agb {{ theme_class }} ns-platform">
+    <main class="agb-shell">
+      <header class="agb-head">
+        <div class="agb-brand">NachtSilo Tube</div>
+        <h1>{{ terms_title }}</h1>
+        <p class="agb-sub">Nutzungsvertrag und Hausordnung für den Invite-only-Kreis. Kein Nutzungsrecht gegenüber Rechteinhabern oder Plattformen.</p>
+        <div class="agb-meta">
+          Version <code>{{ terms_version }}</code>
+          {% if terms_effective_date %} · wirksam ab {{ terms_effective_date }}{% endif %}
+          {% if rules_version %} · Nutzungsregeln <code>{{ rules_version }}</code>{% endif %}
+          · <a href="{{ url_for('datenschutz_view') }}">Datenschutz</a>
+        </div>
+      </header>
+
+      {% if error %}
+      <div class="agb-alert">{{ error }}</div>
+      {% endif %}
+      {% if ok %}
+      <div class="agb-alert ok">AGB akzeptiert. Weiter zum Dashboard…</div>
+      {% endif %}
+
+      <section class="agb-card agb-scroll" id="agbScroll" aria-label="AGB-Volltext" tabindex="0">
+        <div class="agb-prose" id="agbProse">
+          {{ terms_html|safe }}
+        </div>
+
+        <section class="agb-anlage" id="hausordnung" aria-label="Anlage A Hausordnung">
+          <h2>Anlage A — {{ rules_title }}</h2>
+          <p class="agb-anlage-lead">Kurzregeln / Discord-Hausordnung. Bestandteil der AGB; mit der Zustimmung unten mitakzeptiert.</p>
+          <ol class="agb-rules-list">
+            {% for item in rules_items %}
+            <li>{{ item|safe }}</li>
+            {% endfor %}
+          </ol>
+          <p class="agb-footer">{{ rules_footer }}</p>
+        </section>
+      </section>
+
+      {% if require_accept %}
+      <form method="post" action="{{ url_for('agb_accept') }}" class="agb-accept-form" id="agbForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="terms_version" value="{{ terms_version }}">
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+        <p class="agb-scroll-hint" id="agbScrollHint">Bitte zuerst den Text zu Ende scrollen.</p>
+        <label class="agb-check">
+          <input type="checkbox" name="terms_accepted" value="1" id="agbCheck" required disabled>
+          <span>Ich habe die AGB (Version {{ terms_version }}) gelesen und akzeptiere sie. Verstöße können zum sofortigen Entzug des Zugangs führen.</span>
+        </label>
+        <button type="submit" class="btn-primary" id="agbSubmit" disabled>AGB akzeptieren</button>
+      </form>
+      <script>
+        (function () {
+          var box = document.getElementById('agbScroll');
+          var check = document.getElementById('agbCheck');
+          var btn = document.getElementById('agbSubmit');
+          var hint = document.getElementById('agbScrollHint');
+          if (!box || !check || !btn) return;
+          var unlocked = false;
+          function nearBottom() {
+            return (box.scrollTop + box.clientHeight) >= (box.scrollHeight - 24);
+          }
+          function unlock() {
+            if (unlocked) return;
+            unlocked = true;
+            check.disabled = false;
+            if (hint) hint.textContent = 'Du kannst jetzt zustimmen.';
+          }
+          function sync() {
+            btn.disabled = !check.checked;
+          }
+          if (box.scrollHeight <= box.clientHeight + 8) unlock();
+          box.addEventListener('scroll', function () {
+            if (nearBottom()) unlock();
+          });
+          check.addEventListener('change', sync);
+          sync();
+        })();
+      </script>
+      {% elif session.get('logged_in') %}
+      <p class="agb-done">Du hast Version <code>{{ accepted_version or terms_version }}</code> akzeptiert.</p>
+      <p><a class="btn-primary" href="{{ url_for('index') }}">Zum Dashboard</a></p>
+      {% else %}
+      <p class="agb-done">Invite-only. AGB-Volltext nach Login.</p>
+      <p><a href="{{ url_for('login') }}">Zum Login</a></p>
+      {% endif %}
+    </main>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+services:
+  app:
+    container_name: streamrecorder_app
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM python:3.11-slim
+        RUN apt-get update && apt-get install -y ffmpeg procps supervisor fonts-dejavu && rm -rf /var/lib/apt/lists/*
+        RUN pip install flask werkzeug flask-limiter yt-dlp streamlink
+        WORKDIR /app
+        CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+    restart: unless-stopped
+    volumes:
+      # Das hier ist der entscheidende Teil:
+      # Dein Ordner /root/Streamrecorder wird direkt in den Container eingebunden.
+      # Alle Videos und Benutzerdaten bleiben erhalten!
+      - ./:/app
+      - ./docker-worker.conf:/etc/supervisor/conf.d/supervisord.conf
+    environment:
+      - VOD_HOST=0.0.0.0
+      - VOD_PORT=8080
+      - VOD_BASE_DIR=/app
+      - RECORDINGS_BASE_DIR=/app
+      - VOD_USER=${VOD_USER:?set VOD_USER in .env}
+      - VOD_PASS=${VOD_PASS:?set VOD_PASS in .env}
+      - VOD_SECRET_KEY=${VOD_SECRET_KEY:?set VOD_SECRET_KEY in .env}
+      - VOD_SECURE_COOKIES=${VOD_SECURE_COOKIES:-false}
+      - VOD_SHARE_TTL_SEC=${VOD_SHARE_TTL_SEC:-604800}
+      - VOD_USE_X_ACCEL=true
+      - LIVE_HLS_DIR=/app/.hls_live
+      # Oeffentliche Basis-URL fuer Share-Links, z.B. https://recorder.example.com
+      - VOD_PUBLIC_BASE=${VOD_PUBLIC_BASE:-}
+      # Speicherwarnung
+      - STORAGE_ALERT_THRESHOLD_PCT=90
+      - STORAGE_ALERT_THRESHOLD_FREE_GB=20
+      - STORAGE_ALERT_CHECK_INTERVAL_SEC=60
+      - STORAGE_ALERT_COOLDOWN_SEC=21600
+      - STORAGE_ALERT_WEBHOOK_URL=
+
+  nginx:
+    image: nginx:alpine
+    container_name: streamrecorder_nginx
+    restart: unless-stopped
+    ports:
+      - "8090:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./:/app
+    depends_on:
+      - app

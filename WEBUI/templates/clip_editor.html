@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clip Editor - {{ filename }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-clip-editor {{ theme_class }} ns-platform">
+    <header>
+      <div class="brand">
+        <span>&#9986; Clip Editor</span>
+        <span style="color:var(--text-muted); font-weight:400; font-size:14px; margin-left: 10px;">{{ filename }}</span>
+      </div>
+      <a href="{{ back_url }}" class="close-btn">&times;</a>
+    </header>
+    
+    <div class="main-area">
+      {% if clip_error %}<div class="msg error">{{ clip_error }}</div>{% endif %}
+      {% if clip_ok %}
+<div class="msg success" style="display: flex; justify-content: space-between; align-items: center;">
+  <span>{{ clip_ok }}</span>
+  {% if request.args.get('clip_name') %}
+  <button type="button" class="btn-main" onclick="shareClip('{{ request.args.get('clip_name') }}')">Teilen</button>
+  {% endif %}
+</div>
+<script>
+async function shareClip(filename) {
+    const url = "{{ url_for('share_create', streamer=streamer, filename='') }}" + encodeURIComponent(filename);
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'route=clip&csrf_token={{ csrf_token() }}'
+        });
+        const data = await res.json();
+        if(data.ok && data.url) {
+            await navigator.clipboard.writeText(data.url);
+            alert('Link kopiert: ' + data.url);
+        } else {
+            alert('Fehler: ' + (data.message || 'Unbekannt'));
+        }
+    } catch(e) {
+        alert('Fehler: ' + e);
+    }
+}
+</script>
+{% endif %}
+      
+      <div class="player-container">
+        <video id="vodPlayer" controls controlsList="noremoteplayback" disableRemotePlayback preload="metadata" playsinline webkit-playsinline>
+          {% if not is_live %}<source src="{{ media_url }}" type="video/mp4">{% endif %}
+        </video>
+      </div>
+      
+      <div class="editor-panel">
+        <div class="slider-container">
+            <div id="rangeSlider"></div>
+        </div>
+        
+        <div class="controls-grid">
+            <!-- Start Controls -->
+            <div class="time-controls">
+                <span style="font-size:12px; color:var(--text-muted); margin-right:5px;">START</span>
+                <button class="btn-icon" onclick="adjustTime('start', -1)">-1s</button>
+                <button class="btn-icon" onclick="adjustTime('start', -0.1)">-</button>
+                <span id="lblStart" class="time-label">00:00</span>
+                <button class="btn-icon" onclick="adjustTime('start', 0.1)">+</button>
+                <button class="btn-icon" onclick="adjustTime('start', 1)">+1s</button>
+                <button class="btn-icon" onclick="setStartToCurrent()" title="Setze Start auf aktuelle Position" style="margin-left:5px;">&#8676;</button>
+            </div>
+            
+            <!-- Main Controls -->
+            <div class="main-controls">
+                <button class="btn-main" id="btnPlayPause" onclick="togglePlay()">&#9654; Play</button>
+                <button class="btn-main" id="btnPreview" onclick="togglePreview()">&#128065; Vorschau</button>
+            </div>
+            
+            <!-- End Controls -->
+            <div class="time-controls">
+                <span style="font-size:12px; color:var(--text-muted); margin-right:5px;">ENDE</span>
+                <button class="btn-icon" onclick="setEndToCurrent()" title="Setze Ende auf aktuelle Position" style="margin-right:5px;">&#8677;</button>
+                <button class="btn-icon" onclick="adjustTime('end', -1)">-1s</button>
+                <button class="btn-icon" onclick="adjustTime('end', -0.1)">-</button>
+                <span id="lblEnd" class="time-label">00:30</span>
+                <button class="btn-icon" onclick="adjustTime('end', 0.1)">+</button>
+                <button class="btn-icon" onclick="adjustTime('end', 1)">+1s</button>
+            </div>
+        </div>
+        
+        <form method="post" action="{{ url_for('clip_live', streamer=streamer) if is_live else url_for('clip_vod', streamer=streamer, filename=filename) }}" class="meta-row">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="start" id="inpStart">
+          <input type="hidden" name="duration" id="inpDuration">
+          <input type="hidden" name="from_editor" value="1">
+          
+          <input name="clip_name" placeholder="Titel des Clips (optional)">
+          <button type="submit" class="btn-main btn-primary">Clip erstellen</button>
+        </form>
+        
+        <div style="text-align:center; font-size:12px; color:var(--text-muted);">
+            Dauer: <span id="lblDur" style="color:var(--text);">30.0</span>s (Max 300s)
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    {% if is_live %}<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>{% endif %}
+    <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+    <script>
+      const vPlayer = document.getElementById('vodPlayer');
+      const slider = document.getElementById('rangeSlider');
+      const isLive = {{ 'true' if is_live else 'false' }};
+      const mediaUrl = {{ media_url|tojson }};
+      window.NachtSiloCast && window.NachtSiloCast.bindVideo(vPlayer, {
+        url: mediaUrl,
+        live: isLive,
+        contentType: isLive ? 'application/vnd.apple.mpegurl' : 'video/mp4'
+      });
+      
+      let duration = 0;
+      let clipStart = parseFloat("{{ initial_time|default(0) }}");
+      let clipEnd = clipStart + 30;
+      const MAX_DUR = Infinity;
+      let isPreviewing = false;
+      let previewInterval = null;
+
+      // Init Player
+      if (isLive) {
+          if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(vPlayer)) {
+              vPlayer.src = mediaUrl;
+          } else if (window.Hls && Hls.isSupported()) {
+              const hls = new Hls();
+              hls.loadSource(mediaUrl);
+              hls.attachMedia(vPlayer);
+              hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                 // Live duration estimation or wait for metadata
+              });
+          } else if (vPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+              vPlayer.src = mediaUrl;
+          }
+      }
+
+      vPlayer.addEventListener('loadedmetadata', () => {
+          duration = vPlayer.duration;
+          if(!isFinite(duration) && isLive) duration = 3600; // Fallback for live if unknown
+          initSlider();
+      });
+      
+      // Fallback if metadata already loaded
+      if(vPlayer.readyState >= 1) {
+          duration = vPlayer.duration;
+          if(!isFinite(duration) && isLive) duration = 3600;
+          initSlider();
+      }
+
+      function initSlider() {
+          if(slider.noUiSlider) return; // Already init
+          
+          // Initial clip range
+          if(clipEnd > duration) clipEnd = duration;
+          if(clipStart >= clipEnd) clipStart = Math.max(0, clipEnd - 30);
+          
+          noUiSlider.create(slider, {
+              start: [clipStart, clipEnd],
+              connect: true,
+              behaviour: 'drag', // Allow dragging the bar
+              range: {
+                  'min': 0,
+                  'max': duration
+              },
+              step: 0.1,
+              tooltips: [
+                  { to: formatTime }, 
+                  { to: formatTime }
+              ]
+          });
+          
+          slider.noUiSlider.on('update', (values, handle) => {
+              clipStart = parseFloat(values[0]);
+              clipEnd = parseFloat(values[1]);
+              updateUI();
+          });
+          
+          slider.noUiSlider.on('slide', (values, handle) => {
+              // Seek video when dragging handle
+              vPlayer.currentTime = parseFloat(values[handle]);
+              if(isPreviewing) stopPreview();
+          });
+          
+          slider.noUiSlider.on('change', () => {
+              // Enforce max duration
+              if(clipEnd - clipStart > MAX_DUR) {
+                  // Adjust the handle that was moved last? 
+                  // Simple logic: shrink from end
+                  clipEnd = clipStart + MAX_DUR;
+                  slider.noUiSlider.set([clipStart, clipEnd]);
+              }
+          });
+          
+          updateUI();
+          vPlayer.currentTime = clipStart;
+      }
+
+      function updateUI() {
+        document.getElementById('lblStart').textContent = formatTime(clipStart);
+        document.getElementById('lblEnd').textContent = formatTime(clipEnd);
+        document.getElementById('lblDur').textContent = (clipEnd - clipStart).toFixed(1);
+        
+        document.getElementById('inpStart').value = clipStart.toFixed(2);
+        document.getElementById('inpDuration').value = (clipEnd - clipStart).toFixed(2);
+      }
+
+      function formatTime(sec) {
+          sec = parseFloat(sec);
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
+      
+      function togglePlay() {
+          if(vPlayer.paused) {
+              vPlayer.play();
+              document.getElementById('btnPlayPause').innerHTML = '&#10074;&#10074; Pause';
+          } else {
+              vPlayer.pause();
+              document.getElementById('btnPlayPause').innerHTML = '&#9654; Play';
+          }
+      }
+      
+      function togglePreview() {
+          if(isPreviewing) stopPreview();
+          else startPreview();
+      }
+      
+      function startPreview() {
+        isPreviewing = true;
+        const btn = document.getElementById('btnPreview');
+        btn.innerHTML = '&#9632; Stop Vorschau';
+        btn.classList.add('btn-primary');
+        
+        vPlayer.currentTime = clipStart;
+        vPlayer.play();
+        
+        previewInterval = setInterval(() => {
+            if(vPlayer.currentTime >= clipEnd) {
+                vPlayer.currentTime = clipStart; // Loop
+            }
+        }, 100);
+      }
+      
+      function stopPreview() {
+        isPreviewing = false;
+        const btn = document.getElementById('btnPreview');
+        btn.innerHTML = '&#128065; Vorschau';
+        btn.classList.remove('btn-primary');
+        
+        vPlayer.pause();
+        clearInterval(previewInterval);
+      }
+      
+      function adjustTime(type, amount) {
+          if(!slider.noUiSlider) return;
+          let newStart = clipStart;
+          let newEnd = clipEnd;
+          
+          if(type === 'start') {
+              newStart = Math.max(0, Math.min(newStart + amount, newEnd - 1));
+          } else {
+              newEnd = Math.min(duration, Math.max(newEnd + amount, newStart + 1));
+          }
+          
+          if(newEnd - newStart > MAX_DUR) return; // Limit
+          
+          slider.noUiSlider.set([newStart, newEnd]);
+          // Seek to changed point
+          vPlayer.currentTime = (type === 'start') ? newStart : newEnd;
+      }
+      
+      function setStartToCurrent() {
+        if(!slider.noUiSlider) return;
+        const t = vPlayer.currentTime;
+        if(t >= clipEnd) return; // Invalid
+        slider.noUiSlider.set([t, clipEnd]);
+      }
+      
+      function setEndToCurrent() {
+        if(!slider.noUiSlider) return;
+        const t = vPlayer.currentTime;
+        if(t <= clipStart) return; // Invalid
+        slider.noUiSlider.set([clipStart, t]);
+      }
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+          if(e.target.tagName === 'INPUT') return;
+          
+          switch(e.key.toLowerCase()) {
+              case ' ':
+                  e.preventDefault();
+                  togglePlay();
+                  break;
+              case 'i':
+                  setStartToCurrent();
+                  break;
+              case 'o':
+                  setEndToCurrent();
+                  break;
+              case 'arrowleft':
+                  vPlayer.currentTime -= 5;
+                  break;
+              case 'arrowright':
+                  vPlayer.currentTime += 5;
+                  break;
+          }
+      });
+      
+      // Sync play button state if video ends or is paused manually
+      vPlayer.addEventListener('pause', () => {
+          document.getElementById('btnPlayPause').innerHTML = '&#9654; Play';
+      });
+      vPlayer.addEventListener('play', () => {
+          document.getElementById('btnPlayPause').innerHTML = '&#10074;&#10074; Pause';
+      });
+    </script>
+  </body>
+</html>

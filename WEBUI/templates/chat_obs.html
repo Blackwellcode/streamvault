@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat Overlay - {{ streamer }}</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent !important;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    #chat-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 12px;
+      overflow: hidden;
+    }
+    #chat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+    .chat-row {
+      display: inline-block;
+      align-self: flex-start;
+      max-width: 100%;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(10, 10, 15, 0.55);
+      backdrop-filter: blur(2px);
+      color: #f1f5f9;
+      font-size: 15px;
+      line-height: 1.4;
+      word-break: break-word;
+      text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000;
+      animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.5s ease;
+    }
+    body.no-box .chat-row {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      padding: 2px 4px;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chat-badges {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .chat-badge {
+      display: inline-block;
+      height: 18px;
+      width: auto;
+      border-radius: 2px;
+      vertical-align: middle;
+    }
+    .chat-author {
+      font-weight: 700;
+      margin-right: 6px;
+      display: inline;
+    }
+    .chat-body {
+      font-weight: 500;
+      display: inline;
+    }
+    .chat-emote {
+      display: inline-block;
+      vertical-align: middle;
+      height: 24px;
+      margin: -2px 2px;
+    }
+    .chat-mod-notice {
+      font-style: italic;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-wrapper">
+    <div id="chat-list"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='chat_emotes.js') }}"></script>
+  <script>
+    (function() {
+      const streamer = {{ streamer|tojson }};
+      const castToken = {{ cast_token|tojson }};
+      const listEl = document.getElementById("chat-list");
+      
+      const params = new URLSearchParams(window.location.search);
+      const fadeSec = parseInt(params.get("fade") || "0", 10);
+      const noBox = params.get("box") === "0" || params.get("transparent") === "1";
+      if (noBox) {
+        document.body.classList.add("no-box");
+      }
+
+      let lastSince = 0;
+      const seenIds = new Set();
+      const maxLines = 40;
+
+      function renderMessage(item) {
+        const row = document.createElement("div");
+        row.className = "chat-row";
+
+        // Badges
+        if (Array.isArray(item.badges) && item.badges.length > 0 && window.NachtSiloChat && window.NachtSiloChat.renderBadgesHtml) {
+          const badgeSpan = document.createElement("span");
+          badgeSpan.className = "chat-badges";
+          badgeSpan.innerHTML = window.NachtSiloChat.renderBadgesHtml(item.badges);
+          row.appendChild(badgeSpan);
+        }
+
+        // Author
+        const author = document.createElement("span");
+        author.className = "chat-author";
+        author.textContent = (item.user || "Anonym") + ":";
+        if (window.NachtSiloChat && window.NachtSiloChat.userColor) {
+          author.style.color = window.NachtSiloChat.userColor(item.user || "", item.color);
+        } else if (item.color) {
+          author.style.color = item.color;
+        }
+        row.appendChild(author);
+
+        // Body
+        const body = document.createElement("span");
+        body.className = "chat-body";
+        if (window.NachtSiloChat && window.NachtSiloChat.renderMessageHtml) {
+          body.innerHTML = window.NachtSiloChat.renderMessageHtml(item);
+        } else {
+          body.textContent = item.msg || "";
+        }
+        row.appendChild(body);
+
+        listEl.appendChild(row);
+
+        // Limit lines
+        while (listEl.children.length > maxLines) {
+          listEl.removeChild(listEl.firstChild);
+        }
+
+        // Auto fadeout if configured
+        if (fadeSec > 0) {
+          setTimeout(() => {
+            row.style.opacity = "0";
+            setTimeout(() => {
+              if (row.parentNode) row.parentNode.removeChild(row);
+            }, 600);
+          }, fadeSec * 1000);
+        }
+      }
+
+      async function fetchLiveChat() {
+        try {
+          let url = "/chat/live/" + encodeURIComponent(streamer) + "?since=" + encodeURIComponent(lastSince);
+          if (castToken) {
+            url += "&cast=" + encodeURIComponent(castToken);
+          }
+          const res = await fetch(url, { cache: "no-store", credentials: "omit" });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              for (const item of data) {
+                const key = (item.t || "") + "|" + (item.user || "") + "|" + (item.msg || "");
+                if (seenIds.has(key)) continue;
+                seenIds.add(key);
+                if (seenIds.size > 200) {
+                  const first = seenIds.values().next().value;
+                  seenIds.delete(first);
+                }
+                if (item.t && item.t > lastSince) {
+                  lastSince = item.t;
+                }
+                renderMessage(item);
+              }
+            }
+          }
+        } catch (err) {}
+        setTimeout(fetchLiveChat, 1200);
+      }
+
+      // Initialize emote and badge caches
+      if (window.NachtSiloChat) {
+        Promise.allSettled([
+          window.NachtSiloChat.loadEmotes ? window.NachtSiloChat.loadEmotes(streamer) : Promise.resolve(),
+          window.NachtSiloChat.loadBadges ? window.NachtSiloChat.loadBadges(streamer) : Promise.resolve()
+        ]).finally(() => {
+          fetchLiveChat();
+        });
+      } else {
+        fetchLiveChat();
+      }
+    })();
+  </script>
+</body>
+</html>

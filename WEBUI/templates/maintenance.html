@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NachtSilo Tube · Wartungsarbeiten</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-login page-maintenance {{ theme_class }} ns-platform">
+    <div class="inferno-stage" aria-hidden="true">
+      <div class="ash ash-a"></div>
+      <div class="ash ash-b"></div>
+      <div class="portal-backglow"></div>
+      <div class="portal-frame">
+        <div class="portal-arch">
+          <div class="portal-lintel"></div>
+          <div class="portal-fire"></div>
+          <div class="portal-door portal-door-left"></div>
+          <div class="portal-door portal-door-right"></div>
+          <div class="portal-seam"></div>
+          <div class="portal-floorglow"></div>
+          <div class="portal-runes">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="portal-embers">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+      <div class="portal-steps"></div>
+    </div>
+
+    <main class="login-shell maintenance-shell">
+      <section class="login-copy">
+        <div class="login-brand">
+          <img
+            class="login-brand-mark"
+            src="{{ url_for('app_icon_png', size=192) }}"
+            width="48"
+            height="48"
+            alt=""
+            decoding="async"
+          >
+          <span class="eyebrow">Work in Progress</span>
+        </div>
+        <h1>NachtSilo Tube</h1>
+        <p class="subtitle">Wir bauen gerade am Vault. Gleich geht’s weiter.</p>
+      </section>
+
+      <section class="login-panel maintenance-panel">
+        <div class="panel-glow"></div>
+        <div class="login-panel-brand" aria-hidden="true">
+          <img
+            class="login-brand-mark"
+            src="{{ url_for('app_icon_png', size=192) }}"
+            width="36"
+            height="36"
+            alt=""
+            decoding="async"
+          >
+          <span>Wartungsarbeiten</span>
+        </div>
+        <p class="maintenance-badge">WIP</p>
+        <h2 class="maintenance-title">Gleich wieder da</h2>
+        <p class="maintenance-text">
+          {{ maintenance_message or "NachtSilo Tube ist wegen aktueller Arbeiten vorübergehend nicht erreichbar. Bitte hab etwas Geduld — die Seite ist später wieder verfügbar." }}
+        </p>
+        <p class="maintenance-note">
+          Danke fürs Verständnis. Berechtigte Benutzer können sich über den Login anmelden.
+        </p>
+        <p class="maintenance-actions">
+          {% if session.logged_in %}
+          <a class="maintenance-login-link" href="{{ url_for('index') }}">Zurück zum Dashboard</a>
+          {% else %}
+          <a class="maintenance-login-link" href="{{ url_for('login') }}">Zum Login</a>
+          {% endif %}
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

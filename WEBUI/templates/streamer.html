@@ -1,0 +1,608 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ display_name or streamer }} — NachtSilo Vault{% endblock %}
+{% block page_title %}{{ display_name or streamer }}{% endblock %}
+{% block page_subtitle %}Kanalarchiv & Aufzeichnungs-Metriken{% endblock %}
+
+{% block content %}
+  <!-- 1. NEBULA Streamer Profile Card (Panel 04) -->
+  <section class="nebula-profile-card" aria-label="Streamer Profil">
+    <div class="nebula-profile-banner {% if session.user_role == 'admin' %}is-editable{% endif %}" 
+         style="{% if banner_url %}background: linear-gradient(to bottom, rgba(7, 11, 20, 0.35) 0%, rgba(7, 11, 20, 0.90) 100%), url('{{ banner_url }}') center/cover no-repeat;{% endif %}"
+         {% if session.user_role == 'admin' %}onclick="openBannerModal()" role="button" tabindex="0" title="Kanal-Banner anpassen"{% endif %}>
+      {% if session.user_role == 'admin' %}
+      <div class="nebula-banner-edit-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Banner ändern</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="nebula-profile-body">
+      <div class="nebula-profile-details">
+        <div class="nebula-profile-avatar {% if session.user_role == 'admin' %}is-editable{% endif %}"
+             {% if session.user_role == 'admin' %}onclick="openAvatarModal()" role="button" tabindex="0" title="Profilbild anpassen"{% endif %}>
+          {% if avatar_url %}
+          <img src="{{ avatar_url }}" alt="{{ streamer }}" class="nebula-profile-avatar-img" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">
+          {% else %}
+          {{ (display_name or streamer)[:2]|upper }}
+          {% endif %}
+          {% if session.user_role == 'admin' %}
+          <div class="nebula-avatar-edit-overlay">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.5px; margin-top: 3px;">ÄNDERN</span>
+          </div>
+          {% endif %}
+        </div>
+        <div>
+          <h2 class="nebula-profile-name">{{ display_name or streamer }}</h2>
+          <div class="nebula-profile-tags">
+            <span class="ns-status-indicator {% if online or streamer in live_channels %}is-recording{% endif %}">
+              <span class="ns-pulse-dot"></span>
+              {% if online %}ON AIR{% else %}OFFLINE{% endif %}
+            </span>
+            {% if on_drive %}<span class="ns-pill ns-pill-drive">DRIVE SYNC</span>{% endif %}
+            {% if streamer in live_channels %}<span class="ns-pill ns-pill-live">AUFNAHME AKTIV</span>{% endif %}
+            <span>•</span>
+            <span>{{ cnt_vod }} Aufnahmen</span>
+            <span>•</span>
+            <span>{{ cnt_clip }} Clips</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px;">
+        {% if twitch_login and (twitch_live or online) %}
+        <a href="{{ url_for('twitch_watch', channel=twitch_login) }}" class="ns-btn ns-btn-primary" style="padding: 10px 22px;">
+          <span class="nebula-live-dot" style="margin-right:6px;"></span> LIVE ZUSCHAUEN
+        </a>
+        {% elif files and files|length > 0 %}
+        <a href="{{ url_for('vod_view', streamer=streamer, filename=files[0].name) }}" class="ns-btn ns-btn-secondary" style="padding: 10px 18px;">
+          Neuestes Video ansehen
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Admin Settings & Danger Controls (Visible strictly for Admins) -->
+  {% if session.user_role == 'admin' %}
+  <section class="nebula-admin-box" aria-label="Admin Steuerung">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size: 13px; font-weight: 700; color: #BB78FF;">⚙️ KANAL-VERWALTUNG (ADMIN)</span>
+        <form method="post" action="{{ url_for('streamer_visibility_update', streamer=streamer) }}" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <span style="font-size: 12px; color: var(--ns-text-muted);">Sichtbar:</span>
+          <select name="visibility" class="ns-input-field" style="padding: 4px 10px; font-size: 12px; cursor: pointer;">
+            <option value="members" {% if folder_visibility != 'admin' %}selected{% endif %}>Alle Nutzer</option>
+            <option value="admin" {% if folder_visibility == 'admin' %}selected{% endif %}>Nur Admins</option>
+          </select>
+          <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 12px;">Speichern</button>
+        </form>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <form method="post" action="{{ url_for('stop_recording_route', streamer=streamer) }}" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" onclick="return confirm('Aufnahme wirklich stoppen?')">
+            Aufnahme Stop
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('empty_folder_route', streamer=streamer) }}" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" onclick="return confirm('Möchtest du den gesamten Aufnahme-Ordner leeren?')">
+            Ordner Leeren
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('delete_folder_route', streamer=streamer) }}" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" onclick="return confirm('ACHTUNG: Möchtest du diesen Streamer und alle Aufnahmen unwiderruflich löschen?')">
+            Ordner Löschen
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </section>
+  {% endif %}
+
+  <!-- 3. Analytics Telemetry Cards -->
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="ns-card-panel">
+      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">Gesamtaufnahmen</span>
+      <div style="font-size: 24px; font-weight: 800; font-family: var(--ns-font-mono); color: #fff; margin-top: 4px;">{{ cnt_vod }}</div>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ cnt_clip }} Clips archiviert</span>
+    </div>
+
+    <div class="ns-card-panel">
+      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">Gesamtlaufzeit</span>
+      <div style="font-size: 24px; font-weight: 800; font-family: var(--ns-font-mono); color: #fff; margin-top: 4px;">{{ total_runtime or (analytics and analytics.total_duration_str) or '—' }}</div>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">Archivierte Sendezeit</span>
+    </div>
+
+    <div class="ns-card-panel">
+      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">Speicherplatz</span>
+      <div style="font-size: 24px; font-weight: 800; font-family: var(--ns-font-mono); color: #fff; margin-top: 4px;">{{ total_size or (analytics and analytics.total_size_str) or '—' }}</div>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">Belegtes Vault-Volumen</span>
+    </div>
+
+    <div class="ns-card-panel">
+      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">Letzter Broadcast</span>
+      <div style="font-size: 18px; font-weight: 700; color: var(--ns-text-primary); margin-top: 8px;">{{ last_date or (files and files[0].date_str) or '—' }}</div>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">Synchronisiert</span>
+    </div>
+  </section>
+
+  <!-- Live Stream Hero Banner (When Streamer is Live) -->
+  {% if hero_stream and (twitch_live or online) %}
+  <section class="nebula-hero" aria-label="Live Stream Highlight" style="margin-bottom: 24px;">
+    {% if hero_stream.thumbnail_url %}
+    <div class="nebula-hero-backdrop" style="background-image: url('{{ hero_stream.thumbnail_url }}');"></div>
+    <div class="nebula-hero-overlay"></div>
+    {% endif %}
+    <div class="nebula-hero-glow"></div>
+    <div class="nebula-hero-content">
+      <div class="nebula-live-badge" style="margin-bottom: 14px;">
+        <span class="nebula-live-dot"></span> LIVE JETZT
+      </div>
+      
+      <h2 class="nebula-hero-title">{{ hero_stream.title }}</h2>
+      
+      <div class="nebula-hero-meta">
+        <div class="nebula-hero-streamer">
+          <div class="nebula-hero-avatar">
+            {% if hero_stream.avatar_url %}
+            <img src="{{ hero_stream.avatar_url }}" alt="{{ hero_stream.streamer }}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">
+            {% else %}
+            {{ hero_stream.streamer[:2]|upper }}
+            {% endif %}
+          </div>
+          <span>{{ hero_stream.streamer }}</span>
+        </div>
+        <span class="nebula-hero-cat">{{ hero_stream.category }}</span>
+        {% if hero_stream.viewers %}
+        <span style="color:#F04458; font-weight:600;">{{ hero_stream.viewers }} Zuschauer</span>
+        {% endif %}
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:12px;">
+        <a href="{{ hero_stream.watch_url }}" class="ns-btn ns-btn-primary" style="padding: 10px 24px; font-size: 15px;">
+          LIVE ZUSCHAUEN
+        </a>
+      </div>
+    </div>
+
+    {% if hero_stream.thumbnail_url %}
+    <div class="nebula-hero-preview-col">
+      <a href="{{ hero_stream.watch_url }}" class="nebula-hero-preview-frame" aria-label="Stream direkt ansehen" style="display:block;">
+        <img src="{{ hero_stream.thumbnail_url }}" alt="{{ hero_stream.title }}" class="nebula-hero-preview-img">
+        <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> LIVE</span>
+        {% if not is_tv and not is_mobile %}
+        <div class="nebula-hero-play-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        </div>
+        {% endif %}
+      </a>
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <!-- 4. Navigation Tabs & Filtering Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+    <div style="display: inline-flex; background-color: var(--ns-bg-surface); padding: 4px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); gap: 4px;">
+      <a href="{{ url_for('streamer_view', streamer=streamer, type='vod') }}" class="ns-btn {% if current_type == 'vod' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
+        Aufnahmen ({{ cnt_vod }})
+      </a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type='clip') }}" class="ns-btn {% if current_type == 'clip' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
+        Clips ({{ cnt_clip }})
+      </a>
+      {% if session.user_role == 'admin' and cnt_media %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type='media') }}" class="ns-btn {% if current_type == 'media' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
+        Dateien ({{ cnt_media }})
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Filter Form -->
+    <form method="get" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0;">
+      <input type="hidden" name="type" value="{{ current_type }}">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="Suchen..." class="ns-input-field" style="padding: 6px 12px; font-size: 12px; width: 220px;">
+      
+      {% if categories %}
+      <select name="cat" class="ns-input-field" style="padding: 6px 10px; font-size: 12px; cursor: pointer;">
+        <option value="">Alle Kategorien</option>
+        {% for cat in categories %}
+        <option value="{{ cat }}" {% if selected_cat == cat %}selected{% endif %}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
+
+      <select name="sort" class="ns-input-field" style="padding: 6px 10px; font-size: 12px; cursor: pointer;">
+        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Neueste</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Älteste</option>
+        <option value="duration" {% if sort == 'duration' %}selected{% endif %}>Dauer</option>
+      </select>
+
+      <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 6px 12px; font-size: 12px;">Filtern</button>
+    </form>
+  </div>
+
+  {% if total_pages and total_pages > 1 %}
+  <nav class="ns-pagination ns-pagination-top" aria-label="Seiten-Navigation (Oben)">
+    <div class="ns-pagination-info">
+      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> &bull; {{ total_count }} {% if current_type == 'clip' %}Clips{% elif current_type == 'media' %}Dateien{% else %}Aufnahmen{% endif %}
+    </div>
+    <div class="ns-pagination-controls pagination-pages">
+      {% if page > 1 %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" aria-label="Vorherige Seite">&lsaquo; Zur&uuml;ck</a>
+      {% endif %}
+      {% for p in page_numbers %}
+        {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+        <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
+        {% elif p == page - 3 or p == page + 3 %}
+        <span class="ns-page-ellipsis">&hellip;</span>
+        {% endif %}
+      {% endfor %}
+      {% if page < total_pages %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" aria-label="N&auml;chste Seite">Weiter &rsaquo;</a>
+      {% endif %}
+    </div>
+  </nav>
+  {% endif %}
+
+  <!-- 5. Cinema Video Grid -->
+  <section class="ns-video-grid">
+    {% if current_type == 'media' %}
+      {% for a in drive_assets %}
+      <article class="ns-video-card">
+        <div class="ns-thumb-frame">
+          <a href="{{ a.open_url }}" target="_blank" style="display: block; width: 100%; height: 100%; background: #1f2937;">
+            {% if a.thumb_url %}
+            <img src="{{ a.thumb_url }}" alt="" loading="lazy" style="object-fit: contain;">
+            {% else %}
+            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:48px;">
+              📁
+            </div>
+            {% endif %}
+          </a>
+          <div class="ns-card-overlay-top">
+            <span class="ns-overlay-chip" style="background-color: var(--ns-drive-blue);">{{ a.kind|upper }}</span>
+          </div>
+        </div>
+        <div class="ns-video-meta">
+          <a href="{{ a.open_url }}" target="_blank" class="ns-video-title">
+            {{ a.name }}
+          </a>
+          <div class="ns-video-subline">
+            <span>{{ a.date_str }}</span>
+            <span>•</span>
+            <strong>{{ a.size_str }}</strong>
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--ns-text-muted);">Keine Dateien gefunden.</div>
+      {% endfor %}
+    {% else %}
+      {% for f in files %}
+      <article class="ns-video-card" data-watch-card data-watch-key="{{ f.watch_key }}" data-done-key="{{ f.done_key }}" data-duration-sec="{{ f.duration_sec }}">
+        <div class="ns-thumb-frame">
+          <a href="{{ url_for('vod_view' if f.route == 'vod' else 'clip_view', streamer=streamer, filename=f.name) }}" style="display: block; width: 100%; height: 100%;">
+            <img src="{{ f.thumb_url }}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/thumb_fallback.jpg') }}'">
+          </a>
+
+          <div class="ns-card-overlay-top">
+            {% if f.platform %}
+            <span class="platform-badge platform-{{ f.platform|lower }}">
+              {% if 'youtube' in (f.platform|lower) %}YT{% else %}TWITCH{% endif %}
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="ns-card-overlay-bottom">
+            <span class="ns-time-badge">{{ f.duration_str }}</span>
+          </div>
+        </div>
+
+        <div class="ns-video-meta">
+          <a href="{{ url_for('vod_view' if f.route == 'vod' else 'clip_view', streamer=streamer, filename=f.name) }}" class="ns-video-title" title="{{ f.display_title or f.name }}">
+            {{ f.display_title or f.name }}
+          </a>
+          <div class="ns-video-subline">
+            <span>{{ f.date_str }}</span>
+            <span>•</span>
+            <span>{{ f.size_str }}</span>
+            {% if f.category %}
+            <span>•</span>
+            <span style="color: #BB78FF;">Spiel: {{ f.category }}</span>
+            {% endif %}
+            {% if f.viewer_count_str %}
+            <span>•</span>
+            <span>{{ f.viewer_count_str }}{% if 'zuschauer' not in (f.viewer_count_str|lower) %} Zuschauer{% endif %}</span>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--ns-text-muted); background: var(--nebula-bg-surface); border-radius: 12px; border: 1px dashed var(--nebula-border);">Keine Aufnahmen gefunden.</div>
+      {% endfor %}
+    {% endif %}
+  </section>
+
+  {% if total_pages and total_pages > 1 %}
+  <nav class="streamer-pagination-panel ns-pagination ns-pagination-bottom" aria-label="Seiten-Navigation">
+    <div class="ns-pagination-info">
+      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> &bull; Insgesamt <strong>{{ total_count }}</strong> {% if current_type == 'clip' %}Clips{% elif current_type == 'media' %}Dateien{% else %}Aufnahmen{% endif %}
+    </div>
+    <div class="ns-pagination-controls pagination-pages">
+      {% if page > 2 %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" title="Erste Seite">&laquo; Erste</a>
+      {% endif %}
+      {% if page > 1 %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn">&lsaquo; Zur&uuml;ck</a>
+      {% endif %}
+      {% for p in page_numbers %}
+        <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
+      {% endfor %}
+      {% if page < total_pages %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn">Weiter &rsaquo;</a>
+      {% endif %}
+      {% if page < total_pages - 1 %}
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=total_pages, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" title="Letzte Seite">Letzte &raquo;</a>
+      {% endif %}
+    </div>
+    {% if total_pages > 3 %}
+    <form method="get" action="{{ url_for('streamer_view', streamer=streamer) }}" class="ns-page-jump">
+      <input type="hidden" name="type" value="{{ current_type }}">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      {% if sort and sort != 'newest' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+      {% if category %}<input type="hidden" name="cat" value="{{ category }}">{% endif %}
+      {% if platform %}<input type="hidden" name="platform" value="{{ platform }}">{% endif %}
+      {% if media_kind %}<input type="hidden" name="kind" value="{{ media_kind }}">{% endif %}
+      {% if show_empty %}<input type="hidden" name="show_empty" value="1">{% endif %}
+      <label for="ns-jump-page" style="font-size:12px; color:var(--ns-text-muted);">Seite:</label>
+      <input id="ns-jump-page" type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" class="ns-input-field" style="width:62px; padding:4px 8px; font-size:12px; text-align:center;">
+      <button type="submit" class="ns-btn ns-btn-secondary" style="padding:5px 10px; font-size:12px;">Los</button>
+    </form>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+<script>
+function updateWatchStates() {
+  document.querySelectorAll('[data-watch-card]').forEach(function(card) {
+    var watchKey = card.getAttribute('data-watch-key');
+    var doneKey = card.getAttribute('data-done-key');
+    if (!watchKey || !doneKey) return;
+    try {
+      var isDone = localStorage.getItem(doneKey) === '1';
+      if (isDone) {
+        card.classList.add('is-watched');
+      }
+    } catch(e) {}
+  });
+}
+document.addEventListener('DOMContentLoaded', updateWatchStates);
+</script>
+
+  <!-- Modals for Direct Banner & Avatar Customization -->
+  {% if session.user_role == 'admin' %}
+  <!-- Modal: Banner Anpassen -->
+  <div id="bannerModal" class="nebula-modal-backdrop" onclick="if(event.target===this) closeBannerModal()">
+    <div class="nebula-modal-card" role="dialog" aria-modal="true" aria-labelledby="bannerModalTitle">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <h3 id="bannerModalTitle" style="margin: 0; font-size: 18px; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 8px;">
+            <span>🖼️</span> Kanal-Banner anpassen
+          </h3>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--ns-text-muted);">
+            {{ display_name or streamer }} · Status: <span style="color: #48D6A2; font-weight: 700;">{{ banner_source or 'Automatisch' }}</span>
+          </p>
+        </div>
+        <button type="button" onclick="closeBannerModal()" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 14px; line-height: 1; border-radius: 50%;" aria-label="Schließen">✕</button>
+      </div>
+
+      <!-- Banner Preview Box -->
+      <div style="width: 100%; height: 90px; border-radius: 10px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--nebula-border); background: {% if banner_url %}url('{{ banner_url }}') center/cover no-repeat{% else %}linear-gradient(135deg, rgba(77, 99, 255, 0.35) 0%, rgba(147, 101, 255, 0.3) 50%, rgba(11, 18, 32, 0.95) 100%){% endif %}; position: relative;">
+        <span style="position: absolute; bottom: 6px; right: 8px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px; color: #FFF;">Aktuelle Vorschau</span>
+      </div>
+
+      <!-- Upload Form -->
+      <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" enctype="multipart/form-data" style="margin-bottom: 16px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="save">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">OPTION A: BILDDATEI HOCHLADEN</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="file" name="banner_file" id="bannerFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
+          <button type="submit" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">Hochladen</button>
+        </div>
+        <span style="font-size: 10px; color: var(--ns-text-muted); display: block; margin-top: 4px;">Unterstützt: JPG, PNG, WEBP, GIF (Empfohlen: 1920x360 oder 1200x300)</span>
+      </form>
+
+      <div style="display: flex; align-items: center; text-align: center; margin: 16px 0; color: var(--ns-text-muted); font-size: 11px;">
+        <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
+        <span style="padding: 0 10px;">ODER</span>
+        <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
+      </div>
+
+      <!-- URL Form -->
+      <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" style="margin-bottom: 16px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">OPTION B: BILD-URL VERWENDEN</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="url" name="custom_banner_url" placeholder="https://example.com/banner.jpg" value="{{ custom_banner_url or '' }}" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
+          <button type="submit" name="action" value="save" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">Speichern</button>
+        </div>
+      </form>
+
+      {% if has_custom_banner %}
+      <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; color: var(--ns-text-muted);">Individuelles Banner aktiv</span>
+        <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 11px; color: #F04458;" onclick="return confirm('Custom Banner wirklich zurücksetzen und auf Standard wechseln?')">Standard wiederherstellen</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Modal: Profilbild Anpassen -->
+  <div id="avatarModal" class="nebula-modal-backdrop" onclick="if(event.target===this) closeAvatarModal()">
+    <div class="nebula-modal-card" role="dialog" aria-modal="true" aria-labelledby="avatarModalTitle">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <h3 id="avatarModalTitle" style="margin: 0; font-size: 18px; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 8px;">
+            <span>👤</span> Profilbild anpassen
+          </h3>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--ns-text-muted);">
+            {{ display_name or streamer }} · Status: <span style="color: #48D6A2; font-weight: 700;">{{ avatar_source or 'Twitch / Standard' }}</span>
+          </p>
+        </div>
+        <button type="button" onclick="closeAvatarModal()" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 14px; line-height: 1; border-radius: 50%;" aria-label="Schließen">✕</button>
+      </div>
+
+      <!-- Avatar Preview Box -->
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px solid var(--nebula-border);">
+        <div style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #9365FF; overflow: hidden; background: #151F33; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #FFF; flex-shrink: 0;">
+          {% if avatar_url %}
+          <img src="{{ avatar_url }}" alt="{{ streamer }}" style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+          {{ (display_name or streamer)[:2]|upper }}
+          {% endif %}
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #FFF;">Aktuelles Profilbild</div>
+          <div style="font-size: 11px; color: var(--ns-text-muted); margin-top: 2px;">Wird in der Navigation, Seitenleiste und auf Streamer-Karten angezeigt.</div>
+        </div>
+      </div>
+
+      <!-- Upload Form -->
+      <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" enctype="multipart/form-data" style="margin-bottom: 16px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="save">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">OPTION A: PROFILBILD HOCHLADEN</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="file" name="avatar_file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
+          <button type="submit" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">Hochladen</button>
+        </div>
+        <span style="font-size: 10px; color: var(--ns-text-muted); display: block; margin-top: 4px;">Unterstützt: JPG, PNG, WEBP, GIF (Quadratisch empfohlen, z. B. 300x300)</span>
+      </form>
+
+      <div style="display: flex; align-items: center; text-align: center; margin: 16px 0; color: var(--ns-text-muted); font-size: 11px;">
+        <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
+        <span style="padding: 0 10px;">ODER</span>
+        <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
+      </div>
+
+      <!-- URL Form -->
+      <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" style="margin-bottom: 16px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">OPTION B: BILD-URL VERWENDEN</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="url" name="custom_avatar_url" placeholder="https://example.com/avatar.jpg" value="{{ custom_avatar_url or '' }}" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
+          <button type="submit" name="action" value="save" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">Speichern</button>
+        </div>
+      </form>
+
+      {% if has_custom_avatar %}
+      <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; color: var(--ns-text-muted);">Individuelles Profilbild aktiv</span>
+        <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" style="margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 11px; color: #F04458;" onclick="return confirm('Custom Profilbild wirklich zurücksetzen und auf Standard wechseln?')">Standard wiederherstellen</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+  function openBannerModal() {
+    var m = document.getElementById('bannerModal');
+    if (m) m.style.display = 'flex';
+  }
+  function closeBannerModal() {
+    var m = document.getElementById('bannerModal');
+    if (m) m.style.display = 'none';
+  }
+  function openAvatarModal() {
+    var m = document.getElementById('avatarModal');
+    if (m) m.style.display = 'flex';
+  }
+  function closeAvatarModal() {
+    var m = document.getElementById('avatarModal');
+    if (m) m.style.display = 'none';
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeBannerModal();
+      closeAvatarModal();
+    }
+  });
+  </script>
+  {% endif %}
+
+{% endblock %}
+
+
+  <!-- Instant Client-Side Live Filter -->
+
+  <script>
+  (function() {
+    var qInput = document.querySelector('form input[name="q"]');
+    var catSelect = document.querySelector('form select[name="cat"]');
+    var cards = document.querySelectorAll('.ns-video-card');
+    if (!cards.length) return;
+
+    function runClientFilter() {
+      var q = (qInput ? qInput.value : '').toLowerCase().trim();
+      var cat = (catSelect ? catSelect.value : '').toLowerCase().trim();
+      var visible = 0;
+
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var titleEl = card.querySelector('.ns-video-title');
+        var title = titleEl ? titleEl.textContent.toLowerCase() : '';
+        var metaEl = card.querySelector('.ns-video-subline');
+        var metaText = metaEl ? metaEl.textContent.toLowerCase() : '';
+        var matchesQ = !q || title.indexOf(q) !== -1 || metaText.indexOf(q) !== -1;
+        var matchesCat = !cat || metaText.indexOf(cat) !== -1;
+
+        if (matchesQ && matchesCat) {
+          card.style.display = '';
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      }
+
+      var empty = document.getElementById('ns-live-filter-empty');
+      if (visible === 0) {
+        if (!empty) {
+          empty = document.createElement('div');
+          empty.id = 'ns-live-filter-empty';
+          empty.style.cssText = 'grid-column: 1/-1; padding: 36px; text-align: center; color: var(--ns-text-muted); font-size: 14px;';
+          empty.textContent = 'Keine lokalen Einträge für diesen Suchbegriff gefunden. [Enter] drücken für Server-Suche.';
+          var grid = document.querySelector('.ns-video-grid');
+          if (grid) grid.appendChild(empty);
+        }
+        empty.style.display = '';
+      } else if (empty) {
+        empty.style.display = 'none';
+      }
+    }
+
+    var timer;
+    if (qInput) {
+      qInput.addEventListener('input', function() {
+        clearTimeout(timer);
+        timer = setTimeout(runClientFilter, 60);
+      });
+    }
+    if (catSelect) {
+      catSelect.addEventListener('change', runClientFilter);
+    }
+  })();
+  </script>

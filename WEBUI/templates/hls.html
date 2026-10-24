@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HLS {{ filename }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-hls {{ theme_class }} ns-platform">
+    <header>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="{{ url_for('index') }}">Home</a> <span style="color:var(--muted)">/</span>
+        <a href="{{ url_for('vod_view', streamer=streamer, filename=filename) }}">Zurueck</a> <span style="color:var(--muted)">/</span> HLS {{ filename }}
+      </div>
+      <a href="{{ url_for('download', streamer=streamer, filename=filename) }}" {% if not downloads_enabled %}hidden{% endif %}>Download</a>
+    </header>
+    {% if not ready %}
+      <div class="note">
+        HLS wird erstellt. Bitte Seite in ein paar Minuten neu laden.
+      </div>
+      <div class="note">
+        <form method="post" action="{{ url_for('hls_generate', streamer=streamer, filename=filename) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit">HLS jetzt erzeugen</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="player">
+        <video
+          id="player"
+          controls
+          playsinline
+          webkit-playsinline
+          x-webkit-airplay="allow"
+          data-media-title="{{ filename }}"
+          data-media-artist="{{ streamer }}"
+          data-media-album="NachtSilo Tube"
+          data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
+        ></video>
+      </div>
+      <div class="note">HLS startet schneller bei sehr grossen Dateien.</div>
+      <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+      <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+      <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
+      <script>
+        const video = document.getElementById('player');
+        window.NachtSiloMediaSession && window.NachtSiloMediaSession.attach(video);
+        const src = {{ (playlist_url or url_for('hls_playlist', streamer=streamer, filename=filename))|tojson }};
+        let autoplayAttempted = false;
+        function playFromCurrentPosition() {
+          video.muted = false;
+          video.defaultMuted = false;
+          video.removeAttribute('muted');
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {});
+          }
+        }
+        function attemptAutoplay() {
+          if (autoplayAttempted) return;
+          autoplayAttempted = true;
+          playFromCurrentPosition();
+        }
+        video.addEventListener('loadedmetadata', attemptAutoplay, {once: true});
+        window.NachtSiloCast && window.NachtSiloCast.bindVideo(video, {
+          url: src,
+          live: false,
+          contentType: 'application/vnd.apple.mpegurl'
+        });
+        if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(video)) {
+          video.src = src;
+        } else if (window.Hls && Hls.isSupported()) {
+          let hlsNetworkRecoveries = 0;
+          let hlsMediaRecoveries = 0;
+          const hls = new Hls();
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, attemptAutoplay);
+          hls.on(Hls.Events.ERROR, function (_event, data) {
+            if (!data || !data.fatal) return;
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR && hlsNetworkRecoveries < 3) {
+              hlsNetworkRecoveries += 1;
+              hls.startLoad();
+              return;
+            }
+            if (data.type === Hls.ErrorTypes.MEDIA_ERROR && hlsMediaRecoveries < 2) {
+              hlsMediaRecoveries += 1;
+              hls.recoverMediaError();
+              return;
+            }
+            hls.destroy();
+            video.outerHTML = '<div class="note">HLS konnte nicht wiederhergestellt werden.</div>';
+          });
+          hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
+            if (hls.audioTracks && hls.audioTracks.length) {
+              hls.audioTrack = 0;
+            }
+          });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = src;
+        } else {
+          video.outerHTML = '<div class="note">HLS wird von diesem Browser nicht unterstuetzt.</div>';
+        }
+      </script>
+    {% endif %}
+  </body>
+</html>

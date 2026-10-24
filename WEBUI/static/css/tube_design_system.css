@@ -1,0 +1,5033 @@
+@import url('tokens.css');
+
+:root {
+  /* Canvas & Base Surfaces (NEBULA Cosmic Palette) */
+  --ns-bg-canvas: var(--nebula-bg-root, #070B14);
+  --ns-bg-sidebar: var(--nebula-bg-deep, #0B1220);
+  --ns-bg-surface: var(--nebula-bg-surface, #111A2B);
+  --ns-bg-surface-raised: var(--nebula-bg-card, #151F33);
+  --ns-bg-surface-hover: var(--nebula-bg-hover, #1A2740);
+  --ns-bg-surface-active: var(--nebula-bg-active, #202C48);
+
+  /* Precision Borders */
+  --ns-border-subtle: var(--nebula-border, #26344F);
+  --ns-border-medium: var(--nebula-border-bright, #3B4E73);
+  --ns-border-strong: var(--nebula-border-glow, rgba(77, 99, 255, 0.4));
+  --ns-border-focus: var(--nebula-accent-primary, #4D63FF);
+
+  /* Typography */
+  --ns-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ns-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --ns-text-primary: var(--nebula-text-main, #F3F5FC);
+  --ns-text-secondary: var(--nebula-text-secondary, #A2AEC8);
+  --ns-text-muted: var(--nebula-text-muted, #75839D);
+  --ns-text-inverse: var(--nebula-text-inverse, #070B14);
+
+  /* Authentic NEBULA Cosmic Streaming Brand & States */
+  --ns-brand-crimson: var(--nebula-accent-primary, #4D63FF);
+  --ns-brand-crimson-hover: var(--nebula-accent-secondary, #9365FF);
+  --ns-brand-crimson-subtle: rgba(77, 99, 255, 0.15);
+  
+  --ns-live-red: var(--nebula-status-live, #F04458);
+  --ns-recording-amber: var(--nebula-status-warning, #F2BC61);
+  --ns-online-green: var(--nebula-status-success, #48D6A2);
+  --ns-platform-twitch: var(--nebula-accent-secondary, #9365FF);
+  --ns-platform-youtube: #F04458;
+  --ns-drive-blue: var(--nebula-accent-cyan, #69C9FF);
+
+  /* Geometry & Rhythm */
+  --ns-rail-width: 68px;
+  --ns-radius-xs: 4px;
+  --ns-radius-sm: 6px;
+  --ns-radius-md: 8px;
+  --ns-radius-lg: 12px;
+  --ns-radius-full: 9999px;
+
+  /* Elevations & Glow */
+  --ns-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --ns-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.65);
+  --ns-shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.85);
+  --ns-glow-crt: 0 0 16px rgba(77, 99, 255, 0.4);
+  --ns-glow-nebula: 0 0 24px rgba(147, 101, 255, 0.45);
+}
+
+/* Base Reset & Layout Frame */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body.ns-platform {
+  margin: 0;
+  padding: 0;
+  background-color: var(--ns-bg-canvas);
+  color: var(--ns-text-primary);
+  font-family: var(--ns-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   1. COMMAND RAIL (PERSISTENT NAVIGATION)
+   ========================================================= */
+.ns-command-rail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--ns-rail-width);
+  background-color: var(--ns-bg-sidebar);
+  border-right: 1px solid var(--ns-border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  z-index: 1000;
+  user-select: none;
+}
+
+.ns-rail-brand {
+  margin-bottom: 24px;
+}
+
+.ns-brand-glyph {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ns-radius-md);
+  background: linear-gradient(135deg, #17231C 0%, #111A15 100%);
+  border: 1px solid var(--ns-border-medium);
+  color: var(--ns-brand-crimson);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ns-font-mono);
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+
+.ns-rail-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+}
+
+.ns-rail-item {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ns-radius-md);
+  color: var(--ns-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  position: relative;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.ns-rail-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ns-rail-item:hover {
+  color: var(--ns-text-primary);
+  background-color: var(--ns-bg-surface-hover);
+  border-color: var(--ns-border-subtle);
+}
+
+.ns-rail-item.is-active {
+  color: var(--ns-brand-crimson);
+  background-color: var(--ns-brand-crimson-subtle);
+  border-color: var(--silo-border-glow, rgba(121, 255, 138, 0.35));
+}
+
+.ns-rail-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background-color: var(--ns-brand-crimson);
+}
+
+.ns-rail-spacer {
+  flex: 1;
+}
+
+.ns-rail-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
+}
+
+.ns-logout-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* =========================================================
+   2. MAIN APPLICATION WORKSPACE
+   ========================================================= */
+.ns-app-main {
+  margin-left: var(--ns-rail-width);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ns-bg-canvas);
+}
+
+.ns-workspace-header {
+  height: 64px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ns-border-subtle);
+  background-color: var(--ns-bg-canvas);
+}
+
+.ns-header-title-block h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ns-text-primary);
+}
+
+.ns-header-title-block p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ns-text-muted);
+}
+
+.ns-workspace-content {
+  padding: 28px 32px 64px;
+  max-width: 1720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   3. HERO TELEMETRY STRIP (DASHBOARD)
+   ========================================================= */
+.ns-telemetry-bar {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 14px 20px;
+  border-radius: var(--ns-radius-lg);
+  background-color: var(--ns-bg-surface);
+  border: 1px solid var(--ns-border-subtle);
+  margin-bottom: 24px;
+}
+
+.ns-telemetry-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ns-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--ns-radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--ns-online-green);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.ns-status-indicator.is-recording {
+  background-color: rgba(225, 29, 72, 0.1);
+  color: var(--ns-brand-crimson);
+  border-color: rgba(225, 29, 72, 0.25);
+}
+
+.ns-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.ns-telemetry-stat {
+  font-size: 12px;
+  color: var(--ns-text-secondary);
+}
+
+.ns-telemetry-stat strong {
+  color: var(--ns-text-primary);
+  font-family: var(--ns-font-mono);
+}
+
+/* Storage Bar In Telemetry */
+.ns-storage-meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ns-meter-track {
+  flex: 1;
+  height: 6px;
+  background-color: var(--ns-bg-surface-raised);
+  border-radius: var(--ns-radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.ns-meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, var(--ns-brand-crimson));
+  border-radius: var(--ns-radius-full);
+}
+
+/* =========================================================
+   4. DASHBOARD OPERATIONS GRID
+   ========================================================= */
+.ns-ops-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  max-width: 100%;
+  min-width: 0;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.ns-card-panel {
+  background-color: var(--ns-bg-surface);
+  border: 1px solid var(--ns-border-subtle);
+  border-radius: var(--ns-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ns-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ns-panel-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ns-text-muted);
+}
+
+/* Quick Launch Input */
+.ns-quick-launch-form {
+  display: flex;
+  gap: 8px;
+}
+
+.ns-input-field {
+  flex: 1;
+  background-color: var(--ns-bg-surface-raised);
+  border: 1px solid var(--ns-border-subtle);
+  border-radius: var(--ns-radius-md);
+  color: var(--ns-text-primary);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.ns-input-field:focus {
+  border-color: var(--ns-brand-crimson);
+}
+
+.ns-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--ns-radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.ns-btn-primary {
+  background-color: var(--ns-brand-crimson);
+  color: #fff;
+}
+
+.ns-btn-primary:hover {
+  background-color: var(--ns-brand-crimson-hover);
+}
+
+.ns-btn-secondary {
+  background-color: var(--ns-bg-surface-raised);
+  color: var(--ns-text-secondary);
+  border-color: var(--ns-border-subtle);
+}
+
+.ns-btn-secondary:hover {
+  background-color: var(--ns-bg-surface-hover);
+  color: var(--ns-text-primary);
+  border-color: var(--ns-border-medium);
+}
+
+/* Live Chips */
+.ns-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ns-channel-chip {
+  padding: 4px 10px;
+  border-radius: var(--ns-radius-sm);
+  background-color: var(--ns-bg-surface-raised);
+  border: 1px solid var(--ns-border-subtle);
+  color: var(--ns-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.ns-channel-chip:hover {
+  border-color: var(--ns-border-medium);
+  color: var(--ns-text-primary);
+}
+
+.ns-channel-chip.is-live {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fff;
+  background-color: rgba(239, 68, 68, 0.12);
+}
+
+/* =========================================================
+   5. STREAMER DIRECTORY (HYBRID CARDS / LIST)
+   ========================================================= */
+.ns-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.ns-section-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ns-streamer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.ns-streamer-card {
+  background-color: var(--ns-bg-surface);
+  border: 1px solid var(--ns-border-subtle);
+  border-radius: var(--ns-radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.15s ease;
+}
+
+.ns-streamer-card:hover {
+  border-color: var(--ns-border-medium);
+  background-color: var(--ns-bg-surface-raised);
+}
+
+.ns-streamer-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ns-streamer-avatar-box {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ns-radius-md);
+  overflow: hidden;
+  background-color: var(--ns-bg-surface-hover);
+  position: relative;
+  flex-shrink: 0;
+  border: 1px solid var(--ns-border-subtle);
+}
+
+.ns-streamer-avatar-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ns-streamer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ns-streamer-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ns-text-primary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ns-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ns-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--ns-radius-xs);
+  letter-spacing: 0.02em;
+}
+
+.ns-pill-offline {
+  background-color: var(--ns-bg-surface-hover);
+  color: var(--ns-text-muted);
+}
+
+.ns-pill-live {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--ns-live-red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.ns-pill-drive {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--ns-drive-blue);
+}
+
+.ns-streamer-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding-top: 12px;
+  border-top: 1px solid var(--ns-border-subtle);
+  font-size: 12px;
+}
+
+.ns-metric-col span {
+  display: block;
+  color: var(--ns-text-muted);
+  font-size: 11px;
+}
+
+.ns-metric-col strong {
+  font-family: var(--ns-font-mono);
+  color: var(--ns-text-secondary);
+}
+
+/* =========================================================
+   6. CINEMATIC VIDEO ARCHIVE GRID
+   ========================================================= */
+.ns-video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px 18px;
+  margin-top: 24px;
+}
+
+.ns-video-card {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  border-radius: var(--ns-radius-md);
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.ns-thumb-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--ns-radius-md);
+  overflow: hidden;
+  background-color: #12141c;
+  border: 1px solid var(--ns-border-subtle);
+}
+
+.ns-thumb-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+.ns-video-card:hover .ns-thumb-frame img {
+  transform: scale(1.03);
+}
+
+.ns-card-overlay-top {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.ns-card-overlay-bottom {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  pointer-events: none;
+}
+
+.ns-overlay-chip {
+  padding: 2px 6px;
+  border-radius: var(--ns-radius-xs);
+  font-size: 11px;
+  font-weight: 700;
+  background-color: rgba(9, 10, 15, 0.85);
+  backdrop-filter: none;
+  color: #fff;
+  font-family: var(--ns-font-mono);
+}
+
+.ns-watch-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.ns-watch-fill {
+  display: block;
+  height: 100%;
+  background-color: var(--ns-brand-crimson);
+}
+
+.ns-video-meta {
+  padding: 10px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ns-video-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ns-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.ns-video-title:hover {
+  color: #fff;
+}
+
+.ns-video-subline {
+  font-size: 12px;
+  color: var(--ns-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ns-video-subline strong {
+  color: var(--ns-text-secondary);
+  font-weight: 500;
+}
+
+.ns-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ns-video-card:hover .ns-card-actions {
+  opacity: 1;
+}
+
+.ns-action-btn-mini {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ns-radius-sm);
+  background-color: var(--ns-bg-surface-raised);
+  border: 1px solid var(--ns-border-subtle);
+  color: var(--ns-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ns-action-btn-mini:hover {
+  background-color: var(--ns-bg-surface-hover);
+  color: var(--ns-text-primary);
+  border-color: var(--ns-border-medium);
+}
+/* Streamer Archive Modernization Overrides */
+body.ns-platform.page-streamer_view .main,
+body.ns-platform.page-streamer .main {
+  margin-left: var(--ns-rail-width) !important;
+  padding: 24px 32px !important;
+  background-color: var(--ns-bg-canvas) !important;
+}
+
+body.ns-platform .streamer-hero {
+  background-color: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  border-radius: var(--ns-radius-lg) !important;
+  padding: 24px !important;
+  margin-bottom: 24px !important;
+}
+
+/* 16:9 Video Cards Elevation */
+body.ns-platform .video-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 20px 16px !important;
+}
+
+body.ns-platform .video-card {
+  background-color: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  border-radius: var(--ns-radius-md) !important;
+  overflow: hidden !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+}
+
+body.ns-platform .video-card:hover {
+  border-color: var(--ns-border-medium) !important;
+  background-color: var(--ns-bg-surface-raised) !important;
+  transform: translateY(-2px) !important;
+}
+
+body.ns-platform .thumb-wrap {
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--ns-border-subtle) !important;
+  overflow: hidden !important;
+}
+
+body.ns-platform .thumb-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.25s ease !important;
+}
+
+body.ns-platform .video-card:hover .thumb-wrap img {
+  transform: scale(1.04) !important;
+}
+
+/* Typography on Archive Cards */
+body.ns-platform .card-body {
+  padding: 12px !important;
+}
+
+body.ns-platform .video-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--ns-text-primary) !important;
+  line-height: 1.35 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  margin-bottom: 6px !important;
+}
+
+body.ns-platform .video-meta {
+  font-size: 11px !important;
+  color: var(--ns-text-muted) !important;
+}
+
+/* Action Buttons Restraint */
+body.ns-platform .card-actions {
+  padding: 8px 12px 12px !important;
+  border-top: 1px solid var(--ns-border-subtle) !important;
+  gap: 6px !important;
+  display: flex !important;
+}
+
+body.ns-platform .card-actions .action-btn {
+  border-radius: var(--ns-radius-sm) !important;
+  background: var(--ns-bg-surface-raised) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  color: var(--ns-text-secondary) !important;
+  transition: all 0.15s ease !important;
+}
+
+body.ns-platform .card-actions .action-btn:hover {
+  background: var(--ns-bg-surface-hover) !important;
+  color: #fff !important;
+  border-color: var(--ns-border-medium) !important;
+}
+/* ==========================================================================
+   STREAMER DETAIL & VIDEO ARCHIVE COMPLETE REDESIGN ("NACHTSILO COMMAND")
+   ========================================================================== */
+
+/* 1. Viewport & Main Container Fixes */
+body.ns-platform.page-streamer .ns-app-main,
+body.ns-platform.page-streamer .main {
+  margin-left: var(--ns-rail-width) !important;
+  width: calc(100% - var(--ns-rail-width)) !important;
+  padding: 0 !important;
+  background-color: var(--ns-bg-canvas) !important;
+}
+
+/* Remove legacy sidebar wrapper artifacts if rendered */
+body.ns-platform.page-streamer > .sidebar:not(.ns-command-rail) {
+  display: none !important;
+}
+
+/* 2. Streamer Command Header (Hero) */
+body.ns-platform .streamer-command-hero {
+  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #11131c 0%, var(--ns-bg-canvas) 100%);
+  border-bottom: 1px solid var(--ns-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+body.ns-platform .hero-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+body.ns-platform .hero-title-group {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+body.ns-platform .hero-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--ns-radius-md);
+  background-color: var(--ns-bg-surface-raised);
+  border: 1px solid var(--ns-border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ns-brand-crimson);
+}
+
+body.ns-platform .hero-title-group h1 {
+  margin: 0 0 4px 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ns-text-primary);
+}
+
+body.ns-platform .hero-status-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 3. High-Density Telemetry & Activity Panel */
+body.ns-platform .analytics-command-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+body.ns-platform .analytics-stat-card {
+  background-color: var(--ns-bg-surface);
+  border: 1px solid var(--ns-border-subtle);
+  border-radius: var(--ns-radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.ns-platform .analytics-stat-card .label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ns-text-muted);
+  letter-spacing: 0.04em;
+}
+
+body.ns-platform .analytics-stat-card .value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--ns-font-mono);
+  color: var(--ns-text-primary);
+}
+
+body.ns-platform .analytics-stat-card .subtext {
+  font-size: 11px;
+  color: var(--ns-text-secondary);
+}
+
+/* 4. Streamer View Content Body */
+body.ns-platform .streamer-body-content {
+  padding: 24px 40px 64px;
+  max-width: 1720px;
+}
+
+/* Redesigned Navigation Tabs */
+body.ns-platform .archive-tabs-dock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--ns-radius-md);
+  background-color: var(--ns-bg-surface);
+  border: 1px solid var(--ns-border-subtle);
+  width: fit-content;
+  margin-bottom: 24px;
+}
+
+body.ns-platform .archive-tab-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--ns-radius-sm);
+  color: var(--ns-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+body.ns-platform .archive-tab-link:hover {
+  color: var(--ns-text-primary);
+  background-color: var(--ns-bg-surface-hover);
+}
+
+body.ns-platform .archive-tab-link.is-active {
+  color: #fff;
+  background-color: var(--ns-brand-crimson);
+}
+
+body.ns-platform .archive-tab-link .counter-chip {
+  padding: 2px 6px;
+  border-radius: var(--ns-radius-full);
+  font-size: 10px;
+  font-family: var(--ns-font-mono);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 5. Filter & Search Toolbar */
+body.ns-platform .archive-toolbar-card {
+  padding: 14px 18px;
+  border-radius: var(--ns-radius-lg);
+  background-color: var(--ns-bg-surface);
+  border: 1px solid var(--ns-border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+body.ns-platform .archive-search-box {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+}
+
+body.ns-platform .archive-search-box input {
+  width: 100%;
+  background-color: var(--ns-bg-surface-raised);
+  border: 1px solid var(--ns-border-subtle);
+  border-radius: var(--ns-radius-md);
+  padding: 9px 12px 9px 36px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+}
+
+body.ns-platform .archive-search-box input:focus {
+  border-color: var(--ns-brand-crimson);
+}
+
+body.ns-platform .archive-search-box svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--ns-text-muted);
+}
+
+/* 6. True 16:9 Media Cards (YouTube / Twitch Quality) */
+body.ns-platform .video-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)) !important;
+  gap: 24px 18px !important;
+}
+
+body.ns-platform .video-card {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  position: relative !important;
+  box-shadow: none !important;
+}
+
+body.ns-platform .video-card:hover {
+  transform: none !important;
+}
+
+body.ns-platform .thumb-wrap {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: var(--ns-radius-md) !important;
+  overflow: hidden !important;
+  position: relative !important;
+  background-color: #12141c !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  display: block !important;
+}
+
+body.ns-platform .thumb-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  transition: transform 0.2s ease !important;
+}
+
+body.ns-platform .video-card:hover .thumb-wrap img {
+  transform: scale(1.03) !important;
+}
+
+/* Badges positioned over thumbnail */
+body.ns-platform .duration-badge {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  padding: 3px 6px !important;
+  border-radius: var(--ns-radius-xs) !important;
+  background-color: rgba(9, 10, 15, 0.88) !important;
+  backdrop-filter: none;
+  color: #fff !important;
+  font-family: var(--ns-font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body.ns-platform .thumb-wrap .platform-badge,
+body.ns-platform .vod-card .platform-badge,
+body.ns-platform .video-card .platform-badge,
+body.ns-platform .card-thumbnail .platform-badge {
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: var(--ns-radius-xs) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+}
+
+body.ns-platform .vod-details .platform-badge,
+body.ns-platform .vod-kicker .platform-badge,
+body.ns-platform .related-recording-card .platform-badge,
+body.ns-platform .source-chip .platform-badge {
+  position: static !important;
+  display: inline-flex !important;
+  vertical-align: middle !important;
+  margin: 0 4px !important;
+}
+
+body.ns-platform .drive-chip {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: var(--ns-radius-xs) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Media Card Typography & Sublines */
+body.ns-platform .card-body {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+body.ns-platform .video-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: var(--ns-text-primary) !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-decoration: none !important;
+}
+
+body.ns-platform .video-title:hover {
+  color: #fff !important;
+}
+
+body.ns-platform .video-meta {
+  font-size: 12px !important;
+  color: var(--ns-text-muted) !important;
+  line-height: 1.4 !important;
+}
+
+body.ns-platform .video-meta strong {
+  color: var(--ns-text-secondary) !important;
+  font-weight: 500 !important;
+}
+
+/* Action Strip on Media Card */
+body.ns-platform .card-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 4px !important;
+  padding: 0 !important;
+  border-top: none !important;
+}
+
+body.ns-platform .card-actions .btn-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: var(--ns-radius-sm) !important;
+  background-color: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  color: var(--ns-text-muted) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+body.ns-platform .card-actions .btn-icon:hover {
+  background-color: var(--ns-bg-surface-hover) !important;
+  color: var(--ns-text-primary) !important;
+  border-color: var(--ns-border-medium) !important;
+}
+/* ==========================================================================
+   STREAMER ARCHIVE HIGH-SPECIFICITY OVERRIDES (COMPLETE VISUAL TRANSFORMATION)
+   ========================================================================== */
+
+/* 1. Reset Legacy Panels & Cards */
+body.ns-platform.page-streamer .panel {
+  background: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  border-radius: var(--ns-radius-lg) !important;
+  box-shadow: var(--ns-shadow-sm) !important;
+  padding: 20px 24px !important;
+  margin-bottom: 24px !important;
+}
+
+/* 2. Top Header & Hero Area */
+body.ns-platform.page-streamer .header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 24px 0 20px 0 !important;
+  border-bottom: 1px solid var(--ns-border-subtle) !important;
+  margin-bottom: 24px !important;
+}
+
+body.ns-platform.page-streamer .page-title {
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--ns-text-primary) !important;
+  margin: 0 !important;
+}
+
+body.ns-platform.page-streamer .btn-live-watch {
+  background: var(--ns-brand-crimson) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.05em !important;
+  padding: 8px 16px !important;
+  border-radius: var(--ns-radius-full) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.35) !important;
+  border: none !important;
+  text-decoration: none !important;
+}
+
+/* 3. Navigation Tabs */
+body.ns-platform.page-streamer .tabs {
+  display: inline-flex !important;
+  gap: 6px !important;
+  background: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  padding: 4px !important;
+  border-radius: var(--ns-radius-md) !important;
+  margin-bottom: 24px !important;
+}
+
+body.ns-platform.page-streamer .tabs .tab {
+  padding: 8px 16px !important;
+  border-radius: var(--ns-radius-sm) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--ns-text-secondary) !important;
+  text-decoration: none !important;
+  border: none !important;
+  background: transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+body.ns-platform.page-streamer .tabs .tab:hover {
+  color: #fff !important;
+  background: var(--ns-bg-surface-hover) !important;
+}
+
+body.ns-platform.page-streamer .tabs .tab.active {
+  color: #fff !important;
+  background: var(--ns-brand-crimson) !important;
+}
+
+body.ns-platform.page-streamer .tabs .badge {
+  font-size: 11px !important;
+  font-family: var(--ns-font-mono) !important;
+  padding: 2px 6px !important;
+  border-radius: var(--ns-radius-full) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: inherit !important;
+}
+
+/* 4. Filter Toolbar */
+body.ns-platform.page-streamer .filter-form,
+body.ns-platform.page-streamer .panel form {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+body.ns-platform.page-streamer input[type="text"],
+body.ns-platform.page-streamer select {
+  background-color: var(--ns-bg-surface-raised) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  border-radius: var(--ns-radius-md) !important;
+  color: var(--ns-text-primary) !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  outline: none !important;
+}
+
+body.ns-platform.page-streamer input[type="text"]:focus,
+body.ns-platform.page-streamer select:focus {
+  border-color: var(--ns-brand-crimson) !important;
+}
+
+body.ns-platform.page-streamer .btn-action {
+  background-color: var(--ns-brand-crimson) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: var(--ns-radius-md) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+body.ns-platform.page-streamer .btn-action:hover {
+  background-color: var(--ns-brand-crimson-hover) !important;
+}
+
+/* 5. Transform Video Cards to YouTube/Twitch Cinema Layout */
+body.ns-platform.page-streamer .video-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+  gap: 28px 20px !important;
+  padding: 0 !important;
+  margin-top: 24px !important;
+}
+
+body.ns-platform.page-streamer .video-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  position: relative !important;
+}
+
+body.ns-platform.page-streamer .video-card:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+/* 16:9 Thumbnail Frame */
+body.ns-platform.page-streamer .thumb-wrap {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: var(--ns-radius-md) !important;
+  overflow: hidden !important;
+  position: relative !important;
+  background: #0f1015 !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  display: block !important;
+}
+
+body.ns-platform.page-streamer .thumb-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.ns-platform.page-streamer .video-card:hover .thumb-img {
+  transform: scale(1.04) !important;
+}
+
+/* Thumbnail Micro Badges */
+body.ns-platform.page-streamer .duration-badge {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  padding: 3px 6px !important;
+  border-radius: var(--ns-radius-xs) !important;
+  background-color: rgba(9, 10, 15, 0.88) !important;
+  backdrop-filter: none;
+  color: #fff !important;
+  font-family: var(--ns-font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body.ns-platform.page-streamer .platform-badge {
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: var(--ns-radius-xs) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+body.ns-platform.page-streamer .drive-chip {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: var(--ns-radius-xs) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Card Body & Text */
+body.ns-platform.page-streamer .card-body {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+body.ns-platform.page-streamer .video-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: var(--ns-text-primary) !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-decoration: none !important;
+}
+
+body.ns-platform.page-streamer .video-title:hover {
+  color: #fff !important;
+}
+
+body.ns-platform.page-streamer .video-meta {
+  font-size: 12px !important;
+  color: var(--ns-text-muted) !important;
+  line-height: 1.4 !important;
+}
+
+/* Card Action Bar (Hover Reveal) */
+body.ns-platform.page-streamer .card-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 4px !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+body.ns-platform.page-streamer .card-actions .btn-icon,
+body.ns-platform.page-streamer .card-actions .action-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: var(--ns-radius-sm) !important;
+  background-color: var(--ns-bg-surface-raised) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  color: var(--ns-text-muted) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+body.ns-platform.page-streamer .card-actions .btn-icon:hover,
+body.ns-platform.page-streamer .card-actions .action-btn:hover {
+  background-color: var(--ns-bg-surface-hover) !important;
+  color: var(--ns-text-primary) !important;
+  border-color: var(--ns-border-medium) !important;
+}
+/* ==========================================================================
+   GLOBAL VIEWPORT & SIDEBAR UNDERLAP RESOLUTION
+   ========================================================================== */
+
+/* Enforce rail margin and full canvas clearance on ALL views */
+body.ns-platform {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: var(--ns-bg-canvas) !important;
+  display: block !important;
+  min-height: 100vh !important;
+}
+
+body.ns-platform > .main,
+body.ns-platform .main,
+body.ns-platform .ns-app-main {
+  margin-left: var(--ns-rail-width) !important;
+  width: calc(100% - var(--ns-rail-width)) !important;
+  box-sizing: border-box !important;
+  min-height: 100vh !important;
+  padding: 28px 36px 64px !important;
+  background-color: var(--ns-bg-canvas) !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Ensure Command Rail is fixed and does not hide content */
+.ns-command-rail {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: var(--ns-rail-width) !important;
+  height: 100vh !important;
+  background-color: var(--ns-bg-sidebar) !important;
+  border-right: 1px solid var(--ns-border-subtle) !important;
+  z-index: 9999 !important;
+  box-sizing: border-box !important;
+  padding: 16px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+/* Fix Logout Button positioning so it never gets clipped */
+.ns-command-rail .ns-rail-footer {
+  margin-top: auto !important;
+  padding-bottom: 8px !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+/* ==========================================================================
+   ADMIN PANEL COMPLETE VISUAL OVERHAUL ("NACHTSILO COMMAND")
+   ========================================================================== */
+
+body.ns-platform.page-admin .main,
+body.ns-platform.page-admin-traffic .main,
+body.ns-platform.page-stalk-admin .main {
+  margin-left: var(--ns-rail-width) !important;
+  width: calc(100% - var(--ns-rail-width)) !important;
+  padding: 28px 36px 64px !important;
+}
+
+/* 1. Header Styling */
+body.ns-platform.page-admin .header,
+body.ns-platform.page-admin-traffic .header,
+body.ns-platform.page-stalk-admin .header {
+  border-bottom: 1px solid var(--ns-border-subtle) !important;
+  padding-bottom: 20px !important;
+  margin-bottom: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+body.ns-platform.page-admin .page-title,
+body.ns-platform.page-admin-traffic .page-title,
+body.ns-platform.page-stalk-admin .page-title {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--ns-text-primary) !important;
+  margin: 0 !important;
+}
+
+/* 2. Admin Tab Dock */
+body.ns-platform.page-admin .admin-tabs {
+  display: inline-flex !important;
+  gap: 6px !important;
+  background: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  padding: 4px !important;
+  border-radius: var(--ns-radius-md) !important;
+  margin-bottom: 28px !important;
+  width: fit-content !important;
+}
+
+body.ns-platform.page-admin .admin-tab-btn {
+  padding: 8px 18px !important;
+  border-radius: var(--ns-radius-sm) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--ns-text-secondary) !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+body.ns-platform.page-admin .admin-tab-btn:hover {
+  color: var(--ns-text-primary) !important;
+  background: var(--ns-bg-surface-hover) !important;
+}
+
+body.ns-platform.page-admin .admin-tab-btn.active {
+  color: #fff !important;
+  background: var(--ns-brand-crimson) !important;
+  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.3) !important;
+}
+
+/* 3. Panel & Card System in Admin & Stalk */
+body.ns-platform.page-admin .panel,
+body.ns-platform.page-admin-traffic .panel,
+body.ns-platform.page-stalk-admin .panel,
+body.ns-platform .stalk-panel {
+  background: var(--ns-bg-surface) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  border-radius: var(--ns-radius-lg) !important;
+  padding: 22px 26px !important;
+  box-shadow: var(--ns-shadow-sm) !important;
+  margin-bottom: 24px !important;
+}
+
+body.ns-platform.page-admin .panel h3,
+body.ns-platform.page-stalk-admin .panel h3 {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: var(--ns-text-muted) !important;
+  margin-top: 0 !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid var(--ns-border-subtle) !important;
+}
+
+/* 4. Form Controls & Buttons in Admin */
+body.ns-platform.page-admin input[type="text"],
+body.ns-platform.page-admin input[type="password"],
+body.ns-platform.page-admin input[type="number"],
+body.ns-platform.page-admin select,
+body.ns-platform.page-stalk-admin input[type="text"],
+body.ns-platform.page-stalk-admin select {
+  background-color: var(--ns-bg-surface-raised) !important;
+  border: 1px solid var(--ns-border-subtle) !important;
+  border-radius: var(--ns-radius-md) !important;
+  color: var(--ns-text-primary) !important;
+  padding: 9px 12px !important;
+  font-size: 13px !important;
+  outline: none !important;
+}
+
+body.ns-platform.page-admin input:focus,
+body.ns-platform.page-stalk-admin input:focus {
+  border-color: var(--ns-brand-crimson) !important;
+}
+
+body.ns-platform.page-admin button[type="submit"],
+body.ns-platform.page-admin .btn-primary,
+body.ns-platform.page-stalk-admin button[type="submit"],
+body.ns-platform.page-stalk-admin .btn-primary {
+  background: var(--ns-brand-crimson) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--ns-radius-md) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 9px 18px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+body.ns-platform.page-admin button[type="submit"]:hover,
+body.ns-platform.page-stalk-admin button[type="submit"]:hover {
+  background: var(--ns-brand-crimson-hover) !important;
+}
+
+/* 5. User Management & Data Tables */
+body.ns-platform.page-admin table,
+body.ns-platform.page-stalk-admin table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
+  margin-top: 12px !important;
+}
+
+body.ns-platform.page-admin th,
+body.ns-platform.page-stalk-admin th {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid var(--ns-border-subtle) !important;
+  color: var(--ns-text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  text-align: left !important;
+}
+
+body.ns-platform.page-admin td,
+body.ns-platform.page-stalk-admin td {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid var(--ns-border-subtle) !important;
+  color: var(--ns-text-secondary) !important;
+}
+
+body.ns-platform.page-admin tr:hover td,
+body.ns-platform.page-stalk-admin tr:hover td {
+  background: var(--ns-bg-surface-raised) !important;
+  color: var(--ns-text-primary) !important;
+}
+
+/* ==========================================================================
+   NACHTSILO COMMAND: GLOBAL PLATFORM-WIDE CLEARANCE & RAIL RESILIENCE
+   ========================================================================== */
+
+:root {
+  --ns-rail-width: 68px !important;
+}
+
+/* 1. Reset any style.css nav height overrides on the command rail */
+.ns-command-rail nav,
+.ns-command-rail .ns-rail-nav,
+body .ns-command-rail nav,
+body.ns-platform .ns-command-rail nav,
+body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-command-rail nav {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  padding: 0 0 4px 0 !important;
+  gap: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.ns-command-rail nav::-webkit-scrollbar,
+.ns-command-rail .ns-rail-nav::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+/* 2. Precision Command Rail positioning & dimensions */
+.ns-command-rail,
+aside.ns-command-rail,
+body .ns-command-rail {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: var(--ns-rail-width, 68px) !important;
+  max-width: var(--ns-rail-width, 68px) !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  background-color: var(--ns-bg-sidebar, #0d0f17) !important;
+  border-right: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  z-index: 99999 !important;
+  box-sizing: border-box !important;
+  padding: 16px 0 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+.ns-command-rail .ns-rail-brand {
+  margin-bottom: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+.ns-command-rail .ns-rail-spacer {
+  flex: 1 1 auto !important;
+  min-height: 16px !important;
+}
+
+.ns-command-rail .ns-rail-footer {
+  margin-top: auto !important;
+  padding-bottom: 4px !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.ns-command-rail .ns-logout-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.ns-command-rail .ns-logout-btn button.ns-rail-item,
+body .ns-command-rail .ns-logout-btn button.ns-rail-item,
+body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-command-rail .ns-logout-btn button {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: var(--ns-radius-md, 10px) !important;
+  color: var(--ns-text-muted, #94a3b8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.ns-command-rail .ns-logout-btn button.ns-rail-item:hover,
+body .ns-command-rail .ns-logout-btn button.ns-rail-item:hover {
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 3. ABSOLUTE GLOBAL SIDEBAR CLEARANCE (ZERO UNDERLAP) */
+body.ns-platform > .main,
+body.ns-platform .main,
+body.ns-platform .ns-app-main,
+body.page-vod .main,
+body.page-vod > .main,
+body.page-live .main,
+body.page-live > .main,
+body.page-hls .main,
+body.page-hls > .main,
+body.page-clip-editor .main,
+body.page-clip-editor > .main,
+body.page-admin .main,
+body.page-admin > .main,
+body.page-stalk .main,
+body.page-stalk > .main,
+body.page-files .main,
+body.page-files > .main,
+body.page-search .main,
+body.page-search > .main,
+body.page-channels .main,
+body.page-channels > .main,
+body.page-index .main,
+body.page-index > .main,
+body.page-streamer .main,
+body.page-streamer > .main,
+body.page-streamer_view .main,
+body.page-streamer_view > .main,
+body.page-mplus .main,
+body.page-discord-tool .main {
+  margin-left: var(--ns-rail-width, 68px) !important;
+  width: calc(100% - var(--ns-rail-width, 68px)) !important;
+  max-width: calc(100% - var(--ns-rail-width, 68px)) !important;
+  box-sizing: border-box !important;
+}
+
+/* 4. VOD Player Viewport & Actions Overrides */
+body.page-vod .content {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px) !important;
+  gap: 16px !important;
+}
+
+body:is(.page-vod, .page-twitch-watch, .page-live) .vod-details {
+  background: var(--ns-bg-surface, #11131a) !important;
+  border: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: var(--ns-radius-lg, 12px) !important;
+  padding: 18px 24px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  align-self: stretch !important;
+}
+
+body:is(.page-vod, .page-twitch-watch) .twitch-switcher,
+nav.twitch-switcher {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  align-self: auto !important;
+  align-items: stretch !important;
+  padding: 8px 0 0 !important;
+  margin: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+
+body:is(.page-vod, .page-live) #btnOpenEditor,
+body:is(.page-vod, .page-live) .vod-inline-tool {
+  background: var(--ns-brand-crimson, #e11d48) !important;
+  color: #fff !important;
+  border: 1px solid var(--ns-brand-crimson, #e11d48) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+}
+
+body:is(.page-vod, .page-live) #btnInstantClip,
+body:is(.page-vod, .page-live) #btnTranscriptToggle,
+body:is(.page-vod, .page-live) .vod-file-action {
+  background: var(--ns-bg-surface-raised, #161922) !important;
+  color: var(--ns-text-primary, #fff) !important;
+  border: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+}
+
+body:is(.page-vod, .page-live) #btnOpenEditor:hover {
+  background: var(--ns-brand-crimson-hover, #f43f5e) !important;
+  border-color: var(--ns-brand-crimson-hover, #f43f5e) !important;
+}
+
+body:is(.page-vod, .page-live) #btnInstantClip:hover,
+body:is(.page-vod, .page-live) #btnTranscriptToggle:hover,
+body:is(.page-vod, .page-live) .vod-file-action:hover {
+  background: var(--ns-bg-surface-hover, rgba(255, 255, 255, 0.08)) !important;
+  border-color: var(--ns-border-medium, rgba(255, 255, 255, 0.16)) !important;
+  color: #fff !important;
+}
+
+/* =========================================================
+   MOBILE PLAYER & LIVE WATCH UX UPGRADE (STREAM PROMINENCE,
+   NO BOTTOM CHAT CUTOFF, RELIABLE LANDSCAPE CHAT TOGGLE)
+   ========================================================= */
+
+/* 1. Viewport Lock: Prevent unwanted body scrolling and cutoffs on mobile */
+body.ns-platform:is(.page-mobile-player, .page-twitch-watch-mobile) {
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: #000 !important;
+}
+
+/* 2. Stream Priority: Clean 16:9 full-width video container without top gaps */
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .video-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  flex: 0 0 auto !important;
+  position: relative !important;
+  background: #000 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .overlay-header {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  padding: max(8px, env(safe-area-inset-top, 8px)) max(12px, env(safe-area-inset-right, 12px)) 12px max(12px, env(safe-area-inset-left, 12px)) !important;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%) !important;
+  z-index: 60 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  pointer-events: none !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .overlay-header > * {
+  pointer-events: auto !important;
+}
+
+/* 3. Ultra-Compact Metadata Bar under Video (saves ~90px of space) */
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details {
+  flex: 0 0 auto !important;
+  padding: 8px 12px 8px !important;
+  background: var(--ns-bg-surface, #12141c) !important;
+  border-bottom: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-details-main {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-kicker {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .twitch-live-pill {
+  background: var(--ns-brand-crimson, #e11d48) !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  padding: 2px 7px !important;
+  border-radius: var(--ns-radius-full, 9999px) !important;
+  box-shadow: 0 0 10px rgba(225, 29, 72, 0.4) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-display-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: var(--ns-text-primary, #f8fafc) !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-details-side {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts {
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11px !important;
+  color: var(--ns-text-muted, #94a3b8) !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts div {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts dt {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  color: var(--ns-text-muted, #64748b) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts dd {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--ns-text-secondary, #cbd5e1) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-file-actions {
+  flex-shrink: 0 !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool,
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .ns-cast-trigger {
+  min-height: 26px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: var(--ns-radius-sm, 6px) !important;
+  background: var(--ns-bg-surface-raised, #181a24) !important;
+  border: 1px solid var(--ns-border-medium, rgba(255, 255, 255, 0.12)) !important;
+  color: var(--ns-text-secondary, #cbd5e1) !important;
+  transition: all 0.15s ease !important;
+}
+
+/* Compact Tabs Header and Toolbar */
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .chat-tabs-head {
+  padding: 4px 10px !important;
+  min-height: 34px !important;
+  background: var(--ns-bg-surface, #12141c) !important;
+  border-bottom: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.06)) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .chat-tab {
+  padding: 4px 14px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  border-radius: var(--ns-radius-sm, 6px) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--ns-text-muted, #64748b) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .chat-tab.is-active {
+  background: var(--ns-brand-crimson, #e11d48) !important;
+  color: #fff !important;
+  border-color: var(--ns-brand-crimson, #e11d48) !important;
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.35) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .chat-pane-toolbar {
+  padding: 3px 10px !important;
+  min-height: 28px !important;
+  border-bottom: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.04)) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .chat-toggle {
+  min-height: 24px !important;
+  padding: 2px 8px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  border-radius: var(--ns-radius-xs, 4px) !important;
+  background: var(--ns-bg-surface-raised, #181a24) !important;
+  border: 1px solid var(--ns-border-medium, rgba(255, 255, 255, 0.12)) !important;
+  color: var(--ns-text-secondary, #cbd5e1) !important;
+}
+
+/* 4. Chat Container & List: ZERO CUTOFF AT BOTTOM */
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .chat-container {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: var(--ns-bg-canvas, #090a0f) !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .chat-tab-pane {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .chat-tab-pane[hidden],
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .chat-tab-pane.is-hidden {
+  display: none !important;
+}
+
+/* ========================================================================= */
+/* ULTRA-FAST MOBILE PERFORMANCE & INSTANT 0MS TAP RESPONSE                  */
+/* ========================================================================= */
+
+/* 1. Eliminate 300ms mobile tap delay across entire site */
+html, body, button, a, input, textarea, select, [role="button"], [role="tab"],
+.chat-tab, .btn, .ns-command-item, .video-card, .streamer-card, .card, .live-card {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 2. Instant visual haptic feedback on touch */
+button:active,
+a.btn:active,
+.chat-tab:active,
+.mobile-global-nav a:active,
+.mobile-global-nav button:active,
+.card:active {
+  transform: scale(0.97) !important;
+  transition: transform 0.05s ease !important;
+}
+
+/* 3. GPU-accelerated smooth 120fps scrolling on mobile */
+.chat-list,
+.vod-comments-list,
+.content,
+.main,
+.page-mobile-index {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .chat-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  padding: 8px 12px max(44px, calc(env(safe-area-inset-bottom, 20px) + 24px)) 12px !important;
+  box-sizing: border-box !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .tube-chat-compose {
+  padding: 6px 12px max(10px, env(safe-area-inset-bottom, 10px)) 12px !important;
+  flex-shrink: 0 !important;
+  background: var(--ns-bg-surface, #12141c) !important;
+  border-top: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+}
+
+/* 5. Landscape Mode & Chat Toggle Button Guaranteed Visibility */
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-landscape-chat-toggle {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  cursor: pointer !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  text-decoration: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  line-height: 1 !important;
+  width: auto !important;
+  min-width: 40px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* Hidden by default in portrait */
+@media (orientation: portrait) {
+  body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.is-landscape-active) .mobile-landscape-chat-toggle {
+    display: none !important;
+  }
+}
+
+/* Guaranteed display in landscape */
+@media (orientation: landscape), (min-aspect-ratio: 1/1) {
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-force-landscape-toggle {
+    display: none !important;
+  }
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-landscape-chat-toggle {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile).is-landscape-active .mobile-force-landscape-toggle {
+  display: none !important;
+}
+body:is(.page-mobile-player, .page-twitch-watch-mobile).is-landscape-active .mobile-landscape-chat-toggle {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Chat CLOSED in Landscape (100% video): glowing crimson pill pinned top-right */
+body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.landscape-chat-open) .mobile-landscape-chat-toggle {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top, 12px)) !important;
+  right: max(16px, env(safe-area-inset-right, 16px)) !important;
+  z-index: 99999 !important;
+  height: 40px !important;
+  width: auto !important;
+  min-width: fit-content !important;
+  padding: 0 14px 0 12px !important;
+  border-radius: 20px !important;
+  background: rgba(15, 18, 28, 0.94) !important;
+  border: 1.5px solid var(--ns-brand-crimson, #e11d48) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 14px rgba(225, 29, 72, 0.4) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  white-space: nowrap !important;
+  gap: 6px !important;
+}
+
+/* Chat OPEN in Landscape: compact collapse button */
+body:is(.page-mobile-player, .page-twitch-watch-mobile).landscape-chat-open .mobile-landscape-chat-toggle {
+  position: relative !important;
+  z-index: 100 !important;
+  height: 38px !important;
+  width: auto !important;
+  min-width: fit-content !important;
+  padding: 0 12px 0 10px !important;
+  border-radius: 19px !important;
+  background: rgba(22, 26, 38, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  white-space: nowrap !important;
+  gap: 4px !important;
+}
+
+/* Inner content toggles */
+body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.landscape-chat-open) .landscape-chat-toggle-closed-content {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.landscape-chat-open) .landscape-chat-toggle-open-content {
+  display: none !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile).landscape-chat-open .landscape-chat-toggle-closed-content {
+  display: none !important;
+}
+body:is(.page-mobile-player, .page-twitch-watch-mobile).landscape-chat-open .landscape-chat-toggle-open-content {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-landscape-chat-toggle:active {
+  transform: scale(0.95) !important;
+}
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-landscape-chat-toggle:hover {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Live Tap Unmute Pill */
+.live-tap-unmute {
+  position: absolute !important;
+  bottom: 16px !important;
+  left: max(16px, env(safe-area-inset-left, 16px)) !important;
+  z-index: 850 !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 18px !important;
+  background: rgba(15, 18, 28, 0.92) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  touch-action: manipulation !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.live-tap-unmute[hidden] {
+  display: none !important;
+}
+.live-tap-unmute:active {
+  transform: scale(0.96) !important;
+}
+
+@media (orientation: landscape) {
+  body.ns-platform:is(.page-mobile-player, .page-twitch-watch-mobile) {
+    flex-direction: row !important;
+  }
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-vod-details,
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-comments:not(.chat-tab-pane *) {
+    display: none !important;
+  }
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-force-landscape-toggle {
+    display: none !important;
+  }
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-landscape-chat-toggle {
+    display: inline-flex !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 100 !important;
+  }
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .overlay-header {
+    padding-left: max(16px, env(safe-area-inset-left, 16px)) !important;
+    padding-right: max(16px, env(safe-area-inset-right, 16px)) !important;
+    padding-top: max(8px, env(safe-area-inset-top, 8px)) !important;
+  }
+
+  /* Video inside container in landscape */
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .video-container video {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  /* Landscape layout split: Chat open (2/3 video + 1/3 chat) */
+  body:is(.page-mobile-player, .page-twitch-watch-mobile).landscape-chat-open .video-container {
+    flex: 1 1 66.666% !important;
+    width: 66.666% !important;
+    max-width: 66.666% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    position: relative !important;
+  }
+
+  body:is(.page-mobile-player, .page-twitch-watch-mobile).landscape-chat-open .chat-container {
+    display: flex !important;
+    flex: 0 0 33.334% !important;
+    width: 33.334% !important;
+    max-width: 33.334% !important;
+    min-width: 260px !important;
+    height: 100% !important;
+    border-top: none !important;
+    border-left: 1px solid var(--ns-border-medium, rgba(255, 255, 255, 0.12)) !important;
+    z-index: 20 !important;
+  }
+
+  /* Landscape layout: Chat closed / Fullscreen video (100% video) */
+  body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.landscape-chat-open) .video-container {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    position: relative !important;
+  }
+
+  body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.landscape-chat-open) .chat-container {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+  }
+}
+
+/* 7. VOD Comments inside Unified Mobile Tab Pane */
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-section.mobile-comments {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-expanded {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-expanded-header {
+  display: none !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-compose {
+  padding: 10px 14px !important;
+  flex-shrink: 0 !important;
+  background: var(--ns-bg-surface, #12141c) !important;
+  border-bottom: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  gap: 10px !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comment-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 13px !important;
+  background: var(--ns-brand-crimson, #e11d48) !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 10px 14px max(44px, calc(env(safe-area-inset-bottom, 20px) + 24px)) 14px !important;
+  box-sizing: border-box !important;
+}
+
+
+/* --------------------------------------------------------------------------
+   Mobile Player Top Overlay Quick Controls (Play/Pause, Mute, Clip)
+   -------------------------------------------------------------------------- */
+.mobile-force-landscape-toggle,
+#forceLandscapeToggle {
+  display: none !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .overlay-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  pointer-events: auto !important;
+  z-index: 950 !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 18px !important;
+  background: rgba(14, 16, 24, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  gap: 6px !important;
+  transition: all 0.15s ease !important;
+  line-height: 1 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn:active {
+  transform: scale(0.92) !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(24, 28, 42, 0.95) !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn.mobile-clip-btn {
+  border-color: rgba(225, 29, 72, 0.6) !important;
+  background: rgba(22, 26, 38, 0.92) !important;
+  color: #ffffff !important;
+  padding: 0 12px !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn.mobile-clip-btn:hover,
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn.mobile-clip-btn:active {
+  border-color: var(--ns-brand-crimson, #e11d48) !important;
+  background: rgba(225, 29, 72, 0.25) !important;
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.35) !important;
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn.is-muted,
+body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-player-control-btn.is-paused {
+  border-color: rgba(245, 158, 11, 0.7) !important;
+  color: #fbbf24 !important;
+}
+
+
+/* --------------------------------------------------------------------------
+   Notch / Dynamic Island Safety & Bottom Action Buttons (Desktop VOD Style)
+   -------------------------------------------------------------------------- */
+@media (orientation: portrait) {
+  body.ns-platform:is(.page-mobile-player, .page-twitch-watch-mobile) {
+    padding-top: max(10px, env(safe-area-inset-top, 0px)) !important;
+    background-color: #000000 !important;
+  }
+  body:is(.page-mobile-player, .page-twitch-watch-mobile) .video-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    flex: 0 0 auto !important;
+    position: relative !important;
+    background: #000000 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  /* Remove overlay header (both X button and Streamer name) completely from video in portrait */
+  body:is(.page-mobile-player, .page-twitch-watch-mobile):not(.is-landscape-active) .overlay-header {
+    display: none !important;
+  }
+}
+
+body:is(.page-mobile-player, .page-twitch-watch-mobile).is-portrait-active .overlay-header {
+  display: none !important;
+}
+
+.vod-title-cluster {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.mobile-portrait-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: var(--ns-radius-md, 8px) !important;
+  background: var(--ns-bg-surface-raised, rgba(255, 255, 255, 0.08)) !important;
+  border: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.12)) !important;
+  color: var(--ns-text-primary, #f8fafc) !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
+  transition: background 0.15s ease, transform 0.1s ease !important;
+}
+
+.mobile-portrait-back-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.mobile-portrait-back-btn:active {
+  background: rgba(255, 255, 255, 0.25) !important;
+  transform: scale(0.92) !important;
+}
+
+/* Rendering performance: content-visibility for list cards */
+body.ns-platform .video-card,
+body.ns-platform .streamer-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 280px;
+}
+
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details {
+  flex: 0 0 auto !important;
+  padding: 8px 12px 10px !important;
+  background: var(--ns-bg-surface, #12141c) !important;
+  border-bottom: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-details-main {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-file-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  padding: 2px 0 !important;
+  width: 100% !important;
+}
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-file-actions::-webkit-scrollbar {
+  display: none !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: var(--ns-radius-md, 8px) !important;
+  background: var(--ns-bg-surface-raised, #181a24) !important;
+  border: 1px solid var(--ns-border-medium, rgba(255, 255, 255, 0.16)) !important;
+  color: var(--ns-text-primary, #f1f5f9) !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool:active {
+  transform: scale(0.95) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool.mobile-clip-tool {
+  border-color: rgba(225, 29, 72, 0.6) !important;
+  background: rgba(22, 26, 38, 0.95) !important;
+  color: #fff !important;
+}
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool.mobile-clip-tool:active {
+  border-color: var(--ns-brand-crimson, #e11d48) !important;
+  background: rgba(225, 29, 72, 0.25) !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool.is-paused,
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool.is-muted {
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  color: #fbbf24 !important;
+}
+
+/* Split Chat: VOD Comments column matching live Tubechat */
+.vod-comments-split-col {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 50% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vod-comments-split-col .vod-comments-section {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.vod-comments-split-col .vod-comments-expanded {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.vod-comments-split-col .vod-comments-list {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding: 0 12px !important;
+  margin: 0 !important;
+}
+
+.vod-comments-split-col .vod-comment-item {
+  padding: 8px 0 !important;
+  gap: 10px !important;
+}
+
+.vod-comments-split-col .vod-comment-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 12px !important;
+}
+
+.vod-comments-compose-tube {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--ns-bg-surface-raised, #161922) !important;
+  flex-shrink: 0 !important;
+}
+
+.vod-comments-compose-tube input {
+  flex: 1 !important;
+  min-width: 0 !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  outline: none !important;
+}
+
+.vod-comments-compose-tube input:focus {
+  border-color: var(--ns-brand-crimson, #e11d48) !important;
+}
+
+.vod-comments-compose-tube .tube-chat-send {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  background: var(--ns-brand-crimson, #e11d48) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  transition: opacity 0.15s ease !important;
+}
+
+.vod-comments-compose-tube .tube-chat-send:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+/* Admin Title & Description Modal Overlay */
+.vod-admin-overlay[hidden] {
+  display: none !important;
+}
+
+.vod-admin-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 8500 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.vod-admin-scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.vod-admin-dialog {
+  position: relative !important;
+  z-index: 8501 !important;
+  width: min(540px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 60px) !important;
+  overflow-y: auto !important;
+  background: var(--ns-bg-surface, #12141c) !important;
+  border: 1px solid var(--ns-border-medium, rgba(255, 255, 255, 0.16)) !important;
+  border-radius: var(--ns-radius-lg, 12px) !important;
+  padding: 20px 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  color: #fff !important;
+}
+
+.vod-admin-dialog-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.vod-admin-dialog-titles {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.vod-admin-kicker {
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--ns-brand-crimson, #e11d48) !important;
+  letter-spacing: 0.05em !important;
+}
+
+.vod-admin-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  margin: 0 !important;
+}
+
+.vod-admin-meta-form,
+.vod-admin-rename-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.vod-admin-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  color: #a1a1aa !important;
+  font-weight: 600 !important;
+}
+
+.vod-admin-field input,
+.vod-admin-field textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #0d0f16 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+  padding: 9px 12px !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  outline: none !important;
+  resize: vertical !important;
+  transition: border-color 0.15s ease !important;
+}
+
+.vod-admin-field input:focus,
+.vod-admin-field textarea:focus {
+  border-color: var(--ns-brand-crimson, #e11d48) !important;
+}
+
+.vod-admin-actions-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+}
+
+.vod-admin-status-text {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.vod-admin-divider {
+  height: 1px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  margin: 4px 0 !important;
+}
+
+/* VOD Chat & Comments Split Panel (Matching Live twitch_watch 50/50) */
+body.page-vod .chat-panel.chat-panel-split {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  min-height: 0 !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .chat-split-col {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 50% !important;
+  min-width: 0 !important;
+  min-height: 180px !important;
+  height: 50% !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .chat-split-twitch {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .chat-split-col .chat-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 16px !important;
+  background: var(--tube-surface, #0d0d0d) !important;
+  border-bottom: 1px solid rgba(206, 232, 255, 0.08) !important;
+  color: var(--tube-text, #fff) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .chat-split-col .chat-header span {
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .chat-split-col .chat-list {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 10px 8px 18px !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .chat-filter-bar {
+  flex-shrink: 0 !important;
+}
+
+body.page-vod .chat-panel.chat-panel-split .tube-chat-compose,
+body:is(.page-twitch-watch, .page-twitch-watch-mobile) .tube-chat-compose {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+  min-height: 48px !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+/* Full Viewport Height Desktop Player & Chat (Standard everywhere) */
+@media (min-width: 1024px) {
+  html:has(body:is(.page-vod, .page-live, .page-twitch-watch)),
+  body:is(.page-vod, .page-live, .page-twitch-watch) {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) .ns-command-rail {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 68px !important;
+    height: 100vh !important;
+    font-size: 14px !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) .main {
+    margin-left: 68px !important;
+    width: calc(100vw - 68px) !important;
+    max-width: calc(100vw - 68px) !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    box-sizing: border-box !important;
+    padding: 16px 24px 16px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    font-size: 14px !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) .content {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 380px !important;
+    gap: 16px !important;
+    overflow: hidden !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) .main-col {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    gap: 12px !important;
+    overflow: hidden !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) .player-wrapper,
+  body:is(.page-vod, .page-live, .page-twitch-watch) .twitch-embed-wrapper {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: auto !important;
+    background: #000 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) :is(.player-wrapper, .twitch-embed-wrapper) :is(video, iframe) {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    border: none !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) :is(.vod-details, .twitch-details) {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+    overflow: visible !important;
+  }
+  body:is(.page-vod, .page-live, .page-twitch-watch) .chat-panel {
+    height: 100% !important;
+    max-height: 100% !important;
+    top: 0 !important;
+  }
+}
+.twitch-player-embed-box,
+.twitch-player-embed-box iframe {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  display: block !important;
+}
+
+
+/* ==========================================================================
+   Pfeiler 5: App-Shell Dynamic Viewport (100dvh) & Timeline Heatmap Canvas
+   ========================================================================== */
+
+@supports (height: 100dvh) {
+  body:is(.page-vod, .page-live, .page-twitch-watch),
+  .content,
+  .main,
+  .tube-layout {
+    min-height: 100dvh !important;
+  }
+  
+  @media (max-width: 960px) {
+    .chat-panel {
+      max-height: calc(100dvh - 60px) !important;
+    }
+  }
+}
+
+.vod-timeline-heatmap-bar {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  background: rgba(18, 20, 28, 0.85);
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08));
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.vod-timeline-heatmap-bar:hover {
+  border-color: var(--ns-border-medium, rgba(255, 255, 255, 0.2));
+}
+
+.vod-heatmap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.vod-heatmap-pins {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.vod-heatmap-pin {
+  position: absolute;
+  top: 1px;
+  width: 4px;
+  height: 12px;
+  border-radius: 2px;
+  background: #f59e0b;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.vod-heatmap-pin:hover {
+  transform: translateX(-50%) scaleY(1.3);
+  background: #fbbf24;
+  z-index: 2;
+}
+
+
+/* ==========================================================================
+   NEBULA: COSMIC STREAMING DESIGN SYSTEM
+   ========================================================================== */
+
+/* Buttons: Cosmic Glow & Gradients */
+.ns-btn-primary,
+.nebula-btn-primary {
+  background: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  border-radius: var(--ns-radius-md) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 16px rgba(77, 99, 255, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.ns-btn-primary:hover,
+.nebula-btn-primary:hover {
+  background: linear-gradient(135deg, #5B70FF 0%, #A276FF 100%) !important;
+  box-shadow: 0 6px 24px rgba(77, 99, 255, 0.6), 0 0 12px rgba(187, 120, 255, 0.4) !important;
+  transform: translateY(-1px);
+  color: #FFFFFF !important;
+}
+
+.ns-btn-secondary,
+.nebula-btn-secondary {
+  background-color: var(--nebula-bg-card, #151F33) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  color: var(--nebula-text-main, #F3F5FC) !important;
+  border-radius: var(--ns-radius-md) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none !important;
+}
+
+.ns-btn-secondary:hover,
+.nebula-btn-secondary:hover {
+  background-color: var(--nebula-bg-active, #202C48) !important;
+  border-color: var(--nebula-accent-primary, #4D63FF) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* Command Rail Brand Glyph with Cosmic Glow */
+.ns-brand-glyph {
+  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 0 16px rgba(77, 99, 255, 0.5) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+.ns-brand-glyph:hover {
+  box-shadow: 0 0 24px rgba(147, 101, 255, 0.7) !important;
+  transform: scale(1.05);
+}
+
+.ns-rail-item.is-active {
+  color: var(--nebula-accent-primary, #4D63FF) !important;
+  background-color: rgba(77, 99, 255, 0.15) !important;
+  border-color: rgba(77, 99, 255, 0.4) !important;
+  box-shadow: 0 0 12px rgba(77, 99, 255, 0.25) !important;
+}
+
+.ns-rail-item.is-active::before {
+  background-color: var(--nebula-accent-primary, #4D63FF) !important;
+  box-shadow: 0 0 8px var(--nebula-accent-primary, #4D63FF) !important;
+}
+
+/* NEBULA Cards & Panels */
+.ns-card-panel,
+.ns-streamer-card,
+.vod-details,
+.chat-panel,
+.nebula-panel {
+  background: var(--nebula-bg-surface, #111A2B) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  border-radius: var(--ns-radius-lg) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.ns-streamer-card:hover {
+  border-color: var(--nebula-accent-primary, #4D63FF) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(77, 99, 255, 0.2) !important;
+}
+
+/* Telemetry & Metrics */
+.ns-telemetry-bar {
+  background: var(--nebula-bg-surface, #111A2B) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  border-radius: var(--ns-radius-md) !important;
+}
+
+/* Status Pills */
+.ns-pill-live,
+.nebula-live-badge {
+  background: rgba(240, 68, 88, 0.18) !important;
+  border: 1px solid rgba(240, 68, 88, 0.45) !important;
+  color: #F04458 !important;
+  font-weight: 700 !important;
+  border-radius: var(--ns-radius-full) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nebula-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #F04458;
+  box-shadow: 0 0 8px #F04458;
+  animation: nebula-pulse 1.8s infinite;
+}
+
+@keyframes nebula-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.ns-pill-offline {
+  background: rgba(117, 131, 157, 0.15) !important;
+  border-color: rgba(117, 131, 157, 0.3) !important;
+  color: #A2AEC8 !important;
+}
+
+.ns-pill-drive {
+  background: rgba(105, 201, 255, 0.15) !important;
+  border-color: rgba(105, 201, 255, 0.4) !important;
+  color: #69C9FF !important;
+}
+
+/* Storage Meter Bar */
+.ns-meter-fill {
+  background: linear-gradient(90deg, #4D63FF 0%, #BB78FF 100%) !important;
+  box-shadow: 0 0 10px rgba(147, 101, 255, 0.4) !important;
+}
+
+/* Input Fields & Selects */
+.ns-input-field,
+input[type="text"],
+input[type="password"],
+input[type="search"],
+select {
+  background: var(--nebula-bg-surface, #111A2B) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  color: var(--nebula-text-main, #F3F5FC) !important;
+  border-radius: var(--ns-radius-md) !important;
+}
+
+.ns-input-field:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+select:focus {
+  border-color: var(--nebula-accent-primary, #4D63FF) !important;
+  box-shadow: 0 0 12px rgba(77, 99, 255, 0.4) !important;
+  outline: none !important;
+}
+
+/* =========================================================
+   NEBULA COMPONENT SPECIFICATIONS
+   ========================================================= */
+
+/* Hero Banner */
+.nebula-hero {
+  position: relative;
+  background: linear-gradient(135deg, rgba(17, 26, 43, 0.95) 0%, rgba(11, 18, 32, 0.98) 100%),
+              radial-gradient(circle at 85% 20%, rgba(147, 101, 255, 0.25) 0%, transparent 65%);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.nebula-hero-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(77, 99, 255, 0.35) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.nebula-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+}
+
+.nebula-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(77, 99, 255, 0.15);
+  border: 1px solid rgba(77, 99, 255, 0.35);
+  border-radius: var(--ns-radius-full);
+  color: #69C9FF;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+
+.nebula-hero-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #FFFFFF;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.5px;
+}
+
+.nebula-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  color: var(--nebula-text-secondary, #A2AEC8);
+  font-size: 14px;
+}
+
+.nebula-hero-streamer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.nebula-hero-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--nebula-accent-primary, #4D63FF);
+  background: #151F33;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFF;
+}
+
+.nebula-hero-cat {
+  padding: 2px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #BB78FF;
+  font-size: 13px;
+}
+
+/* VOD Discovery Grid */
+.nebula-vod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.nebula-vod-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--nebula-bg-card, #151F33);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.nebula-vod-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--nebula-accent-primary, #4D63FF);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(77, 99, 255, 0.25);
+}
+
+.nebula-vod-thumb-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #0B1220;
+  overflow: hidden;
+}
+
+.nebula-vod-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.nebula-vod-card:hover .nebula-vod-thumb-img {
+  transform: scale(1.04);
+}
+
+.nebula-vod-duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  background: rgba(7, 11, 20, 0.85);
+  backdrop-filter: none;
+  color: #FFFFFF;
+  font-family: var(--ns-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nebula-vod-streamer-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  background: rgba(17, 26, 43, 0.85);
+  backdrop-filter: none;
+  color: #A2AEC8;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nebula-vod-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 11, 20, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nebula-vod-card:hover .nebula-vod-play-overlay {
+  opacity: 1;
+}
+
+.nebula-vod-play-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--nebula-gradient-primary, linear-gradient(135deg, #4D63FF 0%, #9365FF 100%));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(77, 99, 255, 0.6);
+  color: #FFFFFF;
+}
+
+.nebula-vod-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.nebula-vod-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--nebula-text-main, #F3F5FC);
+  margin: 0 0 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nebula-vod-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--nebula-text-muted, #75839D);
+}
+
+/* Section Header */
+.nebula-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 28px 0 16px 0;
+}
+
+.nebula-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.nebula-section-link {
+  font-size: 13px;
+  color: var(--nebula-accent-primary, #4D63FF);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.nebula-section-link:hover {
+  color: var(--nebula-accent-highlight, #BB78FF);
+}
+
+/* Two-Column Home Grid: Main content + Community sidebar */
+.nebula-home-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  max-width: 100%;
+  min-width: 0;
+  gap: 28px;
+}
+
+@media (max-width: 1200px) {
+  .nebula-home-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Right Rail Widgets */
+.nebula-side-widget {
+  background: var(--nebula-bg-surface, #111A2B);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.nebula-widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(38, 52, 79, 0.6);
+}
+
+.nebula-widget-head h3 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.nebula-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nebula-category-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--nebula-bg-card, #151F33);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--nebula-text-main, #F3F5FC);
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.nebula-category-item:hover {
+  background: var(--nebula-bg-active, #202C48);
+  border-color: var(--nebula-accent-primary, #4D63FF);
+  transform: translateX(2px);
+}
+
+.nebula-category-count {
+  font-family: var(--ns-font-mono);
+  font-size: 11px;
+  color: #A2AEC8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Top Global Search */
+.ns-search-box {
+  display: flex;
+  align-items: center;
+  background: var(--nebula-bg-surface, #111A2B);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 10px;
+  padding: 6px 14px;
+  width: 100%;
+  max-width: 440px;
+  transition: all 0.2s ease;
+}
+
+.ns-search-box:focus-within {
+  border-color: var(--nebula-accent-primary, #4D63FF);
+  box-shadow: 0 0 12px rgba(77, 99, 255, 0.35);
+}
+
+.ns-search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 13px;
+  width: 100%;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 2px 8px;
+}
+
+.ns-search-box svg {
+  color: var(--nebula-text-muted, #75839D);
+  flex-shrink: 0;
+}
+
+
+/* Strict Protection: Never apply CRT filters or scanlines over video content! */
+video, #vodPlayer, .player-wrapper video, .twitch-embed-wrapper iframe {
+  filter: none !important;
+  pointer-events: auto !important;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* =========================================================
+   7. RESPONSIVE MOBILE & TABLET LAYOUTS
+   ========================================================= */
+/* ==========================================================================
+   MOBILE UI/UX OVERHAUL & RESPONSIVE HARDENING (< 768px)
+   ========================================================================== */
+
+/* Hide Mobile Global Nav on Desktop */
+.mobile-global-nav {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --ns-rail-width: 0px !important;
+  }
+
+  /* 1. Global Viewport & Container Containment */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    -webkit-text-size-adjust: 100% !important;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+  }
+
+  /* 2. Desktop Rail Suppression & Content Margin Reset */
+  .ns-command-rail,
+  aside.ns-command-rail,
+  body .ns-command-rail,
+  body.ns-platform .ns-command-rail {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+  }
+
+  body.ns-platform > .main,
+  body.ns-platform .main,
+  body.ns-platform .ns-app-main,
+  body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .main,
+  body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-app-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 3. Global Padding Protection against Fixed Bottom Bar Overlap */
+  body,
+  .ns-workspace-content,
+  .main,
+  .mobile-shell,
+  .content,
+  main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 16px)) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 4. Fluid Header & Search Box Stacking */
+  .ns-workspace-header {
+    padding: 12px 14px !important;
+    height: auto !important;
+    min-height: 56px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    background: rgba(7, 11, 20, 0.94) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid var(--nebula-border, #26344F) !important;
+    box-sizing: border-box !important;
+  }
+
+  .ns-header-title-block {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .ns-header-title-block h1 {
+    font-size: 18px !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ns-header-title-block p {
+    font-size: 12px !important;
+    margin: 2px 0 0 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ns-search-box {
+    order: 3 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .ns-header-actions {
+    flex: 0 0 auto !important;
+  }
+
+  /* 5. Mobile Global Navigation Bar (Pixel-Perfect, Zero-Overlap) */
+  .mobile-global-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 58px !important;
+    background: rgba(7, 11, 20, 0.95) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: 1px solid var(--nebula-border, #26344F) !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    z-index: 999999 !important;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)) 8px !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .mobile-global-nav a,
+  .mobile-global-nav button {
+    background: transparent !important;
+    border: none !important;
+    color: var(--nebula-text-muted, #75839D) !important;
+    text-decoration: none !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    font-family: var(--ns-font-sans, inherit) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    flex: 1 1 0 !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    padding: 4px 6px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    transition: color 80ms ease, transform 80ms ease !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-global-nav a:hover,
+  .mobile-global-nav button:hover {
+    color: var(--nebula-text-primary, #F3F5FC) !important;
+  }
+
+  .mobile-global-nav a.active {
+    color: #4D63FF !important;
+    font-weight: 700 !important;
+  }
+
+  .mobile-global-nav svg {
+    width: 22px !important;
+    height: 22px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 2 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    transition: transform 80ms ease !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+  }
+
+  .mobile-global-nav a.active svg {
+    transform: scale(1.1) !important;
+    stroke: #4D63FF !important;
+    filter: drop-shadow(0 0 6px rgba(77, 99, 255, 0.6)) !important;
+  }
+
+  .mobile-global-nav a:active,
+  .mobile-global-nav button:active {
+    transform: scale(0.92) !important;
+    transition-duration: 0ms !important;
+  }
+
+  .mobile-global-nav span {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  /* 6. Form Inputs & Select Auto-Zoom Suppression */
+  input[type="text"],
+  input[type="search"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important; /* 16px eliminates iOS zoom */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  form {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 7. Grid & Flexbox Mobile Hardening */
+  .ns-ops-grid,
+  .nebula-home-layout,
+  .ns-video-grid,
+  .ns-streamer-grid,
+  .channels-grid,
+  .admin-grid,
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 16px !important;
+  }
+
+  /* 8. Card & Container Protection */
+  .card,
+  .ns-video-card,
+  .nebula-card,
+  .vod-card,
+  .streamer-card,
+  .settings-card,
+  .nebula-profile-card,
+  .nebula-hero,
+  .nebula-admin-box,
+  .mobile-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .nebula-profile-body {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+
+  .nebula-profile-details {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 12px !important;
+  }
+
+  .nebula-profile-tags {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* 9. VOD Player & Detail Panels (Stacking without side chat crushing) */
+  body.page-vod .content,
+  body.page-live .content,
+  body.page-twitch-watch .content {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    gap: 16px !important;
+  }
+
+  body.page-vod .main-col,
+  body.page-live .main-col,
+  body.page-twitch-watch .main-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  body.page-vod .player-wrapper,
+  body.page-live .player-wrapper,
+  body.page-twitch-watch .player-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+  }
+
+  body.page-vod .vod-details,
+  body.page-live .vod-details,
+  body.page-twitch-watch .vod-details {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px 16px !important;
+  }
+
+  body.page-vod .vod-file-actions,
+  body.page-live .vod-file-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  body.page-vod .chat-panel,
+  body.page-live .chat-panel,
+  body.page-twitch-watch .chat-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 450px !important;
+    min-height: 350px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 10. Login Modal Mobile Hardening */
+  body.page-login .nebula-login-wrapper {
+    padding: 16px 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.page-login .nebula-login-modal {
+    padding: 28px 18px 24px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 16px !important;
+  }
+
+  /* 11. Text Truncation & Ellipsis Protection */
+  .vod-title,
+  .streamer-title,
+  .card-title,
+  .video-title,
+  .nebula-profile-name,
+  .ns-video-card h3,
+  .ns-video-card h4,
+  .nebula-vod-card h4 {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+  }
+
+  /* 12. Tables & Code Blocks Horizontal Scrolling */
+  table,
+  .table-responsive,
+  pre,
+  code {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* =========================================================
+   NEBULA LOGIN PORTAL STYLING
+   ========================================================= */
+body.page-login {
+  background: var(--nebula-bg-root, #070B14) !important;
+  color: var(--nebula-text-main, #F3F5FC) !important;
+}
+
+body.page-login .login-shell {
+  max-width: 960px;
+}
+
+body.page-login .eyebrow {
+  color: var(--nebula-accent-highlight, #BB78FF) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+body.page-login h1 {
+  color: #FFFFFF !important;
+  text-shadow: 0 0 30px rgba(77, 99, 255, 0.4);
+}
+
+body.page-login .subtitle {
+  color: var(--nebula-text-secondary, #A2AEC8) !important;
+}
+
+body.page-login .login-panel {
+  background: var(--nebula-bg-surface, #111A2B) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(77, 99, 255, 0.2) !important;
+}
+
+body.page-login .login-form label {
+  color: var(--nebula-text-secondary, #A2AEC8) !important;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+body.page-login input {
+  background: var(--nebula-bg-card, #151F33) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  color: #FFFFFF !important;
+  border-radius: 8px !important;
+}
+
+body.page-login input:focus {
+  border-color: var(--nebula-accent-primary, #4D63FF) !important;
+  box-shadow: 0 0 12px rgba(77, 99, 255, 0.4) !important;
+}
+
+body.page-login button#login-submit,
+body.page-login button[type="submit"] {
+  background: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(77, 99, 255, 0.5) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer;
+}
+
+body.page-login button#login-submit:hover,
+body.page-login button[type="submit"]:hover {
+  background: linear-gradient(135deg, #5B70FF 0%, #A276FF 100%) !important;
+  box-shadow: 0 6px 28px rgba(77, 99, 255, 0.7), 0 0 16px rgba(187, 120, 255, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+body.page-login .login-register {
+  background: rgba(11, 18, 32, 0.6) !important;
+  border: 1px solid var(--nebula-border, #26344F) !important;
+  border-radius: 10px !important;
+}
+
+body.page-login .login-register-kicker {
+  color: var(--nebula-accent-highlight, #BB78FF) !important;
+  font-weight: 700 !important;
+}
+/* ==========================================================================
+   NEBULA REBUILD V2 - CORE ENHANCEMENTS
+   ========================================================================== */
+
+/* 1. Ghost Pseudo-Element Suppression on Command Rail */
+/* 1. Ghost Pseudo-Element & Icon Duplicate Suppression on Command Rail */
+.ns-command-rail *::before,
+.ns-command-rail *::after,
+aside.ns-command-rail *::before,
+aside.ns-command-rail *::after,
+.ns-command-rail a::before,
+.ns-command-rail a::after,
+.ns-command-rail button::before,
+.ns-command-rail button::after,
+.ns-command-rail .nav-item::before,
+.ns-command-rail .nav-item::after,
+.ns-command-rail .ns-rail-item::before,
+.ns-command-rail .ns-rail-item::after,
+.ns-command-rail .logout-button::before,
+.ns-command-rail .logout-button::after {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+  background: transparent !important;
+}
+
+/* 2. Enhanced Cinematic Hero Banner (Panel 01) */
+.nebula-hero {
+  position: relative;
+  background: var(--nebula-bg-surface, #111A2B);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 260px;
+}
+
+.nebula-hero-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center right;
+  filter: blur(28px) brightness(0.25);
+  opacity: 0.6;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.nebula-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #070B14 0%, rgba(7, 11, 20, 0.9) 45%, rgba(7, 11, 20, 0.4) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.nebula-hero-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  max-width: 620px;
+}
+
+.nebula-hero-preview-col {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  width: 360px;
+  max-width: 42%;
+}
+
+.nebula-hero-preview-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(77, 99, 255, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), 0 0 20px rgba(77, 99, 255, 0.25);
+  background: #0B1220;
+}
+
+.nebula-hero-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nebula-hero-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(77, 99, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  box-shadow: 0 0 20px rgba(77, 99, 255, 0.6);
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.nebula-hero-preview-frame:hover .nebula-hero-play-icon {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* 3. Streamer Profile (Panel 04) */
+.nebula-profile-card {
+  position: relative;
+  background: var(--nebula-bg-surface, #111A2B);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.nebula-profile-banner {
+  height: 140px;
+  background: linear-gradient(135deg, rgba(77, 99, 255, 0.35) 0%, rgba(147, 101, 255, 0.3) 50%, rgba(11, 18, 32, 0.95) 100%),
+              radial-gradient(circle at 80% 20%, rgba(105, 201, 255, 0.25) 0%, transparent 65%);
+  position: relative;
+}
+
+.nebula-profile-body {
+  padding: 0 28px 24px;
+  margin-top: -46px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.nebula-profile-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px solid #9365FF;
+  box-shadow: 0 0 24px rgba(147, 101, 255, 0.5);
+  background: #151F33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: #FFF;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.nebula-profile-details {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.nebula-profile-name {
+  font-size: 26px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.nebula-profile-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--nebula-text-secondary, #A2AEC8);
+}
+
+.nebula-admin-box {
+  background: rgba(11, 18, 32, 0.7);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.nebula-btn-danger {
+  background: rgba(240, 68, 88, 0.15) !important;
+  color: #F04458 !important;
+  border: 1px solid rgba(240, 68, 88, 0.4) !important;
+}
+.nebula-btn-danger:hover {
+  background: rgba(240, 68, 88, 0.3) !important;
+  border-color: #F04458 !important;
+  box-shadow: 0 0 12px rgba(240, 68, 88, 0.4) !important;
+}
+
+/* 4. VOD Player Fallback & Chat Initial State (Panel 03) */
+.vod-player-error-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 11, 20, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 10;
+  color: #F3F5FC;
+  text-align: center;
+  padding: 24px;
+}
+
+.vod-chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  padding: 32px 20px;
+  text-align: center;
+  color: #75839D;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 5. Centered NEBULA Login Portal (Panel 10) */
+.nebula-login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #070B14;
+  background-image: radial-gradient(circle at 50% 25%, rgba(147, 101, 255, 0.18) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 80%, rgba(77, 99, 255, 0.14) 0%, transparent 55%);
+  padding: 24px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+}
+
+.nebula-login-modal {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(17, 26, 43, 0.9);
+  backdrop-filter: none;
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 20px;
+  padding: 40px 32px 32px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(77, 99, 255, 0.15);
+  text-align: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.nebula-login-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%);
+  box-shadow: 0 0 24px rgba(147, 101, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: #FFF;
+  margin-bottom: 14px;
+}
+
+.nebula-login-h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFF;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.nebula-login-sub {
+  font-size: 13px;
+  color: var(--nebula-text-secondary, #A2AEC8);
+  margin: 0 0 24px 0;
+  line-height: 1.45;
+}
+
+.nebula-btn-discord {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 13px 20px;
+  background: #5865F2;
+  color: #FFFFFF !important;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 20px rgba(88, 101, 242, 0.35);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.nebula-btn-discord:hover {
+  background: #4752C4;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(88, 101, 242, 0.5);
+}
+
+.nebula-login-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 18px;
+  color: #75839D;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.nebula-login-sep::before,
+.nebula-login-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #26344F;
+}
+
+.nebula-login-footer-tag {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #75839D;
+}
+
+/* 6. Mobile Optimization (Panel 07) */
+@media (max-width: 768px) {
+  .nebula-hero {
+    flex-direction: column !important;
+    padding: 20px !important;
+    gap: 16px !important;
+  }
+  .nebula-hero-preview-col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .nebula-profile-body {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin-top: -40px !important;
+  }
+  .nebula-profile-details {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+}
+
+.vod-player-error-overlay[hidden] { display: none !important; }
+
+
+/* ==========================================================================
+   ULTRA-LOW-LATENCY & INSTANT-FEEDBACK ENGINE (< 16ms Reaction)
+   ========================================================================== */
+
+/* 1. Global Touch & Tap Latency Elimination */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-danger,
+.ns-btn,
+.nebula-btn,
+.action-btn,
+.tab-btn,
+a.button,
+.nav-btn,
+.nebula-streamer-card,
+.nebula-vod-card,
+.vod-card,
+.nebula-card,
+.sidebar-link,
+.channel-item,
+.chip-filter {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 80ms cubic-bezier(0, 0, 0.2, 1),
+              background-color 80ms ease,
+              border-color 80ms ease,
+              box-shadow 80ms ease,
+              filter 80ms ease;
+}
+
+/* 2. Instant Zero-Latency Active States (< 16ms Frame Time) */
+button:active,
+input[type="button"]:active,
+input[type="submit"]:active,
+.btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-ghost:active,
+.btn-danger:active,
+.ns-btn:active,
+.nebula-btn:active,
+.action-btn:active,
+.tab-btn:active,
+a.button:active,
+.nav-btn:active,
+.sidebar-link:active,
+.chip-filter:active,
+.is-active-press {
+  transform: scale(0.97) translateY(1px) !important;
+  transition-duration: 0ms !important;
+  filter: brightness(1.15) !important;
+}
+
+/* Card Press Instant Feedback */
+.nebula-streamer-card:active,
+.nebula-vod-card:active,
+.vod-card:active,
+.nebula-card:active,
+.card:active {
+  transform: scale(0.985) translateY(1px) !important;
+  transition-duration: 0ms !important;
+  filter: brightness(1.08) !important;
+}
+
+/* GPU Rendering Hint for Backdrop Filters */
+.nebula-glass-card,
+.nebula-profile-card,
+.nebula-sidebar,
+.ns-workspace-header {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+
+/* Direct In-Place Interaction for Banner and Avatar */
+.nebula-profile-banner.is-editable {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.nebula-profile-banner.is-editable:hover {
+  filter: brightness(1.08);
+}
+
+.nebula-banner-edit-badge {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: rgba(17, 26, 43, 0.82);
+  border: 1px solid rgba(187, 120, 255, 0.5);
+  backdrop-filter: none;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  z-index: 5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.nebula-profile-banner.is-editable:hover .nebula-banner-edit-badge {
+  background: rgba(187, 120, 255, 0.35);
+  border-color: #BB78FF;
+  box-shadow: 0 0 16px rgba(187, 120, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+.nebula-profile-avatar.is-editable {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nebula-profile-avatar.is-editable:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 28px rgba(187, 120, 255, 0.75);
+}
+
+.nebula-avatar-edit-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(7, 11, 20, 0.78);
+  backdrop-filter: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #FFF;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 4;
+}
+
+.nebula-profile-avatar.is-editable:hover .nebula-avatar-edit-overlay {
+  opacity: 1;
+}
+
+/* Modal Dialogs */
+.nebula-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 8, 16, 0.82);
+  backdrop-filter: none;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.nebula-modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--nebula-bg-surface, #111A2B);
+  border: 1px solid var(--nebula-border, #26344F);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(187, 120, 255, 0.15);
+  padding: 24px;
+  position: relative;
+  animation: nebulaModalFadeIn 0.15s ease;
+}
+
+@keyframes nebulaModalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
+/* === NS-PERF-AND-PARITY-2026 === */
+html, body.ns-platform {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+.ns-app-shell {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.ns-app-main {
+  min-width: 0 !important;
+  max-width: calc(100vw - var(--ns-rail-width, 0px)) !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.ns-workspace-content,
+.nebula-home-layout,
+.nebula-main-col,
+.nebula-side-rail {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+details.streamer-menu:not([open]) > .streamer-menu-popover {
+  display: none !important;
+}
+details.streamer-menu[open] > .streamer-menu-popover {
+  display: flex !important;
+}
+
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts dt {
+  text-transform: none !important;
+}
+
+@media (max-width: 1024px) {
+  .ns-app-main {
+    max-width: 100vw !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* Global Dialog/Modal Reachability (PC WebUI & PC App 1280x720 / 1366x768) */
+.nebula-modal-card,
+.rbac-modal,
+.vod-clip-panel,
+.vod-admin-dialog {
+  max-height: calc(100vh - 32px) !important;
+  max-width: calc(100vw - 32px) !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Mobile-UI Parity with TV View (Breakpoints <= 768px & .is-mobile-view) */
+@media (max-width: 768px) {
+  .ns-command-rail,
+  .ns-top-bar,
+  .nebula-page-title,
+  .nebula-hero-play-icon,
+  .nebula-empty-live-banner,
+  .nebula-vod-play-overlay,
+  .nebula-side-rail,
+  .vod-header-titles .kicker-type,
+  .vod-description,
+  .mobile-vod-description,
+  #btnAdminMetaToggle,
+  #btnOpenEditor,
+  #btnTranscriptToggle,
+  #vodTranscriptPanel,
+  #vodAdminMetaOverlay,
+  .chat-filter-bar,
+  .vod-comments-split-col,
+  #vodCommentsSection,
+  #chatTabComments,
+  #chatPaneComments,
+  .twitch-monitored-pill,
+  #self-password-modal,
+  form[action*="/remux"],
+  a[download],
+  button[onclick*="copyShareUrl"],
+  button[onclick*="shareToDiscord"] {
+    display: none !important;
+  }
+}
+
+/* Compact Side-Rail Streamer Rows (Overrides legacy style.css 4-column grid) */
+body.page-index .nebula-side-rail .ns-compact-streamer-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+body.page-index .nebula-side-rail .streamer-row {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  gap: 8px !important;
+  border: 1px solid rgba(38, 52, 79, 0.55) !important;
+  border-radius: 8px !important;
+  background: rgba(11, 18, 32, 0.55) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+body.page-index .nebula-side-rail .streamer-row:hover {
+  background: rgba(21, 31, 51, 0.85) !important;
+  border-color: rgba(77, 99, 255, 0.45) !important;
+}
+body.page-index .nebula-side-rail .ns-compact-streamer-link {
+  color: #F3F6FF !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+body.page-index .nebula-side-rail .streamer-menu {
+  flex: 0 0 auto !important;
+  position: relative !important;
+  margin: 0 !important;
+}
+body.page-index .nebula-side-rail .streamer-menu summary {
+  width: 26px !important;
+  min-width: 26px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  color: #A2AEC8 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  list-style: none !important;
+}
+body.page-index .nebula-side-rail .streamer-menu summary:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+}
+body.page-index .nebula-side-rail details.streamer-menu:not([open]) > .streamer-menu-popover {
+  display: none !important;
+}
+body.page-index .nebula-side-rail details.streamer-menu[open] > .streamer-menu-popover {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  position: absolute !important;
+  right: 0 !important;
+  left: auto !important;
+  top: calc(100% + 4px) !important;
+  bottom: auto !important;
+  z-index: 1200 !important;
+  min-width: 140px !important;
+  max-width: 180px !important;
+  background: #0E1626 !important;
+  border: 1px solid #26344F !important;
+  border-radius: 8px !important;
+  padding: 5px !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.75) !important;
+}
+
+body.page-index .nebula-side-rail .nebula-side-widget {
+  overflow: visible !important;
+  position: relative !important;
+}
+body.page-index .nebula-side-rail .nebula-side-widget:has(.streamer-menu[open]) {
+  z-index: 1400 !important;
+}
+body.page-index .nebula-side-rail .streamer-row {
+  z-index: 1 !important;
+}
+body.page-index .nebula-side-rail .streamer-row:has(.streamer-menu[open]) {
+  z-index: 1500 !important;
+}
+
+/* =========================================================
+   NEBULA PAGINATION (SEITEN-NAVIGATION) - ALL VIEWPORTS
+   ========================================================= */
+.ns-pagination {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px 16px !important;
+  padding: 14px 18px !important;
+  margin: 20px 0 !important;
+  background: rgba(17, 26, 43, 0.85) !important;
+  border: 1px solid rgba(38, 52, 79, 0.85) !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.ns-pagination-top {
+  padding: 10px 16px !important;
+  margin: 0 0 18px 0 !important;
+}
+.ns-pagination-info {
+  font-size: 13px !important;
+  color: #A2AEC8 !important;
+  white-space: nowrap !important;
+}
+.ns-pagination-info strong {
+  color: #F3F6FF !important;
+  font-weight: 700 !important;
+}
+.ns-pagination-controls {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: auto !important;
+  max-width: 100% !important;
+}
+.ns-page-btn,
+body.page-streamer .ns-pagination .pagination-page,
+body.page-streamer .ns-pagination .pagination-nav,
+body.page-mobile-streamer .ns-pagination .pagination-page {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 36px !important;
+  height: 34px !important;
+  padding: 0 11px !important;
+  border-radius: 8px !important;
+  background: rgba(11, 18, 32, 0.85) !important;
+  border: 1px solid #26344F !important;
+  color: #D2DCF0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+}
+.ns-page-btn:hover,
+body.page-streamer .ns-pagination .pagination-page:hover,
+body.page-streamer .ns-pagination .pagination-nav:hover,
+body.page-mobile-streamer .ns-pagination .pagination-page:hover {
+  background: rgba(77, 99, 255, 0.22) !important;
+  border-color: #4D63FF !important;
+  color: #FFFFFF !important;
+}
+.ns-page-btn.is-active,
+.ns-page-btn.is-current,
+body.page-streamer .ns-pagination .pagination-page.is-current,
+body.page-mobile-streamer .ns-pagination .pagination-page.is-current {
+  background: linear-gradient(135deg, #4D63FF 0%, #7C4DFF 100%) !important;
+  border-color: #69C9FF !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 10px rgba(77, 99, 255, 0.4) !important;
+  cursor: default !important;
+}
+.ns-page-ellipsis {
+  color: #75839D !important;
+  padding: 0 4px !important;
+  font-size: 13px !important;
+}
+.ns-page-jump {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+}
+@media (max-width: 768px) {
+  .ns-pagination {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  .ns-pagination-info {
+    text-align: center !important;
+    white-space: normal !important;
+  }
+  .ns-page-jump {
+    justify-content: center !important;
+  }
+}
+
+/* Dashboard Realtime VOD Sync Glow */
+@keyframes vodCardPulse {
+  0% { transform: scale(0.97); box-shadow: 0 0 0 rgba(77, 99, 255, 0.6); }
+  50% { transform: scale(1.02); box-shadow: 0 0 24px rgba(77, 99, 255, 0.45); }
+  100% { transform: scale(1); box-shadow: none; }
+}
+
+.ns-vod-fresh-enter {
+  animation: vodCardPulse 1.2s ease-out;
+  border-color: rgba(77, 99, 255, 0.7) !important;
+}

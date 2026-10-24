@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Traffic – Admin</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-admin page-admin-traffic {{ theme_class }} ns-platform">
+
+        {% include 'components/sidebar.html' %}
+
+    <div class="main">
+      <div class="header traffic-header">
+        <div>
+          <h1 class="page-title">Traffic-Übersicht</h1>
+          <p class="traffic-lead">Nutzer A–Z · letzte {{ overview.days }} Tage ({{ overview.since }} – {{ overview.until }}). Heatmap = Anwesenheit, Balken = Login/Seiten/Video/Chat je Tag.</p>
+        </div>
+        <a class="btn-primary traffic-back" href="{{ url_for('admin_view') }}">Zurück zur Benutzerverwaltung</a>
+      </div>
+
+      <div class="traffic-toolbar">
+        <div class="traffic-legend" aria-label="Legende">
+          <span><i class="swatch logins"></i> Login</span>
+          <span><i class="swatch pages"></i> Seiten</span>
+          <span><i class="swatch media"></i> Video</span>
+          <span><i class="swatch chats"></i> Chat</span>
+          <span class="traffic-heat-legend"><i class="heat-swatch l1"></i><i class="heat-swatch l2"></i><i class="heat-swatch l3"></i><i class="heat-swatch l4"></i> Intensität</span>
+        </div>
+        <div class="traffic-filters">
+          <a class="chip{% if days == 30 %} is-on{% endif %}" href="{{ url_for('admin_traffic_view', days=30, show=show) }}">30 Tage</a>
+          <a class="chip{% if days == 90 %} is-on{% endif %}" href="{{ url_for('admin_traffic_view', days=90, show=show) }}">90 Tage</a>
+          <a class="chip{% if show == 'all' %} is-on{% endif %}" href="{{ url_for('admin_traffic_view', days=days, show='all') }}">Alle ({{ overview.cards|length }})</a>
+          <a class="chip{% if show == 'inactive' %} is-on{% endif %}" href="{{ url_for('admin_traffic_view', days=days, show='inactive') }}">Inaktiv ({{ overview.inactive_count }})</a>
+        </div>
+      </div>
+
+      {% if not cards %}
+      <div class="panel">
+        <p class="muted" style="margin:0;">Keine Konten in diesem Filter.</p>
+      </div>
+      {% else %}
+      <div class="traffic-grid">
+        {% for card in cards %}
+        <article class="panel traffic-card{% if card.inactive %} is-inactive{% endif %}{% if not card.active %} is-disabled{% endif %}">
+          <header class="traffic-card-head">
+            <div>
+              <h3>{{ card.username }}</h3>
+              <div class="traffic-meta">
+                {{ role_label(card.role) }}
+                · zuletzt {{ card.last_seen_label }}
+                {% if card.inactive %}<span class="traffic-pill warn">≥30 Tage still</span>{% endif %}
+                {% if not card.active %}<span class="traffic-pill">deaktiviert</span>{% endif %}
+              </div>
+            </div>
+            <div class="traffic-total" title="Summe im Zeitraum">{{ card.totals.total }}</div>
+          </header>
+
+          <div class="traffic-eval">
+            <div><span>Aktiv</span><strong>{{ card.active_days }}/{{ overview.days }}</strong></div>
+            <div><span>Ø aktiv</span><strong>{{ card.avg_active }}</strong></div>
+            <div><span>Peak</span><strong>{{ card.peak_day_label }}{% if card.peak_day_total %} · {{ card.peak_day_total }}{% endif %}</strong></div>
+            <div><span>Still</span><strong>{{ card.quiet_days }}</strong></div>
+          </div>
+
+          <div class="traffic-heat" role="img" aria-label="Anwesenheit {{ card.username }}">
+            {% for cell in card.heat %}
+            <span class="heat-cell l{{ cell.level }}" title="{{ cell.title }}"></span>
+            {% endfor %}
+          </div>
+
+          <div class="traffic-chart-wrap{% if card.peak <= 0 %} no-scale{% endif %}">
+            {% if card.peak > 0 %}
+            <div class="traffic-chart-scale" aria-hidden="true">
+              <span>{{ card.peak }}</span>
+              <span>0</span>
+            </div>
+            {% endif %}
+            <svg class="traffic-chart" viewBox="0 0 {{ card.chart_width }} {{ card.chart_height }}" width="100%" height="88" preserveAspectRatio="none" role="img" aria-label="Tagesaktivität {{ card.username }}">
+              <line x1="0" y1="{{ card.plot_height }}" x2="{{ card.chart_width }}" y2="{{ card.plot_height }}" class="chart-axis"></line>
+              {% for bar in card.bars %}
+              <g>
+                {% if not bar.stacks %}
+                <rect x="{{ bar.x }}" y="{{ card.plot_height - 2 }}" width="{{ bar.w }}" height="2" rx="1" class="bar-empty"></rect>
+                {% endif %}
+                {% for stack in bar.stacks %}
+                <rect x="{{ bar.x }}" y="{{ stack.y }}" width="{{ bar.w }}" height="{{ stack.h }}" rx="1" class="bar-{{ stack.kind }}">
+                  <title>{{ bar.title }}</title>
+                </rect>
+                {% endfor %}
+              </g>
+              {% endfor %}
+              {% for label in card.axis_labels %}
+              <text x="{{ label.x }}" y="{{ label.y }}" class="chart-label" text-anchor="middle" font-size="9" fill="currentColor" opacity="0.6">{{ label.text }}</text>
+              {% endfor %}
+            </svg>
+          </div>
+
+          {% if card.totals.total > 0 %}
+          <div class="traffic-mix" title="Anteil am Zeitraum">
+            {% if card.shares.logins %}<span class="mix-logins" style="width:{{ card.shares.logins }}%"></span>{% endif %}
+            {% if card.shares.pages %}<span class="mix-pages" style="width:{{ card.shares.pages }}%"></span>{% endif %}
+            {% if card.shares.media %}<span class="mix-media" style="width:{{ card.shares.media }}%"></span>{% endif %}
+            {% if card.shares.chats %}<span class="mix-chats" style="width:{{ card.shares.chats }}%"></span>{% endif %}
+          </div>
+          {% endif %}
+
+          <dl class="traffic-stats">
+            <div><dt>Login</dt><dd>{{ card.totals.logins }}</dd></div>
+            <div><dt>Seiten</dt><dd>{{ card.totals.pages }}</dd></div>
+            <div><dt>Video</dt><dd>{{ card.totals.media }}</dd></div>
+            <div><dt>Chat</dt><dd>{{ card.totals.chats }}</dd></div>
+          </dl>
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>

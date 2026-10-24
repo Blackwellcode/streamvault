@@ -1,0 +1,130 @@
+/* ==========================================================================
+   NACHTSILO TUBE — NEBULA DESIGN SYSTEM TOKENS
+   Theme: Kosmische, cineastische Streaming-Plattform
+   ========================================================================== */
+
+:root {
+  /* 1. NEBULA CORE PALETTE */
+  --nebula-bg-root: #070B14;          /* Haupt-Hintergrund: Tiefes Weltraum-Schwarzblau */
+  --nebula-bg-deep: #0B1220;          /* Zweiter Hintergrund */
+  --nebula-bg-surface: #111A2B;       /* Hauptflächen & Card Panels */
+  --nebula-bg-card: #151F33;          /* Erhöhte Karten */
+  --nebula-bg-active: #202C48;        /* Aktive / Fokussierte Flächen */
+  --nebula-bg-hover: #1A2740;         /* Hover-Zustand */
+
+  /* Borders & Dividers */
+  --nebula-border: #26344F;           /* Feine, dezente Konturen */
+  --nebula-border-subtle: rgba(38, 52, 79, 0.6);
+  --nebula-border-bright: #3B4E73;
+  --nebula-border-glow: rgba(77, 99, 255, 0.4); /* Cosmic Glow */
+
+  /* Primary & Accent Spectrum */
+  --nebula-accent-primary: #4D63FF;   /* Primärer Akzent: Elektrisches Blau */
+  --nebula-accent-secondary: #9365FF; /* Sekundärer Akzent: Nebula-Violett */
+  --nebula-accent-highlight: #BB78FF; /* Violetter Highlight-Akzent */
+  --nebula-accent-magenta: #E45DC5;   /* Dezenter Magenta-Akzent */
+  --nebula-accent-cyan: #69C9FF;      /* Sekundärer Cyan-Akzent */
+
+  /* Status Colors */
+  --nebula-status-live: #F04458;      /* Live-Anzeige (Red) */
+  --nebula-status-success: #48D6A2;   /* Erfolgsstatus (Green/Mint) */
+  --nebula-status-warning: #F2BC61;   /* Warnung (Amber/Gold) */
+
+  /* Typography Colors */
+  --nebula-text-main: #F3F5FC;        /* Haupttext (Strahlendes Eisweiß) */
+  --nebula-text-secondary: #A2AEC8;   /* Sekundärtext */
+  --nebula-text-muted: #75839D;       /* Dezenter Text / Metadaten */
+  --nebula-text-inverse: #070B14;     /* Kontrasttext auf Akzenten */
+
+  /* Typography Stacks */
+  --nebula-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --nebula-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Gradients & Glows */
+  --nebula-gradient-primary: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%);
+  --nebula-gradient-hero: linear-gradient(180deg, rgba(7, 11, 20, 0) 0%, rgba(7, 11, 20, 0.95) 100%);
+  --nebula-gradient-cosmic: radial-gradient(circle at 50% 0%, rgba(147, 101, 255, 0.15) 0%, rgba(7, 11, 20, 0) 70%);
+  --nebula-glow-blue: 0 0 20px rgba(77, 99, 255, 0.35);
+  --nebula-glow-purple: 0 0 20px rgba(147, 101, 255, 0.35);
+  --nebula-glow-live: 0 0 12px rgba(240, 68, 88, 0.55);
+
+  /* Geometry & Rhythm */
+  --nebula-radius-xs: 4px;
+  --nebula-radius-sm: 8px;
+  --nebula-radius-md: 12px;
+  --nebula-radius-lg: 16px;
+  --nebula-radius-full: 9999px;
+  --nebula-rail-width: 72px;
+
+  /* 2. NAMESPACE MAPPINGS FOR SYSTEM INTEGRATION */
+  /* --ns-* mappings */
+  --ns-bg-canvas: var(--nebula-bg-root);
+  --ns-bg-sidebar: var(--nebula-bg-root);
+  --ns-bg-surface: var(--nebula-bg-surface);
+  --ns-bg-surface-raised: var(--nebula-bg-card);
+  --ns-bg-surface-hover: var(--nebula-bg-hover);
+  --ns-bg-surface-active: var(--nebula-bg-active);
+  --ns-border-subtle: var(--nebula-border);
+  --ns-border-medium: var(--nebula-border-bright);
+  --ns-border-strong: var(--nebula-border-glow);
+  --ns-border-focus: var(--nebula-accent-primary);
+  --ns-text-primary: var(--nebula-text-main);
+  --ns-text-secondary: var(--nebula-text-secondary);
+  --ns-text-muted: var(--nebula-text-muted);
+  --ns-text-inverse: var(--nebula-text-inverse);
+  --ns-brand-crimson: var(--nebula-accent-primary);
+  --ns-brand-crimson-hover: var(--nebula-accent-secondary);
+  --ns-brand-crimson-subtle: rgba(77, 99, 255, 0.15);
+  --ns-live-red: var(--nebula-status-live);
+  --ns-recording-amber: var(--nebula-status-warning);
+  --ns-online-green: var(--nebula-status-success);
+  --ns-platform-twitch: var(--nebula-accent-secondary);
+  --ns-drive-blue: var(--nebula-accent-cyan);
+  --ns-font-sans: var(--nebula-font-sans);
+  --ns-font-mono: var(--nebula-font-mono);
+
+  /* --tube-* & generic root */
+  --tube-bg: var(--nebula-bg-root);
+  --tube-surface: var(--nebula-bg-surface);
+  --tube-surface-2: var(--nebula-bg-card);
+  --tube-surface-3: var(--nebula-bg-active);
+  --tube-line: var(--nebula-border);
+  --tube-line-soft: var(--nebula-border-subtle);
+  --tube-text: var(--nebula-text-main);
+  --tube-text-2: var(--nebula-text-secondary);
+  --tube-muted: var(--nebula-text-muted);
+  --tube-accent: var(--nebula-accent-primary);
+  --tube-accent-hover: var(--nebula-accent-secondary);
+  --tube-live: var(--nebula-status-live);
+  --tube-success: var(--nebula-status-success);
+
+  --bg: var(--nebula-bg-root);
+  --bg-deep: var(--nebula-bg-root);
+  --bg-body: var(--nebula-bg-root);
+  --bg-sidebar: var(--nebula-bg-root);
+  --card: var(--nebula-bg-surface);
+  --glass: var(--nebula-bg-card);
+  --border: var(--nebula-border);
+  --primary: var(--nebula-accent-primary);
+  --primary-hover: var(--nebula-accent-secondary);
+  --accent: var(--nebula-accent-secondary);
+  --accent-2: var(--nebula-accent-cyan);
+  --text: var(--nebula-text-main);
+  --text-main: var(--nebula-text-main);
+  --text-muted: var(--nebula-text-secondary);
+  --muted: var(--nebula-text-muted);
+  --danger: var(--nebula-status-live);
+  --success: var(--nebula-status-success);
+
+  /* Backward compatibility aliases */
+  --silo-bg-abyss: var(--nebula-bg-root);
+  --silo-bg-graphite: var(--nebula-bg-surface);
+  --silo-bg-terminal: var(--nebula-bg-card);
+  --silo-bg-surface-raised: var(--nebula-bg-active);
+  --silo-accent-crt: var(--nebula-accent-primary);
+  --silo-accent-purple: var(--nebula-accent-secondary);
+  --silo-accent-cyan: var(--nebula-accent-cyan);
+  --silo-border-base: var(--nebula-border);
+  --silo-text-main: var(--nebula-text-main);
+  --silo-text-muted: var(--nebula-text-secondary);
+}

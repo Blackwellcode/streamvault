@@ -1,0 +1,447 @@
+{% if use_hls_proxy %}
+<script src="{{ url_for('static', filename='mpegts.js', v=ASSET_VERSION) }}" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js'"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script>
+(function() {
+  const playlistUrl = {{ (hls_playlist_url or '')|tojson }};
+  const readyUrl = {{ (hls_ready_url or '')|tojson }};
+  const clientDebugUrl = {{ (hls_client_debug_url or '')|tojson }};
+  const csrfToken = {{ csrf_token()|tojson }};
+  const liveOauth = {{ (live_oauth_enabled or false)|tojson }};
+  const channelName = {{ (channel or '')|tojson }};
+  const debugEnabled = {{ (live_debug or false)|tojson }};
+  if (!playlistUrl && !channelName) return;
+
+  const video = document.getElementById('proxyPlayer');
+  const waitEl = document.getElementById('proxyWait');
+  const waitText = document.getElementById('proxyWaitText');
+  const statusEl = document.getElementById('proxyStatus');
+  if (!video) return;
+
+  const unmuteBtn = document.getElementById('liveTapUnmute');
+  function unmuteLive() {
+    try {
+      video.muted = false;
+      video.defaultMuted = false;
+      video.removeAttribute('muted');
+      if (video.paused) {
+        const p = video.play();
+        if (p && typeof p.catch === 'function') p.catch(function() {});
+      }
+      if (unmuteBtn) unmuteBtn.hidden = true;
+    } catch (_) {}
+  }
+
+  if (unmuteBtn) {
+    unmuteBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      unmuteLive();
+    });
+  }
+  video.addEventListener('click', function() {
+    if (video.muted) unmuteLive();
+    else if (video.paused) video.play();
+  });
+  if (waitEl) {
+    waitEl.addEventListener('click', function() {
+      unmuteLive();
+    });
+  }
+  video.addEventListener('play', function() {
+    if (video.muted && unmuteBtn) unmuteBtn.hidden = false;
+  });
+  video.addEventListener('volumechange', function() {
+    if (!video.muted && unmuteBtn) unmuteBtn.hidden = true;
+  });
+
+  window.NachtSiloMediaSession && window.NachtSiloMediaSession.attach(video, {live: true});
+  window.NachtSiloCast && window.NachtSiloCast.bindVideo(video, {
+    url: playlistUrl || ('/live/' + encodeURIComponent(channelName) + '/stream.m3u8'),
+    live: true,
+    contentType: 'application/vnd.apple.mpegurl',
+    ensureUrl: {{ (cast_ensure_url or '')|tojson }}
+  });
+
+  let mpegtsPlayer = null;
+  let hls = null;
+  let telemetryTimer = null;
+  let ready = false;
+  let readyPoll = null;
+  let reconnectTimer = null;
+  let reconnectAttempt = 0;
+  let waitStartedAt = Date.now();
+  let lastDebugSent = 0;
+  const profile = {{ (live_player_profile or 'desktop')|tojson }};
+  const isMobilePlayer = profile === 'mobile'
+    || document.body.classList.contains('page-twitch-watch-mobile')
+    || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+
+  function dbg(level, eventName, extra) {
+    try {
+      const payload = Object.assign({
+        channel: channelName,
+        mode: mpegtsPlayer ? 'mpegts' : 'hls_proxy',
+        level: level || 'info',
+        event: eventName || 'event',
+        ready: ready,
+        waited_sec: Math.round((Date.now() - waitStartedAt) / 1000),
+        reconnect_attempt: reconnectAttempt
+      }, extra || {});
+      if (debugEnabled) {
+        try { console.log('[live-debug]', payload); } catch (e) {}
+        if (statusEl && (level === 'error' || level === 'warn')) {
+          statusEl.textContent = (eventName || '') + (payload.detail ? (': ' + payload.detail) : '');
+        }
+      }
+      if (!clientDebugUrl) return;
+      const now = Date.now();
+      if (level !== 'error' && level !== 'warn' && now - lastDebugSent < 4000) return;
+      lastDebugSent = now;
+      fetch(clientDebugUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRFToken': csrfToken || ''
+        },
+        body: JSON.stringify(Object.assign({ csrf_token: csrfToken || '' }, payload))
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  function setWait(visible, msg) {
+    if (waitEl) {
+      if (visible) waitEl.classList.add('is-visible');
+      else waitEl.classList.remove('is-visible');
+    }
+    if (statusEl && msg) statusEl.textContent = msg;
+  }
+
+  function revealPlaying() {
+    setWait(false, 'Live');
+  }
+
+  video.addEventListener('playing', revealPlaying);
+  video.addEventListener('timeupdate', function() {
+    if (video.currentTime > 0) revealPlaying();
+  });
+
+  function destroyPlayers() {
+    if (telemetryTimer) {
+      clearInterval(telemetryTimer);
+      telemetryTimer = null;
+    }
+    if (mpegtsPlayer) {
+      try {
+        mpegtsPlayer.pause();
+        mpegtsPlayer.unload();
+        mpegtsPlayer.detachMediaElement();
+        mpegtsPlayer.destroy();
+      } catch (e) {}
+      mpegtsPlayer = null;
+    }
+    if (hls) {
+      try { hls.destroy(); } catch (e) {}
+      hls = null;
+    }
+  }
+
+  function stopReadyPoll() {
+    if (!readyPoll) return;
+    clearInterval(readyPoll);
+    readyPoll = null;
+  }
+
+  function ensureReadyPoll(intervalMs) {
+    stopReadyPoll();
+    readyPoll = setInterval(function() {
+      if (ready) return;
+      checkPlaylist();
+    }, intervalMs || 1000);
+  }
+
+  function reconnectDelayMs() {
+    const base = 1200;
+    return Math.round(Math.min(15000, base * Math.pow(1.7, Math.min(reconnectAttempt, 8))));
+  }
+
+  function scheduleReconnect(msg) {
+    ready = false;
+    destroyPlayers();
+    setWait(true, msg || 'Verbindung unterbrochen ? verbinde neu?');
+    dbg('warn', 'reconnect_scheduled', { detail: msg || '' });
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    const delay = reconnectDelayMs();
+    reconnectAttempt += 1;
+    reconnectTimer = setTimeout(function() {
+      reconnectTimer = null;
+      checkPlaylist();
+      ensureReadyPoll(1000);
+    }, delay);
+  }
+
+  function tryAutoplay() {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    const p = video.play();
+    if (p && typeof p.then === 'function') {
+      p.then(function() {
+        if (!isMobilePlayer) {
+          window.setTimeout(function() {
+            try {
+              if (window.NachtSiloLiveClip && window.NachtSiloLiveClip.isOverlayOpen()) return;
+              video.muted = false;
+              video.defaultMuted = false;
+              video.removeAttribute('muted');
+            } catch (e) {}
+          }, 300);
+        } else {
+          if (unmuteBtn) unmuteBtn.hidden = false;
+        }
+      }).catch(function(err) {
+        dbg('warn', 'autoplay_blocked', { detail: String(err && err.message || err) });
+        if (unmuteBtn) unmuteBtn.hidden = false;
+      });
+    }
+  }
+
+  function startTelemetry(modeName) {
+    if (telemetryTimer) clearInterval(telemetryTimer);
+    telemetryTimer = setInterval(function() {
+      if (!ready || video.paused) return;
+      if (video.buffered && video.buffered.length > 0) {
+        const end = video.buffered.end(video.buffered.length - 1);
+        const buf = Math.max(0, end - video.currentTime);
+        if (statusEl && waitEl && !waitEl.classList.contains('is-visible')) {
+          statusEl.textContent = modeName + ' • Puffer: ' + (buf ? buf.toFixed(1) : '0') + 's';
+        }
+      }
+    }, 1000);
+  }
+
+  function initLowLatencyHlsPlayer(targetVideo, fallbackUrl) {
+    dbg('info', 'init_ll_hls_fallback', { url: fallbackUrl });
+    const hlsUrl = fallbackUrl || ('/live/' + encodeURIComponent(channelName) + '/stream.m3u8');
+    const isTv = document.body.classList.contains('is-tizen-tv') || /Tizen|SMART-TV|SmartTV/i.test(navigator.userAgent || '');
+
+    if (window.Hls && Hls.isSupported()) {
+      let net = 0;
+      let media = 0;
+      hls = new Hls({
+        lowLatencyMode: true,
+        liveDurationInfinity: true,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 8,
+        maxLiveSyncPlaybackRate: 1.1,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        enableWorker: (!isMobilePlayer && !isTv),
+      });
+
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        dbg('info', 'hls_manifest_parsed', {});
+        tryAutoplay();
+        startTelemetry('LL-HLS');
+      });
+
+      hls.on(Hls.Events.ERROR, function(_evt, data) {
+        if (!data) return;
+        if (!data.fatal) return;
+        dbg('error', 'hls_fatal', { detail: String(data.details || data.type || '') });
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && net < 6) {
+          net += 1;
+          hls.startLoad();
+          return;
+        }
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && media < 3) {
+          media += 1;
+          hls.recoverMediaError();
+          return;
+        }
+        scheduleReconnect('HLS Verbindung unterbrochen — verbinde neu…');
+      });
+
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(targetVideo);
+      return;
+    }
+
+    if (targetVideo.canPlayType && targetVideo.canPlayType('application/vnd.apple.mpegurl')) {
+      targetVideo.src = hlsUrl;
+      targetVideo.addEventListener('error', function() {
+        dbg('error', 'native_hls_error', { code: targetVideo.error ? targetVideo.error.code : 'unknown' });
+        scheduleReconnect('HLS Verbindung unterbrochen — verbinde neu…');
+      }, { once: true });
+      tryAutoplay();
+      startTelemetry('NATIVE-HLS');
+      return;
+    }
+
+    ready = false;
+    setWait(true, 'Browser unterstützt weder MPEG-TS noch Live-HLS.');
+    dbg('error', 'playback_unsupported', {});
+  }
+
+  function startPlayer() {
+    if (ready) return;
+    ready = true;
+    reconnectAttempt = 0;
+    stopReadyPoll();
+    destroyPlayers();
+    dbg('info', 'player_start', {});
+
+    try {
+      // 1. Primary: mpegts.js Ultra-Low-Latency Byte-Stream
+      const isTv = document.body.classList.contains('is-tizen-tv') || /Tizen|SMART-TV|SmartTV/i.test(navigator.userAgent || '');
+      const mseSupported = !isTv && window.mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
+      const castWantsNative = window.NachtSiloCast && NachtSiloCast.preferNativeHls(video);
+
+      if (mseSupported && !castWantsNative) {
+        dbg('info', 'init_mpegts_player', { channel: channelName });
+        const tsUrl = '/live/' + encodeURIComponent(channelName) + '.ts';
+        mpegtsPlayer = mpegts.createPlayer({
+          type: 'mse',
+          isLive: true,
+          url: tsUrl,
+          cors: true
+        }, {
+          enableWorker: !isMobilePlayer,
+          enableStashBuffer: false,
+          stashInitialSize: isMobilePlayer ? 384 : 128,
+          liveBufferLatencyChasing: true,
+          liveBufferLatencyMaxLatency: isMobilePlayer ? 2.5 : 1.5,
+          liveBufferLatencyMinRemain: isMobilePlayer ? 0.6 : 0.4,
+          liveSync: true,
+          liveSyncMaxLatency: isMobilePlayer ? 2.5 : 1.5,
+          liveSyncTargetLatency: isMobilePlayer ? 1.0 : 0.6,
+          liveSyncPlaybackRate: 1.08,
+          autoCleanupSourceBuffer: true,
+          autoCleanupMaxBackwardDuration: 10,
+          autoCleanupMinBackwardDuration: 5
+        });
+
+        mpegtsPlayer.attachMediaElement(video);
+        mpegtsPlayer.load();
+        const p = mpegtsPlayer.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function() {});
+        }
+        tryAutoplay();
+        startTelemetry('ULTRA-LOW-LATENCY MPEG-TS');
+
+        mpegtsPlayer.on(mpegts.Events.ERROR, function(type, detail, info) {
+          dbg('error', 'mpegts_error', {
+            error_type: String(type),
+            detail: String(detail),
+            info: String(info || '')
+          });
+          scheduleReconnect('Echtzeit-Stream Fehler — verbinde neu…');
+        });
+
+        return;
+      }
+
+      // 2. Fallback: Low-Latency HLS (iOS / Safari / native cast / Smart TV)
+      initLowLatencyHlsPlayer(video, '/live/' + encodeURIComponent(channelName) + '/stream.m3u8');
+
+    } catch (e) {
+      ready = false;
+      destroyPlayers();
+      dbg('error', 'player_start_failed', { detail: String(e && e.message || e) });
+      scheduleReconnect('Player-Fehler — verbinde neu…');
+    }
+  }
+
+  // Catchup on Tab Visibility change
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && video.buffered && video.buffered.length > 0) {
+      const end = video.buffered.end(video.buffered.length - 1);
+      if (end - video.currentTime > 2.0) {
+        video.currentTime = Math.max(0, end - 0.5);
+      }
+    }
+  });
+
+  async function checkPlaylist() {
+    if (ready) return;
+    try {
+      if (readyUrl) {
+        const resp = await fetch(readyUrl + (readyUrl.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(), {
+          cache: 'no-store',
+          credentials: 'same-origin'
+        });
+        if (!resp.ok) {
+          setWait(true, 'Server lädt Stream… (' + resp.status + ')');
+          dbg('warn', 'ready_http', { detail: String(resp.status) });
+          return;
+        }
+        const data = await resp.json().catch(function() { return null; });
+        if (data && data.ready) {
+          startPlayer();
+          return;
+        }
+        const waitedSec = Math.round((Date.now() - waitStartedAt) / 1000);
+        if (data && data.twitch_live === false && waitedSec >= 20) {
+          setWait(true, 'Streamer ist derzeit offline.');
+          dbg('warn', 'offline', { detail: 'twitch_live=false' });
+          return;
+        }
+        if (waitedSec >= 90) {
+          setWait(true, 'Stream startet nicht — prüfe Live-Status oder lade die Seite neu.');
+          dbg('error', 'ready_timeout', { detail: 'waited>=90s' });
+          return;
+        }
+        setWait(true, 'Server lädt Stream…');
+        return;
+      }
+
+      // Fallback check on .ts endpoint
+      const checkUrl = '/live/' + encodeURIComponent(channelName) + '.ts';
+      const resp = await fetch(checkUrl, {
+        method: 'HEAD',
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+      if (resp.ok) {
+        startPlayer();
+        return;
+      }
+      setWait(true, 'Server lädt Stream… (' + resp.status + ')');
+    } catch (e) {
+      setWait(true, 'Warte auf Server-Stream…');
+      dbg('warn', 'ready_fetch_error', { detail: String(e && e.message || e) });
+    }
+  }
+
+  function touchHeartbeat() {
+    const url = readyUrl || ('/live/' + encodeURIComponent(channelName) + '.ts');
+    if (!url) return;
+    fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(), {
+      method: readyUrl ? 'GET' : 'HEAD',
+      cache: 'no-store',
+      credentials: 'same-origin'
+    }).catch(function() {});
+  }
+
+  setWait(true, liveOauth
+    ? 'Server l?dt Stream (Turbo, ohne Viewer-Liste)?'
+    : 'Server l?dt Stream (ohne Twitch-Account)?');
+  try { dbg('info', 'proxy_boot', {}); } catch (e) {}
+  checkPlaylist();
+  ensureReadyPoll(400);
+  setInterval(touchHeartbeat, 15000);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && !ready) {
+      scheduleReconnect('Verbinde erneut?');
+    }
+  });
+  window.addEventListener('online', function() {
+    if (!ready) scheduleReconnect('Netzwerk wieder da ? verbinde neu?');
+  });
+})();
+</script>
+{% endif %}

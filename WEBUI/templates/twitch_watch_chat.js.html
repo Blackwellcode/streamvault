@@ -1,0 +1,528 @@
+<script src="{{ url_for('static', filename='chat_emotes.js', v=ASSET_VERSION) }}"></script>
+<script>
+(function() {
+  const channel = {{ channel|tojson }};
+  const displayName = {{ display_name|tojson }};
+  const statusUrl = {{ url_for('api_twitch_stream', login=channel)|tojson }};
+  const chatUrl = {{ chat_feed_url|tojson }};
+  const chatStreamer = {{ chat_streamer|tojson }};
+  const tubeChatUrl = {{ (tube_chat_url or '')|tojson }};
+  const tubeChatClearUrl = {{ (tube_chat_clear_url or '')|tojson }};
+  const tubeChatMuteUrl = {{ (tube_chat_mute_url or '')|tojson }};
+  const tubeChatUnmuteUrl = {{ (tube_chat_unmute_url or '')|tojson }};
+  const tubeChatCanModerate = {{ (tube_chat_can_moderate or false)|tojson }};
+  const csrfToken = {{ csrf_token()|tojson }};
+  const RECENT_KEY = 'nachtsilo_twitch_recent_v1';
+
+  try {
+    let items = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    if (!Array.isArray(items)) items = [];
+    items = [channel].concat(items.filter((x) => x !== channel)).slice(0, 16);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(items));
+  } catch (e) {}
+
+  const chatList = document.getElementById('chatList');
+  const chatToggle = document.getElementById('chatAutoToggle');
+  const chatEmpty = document.getElementById('chatEmpty');
+  const tubeChatList = document.getElementById('tubeChatList');
+  const tubeChatEmpty = document.getElementById('tubeChatEmpty');
+  const tubeChatForm = document.getElementById('tubeChatForm');
+  const tubeChatInput = document.getElementById('tubeChatInput');
+  const tubeChatError = document.getElementById('tubeChatError');
+  const tubeChatClearBtn = document.getElementById('tubeChatClearBtn');
+  const tubeChatAutoToggle = document.getElementById('tubeChatAutoToggle');
+  let autoScrollTwitch = true;
+  let autoScrollTube = true;
+  let suppressScrollTwitch = false;
+  let suppressScrollTube = false;
+  let lastSince = 0;
+  let lastTubeId = 0;
+  let lastDeleteTs = 0;
+  const renderedChatKeys = new Set();
+  const renderedTubeIds = new Set();
+  const chatAssetsReady = Promise.allSettled([
+    (window.NachtSiloChat && window.NachtSiloChat.loadEmotes && window.NachtSiloChat.loadEmotes(chatStreamer)),
+    (window.NachtSiloChat && window.NachtSiloChat.loadBadges && window.NachtSiloChat.loadBadges(chatStreamer))
+  ]);
+
+  function getUserColor(username) {
+    const colors = [
+      '#ef5350','#ec407a','#ab47bc','#7e57c2','#5c6bc0','#42a5f5',
+      '#29b6f6','#26c6da','#26a69a','#66bb6a','#9ccc65','#d4e157',
+      '#ffee58','#ffca28','#ffa726','#ff7043','#8d6e63','#bdbdbd'
+    ];
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  function formatTime(ts) {
+    const d = new Date(ts * 1000);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  function processMsg(item) {
+    return (window.NachtSiloChat && window.NachtSiloChat.renderMessageHtml && window.NachtSiloChat.renderMessageHtml(item)) || (item.msg || '');
+  }
+
+  function atBottom(list, thresholdPx) {
+    if (!list) return true;
+    const gap = list.scrollHeight - list.scrollTop - list.clientHeight;
+    return gap <= (thresholdPx == null ? 72 : thresholdPx);
+  }
+
+  function scrollChatToBottom(list, which) {
+    if (!list) return;
+    if (which === 'tube') suppressScrollTube = true;
+    else suppressScrollTwitch = true;
+    const stick = () => {
+      list.scrollTop = list.scrollHeight;
+    };
+    stick();
+    requestAnimationFrame(() => {
+      stick();
+      requestAnimationFrame(() => {
+        stick();
+        if (which === 'tube') suppressScrollTube = false;
+        else suppressScrollTwitch = false;
+      });
+    });
+  }
+
+  function setAutoScroll(which, enabled) {
+    if (which === 'tube') {
+      autoScrollTube = !!enabled;
+      if (tubeChatAutoToggle) tubeChatAutoToggle.textContent = enabled ? 'Auto' : 'Pause';
+    } else {
+      autoScrollTwitch = !!enabled;
+      if (chatToggle) chatToggle.textContent = enabled ? 'Auto' : 'Pause';
+    }
+  }
+
+  function bindListScroll(list, which) {
+    if (!list) return;
+    list.addEventListener('scroll', () => {
+      if (which === 'tube' ? suppressScrollTube : suppressScrollTwitch) return;
+      // Stick while near bottom; pause only when the user scrolls away upward.
+      setAutoScroll(which, atBottom(list));
+    }, { passive: true });
+  }
+  bindListScroll(chatList, 'twitch');
+  bindListScroll(tubeChatList, 'tube');
+
+  chatToggle && chatToggle.addEventListener('click', () => {
+    setAutoScroll('twitch', true);
+    scrollChatToBottom(chatList, 'twitch');
+  });
+  tubeChatAutoToggle && tubeChatAutoToggle.addEventListener('click', () => {
+    setAutoScroll('tube', true);
+    scrollChatToBottom(tubeChatList, 'tube');
+  });
+
+  // After landscape chat opens, jump to latest if Auto is on.
+  document.body && document.body.addEventListener('nachtsilo:landscape-chat', (ev) => {
+    if (!(ev && ev.detail && ev.detail.open)) return;
+    if (autoScrollTwitch) scrollChatToBottom(chatList, 'twitch');
+    if (autoScrollTube) scrollChatToBottom(tubeChatList, 'tube');
+  });
+
+  function renderMessage(item) {
+    if (!chatList) return;
+    const rewardId = item.reward && item.reward.id ? item.reward.id : '';
+    const eventType = item.event && item.event.type ? item.event.type : '';
+    const eventPart = eventType ? ('event|' + eventType + '|') : '';
+    const key = item.t + '|' + item.user + '|' + eventPart + (rewardId ? ('reward|' + rewardId + '|') : '') + (item.msg || '');
+    if (renderedChatKeys.has(key)) return;
+    renderedChatKeys.add(key);
+    if (chatEmpty) chatEmpty.hidden = true;
+    const line = document.createElement('div');
+    const userColor = (window.NachtSiloChat && window.NachtSiloChat.userColor && window.NachtSiloChat.userColor(item.color)) || getUserColor(item.user || '');
+    line.className = (window.NachtSiloChat && window.NachtSiloChat.chatLineClassName && window.NachtSiloChat.chatLineClassName(item))
+      || (item.reward ? 'chat-line chat-line-redeem' : 'chat-line');
+    line.innerHTML = '<span class="chat-time">' + formatTime(item.t) + '</span>' +
+      '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user" style="color:' + userColor + '"></span><span class="chat-msg"></span></span>';
+    if (!item.event) {
+      const badges = line.querySelector('.chat-badges');
+      if (badges) badges.innerHTML = (window.NachtSiloChat && window.NachtSiloChat.renderBadgesHtml && window.NachtSiloChat.renderBadgesHtml(item)) || '';
+      line.querySelector('.chat-user').textContent = (item.user || '') + (item.reward ? ' ' : ': ');
+    }
+    line.querySelector('.chat-msg').innerHTML = processMsg(item);
+    chatList.appendChild(line);
+    while (chatList.children.length > 200) {
+      chatList.removeChild(chatList.firstElementChild);
+    }
+  }
+
+  function removeTubeMessage(id) {
+    const el = tubeChatList && tubeChatList.querySelector('[data-tube-id="' + id + '"]');
+    if (el) el.remove();
+    renderedTubeIds.delete(Number(id));
+    if (tubeChatList && tubeChatEmpty && !tubeChatList.querySelector('.chat-line')) {
+      tubeChatEmpty.hidden = false;
+    }
+  }
+
+  function tubeRoleBadgeHtml(role) {
+    const r = String(role || '');
+    // Compact symbols matching Twitch-style chat badges (no text labels).
+    if (r === 'admin') {
+      return '<span class="chat-badge has-badge-fallback-icon tube-badge-admin" data-badge="admin" title="Admin">' +
+        '<svg class="chat-badge-fallback-icon" viewBox="0 0 24 24" role="img" aria-label="Admin" focusable="false">' +
+        '<path d="M12 2.4 4.6 5.4v5.7c0 4.5 3.1 8.5 7.4 10.1 4.3-1.6 7.4-5.6 7.4-10.1V5.4L12 2.4Zm1.2 4.8h-2.4v3.6H7.2v2.4h3.6v3.6h2.4v-3.6h3.6v-2.4h-3.6V7.2Z"/></svg></span>';
+    }
+    if (r === 'livechat_mod') {
+      return '<span class="chat-badge has-badge-fallback-icon" data-badge="moderator" title="Livechat-MOD">' +
+        '<svg class="chat-badge-fallback-icon" viewBox="0 0 24 24" role="img" aria-label="Moderator" focusable="false">' +
+        '<path d="M7.2 3.2h2.1l1.2 3.4 2.1-2.6 1.7 1.3-2.4 3 3.6.8-.5 2.1-3.7-.8-.1 4.1H8.6l-.1-4.1-3.7.8-.5-2.1 3.6-.8-2.4-3 1.7-1.3 2.1 2.6 1.2-3.4Zm8.3 10.2 1.5-.4 3.4 7.1-2 1-1.5-3.1-1.5 3.1-2-1 2.1-6.7Z"/></svg></span>';
+    }
+    return '';
+  }
+
+  function renderTubeMessage(item) {
+    if (!tubeChatList || !item || !item.id) return;
+    const id = Number(item.id);
+    if (renderedTubeIds.has(id)) return;
+    renderedTubeIds.add(id);
+    if (tubeChatEmpty) tubeChatEmpty.hidden = true;
+    const line = document.createElement('div');
+    const role = String(item.role || '');
+    const userName = item.user || '';
+    line.className = 'chat-line tube-chat-line' +
+      (role === 'admin' ? ' is-admin' : '') +
+      (role === 'livechat_mod' ? ' is-mod' : '');
+    line.dataset.tubeId = String(id);
+    line.dataset.tubeUser = userName;
+    const userColor = getUserColor(userName);
+    // Keep tools inside .chat-text so the 2-column chat grid never wraps a 3rd cell.
+    line.innerHTML = '<span class="chat-time"></span>' +
+      '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user"></span><span class="chat-msg"></span>' +
+      (tubeChatCanModerate ? '<span class="tube-mod-tools"></span>' : '') +
+      '</span>';
+    line.querySelector('.chat-time').textContent = formatTime(item.t || 0);
+    const badges = line.querySelector('.chat-badges');
+    if (badges) badges.innerHTML = tubeRoleBadgeHtml(role);
+    const userEl = line.querySelector('.chat-user');
+    userEl.style.color = userColor;
+    userEl.textContent = userName + ': ';
+    line.querySelector('.chat-msg').textContent = item.msg || '';
+    if (tubeChatCanModerate) {
+      const tools = line.querySelector('.tube-mod-tools');
+      if (tools) {
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'tube-mod-icon';
+        delBtn.title = 'Nachricht löschen';
+        delBtn.setAttribute('aria-label', 'Nachricht löschen');
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', () => deleteTubeMessage(id));
+        tools.appendChild(delBtn);
+        if (userName) {
+          const muteBtn = document.createElement('button');
+          muteBtn.type = 'button';
+          muteBtn.className = 'tube-mod-icon';
+          muteBtn.title = '30 Min. stumm';
+          muteBtn.setAttribute('aria-label', '30 Min. stumm');
+          muteBtn.textContent = '⌀';
+          muteBtn.addEventListener('click', () => muteTubeUser(userName, 30));
+          tools.appendChild(muteBtn);
+        }
+      }
+    }
+    tubeChatList.appendChild(line);
+    lastTubeId = Math.max(lastTubeId, id);
+    while (tubeChatList.children.length > 200) {
+      const first = tubeChatList.firstElementChild;
+      const oldId = (first && first.getAttribute('data-tube-id'));
+      if (oldId) renderedTubeIds.delete(Number(oldId));
+      tubeChatList.removeChild(first);
+    }
+  }
+
+  async function deleteTubeMessage(id) {
+    if (!tubeChatUrl || !tubeChatCanModerate) return;
+    try {
+      const resp = await fetch(tubeChatUrl + '/message/' + id, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ action: 'delete', csrf_token: csrfToken })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        showTubeError((data && data.error) || 'Löschen fehlgeschlagen.');
+        return;
+      }
+      removeTubeMessage(id);
+      if (data.deleted && data.deleted.deleted_at) {
+        lastDeleteTs = Math.max(lastDeleteTs, Number(data.deleted.deleted_at) || 0);
+      }
+    } catch (e) {
+      showTubeError('Netzwerkfehler.');
+    }
+  }
+
+  async function muteTubeUser(username, minutes) {
+    if (!tubeChatMuteUrl || !tubeChatCanModerate) return;
+    if (!window.confirm('„' + username + '“ für ' + minutes + ' Min. im Tube-Chat stumm schalten?')) return;
+    try {
+      const resp = await fetch(tubeChatMuteUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ username, minutes, csrf_token: csrfToken })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        showTubeError((data && data.error) || 'Mute fehlgeschlagen.');
+        return;
+      }
+      showTubeError('');
+    } catch (e) {
+      showTubeError('Netzwerkfehler.');
+    }
+  }
+
+  tubeChatClearBtn && tubeChatClearBtn.addEventListener('click', async () => {
+    if (!tubeChatClearUrl || !tubeChatCanModerate) return;
+    if (!window.confirm('Gesamten Tube-Chat leeren?')) return;
+    try {
+      const resp = await fetch(tubeChatClearUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ csrf_token: csrfToken })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        showTubeError((data && data.error) || 'Leeren fehlgeschlagen.');
+        return;
+      }
+      if (tubeChatList) tubeChatList.innerHTML = '';
+      renderedTubeIds.clear();
+      if (tubeChatEmpty) tubeChatEmpty.hidden = false;
+      if (data.deleted_at) lastDeleteTs = Math.max(lastDeleteTs, Number(data.deleted_at) || 0);
+    } catch (e) {
+      showTubeError('Netzwerkfehler.');
+    }
+  });
+
+  let chatPolls = 0;
+  async function pollChat() {
+    if (!chatUrl) return;
+    try {
+      const resp = await fetch(chatUrl + '?since=' + lastSince);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      chatPolls += 1;
+      if (!Array.isArray(data) || !data.length) {
+        if (chatEmpty && !chatEmpty.hidden && chatPolls >= 2 && renderedChatKeys.size === 0) {
+          chatEmpty.textContent = 'Kein Live-Chat verfügbar. Chat erscheint, wenn NachtSilo den Stream aufnimmt.';
+        }
+        return;
+      }
+      data.forEach((item) => {
+        renderMessage(item);
+        lastSince = Math.max(lastSince, Number(item.t) || 0);
+      });
+      if (autoScrollTwitch) scrollChatToBottom(chatList, 'twitch');
+    } catch (e) {}
+  }
+
+  async function pollTubeChat() {
+    if (!tubeChatUrl) return;
+    try {
+      const resp = await fetch(
+        tubeChatUrl + '?since_id=' + lastTubeId + '&since_delete=' + lastDeleteTs,
+        { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' }
+      );
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const messages = Array.isArray(data) ? data : (data.messages || []);
+      const deleted = Array.isArray((data && data.deleted)) ? data.deleted : [];
+      deleted.forEach((row) => {
+        removeTubeMessage(row.id);
+        lastDeleteTs = Math.max(lastDeleteTs, Number(row.deleted_at) || 0);
+      });
+      if (!messages.length) {
+        if (tubeChatEmpty && renderedTubeIds.size === 0) tubeChatEmpty.hidden = false;
+        return;
+      }
+      messages.forEach(renderTubeMessage);
+      if (autoScrollTube) scrollChatToBottom(tubeChatList, 'tube');
+    } catch (e) {}
+  }
+
+  function showTubeError(text) {
+    if (!tubeChatError) return;
+    if (!text) {
+      tubeChatError.hidden = true;
+      tubeChatError.textContent = '';
+      return;
+    }
+    tubeChatError.hidden = false;
+    tubeChatError.textContent = text;
+  }
+
+  tubeChatForm && tubeChatForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!tubeChatUrl || !tubeChatInput) return;
+    const msg = (tubeChatInput.value || '').trim();
+    if (!msg) return;
+    const csrf = (tubeChatForm.querySelector('input[name="csrf_token"]') || {}).value || csrfToken;
+    showTubeError('');
+    tubeChatInput.disabled = true;
+    try {
+      const resp = await fetch(tubeChatUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ msg, csrf_token: csrf })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        showTubeError((data && data.error) || 'Senden fehlgeschlagen.');
+        return;
+      }
+      tubeChatInput.value = '';
+      if (data.message) renderTubeMessage(data.message);
+      setAutoScroll('tube', true);
+      scrollChatToBottom(tubeChatList, 'tube');
+    } catch (e) {
+      showTubeError('Netzwerkfehler.');
+    } finally {
+      tubeChatInput.disabled = false;
+      tubeChatInput.focus();
+    }
+  });
+
+  let chatPollTimer = null;
+  let tubeChatPollTimer = null;
+  function startChatPolling() {
+    if (!chatPollTimer) chatPollTimer = setInterval(pollChat, 3000);
+    if (tubeChatUrl && !tubeChatPollTimer) tubeChatPollTimer = setInterval(pollTubeChat, 2500);
+  }
+  function stopChatPolling() {
+    if (chatPollTimer) { clearInterval(chatPollTimer); chatPollTimer = null; }
+    if (tubeChatPollTimer) { clearInterval(tubeChatPollTimer); tubeChatPollTimer = null; }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopChatPolling();
+    } else {
+      pollChat();
+      if (tubeChatUrl) pollTubeChat();
+      startChatPolling();
+    }
+  });
+  pollChat();
+  if (tubeChatUrl) pollTubeChat();
+  startChatPolling();
+  chatAssetsReady.finally(() => {});
+
+  async function pollStatus() {
+    try {
+      const res = await fetch(statusUrl, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) return;
+      const data = await res.json();
+      const stream = data.stream || {};
+      const live = !!stream.is_live;
+      const livePill = document.getElementById('livePill');
+      const livePillOverlay = document.getElementById('livePillOverlay');
+      const offlineBanner = document.getElementById('offlineBanner');
+      if (livePill) {
+        if (live) livePill.removeAttribute('hidden');
+        else livePill.setAttribute('hidden', '');
+      }
+      if (livePillOverlay) {
+        if (live) livePillOverlay.removeAttribute('hidden');
+        else livePillOverlay.setAttribute('hidden', '');
+      }
+      if (offlineBanner) {
+        if (live) offlineBanner.setAttribute('hidden', '');
+        else offlineBanner.removeAttribute('hidden');
+      }
+      const title = document.getElementById('watchTitle');
+      const streamTitle = document.getElementById('watchStreamTitle');
+      const game = document.getElementById('watchGame');
+      const viewers = document.getElementById('watchViewers');
+      const name = document.getElementById('watchDisplayName');
+      const nameOverlay = document.getElementById('watchDisplayNameOverlay');
+      const channelLink = document.querySelector('.vod-channel-link');
+      if (title) {
+        title.textContent = (stream.title && stream.title.trim()) || stream.display_name || displayName;
+      }
+      if (name && stream.display_name) name.textContent = stream.display_name;
+      if (nameOverlay && stream.display_name) nameOverlay.textContent = stream.display_name;
+      if (channelLink && stream.display_name) channelLink.textContent = stream.display_name;
+      if (streamTitle) {
+        const st = (stream.title || '').trim();
+        const dn = (stream.display_name || displayName || '').trim();
+        if (st && st !== dn) {
+          streamTitle.textContent = st;
+          streamTitle.removeAttribute('hidden');
+        } else {
+          streamTitle.textContent = '';
+          streamTitle.setAttribute('hidden', '');
+        }
+      }
+      const isTvClient = document.documentElement.classList.contains('is-tizen-tv') || /Tizen|SMART-TV/i.test(navigator.userAgent);
+      if (game) game.textContent = stream.game_name || (isTvClient ? 'Live Stream' : '—');
+      if (viewers) {
+        if (isTvClient) {
+          viewers.textContent = live ? (String(stream.viewer_count || 0) + ' Zuschauer') : 'Offline';
+        } else {
+          viewers.textContent = live ? String(stream.viewer_count || 0) : '—';
+        }
+      }
+      document.title = (live ? 'LIVE ' : '') + (stream.display_name || displayName) + ' · NachtSilo Tube';
+    } catch (e) {}
+  }
+  setInterval(pollStatus, 60000);
+
+  // Mobile live: switch between Twitch and Tube chat panes (full height each).
+  (function initChatTabs() {
+    const tabRoot = document.querySelector('.chat-panel-tabs, .chat-container.chat-panel-tabs');
+    if (!tabRoot) return;
+    const tabs = Array.from(tabRoot.querySelectorAll('[data-chat-tab]'));
+    const panes = Array.from(tabRoot.querySelectorAll('[data-chat-pane]'));
+    if (!tabs.length || !panes.length) return;
+    const storageKey = 'nachtsilo_mobile_chat_tab_v1';
+
+    function activate(name) {
+      const target = name === 'tube' ? 'tube' : 'twitch';
+      tabs.forEach((tab) => {
+        const on = tab.getAttribute('data-chat-tab') === target;
+        tab.classList.toggle('is-active', on);
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panes.forEach((pane) => {
+        const on = pane.getAttribute('data-chat-pane') === target;
+        pane.hidden = !on;
+      });
+      try { localStorage.setItem(storageKey, target); } catch (e) {}
+      if (target === 'tube' && autoScrollTube) {
+        scrollChatToBottom(tubeChatList, 'tube');
+      } else if (target === 'twitch' && autoScrollTwitch) {
+        scrollChatToBottom(chatList, 'twitch');
+      }
+      if (target === 'tube' && tubeChatInput) {
+        window.setTimeout(() => tubeChatInput.focus(), 50);
+      }
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => activate(tab.getAttribute('data-chat-tab')));
+    });
+
+    let initial = 'twitch';
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved === 'tube' || saved === 'twitch') initial = saved;
+    } catch (e) {}
+    activate(initial);
+  })();
+})();
+</script>

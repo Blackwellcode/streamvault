@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NachtSilo Tube &middot; Cosmic Login</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-login {{ theme_class }} ns-platform" style="background:#070B14; margin:0; padding:0; overflow-x:hidden;">
+    <main class="nebula-login-wrapper">
+      <div class="nebula-login-modal">
+        <!-- Logo Glyph -->
+        <div class="nebula-login-logo">
+          <span>N</span>
+        </div>
+        
+        <h1 class="nebula-login-h1">NACHTSILO TUBE</h1>
+        <p class="nebula-login-sub">Willkommen zurück · Melde dich mit deinen Zugangsdaten an, um auf NachtSilo Tube zuzugreifen.</p>
+
+        <!-- Direct Operator Credentials Form -->
+        <form method="post" class="login-form" id="login-form" style="display:flex; flex-direction:column; gap:12px; text-align:left; margin-top:20px;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div>
+            <label for="username" style="display:block; font-size:12px; font-weight:600; color:#A2AEC8; margin-bottom:4px;">Benutzername</label>
+            <input id="username" name="username" placeholder="Username" autocomplete="username" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid #26344F; border-radius:8px; color:#FFF; font-size:14px;">
+          </div>
+          <div>
+            <label for="password" style="display:block; font-size:12px; font-weight:600; color:#A2AEC8; margin-bottom:4px;">Passwort</label>
+            <input id="password" name="password" type="password" placeholder="Passwort" autocomplete="current-password" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid #26344F; border-radius:8px; color:#FFF; font-size:14px;">
+          </div>
+          <button type="submit" id="login-submit" style="width:100%; padding:12px; margin-top:6px; font-size:14px; font-weight:700;">Enter Control</button>
+        </form>
+
+        {% if error %}
+        <div class="error" style="margin-top:16px; padding:10px 14px; background:rgba(240,68,88,0.15); border:1px solid rgba(240,68,88,0.4); border-radius:8px; color:#F04458; font-size:13px;">
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="login-register-hint registrierung-info" style="font-size:12px; color:#A2AEC8; margin-top:16px; margin-bottom:12px; text-align:center;">
+          Noch kein Account? Die Registrierung erfolgt &uuml;ber unseren Discord-Server. <a href="https://discord.gg/nachtsilo" target="_blank" rel="noopener" style="color:#4D63FF; text-decoration:none; font-weight:600;">Registrieren</a>
+        </div>
+        <div class="nebula-login-footer-tag">
+          <span>Sicher &bull; Privat &bull; Nur f&uuml;r unsere Community</span>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        var form = document.getElementById("login-form");
+        var btn = document.getElementById("login-submit");
+        if (!form || !btn) return;
+        form.addEventListener("submit", function () {
+          btn.disabled = true;
+          btn.setAttribute("aria-busy", "true");
+        });
+      })();
+    </script>
+  </body>
+</html>

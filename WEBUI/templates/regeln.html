@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NachtSilo Tube · Regeln</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-regeln {{ theme_class }} ns-platform">
+    <main class="regeln-shell">
+      <header class="regeln-head">
+        <div class="regeln-brand">NachtSilo Tube</div>
+        <h1>{{ rules_title }}</h1>
+        <p class="regeln-sub">Hausordnung für den Invite-only-Kreis. Kein „offiziell“-Framing — nur verbindliche Nutzungsregeln.</p>
+        <div class="regeln-meta">Version <code>{{ rules_version }}</code></div>
+      </header>
+
+      {% if error %}
+      <div class="regeln-alert">{{ error }}</div>
+      {% endif %}
+      {% if ok %}
+      <div class="regeln-alert ok">Regeln akzeptiert. Weiter zum Dashboard…</div>
+      {% endif %}
+
+      <section class="regeln-card" aria-label="Regeltext">
+        <ol class="regeln-list" id="regelnList">
+          {% for item in rules_items %}
+          <li>{{ item|safe }}</li>
+          {% endfor %}
+        </ol>
+        <p class="regeln-footer">{{ rules_footer }}</p>
+      </section>
+
+      {% if require_accept %}
+      <form method="post" action="{{ url_for('regeln_accept') }}" class="regeln-accept-form" id="regelnForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="rules_version" value="{{ rules_version }}">
+        <label class="regeln-check">
+          <input type="checkbox" name="rules_accepted" value="1" id="regelnCheck" required>
+          <span>Ich habe die NachtSilo-Regeln gelesen und akzeptiere sie. Ich weiß, dass Verstöße zum sofortigen Entzug des Zugangs führen.</span>
+        </label>
+        <button type="submit" class="btn-primary" id="regelnSubmit" disabled>Regeln akzeptieren</button>
+      </form>
+      <script>
+        (function () {
+          var check = document.getElementById('regelnCheck');
+          var btn = document.getElementById('regelnSubmit');
+          if (!check || !btn) return;
+          function sync() { btn.disabled = !check.checked; }
+          check.addEventListener('change', sync);
+          sync();
+        })();
+      </script>
+      {% elif session.get('logged_in') %}
+      <p class="regeln-done">Du hast Version <code>{{ accepted_version or rules_version }}</code> akzeptiert.</p>
+      <p><a class="btn-primary" href="{{ url_for('index') }}">Zum Dashboard</a></p>
+      {% else %}
+      <p class="regeln-done">Registrierung über Discord · Zustimmung dort mit <code>AKZEPTIERE</code>.</p>
+      <p><a href="{{ url_for('login') }}">Zum Login</a></p>
+      {% endif %}
+    </main>
+  </body>
+</html>

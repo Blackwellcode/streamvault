@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Live · NachtSilo Tube</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-twitch-live {{ theme_class }} ns-platform">
+
+      {% include 'components/sidebar.html' %}
+
+    <div class="main twitch-live-main">
+      <header class="twitch-live-header">
+        <div>
+          <h1 class="page-title">Live</h1>
+          <p class="page-subtitle">Twitch-Streams in NachtSilo entdecken und ansehen</p>
+        </div>
+        <div class="twitch-live-search">
+          <label class="sr-only" for="twitchSearchInput">Streamer suchen</label>
+          <input id="twitchSearchInput" type="search" placeholder="Streamer oder Kanal suchen…" autocomplete="off" enterkeyhint="search">
+          <button type="button" id="twitchSearchBtn" class="btn-primary">Suchen</button>
+        </div>
+      </header>
+
+      <section class="twitch-section" aria-labelledby="monitoredHeading">
+        <div class="twitch-section-head">
+          <h2 id="monitoredHeading">Überwacht</h2>
+          <span class="twitch-section-meta" id="monitoredMeta">{{ monitored_live_count }} live</span>
+        </div>
+        <div class="twitch-stream-grid" id="monitoredGrid">
+          {% for s in monitored %}
+          <a class="twitch-stream-card {% if s.is_live %}is-live{% endif %}" href="{{ url_for('twitch_watch', channel=s.login) }}" data-login="{{ s.login }}">
+            <div class="twitch-thumb-wrap">
+              {% if s.is_live %}
+              <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
+              <span class="twitch-live-pill">LIVE</span>
+              <span class="twitch-viewers">{{ s.viewer_count }}</span>
+              {% else %}
+              <div class="twitch-thumb-offline">Offline</div>
+              {% endif %}
+            </div>
+            <div class="twitch-card-body">
+              <strong class="twitch-card-title">{{ s.display_name or s.login }}</strong>
+              <span class="twitch-card-meta">{{ s.title or (s.game_name if s.is_live else 'Nicht live') }}</span>
+              {% if s.game_name and s.is_live %}<span class="twitch-card-game">{{ s.game_name }}</span>{% endif %}
+            </div>
+          </a>
+          {% else %}
+          <div class="twitch-empty">Keine überwachten Twitch-Kanäle. Füge Streamer unter Streamer hinzu.</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="twitch-section" aria-labelledby="discoverHeading">
+        <div class="twitch-section-head">
+          <h2 id="discoverHeading">Entdecken</h2>
+          <div class="twitch-chip-row" id="categoryChips">
+            <button type="button" class="twitch-chip active" data-game-id="">Alle</button>
+            {% for cat in category_suggestions %}
+            <button type="button" class="twitch-chip" data-game-id="{{ cat.id }}">{{ cat.name }}</button>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="twitch-category-search">
+          <label class="sr-only" for="categorySearchInput">Kategorie suchen</label>
+          <input id="categorySearchInput" type="search" placeholder="Kategorie / Game suchen…" autocomplete="off">
+        </div>
+        <div id="discoverStatus" class="twitch-status" hidden></div>
+        <div class="twitch-stream-grid" id="discoverGrid">
+          {% for s in discover %}
+          <a class="twitch-stream-card is-live" href="{{ url_for('twitch_watch', channel=s.login) }}" data-login="{{ s.login }}">
+            <div class="twitch-thumb-wrap">
+              <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
+              <span class="twitch-live-pill">LIVE</span>
+              <span class="twitch-viewers">{{ s.viewer_count }}</span>
+            </div>
+            <div class="twitch-card-body">
+              <strong class="twitch-card-title">{{ s.display_name or s.login }}</strong>
+              <span class="twitch-card-meta">{{ s.title }}</span>
+              {% if s.game_name %}<span class="twitch-card-game">{{ s.game_name }}</span>{% endif %}
+            </div>
+          </a>
+          {% else %}
+          <div class="twitch-empty" id="discoverEmpty">{{ discover_empty_message }}</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="twitch-section" aria-labelledby="searchHeading" id="searchSection" hidden>
+        <div class="twitch-section-head">
+          <h2 id="searchHeading">Suchergebnisse</h2>
+        </div>
+        <div class="twitch-stream-grid" id="searchGrid"></div>
+      </section>
+
+      <section class="twitch-section" aria-labelledby="recentHeading">
+        <div class="twitch-section-head">
+          <h2 id="recentHeading">Zuletzt angesehen</h2>
+        </div>
+        <div class="twitch-stream-grid" id="recentGrid">
+          <div class="twitch-empty">Noch keine zuletzt angesehenen Streams.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+    (function() {
+      const RECENT_KEY = 'nachtsilo_twitch_recent_v1';
+      const watchBase = {{ url_for('twitch_watch', channel='__LOGIN__')|tojson }};
+      const apiMonitored = {{ url_for('api_twitch_monitored')|tojson }};
+      const apiSearch = {{ url_for('api_twitch_search')|tojson }};
+      const apiStreams = {{ url_for('api_twitch_streams')|tojson }};
+      const apiCategories = {{ url_for('api_twitch_categories')|tojson }};
+
+      function watchUrl(login) {
+        return watchBase.replace('__LOGIN__', encodeURIComponent(login));
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, (ch) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[ch]);
+      }
+
+      function cardHtml(s) {
+        const live = !!s.is_live;
+        const thumb = live
+          ? `<img src="${escapeHtml(s.thumbnail_url || '')}" alt="" loading="lazy" decoding="async" width="640" height="360"><span class="twitch-live-pill">LIVE</span><span class="twitch-viewers">${escapeHtml(s.viewer_count || 0)}</span>`
+          : `<div class="twitch-thumb-offline">Offline</div>`;
+        const meta = live ? escapeHtml(s.title || s.game_name || '') : 'Nicht live';
+        const game = (live && s.game_name) ? `<span class="twitch-card-game">${escapeHtml(s.game_name)}</span>` : '';
+        return `<a class="twitch-stream-card ${live ? 'is-live' : ''}" href="${watchUrl(s.login)}" data-login="${escapeHtml(s.login)}">
+          <div class="twitch-thumb-wrap">${thumb}</div>
+          <div class="twitch-card-body">
+            <strong class="twitch-card-title">${escapeHtml(s.display_name || s.login)}</strong>
+            <span class="twitch-card-meta">${meta}</span>
+            ${game}
+          </div>
+        </a>`;
+      }
+
+      function renderGrid(el, items, emptyText) {
+        if (!el) return;
+        if (!items || !items.length) {
+          el.innerHTML = `<div class="twitch-empty">${escapeHtml(emptyText || 'Keine Streams')}</div>`;
+          return;
+        }
+        el.innerHTML = items.map(cardHtml).join('');
+      }
+
+      function loadRecent() {
+        try {
+          const raw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+          return Array.isArray(raw) ? raw.slice(0, 12) : [];
+        } catch (e) { return []; }
+      }
+
+      function renderRecent() {
+        const items = loadRecent().map((login) => ({
+          login,
+          display_name: login,
+          is_live: true,
+          thumbnail_url: `https://static-cdn.jtvnw.net/previews-ttv/live_user_${login}-640x360.jpg`,
+          title: 'Zuletzt angesehen',
+          viewer_count: '',
+          game_name: ''
+        }));
+        renderGrid(document.getElementById('recentGrid'), items, 'Noch keine zuletzt angesehenen Streams.');
+      }
+
+      async function refreshMonitored() {
+        try {
+          const res = await fetch(apiMonitored, { headers: { 'Accept': 'application/json' } });
+          if (!res.ok) return;
+          const data = await res.json();
+          const streams = data.streams || [];
+          renderGrid(document.getElementById('monitoredGrid'), streams, 'Keine überwachten Twitch-Kanäle.');
+          const liveCount = streams.filter((s) => s.is_live).length;
+          const meta = document.getElementById('monitoredMeta');
+          if (meta) meta.textContent = liveCount + ' live';
+        } catch (e) {}
+      }
+
+      async function loadDiscover(gameId) {
+        const status = document.getElementById('discoverStatus');
+        const grid = document.getElementById('discoverGrid');
+        if (status) {
+          status.hidden = false;
+          status.textContent = 'Lade Streams…';
+          status.className = 'twitch-status';
+        }
+        try {
+          const url = new URL(apiStreams, window.location.origin);
+          if (gameId) url.searchParams.set('game_id', gameId);
+          url.searchParams.set('first', '24');
+          const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          const data = await res.json();
+          if (!data.ok) {
+            try {
+              const mon = await fetch(apiMonitored, { headers: { 'Accept': 'application/json' } });
+              const monData = await mon.json();
+              const live = (monData.streams || []).filter((s) => s.is_live);
+              if (status) status.hidden = true;
+              renderGrid(grid, live, 'Keine Live-Streams unter den Überwachten. Nutze die Suche.');
+              return;
+            } catch (e2) {
+              if (status) {
+                status.textContent = data.message || 'Fehler beim Laden.';
+                status.className = 'twitch-status error';
+              }
+              return;
+            }
+          }
+          if (status) status.hidden = true;
+          renderGrid(grid, data.streams || [], 'Aktuell keine Discovery-Streams.');
+        } catch (e) {
+          if (status) {
+            status.textContent = 'Netzwerkfehler beim Laden der Streams.';
+            status.className = 'twitch-status error';
+          }
+        }
+      }
+
+      async function runSearch() {
+        const q = ((document.getElementById('twitchSearchInput') || {}).value || '').trim();
+        const section = document.getElementById('searchSection');
+        const grid = document.getElementById('searchGrid');
+        if (!q) {
+          if (section) section.hidden = true;
+          return;
+        }
+        if (section) section.hidden = false;
+        grid.innerHTML = '<div class="twitch-status">Suche…</div>';
+        try {
+          const url = new URL(apiSearch, window.location.origin);
+          url.searchParams.set('q', q);
+          const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          const data = await res.json();
+          const live = (data.streams || []).filter((s) => s.is_live);
+          const offline = (data.channels || []).filter((c) => !c.is_live).map((c) => ({
+            login: c.login,
+            display_name: c.display_name,
+            is_live: false,
+            thumbnail_url: c.thumbnail_url,
+            title: c.title || '',
+            game_name: c.game_name || '',
+            viewer_count: 0
+          }));
+          renderGrid(grid, live.concat(offline), 'Keine Treffer.');
+        } catch (e) {
+          grid.innerHTML = '<div class="twitch-status error">Suche fehlgeschlagen.</div>';
+        }
+      }
+
+      let categoryTimer = null;
+      async function searchCategories(q) {
+        if (!q || q.length < 2) return;
+        try {
+          const url = new URL(apiCategories, window.location.origin);
+          url.searchParams.set('q', q);
+          const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          const data = await res.json();
+          const row = document.getElementById('categoryChips');
+          if (!row || !data.ok) return;
+          const cats = (data.categories || []).slice(0, 8);
+          row.innerHTML = '<button type="button" class="twitch-chip" data-game-id="">Alle</button>' +
+            cats.map((c) => `<button type="button" class="twitch-chip" data-game-id="${escapeHtml(c.id)}">${escapeHtml(c.name)}</button>`).join('');
+        } catch (e) {}
+      }
+
+      document.getElementById('twitchSearchBtn') && document.getElementById('twitchSearchBtn').addEventListener('click', runSearch);
+      document.getElementById('twitchSearchInput') && document.getElementById('twitchSearchInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+      });
+      document.getElementById('categorySearchInput') && document.getElementById('categorySearchInput').addEventListener('input', (e) => {
+        clearTimeout(categoryTimer);
+        categoryTimer = setTimeout(() => searchCategories(e.target.value.trim()), 350);
+      });
+      document.getElementById('categoryChips') && document.getElementById('categoryChips').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-game-id]');
+        if (!btn) return;
+        document.querySelectorAll('#categoryChips .twitch-chip').forEach((el) => el.classList.remove('active'));
+        btn.classList.add('active');
+        loadDiscover(btn.getAttribute('data-game-id') || '');
+      });
+
+      renderRecent();
+      setInterval(refreshMonitored, 60000);
+      setInterval(() => {
+        const active = document.querySelector('#categoryChips .twitch-chip.active');
+        loadDiscover(active ? (active.getAttribute('data-game-id') || '') : '');
+      }, 90000);
+    })();
+    </script>
+  </body>
+</html>

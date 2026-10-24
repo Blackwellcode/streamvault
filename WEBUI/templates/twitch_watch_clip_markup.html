@@ -1,0 +1,78 @@
+
+    {% if session.user_role == 'admin' %}
+    <div id="vodClipOverlay" class="vod-clip-overlay" aria-hidden="true" hidden>
+      <div class="vod-clip-scrim" data-clip-close></div>
+      <section class="vod-clip-panel" role="dialog" aria-modal="true" aria-labelledby="vodClipDialogTitle">
+        <div class="vod-clip-head">
+          <div>
+            <div class="vod-clip-kicker">NachtSilo Tube</div>
+            <h2 id="vodClipDialogTitle">Clip erstellen</h2>
+          </div>
+          <div class="vod-clip-head-actions">
+            <a href="{{ url_for('editor_live_view', streamer=proxy_key or channel) }}" id="clipFullEditorLink" class="vod-clip-icon-link" title="Editor öffnen" aria-label="Editor öffnen">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 5h5v5M13 11l6-6M19 14v5H5V5h5"/></svg>
+            </a>
+            <button type="button" class="vod-clip-icon-button" id="clipCloseButton" title="Schließen" aria-label="Schließen">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="vod-clip-preview-shell">
+          <video id="clipPreviewVideo" playsinline preload="auto"></video>
+          <button type="button" id="clipPreviewToggle" class="vod-clip-preview-toggle" aria-label="Vorschau pausieren" title="Vorschau pausieren">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>
+          </button>
+        </div>
+
+        <form id="vodClipForm" class="vod-clip-form" method="post" action="{{ url_for('clip_live', streamer=proxy_key or channel) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="clip_streamer" value="{{ archive_name or proxy_key or channel }}">
+          <input type="hidden" name="start" id="clipStartInput">
+          <input type="hidden" name="duration" id="clipDurationInput">
+
+          <div class="vod-clip-timebar">
+            <div class="vod-clip-time-row">
+              <span id="clipStartLabel">00:00</span>
+              <strong id="clipDurationLabel">30.0s</strong>
+              <span id="clipEndLabel">00:30</span>
+            </div>
+            <div class="vod-clip-range" id="clipRangeShell">
+              <div class="vod-clip-range-base"></div>
+              <div class="vod-clip-range-fill" id="clipRangeFill"></div>
+              <input id="clipStartRange" type="range" min="0" max="1" step="0.1" value="0" aria-label="Clip-Start">
+              <input id="clipEndRange" type="range" min="0" max="1" step="0.1" value="1" aria-label="Clip-Ende">
+            </div>
+          </div>
+
+          <div class="vod-clip-nudge-grid">
+            <div class="vod-clip-nudge-group">
+              <span>Start</span>
+              <button type="button" data-clip-nudge="start:-1">-1s</button>
+              <button type="button" data-clip-nudge="start:1">+1s</button>
+              <button type="button" data-clip-set="start">Setzen</button>
+            </div>
+            <div class="vod-clip-nudge-group">
+              <span>Ende</span>
+              <button type="button" data-clip-nudge="end:-1">-1s</button>
+              <button type="button" data-clip-nudge="end:1">+1s</button>
+              <button type="button" data-clip-set="end">Setzen</button>
+            </div>
+          </div>
+
+          <label class="vod-clip-title-field">
+            <span>Clip-Titel</span>
+            <input id="clipTitleInput" name="clip_name" type="text" maxlength="80" placeholder="Titel (optional)" autocomplete="off">
+          </label>
+
+          <div id="clipStatus" class="vod-clip-status" aria-live="polite"></div>
+          <div id="clipResult" class="vod-clip-result" hidden></div>
+
+          <div class="vod-clip-actions">
+            <button type="button" id="clipCancelButton" class="vod-clip-secondary">Abbrechen</button>
+            <button type="submit" id="clipSaveButton" class="vod-clip-primary">Clip speichern</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    {% endif %}

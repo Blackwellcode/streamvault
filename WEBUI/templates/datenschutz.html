@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NachtSilo Tube · Datenschutz</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-agb {{ theme_class }} ns-platform">
+    <main class="agb-shell">
+      <header class="agb-head">
+        <div class="agb-brand">NachtSilo Tube</div>
+        <h1>{{ privacy_title }}</h1>
+        <p class="agb-sub">Hinweise zur Datenverarbeitung im Invite-only-Kreis. Kein Impressum.</p>
+        <div class="agb-meta">
+          Version <code>{{ privacy_version }}</code>
+          {% if privacy_effective_date %} · wirksam ab {{ privacy_effective_date }}{% endif %}
+          · <a href="{{ url_for('agb_view') }}">AGB</a>
+        </div>
+      </header>
+
+      <section class="agb-card agb-scroll" aria-label="Datenschutzerklärung">
+        <div class="agb-prose">
+          {{ privacy_html|safe }}
+        </div>
+      </section>
+
+      {% if session.get('logged_in') %}
+      <p class="agb-done"><a class="btn-primary" href="{{ url_for('agb_view') }}">Zu den AGB</a></p>
+      {% endif %}
+    </main>
+  </body>
+</html>

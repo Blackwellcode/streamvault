@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>LIVE {{ display_name }} · NachtSilo Tube</title>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  </head>
+  <body class="page-twitch-watch page-vod {{ theme_class }} ns-platform" data-channel="{{ channel }}">
+
+      {% include 'components/sidebar.html' %}
+
+    <div class="main">
+      <div class="content">
+        <div class="main-col">
+          <div class="player-wrapper twitch-embed-wrapper">
+            {% if use_hls_proxy %}
+            <div id="proxyWait" class="twitch-proxy-wait is-visible" aria-live="polite">
+              <div class="twitch-proxy-wait-card">
+                <strong>Live über Server</strong>
+                <p id="proxyWaitText">{% if live_oauth_enabled %}Server lädt Stream (Turbo, ohne Viewer-Liste)…{% else %}Server lädt Stream (ohne Twitch-Account)…{% endif %}</p>
+                <p id="proxyStatus" class="twitch-proxy-status">Verbinden…</p>
+              </div>
+            </div>
+            <video
+              id="proxyPlayer"
+              class="twitch-proxy-video"
+              controls
+              controlsList="noremoteplayback"
+              disableRemotePlayback
+              autoplay
+              muted
+              playsinline
+              webkit-playsinline
+              data-media-title="LIVE {{ display_name }}"
+              data-media-artist="{{ display_name }}"
+              data-media-live="true"
+            ></video>
+            {% else %}
+            <iframe
+              src="{{ player_url }}"
+              title="LIVE {{ display_name }} (ohne Twitch-Login)"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowfullscreen
+              credentialless
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
+            {% endif %}
+          </div>
+
+          <section class="vod-details" aria-labelledby="watchTitle">
+            {% if is_tv %}
+            <div class="vod-details-meta-row">
+              <div class="vod-kicker">
+                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>LIVE</span>
+                {% if monitored and not is_tv and not is_mobile %}<span class="twitch-monitored-pill">Überwacht</span>{% endif %}
+                <span class="platform-badge platform-twitch">TW</span>
+                <a class="vod-channel-link" id="watchDisplayName" href="{{ url_for('streamer_view', streamer=archive_name or channel) }}">{{ display_name }}</a>
+                <span class="vod-meta-sep">•</span>
+                <span class="vod-meta-game" id="watchGame">{{ game_name or 'Live Stream' }}</span>
+                <span class="vod-meta-sep">•</span>
+                <span class="vod-meta-viewers" id="watchViewers">{% if is_live %}{{ viewer_count }} Zuschauer{% else %}Offline{% endif %}</span>
+              </div>
+              <div class="vod-file-actions" aria-label="Aktionen">
+                <button
+                  type="button"
+                  id="btnInstantClip"
+                  class="vod-inline-tool"
+                  data-clip-source="live"
+                  data-instant-url="{{ url_for('clip_instant', streamer=proxy_key or channel) }}"
+                >Clip</button>
+                {% if archive_name %}
+                <a class="vod-inline-tool" href="{{ url_for('streamer_view', streamer=archive_name) }}">Archiv</a>
+                {% endif %}
+              </div>
+            </div>
+            <h1 id="watchTitle" class="vod-display-title">{{ title or display_name }}</h1>
+            {% else %}
+            <div class="vod-details-main">
+              <div class="vod-kicker">
+                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>LIVE</span>
+                {% if monitored and not is_tv and not is_mobile %}<span class="twitch-monitored-pill">Überwacht</span>{% endif %}
+                <span class="platform-badge platform-twitch">TW</span>
+              </div>
+              <h1 id="watchTitle" class="vod-display-title">{{ title or display_name }}</h1>
+              <a class="vod-channel-link" id="watchDisplayName" href="{{ url_for('streamer_view', streamer=archive_name or channel) }}">{{ display_name }}</a>
+            </div>
+            <div class="vod-details-side">
+              <dl class="vod-facts">
+                <div><dt>Spiel</dt><dd id="watchGame">{{ game_name or '—' }}</dd></div>
+                <div><dt>Zuschauer</dt><dd id="watchViewers">{% if is_live %}{{ viewer_count }}{% else %}—{% endif %}</dd></div>
+              </dl>
+              <div class="vod-file-actions" aria-label="Aktionen">
+                <button
+                  type="button"
+                  id="btnInstantClip"
+                  class="vod-inline-tool"
+                  data-clip-source="live"
+                  data-instant-url="{{ url_for('clip_instant', streamer=proxy_key or channel) }}"
+                >Clip</button>
+                <a
+                  href="{{ url_for('editor_live_view', streamer=proxy_key or channel) }}"
+                  id="btnOpenEditor"
+                  class="vod-inline-tool"
+                  data-clip-source="live"
+                  data-clip-action="{{ url_for('clip_live', streamer=proxy_key or channel) }}"
+                  data-clip-streamer="{{ archive_name or proxy_key or channel }}"
+                  data-media-url="{{ hls_playlist_url }}"
+                >Zuschneiden</a>
+                {% if archive_name %}
+                <a class="vod-inline-tool" href="{{ url_for('streamer_view', streamer=archive_name) }}">Archiv</a>
+                {% endif %}
+                <a class="vod-inline-tool" href="https://twitch.tv/{{ channel }}" target="_blank" rel="noopener">Twitch</a>
+              </div>
+            </div>
+            {% if switcher and switcher|length > 1 %}
+            <nav class="twitch-switcher" aria-label="Live-Kanäle">
+              <div class="twitch-switcher-list" id="switcherList">
+                {% for s in switcher %}
+                <a class="twitch-switcher-item {% if s.login == channel %}active{% endif %}" href="{{ url_for('twitch_watch', channel=s.login) }}">
+                  <span class="twitch-live-dot" aria-hidden="true"></span>
+                  <span class="twitch-switcher-name">{{ s.display_name or s.login }}</span>
+                </a>
+                {% endfor %}
+              </div>
+            </nav>
+            {% endif %}
+            {% endif %}
+          </section>
+
+          <div class="twitch-offline-banner" id="offlineBanner" {% if is_live %}hidden{% endif %}>
+            Dieser Kanal ist gerade nicht live.
+          </div>
+        </div>
+
+        <aside class="chat-panel{% if show_tube_chat and not is_tv %} chat-panel-split{% endif %}">
+          {% if show_tube_chat and not is_tv %}
+          <div class="chat-split-col chat-split-twitch">
+            <div class="chat-header">
+              <span>Twitch Live Chat</span>
+              <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
+            </div>
+            <div id="chatEmpty" class="twitch-chat-empty">Chat wird geladen…</div>
+            <div id="chatList" class="chat-list"></div>
+          </div>
+          <div class="chat-split-col chat-split-tube">
+            <div class="chat-header">
+              <span>Tube</span>
+              <div class="tube-chat-mod-actions">
+                {% if tube_chat_can_moderate %}
+                <button id="tubeChatClearBtn" class="chat-toggle tube-mod-btn" type="button" title="Tube-Chat leeren">Leeren</button>
+                {% endif %}
+                <button id="tubeChatAutoToggle" class="chat-toggle" type="button">Auto</button>
+              </div>
+            </div>
+            <div id="tubeChatList" class="chat-list" data-can-moderate="{{ '1' if tube_chat_can_moderate else '0' }}">
+              <div id="tubeChatEmpty" class="twitch-chat-empty">Noch keine Tube-Nachrichten. Schreib die Erste!</div>
+            </div>
+            <form id="tubeChatForm" class="tube-chat-compose" autocomplete="off">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="sr-only" for="tubeChatInput">Tube-Chat Nachricht</label>
+              <input id="tubeChatInput" name="msg" type="text" maxlength="400" placeholder="Als {{ tube_chat_username }} schreiben…" required>
+              <button type="submit" class="tube-chat-send" title="Senden" aria-label="Senden">➔</button>
+            </form>
+            <div id="tubeChatError" class="tube-chat-error" hidden></div>
+          </div>
+          {% else %}
+          <div class="chat-header">
+            <span>Twitch Live Chat</span>
+            <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
+          </div>
+          <div id="chatEmpty" class="twitch-chat-empty">Chat wird geladen…</div>
+          <div id="chatList" class="chat-list"></div>
+          {% endif %}
+        </aside>
+      </div>
+    </div>
+<script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+<script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
+

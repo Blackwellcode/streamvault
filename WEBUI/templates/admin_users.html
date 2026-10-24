@@ -1,0 +1,949 @@
+{% extends 'base.html' %}
+
+{% block title %}Benutzer & Gruppen — NachtSilo Tube{% endblock %}
+{% block page_title %}Benutzer & Gruppen{% endblock %}
+{% block page_subtitle %}Dynamische Benutzerkonten- und Gruppenverwaltung mit granularer Stream- & Rechte-Steuerung{% endblock %}
+
+{% block header_actions %}
+  <button type="button" class="ns-btn ns-btn-primary" onclick="openModal('modal-add-user')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    Neuer Benutzer
+  </button>
+  <button type="button" class="ns-btn ns-btn-secondary" onclick="openModal('modal-add-group')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Neue Gruppe
+  </button>
+  <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    System Settings
+  </a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .rbac-nav-tabs {
+    display: flex; gap: 8px; border-bottom: 1px solid var(--ns-border-subtle); margin-bottom: 24px; padding-bottom: 2px;
+  }
+  .rbac-tab-btn {
+    background: transparent; border: none; color: var(--ns-text-secondary); font-size: 14px; font-weight: 600; padding: 10px 18px;
+    border-radius: var(--ns-radius-md) var(--ns-radius-md) 0 0; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: all 0.15s ease; border-bottom: 2px solid transparent; margin-bottom: -3px;
+  }
+  .rbac-tab-btn:hover { color: var(--ns-text-primary); background: rgba(255, 255, 255, 0.03); }
+  .rbac-tab-btn.is-active { color: #4D63FF; border-bottom-color: #4D63FF; background: rgba(77, 99, 255, 0.08); }
+  .rbac-tab-badge { background: rgba(255, 255, 255, 0.1); color: var(--ns-text-secondary); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+  .rbac-tab-btn.is-active .rbac-tab-badge { background: rgba(77, 99, 255, 0.25); color: #FFF; }
+  .rbac-table-wrap { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-subtle); border-radius: var(--ns-radius-lg); overflow: hidden; box-shadow: var(--ns-shadow-sm); }
+  .rbac-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+  .rbac-table th { background: var(--ns-bg-surface-raised); color: var(--ns-text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 18px; border-bottom: 1px solid var(--ns-border-subtle); }
+  .rbac-table td { padding: 14px 18px; border-bottom: 1px solid rgba(38, 52, 79, 0.4); color: var(--ns-text-primary); vertical-align: middle; }
+  .rbac-table tr:last-child td { border-bottom: none; }
+  .rbac-table tr:hover td { background: var(--ns-bg-surface-hover); }
+  .rbac-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: var(--ns-radius-sm); font-size: 11px; font-weight: 600; line-height: 1.2; }
+  .rbac-badge-admin { background: rgba(147, 101, 255, 0.2); color: #BB78FF; border: 1px solid rgba(147, 101, 255, 0.4); }
+  .rbac-badge-mod { background: rgba(77, 99, 255, 0.2); color: #69C9FF; border: 1px solid rgba(77, 99, 255, 0.4); }
+  .rbac-badge-viewer { background: rgba(162, 174, 200, 0.15); color: #A2AEC8; border: 1px solid rgba(162, 174, 200, 0.25); }
+  .rbac-badge-custom { background: rgba(72, 214, 162, 0.15); color: #48D6A2; border: 1px solid rgba(72, 214, 162, 0.3); }
+  .rbac-badge-system { background: rgba(187, 120, 255, 0.15); color: #D4A5FF; border: 1px solid rgba(187, 120, 255, 0.35); font-weight: 700; }
+  .rbac-badge-custom-grp { background: rgba(105, 201, 255, 0.15); color: #69C9FF; border: 1px solid rgba(105, 201, 255, 0.35); }
+  .rbac-badge-active { background: rgba(72, 214, 162, 0.15); color: #48D6A2; border: 1px solid rgba(72, 214, 162, 0.4); }
+  .rbac-badge-inactive { background: rgba(240, 68, 88, 0.15); color: #F04458; border: 1px solid rgba(240, 68, 88, 0.4); }
+  .rbac-perm-chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 520px; }
+  .rbac-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .rbac-chip-on { background: rgba(72, 214, 162, 0.12); color: #48D6A2; border: 1px solid rgba(72, 214, 162, 0.25); }
+  .rbac-chip-off { background: rgba(117, 131, 157, 0.08); color: #75839D; border: 1px solid rgba(117, 131, 157, 0.18); text-decoration: line-through; opacity: 0.6; }
+  .rbac-chip-channel-all { background: rgba(187, 120, 255, 0.15); color: #BB78FF; border: 1px solid rgba(187, 120, 255, 0.35); font-weight: 600; }
+  .rbac-chip-channel-custom { background: rgba(105, 201, 255, 0.15); color: #69C9FF; border: 1px solid rgba(105, 201, 255, 0.35); font-weight: 600; }
+  .rbac-actions { display: flex; gap: 8px; align-items: center; }
+  .rbac-btn-icon { background: transparent; border: 1px solid var(--ns-border-subtle); color: var(--ns-text-secondary); width: 32px; height: 32px; border-radius: var(--ns-radius-sm); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease; }
+  .rbac-btn-icon:hover { color: var(--ns-text-primary); background: var(--ns-bg-surface-active); border-color: var(--ns-border-medium); }
+  .rbac-btn-icon.danger:hover { color: #F04458; background: rgba(240, 68, 88, 0.12); border-color: rgba(240, 68, 88, 0.35); }
+  .rbac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+  .rbac-modal-backdrop.is-open { display: flex; }
+  .rbac-modal { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-medium); border-radius: var(--ns-radius-lg); box-shadow: var(--ns-shadow-lg); width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; animation: rbacModalFadeIn 0.18s ease-out; }
+  @keyframes rbacModalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(-8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .rbac-modal-head { background: var(--ns-bg-surface-raised); padding: 18px 24px; border-bottom: 1px solid var(--ns-border-subtle); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 2; }
+  .rbac-modal-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ns-text-primary); }
+  .rbac-modal-close { background: transparent; border: none; color: var(--ns-text-muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px; }
+  .rbac-modal-close:hover { color: #FFF; }
+  .rbac-modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .rbac-modal-foot { background: var(--ns-bg-surface-raised); padding: 16px 24px; border-top: 1px solid var(--ns-border-subtle); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; z-index: 2; }
+  .rbac-form-group { display: flex; flex-direction: column; gap: 6px; }
+  .rbac-form-group label { font-size: 12px; font-weight: 600; color: var(--ns-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rbac-input, .rbac-select { background: var(--ns-bg-canvas); border: 1px solid var(--ns-border-medium); border-radius: var(--ns-radius-md); color: var(--ns-text-primary); padding: 10px 14px; font-size: 14px; outline: none; transition: border-color 0.15s ease; }
+  .rbac-input:focus, .rbac-select:focus { border-color: #4D63FF; box-shadow: 0 0 0 2px rgba(77, 99, 255, 0.2); }
+  .rbac-checkbox-list { display: flex; flex-direction: column; gap: 8px; background: var(--ns-bg-canvas); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); }
+  .rbac-checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ns-text-primary); cursor: pointer; }
+  .rbac-checkbox-label input[type="checkbox"] { accent-color: #4D63FF; width: 16px; height: 16px; }
+  #rbac-toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+  .rbac-toast { background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-medium); border-left: 4px solid #4D63FF; color: var(--ns-text-primary); padding: 12px 18px; border-radius: var(--ns-radius-md); box-shadow: var(--ns-shadow-lg); font-size: 13px; display: flex; align-items: center; gap: 10px; min-width: 280px; max-width: 440px; animation: rbacToastIn 0.2s ease-out; }
+  .rbac-toast.success { border-left-color: #48D6A2; }
+  .rbac-toast.error { border-left-color: #F04458; }
+  @keyframes rbacToastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}{% block content %}
+<div style="max-width: 1400px; margin: 0 auto;">
+  <div class="rbac-nav-tabs">
+    <button type="button" class="rbac-tab-btn is-active" id="tab-btn-users" onclick="switchRbacTab('users')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Benutzerkonten
+      <span class="rbac-tab-badge" id="badge-users-count">{{ users|length }}</span>
+    </button>
+    <button type="button" class="rbac-tab-btn" id="tab-btn-groups" onclick="switchRbacTab('groups')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17v-4"/><path d="M9 9h.01"/><path d="M15 17v-8"/><path d="M15 9h.01"/></svg>
+      Benutzergruppen & Rechte
+      <span class="rbac-tab-badge" id="badge-groups-count">{{ groups|length }}</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: USERS SECTION -->
+  <section id="section-users" class="rbac-tab-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
+      <div style="flex: 1; max-width: 360px;">
+        <input type="text" id="users-search-input" class="rbac-input" placeholder="Benutzer, E-Mail oder Gruppe suchen..." oninput="filterUsersTable()" style="width: 100%;">
+      </div>
+      <div style="font-size: 12px; color: var(--ns-text-muted);">
+        Insgesamt <span style="color: #FFF; font-weight: 600;">{{ users|length }}</span> registrierte Konten
+      </div>
+    </div>
+
+    <div class="rbac-table-wrap">
+      <table class="rbac-table" id="table-users">
+        <thead>
+          <tr>
+            <th>Benutzer</th>
+            <th>E-Mail</th>
+            <th>Benutzergruppe</th>
+            <th>Status</th>
+            <th>Zuletzt Aktiv</th>
+            <th style="text-align: right;">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          {% for u in users %}
+          <tr id="user-row-{{ u.username }}" data-username="{{ u.username }}" data-email="{{ u.email }}" data-group="{{ u.group_name }}">
+            <td>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #4D63FF, #9365FF); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFF;">
+                  {{ u.username[:1].upper() }}
+                </div>
+                <div>
+                  <div style="font-weight: 600; color: #FFF; display: flex; align-items: center; gap: 6px;">
+                    <span>{{ u.username }}</span>
+                    {% if u.is_system_admin %}
+                    <span class="rbac-badge rbac-badge-admin" style="font-size: 9px; padding: 1px 5px;">ENV ADMIN</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if u.email %}
+              <span style="color: var(--ns-text-secondary); font-family: var(--ns-font-mono); font-size: 12px;">{{ u.email }}</span>
+              {% else %}
+              <span style="color: var(--ns-text-muted); font-size: 12px;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.group_name == 'Administrator' %}
+              <span class="rbac-badge rbac-badge-admin">{{ u.group_name }}</span>
+              {% elif u.group_name == 'Moderator' %}
+              <span class="rbac-badge rbac-badge-mod">{{ u.group_name }}</span>
+              {% elif u.group_name == 'Viewer' %}
+              <span class="rbac-badge rbac-badge-viewer">{{ u.group_name }}</span>
+              {% else %}
+              <span class="rbac-badge rbac-badge-custom">{{ u.group_name }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.active %}
+              <span class="rbac-badge rbac-badge-active">Aktiv</span>
+              {% else %}
+              <span class="rbac-badge rbac-badge-inactive">Gesperrt</span>
+              {% endif %}
+            </td>
+            <td style="color: var(--ns-text-muted); font-size: 12px; white-space: nowrap;">
+              {% if u.last_seen_at %}
+              aktiv
+              {% elif u.last_login_at %}
+              eingeloggt
+              {% else %}
+              Nie
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <div class="rbac-actions" style="justify-content: flex-end;">
+                <button type="button" class="rbac-btn-icon" title="Benutzer bearbeiten" onclick="openEditUserModal('{{ u.username }}', '{{ u.email }}', {{ u.group_id or 3 }}, {{ 1 if u.active else 0 }})">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                {% if not u.is_system_admin and u.username.lower() != (current_username or '').lower() %}
+                <button type="button" class="rbac-btn-icon danger" title="Benutzer löschen" onclick="openDeleteUserModal('{{ u.username }}')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TAB 2: GROUPS SECTION -->
+  <section id="section-groups" class="rbac-tab-section" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
+      <div style="font-size: 13px; color: var(--ns-text-secondary);">
+        Konfigurieren Sie dynamische Berechtigungen für Streams, Videoarchiv und Kanal-Zugriff.
+      </div>
+      <div style="font-size: 12px; color: var(--ns-text-muted);">
+        Insgesamt <span style="color: #FFF; font-weight: 600;">{{ groups|length }}</span> Benutzergruppen
+      </div>
+    </div>
+
+    <div class="rbac-table-wrap">
+      <table class="rbac-table" id="table-groups">
+        <thead>
+          <tr>
+            <th>Gruppe</th>
+            <th>Typ</th>
+            <th>Mitglieder</th>
+            <th>Stream- & Kanal-Zugriff</th>
+            <th>Funktionsrechte</th>
+            <th style="text-align: right;">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="groups-tbody">
+          {% for g in groups %}
+          <tr id="group-row-{{ g.id }}">
+            <td>
+              <div style="font-weight: 600; color: #FFF; font-size: 14px;">{{ g.name }}</div>
+              {% if g.description %}
+              <div style="font-size: 12px; color: var(--ns-text-muted); margin-top: 2px;">{{ g.description }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if g.is_system %}
+              <span class="rbac-badge rbac-badge-system">Systemgruppe</span>
+              {% else %}
+              <span class="rbac-badge rbac-badge-custom-grp">Benutzerdefiniert</span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-weight: 600; color: #FFF;">{{ g.member_count or 0 }}</span>
+              <span style="color: var(--ns-text-muted); font-size: 11px;"> Benutzer</span>
+            </td>
+            <td>
+              {% if g.permissions.access_all_channels %}
+                {% if g.permissions.disabled_channels %}
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <span class="rbac-chip rbac-chip-channel-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Alle Streams (+ Auto-Neu)
+                  </span>
+                  <span style="font-size:11px; color:#F04458; font-weight:500;">
+                    Gesperrt ({{ g.permissions.disabled_channels|length }}): {{ g.permissions.disabled_channels|join(', ') }}
+                  </span>
+                </div>
+                {% else %}
+                <span class="rbac-chip rbac-chip-channel-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Alle Streams (+ Auto-Neu)
+                </span>
+                {% endif %}
+              {% else %}
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <span class="rbac-chip rbac-chip-channel-custom">
+                    {{ (g.permissions.allowed_channels or [])|length }} Ordner erlaubt
+                  </span>
+                  {% if g.permissions.allowed_channels %}
+                  <span style="font-size:11px; color:var(--ns-text-muted);">
+                    {{ g.permissions.allowed_channels|join(', ') }}
+                  </span>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </td>
+            <td>
+              <div class="rbac-perm-chips">
+                <span class="rbac-chip {% if g.permissions.can_view_streams %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Streams ansehen</span>
+                <span class="rbac-chip {% if g.permissions.can_download_archive %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Archiv-Download</span>
+                <span class="rbac-chip {% if g.permissions.can_upload_videos %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Video-Upload</span>
+                <span class="rbac-chip {% if g.permissions.can_delete_videos %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Videos löschen</span>
+                <span class="rbac-chip {% if g.permissions.can_manage_users %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Benutzerverwaltung</span>
+              </div>
+            </td>
+            <td style="text-align: right;">
+              <div class="rbac-actions" style="justify-content: flex-end;">
+                <button type="button" class="rbac-btn-icon" title="Gruppe bearbeiten" onclick='openEditGroupModal({{ g.id }}, {{ g.name|tojson }}, {{ (g.description or "")|tojson }}, {{ 1 if g.is_system else 0 }}, {{ g.permissions|tojson }})'>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                {% if not g.is_system %}
+                <button type="button" class="rbac-btn-icon danger" title="Gruppe löschen" onclick="openDeleteGroupModal({{ g.id }}, '{{ g.name }}')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div><!-- MODAL: ADD USER -->
+<div id="modal-add-user" class="rbac-modal-backdrop">
+  <div class="rbac-modal">
+    <div class="rbac-modal-head">
+      <h3>Neuen Benutzer erstellen</h3>
+      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-add-user')">&times;</button>
+    </div>
+    <form id="form-add-user" onsubmit="handleAddUser(event)">
+      <div class="rbac-modal-body">
+        <div class="rbac-form-group">
+          <label>Benutzername *</label>
+          <input type="text" id="add-user-name" class="rbac-input" required minlength="3" maxlength="32" placeholder="z.B. seele_fan">
+        </div>
+        <div class="rbac-form-group">
+          <label>E-Mail-Adresse (Optional)</label>
+          <input type="email" id="add-user-email" class="rbac-input" placeholder="benutzer@nachtsilo.de">
+        </div>
+        <div class="rbac-form-group">
+          <label>Initiales Passwort *</label>
+          <input type="password" id="add-user-pass" class="rbac-input" required minlength="8" placeholder="Mindestens 8 Zeichen">
+        </div>
+        <div class="rbac-form-group">
+          <label>Benutzergruppe *</label>
+          <select id="add-user-group" class="rbac-select">
+            {% for g in groups %}
+            <option value="{{ g.id }}" {% if g.name == 'Viewer' %}selected{% endif %}>{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="rbac-form-group">
+          <label class="rbac-checkbox-label">
+            <input type="checkbox" id="add-user-active" checked>
+            <span>Konto sofort aktivieren</span>
+          </label>
+        </div>
+      </div>
+      <div class="rbac-modal-foot">
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-user')">Abbrechen</button>
+        <button type="submit" class="ns-btn ns-btn-primary">Benutzer anlegen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: EDIT USER -->
+<div id="modal-edit-user" class="rbac-modal-backdrop">
+  <div class="rbac-modal">
+    <div class="rbac-modal-head">
+      <h3>Benutzer bearbeiten</h3>
+      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-edit-user')">&times;</button>
+    </div>
+    <form id="form-edit-user" onsubmit="handleEditUser(event)">
+      <input type="hidden" id="edit-user-original">
+      <div class="rbac-modal-body">
+        <div class="rbac-form-group">
+          <label>Benutzername</label>
+          <input type="text" id="edit-user-name" class="rbac-input" required minlength="3" maxlength="32">
+        </div>
+        <div class="rbac-form-group">
+          <label>E-Mail-Adresse</label>
+          <input type="email" id="edit-user-email" class="rbac-input" placeholder="benutzer@nachtsilo.de">
+        </div>
+        <div class="rbac-form-group">
+          <label>Neues Passwort (leer lassen für keine Änderung)</label>
+          <input type="password" id="edit-user-pass" class="rbac-input" minlength="8" placeholder="Neues Passwort...">
+        </div>
+        <div class="rbac-form-group">
+          <label>Benutzergruppe</label>
+          <select id="edit-user-group" class="rbac-select">
+            {% for g in groups %}
+            <option value="{{ g.id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="rbac-form-group">
+          <label class="rbac-checkbox-label">
+            <input type="checkbox" id="edit-user-active">
+            <span>Konto aktiv (Zugriff erlaubt)</span>
+          </label>
+        </div>
+      </div>
+      <div class="rbac-modal-foot">
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-user')">Abbrechen</button>
+        <button type="submit" class="ns-btn ns-btn-primary">Änderungen speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: DELETE USER -->
+<div id="modal-delete-user" class="rbac-modal-backdrop">
+  <div class="rbac-modal">
+    <div class="rbac-modal-head">
+      <h3>Benutzer löschen</h3>
+      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-delete-user')">&times;</button>
+    </div>
+    <form id="form-delete-user" onsubmit="handleDeleteUser(event)">
+      <input type="hidden" id="delete-user-name">
+      <div class="rbac-modal-body">
+        <p style="margin: 0; color: var(--ns-text-primary);">
+          Möchten Sie den Benutzer <strong id="delete-user-display" style="color: #F04458;"></strong> wirklich unwiderruflich löschen?
+        </p>
+        <p style="margin: 0; font-size: 12px; color: var(--ns-text-muted);">
+          Alle gespeicherten Einstellungen dieses Kontos werden vollständig gelöscht.
+        </p>
+      </div>
+      <div class="rbac-modal-foot">
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-user')">Abbrechen</button>
+        <button type="submit" class="ns-btn ns-btn-danger">Endgültig löschen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: ADD GROUP -->
+<div id="modal-add-group" class="rbac-modal-backdrop">
+  <div class="rbac-modal">
+    <div class="rbac-modal-head">
+      <h3>Neue Benutzergruppe erstellen</h3>
+      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-add-group')">&times;</button>
+    </div>
+    <form id="form-add-group" onsubmit="handleAddGroup(event)">
+      <div class="rbac-modal-body">
+        <div class="rbac-form-group">
+          <label>Gruppenname *</label>
+          <input type="text" id="add-group-name" class="rbac-input" required minlength="2" maxlength="50" placeholder="z.B. VIP-Archiv">
+        </div>
+        <div class="rbac-form-group">
+          <label>Beschreibung</label>
+          <input type="text" id="add-group-desc" class="rbac-input" placeholder="Zweck dieser Benutzergruppe...">
+        </div>
+
+        <!-- Stream- & Ordner-Zugriff -->
+        <div class="rbac-form-group">
+          <label>Stream- & Ordner-Zugriff</label>
+          <div style="background: var(--ns-bg-canvas); padding: 14px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; flex-direction: column; gap: 10px;">
+            <label class="rbac-checkbox-label" style="font-weight: 600; color: #FFF;">
+              <input type="checkbox" id="add-group-access-all" checked onchange="updateChannelMode('add')">
+              <span>Zukünftig neue Streams & Ordner automatisch freischalten</span>
+            </label>
+            <div id="add-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
+              Aktiv: Neue Streams werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten / sperren.
+            </div>
+
+            <div id="add-group-channels-box" style="border-top: 1px solid var(--ns-border-subtle); padding-top: 10px; margin-top: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div id="add-channel-title" style="font-size: 11px; font-weight: 700; color: #BB78FF; text-transform: uppercase;">
+                  Einzelne Ordner abschalten / freischalten:
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', true)">Alle an</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', false)">Alle aus</button>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.3); border-radius: var(--ns-radius-sm);">
+                {% for st in all_streamers %}
+                <label class="rbac-checkbox-label" style="font-size: 12px; cursor: pointer;">
+                  <input type="checkbox" class="add-channel-item" value="{{ st }}" checked>
+                  <span>{{ st }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funktionsrechte -->
+        <div class="rbac-form-group">
+          <label>Funktionsrechte</label>
+          <div class="rbac-checkbox-list">
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="add-perm-view-streams" checked>
+              <span>Streams & Livechat ansehen (can_view_streams)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="add-perm-download-archive">
+              <span>Archiv & VODs herunterladen (can_download_archive)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="add-perm-upload-videos">
+              <span>Videos & Medien hochladen (can_upload_videos)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="add-perm-delete-videos">
+              <span>Videos & Aufnahmen löschen (can_delete_videos)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="add-perm-manage-users">
+              <span>Benutzer & Gruppen verwalten (can_manage_users)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="rbac-modal-foot">
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-group')">Abbrechen</button>
+        <button type="submit" class="ns-btn ns-btn-primary">Gruppe anlegen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: EDIT GROUP -->
+<div id="modal-edit-group" class="rbac-modal-backdrop">
+  <div class="rbac-modal">
+    <div class="rbac-modal-head">
+      <h3>Gruppe & Berechtigungen bearbeiten</h3>
+      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-edit-group')">&times;</button>
+    </div>
+    <form id="form-edit-group" onsubmit="handleEditGroup(event)">
+      <input type="hidden" id="edit-group-id">
+      <input type="hidden" id="edit-group-is-system">
+      <div class="rbac-modal-body">
+        <div class="rbac-form-group">
+          <label>Gruppenname</label>
+          <input type="text" id="edit-group-name" class="rbac-input" required minlength="2" maxlength="50">
+        </div>
+        <div class="rbac-form-group">
+          <label>Beschreibung</label>
+          <input type="text" id="edit-group-desc" class="rbac-input">
+        </div>
+
+        <!-- Stream- & Ordner-Zugriff -->
+        <div class="rbac-form-group">
+          <label>Stream- & Ordner-Zugriff</label>
+          <div style="background: var(--ns-bg-canvas); padding: 14px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; flex-direction: column; gap: 10px;">
+            <label class="rbac-checkbox-label" style="font-weight: 600; color: #FFF;">
+              <input type="checkbox" id="edit-group-access-all" onchange="updateChannelMode('edit')">
+              <span>Zukünftig neue Streams & Ordner automatisch freischalten</span>
+            </label>
+            <div id="edit-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
+              Aktiv: Neue Streams werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten / sperren.
+            </div>
+
+            <div id="edit-group-channels-box" style="border-top: 1px solid var(--ns-border-subtle); padding-top: 10px; margin-top: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div id="edit-channel-title" style="font-size: 11px; font-weight: 700; color: #BB78FF; text-transform: uppercase;">
+                  Einzelne Ordner abschalten / freischalten:
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', true)">Alle an</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', false)">Alle aus</button>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.3); border-radius: var(--ns-radius-sm);">
+                {% for st in all_streamers %}
+                <label class="rbac-checkbox-label" style="font-size: 12px; cursor: pointer;">
+                  <input type="checkbox" class="edit-channel-item" value="{{ st }}">
+                  <span>{{ st }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funktionsrechte -->
+        <div class="rbac-form-group">
+          <label>Funktionsrechte</label>
+          <div class="rbac-checkbox-list">
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="edit-perm-view-streams">
+              <span>Streams & Livechat ansehen (can_view_streams)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="edit-perm-download-archive">
+              <span>Archiv & VODs herunterladen (can_download_archive)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="edit-perm-upload-videos">
+              <span>Videos & Medien hochladen (can_upload_videos)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="edit-perm-delete-videos">
+              <span>Videos & Aufnahmen löschen (can_delete_videos)</span>
+            </label>
+            <label class="rbac-checkbox-label">
+              <input type="checkbox" id="edit-perm-manage-users">
+              <span>Benutzer & Gruppen verwalten (can_manage_users)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="rbac-modal-foot">
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-group')">Abbrechen</button>
+        <button type="submit" class="ns-btn ns-btn-primary">Gruppe speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: DELETE GROUP -->
+<div id="modal-delete-group" class="rbac-modal-backdrop">
+  <div class="rbac-modal">
+    <div class="rbac-modal-head">
+      <h3>Benutzergruppe löschen</h3>
+      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-delete-group')">&times;</button>
+    </div>
+    <form id="form-delete-group" onsubmit="handleDeleteGroup(event)">
+      <input type="hidden" id="delete-group-id">
+      <div class="rbac-modal-body">
+        <p style="margin: 0; color: var(--ns-text-primary);">
+          Möchten Sie die Gruppe <strong id="delete-group-display" style="color: #F04458;"></strong> wirklich löschen?
+        </p>
+        <div style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.3); border-radius: var(--ns-radius-md); padding: 12px; font-size: 12px; color: #A2AEC8;">
+          <strong style="color: #FFF;">Sicherheits-Migration:</strong> Bestehende Mitglieder dieser Gruppe werden automatisch der Standardgruppe <strong>Viewer</strong> zugewiesen.
+        </div>
+      </div>
+      <div class="rbac-modal-foot">
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-group')">Abbrechen</button>
+        <button type="submit" class="ns-btn ns-btn-danger">Gruppe löschen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="rbac-toast-container"></div>
+{% endblock %}{% block scripts %}
+<script>
+  const CSRF_TOKEN = {{ csrf_token()|tojson }};
+
+  function showToast(msg, type = 'success') {
+    const container = document.getElementById('rbac-toast-container');
+    const toast = document.createElement('div');
+    toast.className = `rbac-toast ${type}`;
+    toast.innerHTML = `
+      <div style="flex: 1;">${msg}</div>
+      <button type="button" style="background:none;border:none;color:#FFF;cursor:pointer;padding:0 4px;" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+  }
+
+  function switchRbacTab(tabId) {
+    document.querySelectorAll('.rbac-tab-btn').forEach(b => b.classList.remove('is-active'));
+    document.querySelectorAll('.rbac-tab-section').forEach(s => s.style.display = 'none');
+    
+    document.getElementById(`tab-btn-${tabId}`).classList.add('is-active');
+    document.getElementById(`section-${tabId}`).style.display = 'block';
+  }
+
+  function filterUsersTable() {
+    const q = (document.getElementById('users-search-input').value || '').toLowerCase();
+    const rows = document.querySelectorAll('#users-tbody tr');
+    rows.forEach(r => {
+      const u = (r.getAttribute('data-username') || '').toLowerCase();
+      const em = (r.getAttribute('data-email') || '').toLowerCase();
+      const grp = (r.getAttribute('data-group') || '').toLowerCase();
+      if (!q || u.includes(q) || em.includes(q) || grp.includes(q)) {
+        r.style.display = '';
+      } else {
+        r.style.display = 'none';
+      }
+    });
+  }
+
+  function updateChannelMode(prefix) {
+    const accessAll = document.getElementById(`${prefix}-group-access-all`).checked;
+    const hint = document.getElementById(`${prefix}-channel-hint`);
+    const title = document.getElementById(`${prefix}-channel-title`);
+    if (accessAll) {
+      if (hint) hint.textContent = 'Aktiv: Neue Streams & Ordner werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten (Haken entfernen).';
+      if (title) title.textContent = 'Einzelne Ordner abschalten / sperren:';
+    } else {
+      if (hint) hint.textContent = 'Inaktiv: Neue Streams bleiben gesperrt. Nur unten aktivierte Ordner (Haken gesetzt) sind freigeschaltet.';
+      if (title) title.textContent = 'Freizuschaltende Ordner auswählen:';
+    }
+  }
+
+  function setAllChannels(prefix, state) {
+    document.querySelectorAll(`.${prefix}-channel-item`).forEach(cb => {
+      cb.checked = Boolean(state);
+    });
+  }
+
+  function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.add('is-open');
+  }
+
+  function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('is-open');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.rbac-modal-backdrop.is-open').forEach(m => m.classList.remove('is-open'));
+    }
+  });
+
+  document.querySelectorAll('.rbac-modal-backdrop').forEach(b => {
+    b.addEventListener('click', (e) => {
+      if (e.target === b) b.classList.remove('is-open');
+    });
+  });
+
+  function openEditUserModal(username, email, groupId, active) {
+    document.getElementById('edit-user-original').value = username;
+    document.getElementById('edit-user-name').value = username;
+    document.getElementById('edit-user-email').value = email || '';
+    document.getElementById('edit-user-pass').value = '';
+    document.getElementById('edit-user-group').value = groupId;
+    document.getElementById('edit-user-active').checked = Boolean(active);
+    openModal('modal-edit-user');
+  }
+
+  function openDeleteUserModal(username) {
+    document.getElementById('delete-user-name').value = username;
+    document.getElementById('delete-user-display').textContent = username;
+    openModal('modal-delete-user');
+  }
+
+  async function handleAddUser(e) {
+    e.preventDefault();
+    const payload = {
+      username: document.getElementById('add-user-name').value.trim(),
+      email: document.getElementById('add-user-email').value.trim(),
+      password: document.getElementById('add-user-pass').value.trim(),
+      group_id: parseInt(document.getElementById('add-user-group').value, 10),
+      active: document.getElementById('add-user-active').checked
+    };
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Erstellen des Benutzers');
+      showToast(data.msg || 'Benutzer erfolgreich angelegt');
+      closeModal('modal-add-user');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function handleEditUser(e) {
+    e.preventDefault();
+    const orig = document.getElementById('edit-user-original').value;
+    const payload = {
+      new_name: document.getElementById('edit-user-name').value.trim(),
+      email: document.getElementById('edit-user-email').value.trim(),
+      password: document.getElementById('edit-user-pass').value.trim(),
+      group_id: parseInt(document.getElementById('edit-user-group').value, 10),
+      active: document.getElementById('edit-user-active').checked
+    };
+
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(orig)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Aktualisieren des Benutzers');
+      showToast(data.msg || 'Benutzer erfolgreich aktualisiert');
+      closeModal('modal-edit-user');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function handleDeleteUser(e) {
+    e.preventDefault();
+    const username = document.getElementById('delete-user-name').value;
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(username)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Löschen des Benutzers');
+      showToast(data.msg || 'Benutzer erfolgreich gelöscht');
+      closeModal('modal-delete-user');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  function openEditGroupModal(id, name, desc, isSystem, perms) {
+    document.getElementById('edit-group-id').value = id;
+    document.getElementById('edit-group-is-system').value = isSystem ? "1" : "0";
+    const nameInput = document.getElementById('edit-group-name');
+    nameInput.value = name;
+    nameInput.readOnly = Boolean(isSystem);
+    document.getElementById('edit-group-desc').value = desc || '';
+    
+    // Stream- & Ordner-Zugriff
+    const accessAll = Boolean(!perms || perms.access_all_channels !== false);
+    document.getElementById('edit-group-access-all').checked = accessAll;
+    updateChannelMode('edit');
+
+    const disabledList = (perms && perms.disabled_channels) ? perms.disabled_channels : [];
+    const disabledSet = new Set(disabledList.map(s => String(s).toLowerCase()));
+
+    const allowedList = (perms && perms.allowed_channels) ? perms.allowed_channels : [];
+    const allowedSet = new Set(allowedList.map(s => String(s).toLowerCase()));
+
+    document.querySelectorAll('.edit-channel-item').forEach(cb => {
+      const val = cb.value.toLowerCase();
+      if (accessAll) {
+        cb.checked = !disabledSet.has(val);
+      } else {
+        cb.checked = allowedSet.has(val);
+      }
+    });
+
+    // Funktionsrechte
+    document.getElementById('edit-perm-view-streams').checked = Boolean(perms && perms.can_view_streams);
+    document.getElementById('edit-perm-download-archive').checked = Boolean(perms && perms.can_download_archive);
+    document.getElementById('edit-perm-upload-videos').checked = Boolean(perms && perms.can_upload_videos);
+    document.getElementById('edit-perm-delete-videos').checked = Boolean(perms && perms.can_delete_videos);
+    
+    const manageUsersCheckbox = document.getElementById('edit-perm-manage-users');
+    manageUsersCheckbox.checked = Boolean(perms && perms.can_manage_users);
+    if (isSystem && name === 'Administrator') {
+      manageUsersCheckbox.disabled = true;
+    } else {
+      manageUsersCheckbox.disabled = false;
+    }
+
+    openModal('modal-edit-group');
+  }
+
+  function openDeleteGroupModal(id, name) {
+    document.getElementById('delete-group-id').value = id;
+    document.getElementById('delete-group-display').textContent = name;
+    openModal('modal-delete-group');
+  }
+
+  async function handleAddGroup(e) {
+    e.preventDefault();
+    const accessAll = document.getElementById('add-group-access-all').checked;
+    const disabledChannels = [];
+    const allowedChannels = [];
+
+    document.querySelectorAll('.add-channel-item').forEach(cb => {
+      if (accessAll) {
+        if (!cb.checked) {
+          disabledChannels.push(cb.value);
+        }
+      } else {
+        if (cb.checked) {
+          allowedChannels.push(cb.value);
+        }
+      }
+    });
+
+    const payload = {
+      name: document.getElementById('add-group-name').value.trim(),
+      description: document.getElementById('add-group-desc').value.trim(),
+      permissions: {
+        can_view_streams: document.getElementById('add-perm-view-streams').checked,
+        can_download_archive: document.getElementById('add-perm-download-archive').checked,
+        can_upload_videos: document.getElementById('add-perm-upload-videos').checked,
+        can_delete_videos: document.getElementById('add-perm-delete-videos').checked,
+        can_manage_users: document.getElementById('add-perm-manage-users').checked,
+        access_all_channels: accessAll,
+        allowed_channels: allowedChannels,
+        disabled_channels: disabledChannels
+      }
+    };
+
+    try {
+      const res = await fetch('/api/admin/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Anlegen der Gruppe');
+      showToast(data.msg || 'Gruppe erfolgreich angelegt');
+      closeModal('modal-add-group');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function handleEditGroup(e) {
+    e.preventDefault();
+    const gid = document.getElementById('edit-group-id').value;
+    const isSystem = document.getElementById('edit-group-is-system').value === "1";
+    const name = document.getElementById('edit-group-name').value.trim();
+    const manageUsersChecked = (isSystem && name === 'Administrator') ? true : document.getElementById('edit-perm-manage-users').checked;
+
+    const accessAll = document.getElementById('edit-group-access-all').checked;
+    const disabledChannels = [];
+    const allowedChannels = [];
+
+    document.querySelectorAll('.edit-channel-item').forEach(cb => {
+      if (accessAll) {
+        if (!cb.checked) {
+          disabledChannels.push(cb.value);
+        }
+      } else {
+        if (cb.checked) {
+          allowedChannels.push(cb.value);
+        }
+      }
+    });
+
+    const payload = {
+      name: name,
+      description: document.getElementById('edit-group-desc').value.trim(),
+      permissions: {
+        can_view_streams: document.getElementById('edit-perm-view-streams').checked,
+        can_download_archive: document.getElementById('edit-perm-download-archive').checked,
+        can_upload_videos: document.getElementById('edit-perm-upload-videos').checked,
+        can_delete_videos: document.getElementById('edit-perm-delete-videos').checked,
+        can_manage_users: manageUsersChecked,
+        access_all_channels: accessAll,
+        allowed_channels: allowedChannels,
+        disabled_channels: disabledChannels
+      }
+    };
+
+    try {
+      const res = await fetch(`/api/admin/groups/${gid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Speichern der Gruppe');
+      showToast(data.msg || 'Gruppe erfolgreich gespeichert');
+      closeModal('modal-edit-group');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function handleDeleteGroup(e) {
+    e.preventDefault();
+    const gid = document.getElementById('delete-group-id').value;
+    try {
+      const res = await fetch(`/api/admin/groups/${gid}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Löschen der Gruppe');
+      showToast(data.msg || 'Gruppe erfolgreich gelöscht');
+      closeModal('modal-delete-group');
+      setTimeout(() => location.reload(), 600);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+</script>
+{% endblock %}
