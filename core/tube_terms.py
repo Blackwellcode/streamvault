@@ -81,9 +81,15 @@ def load_document(*, force: bool = False) -> dict[str, Any]:
         _cached_document.cache_clear()
     try:
         mtime_ns = os.stat(AGB_PATH).st_mtime_ns
-    except OSError as exc:
-        raise FileNotFoundError(f"AGB-Datei fehlt: {AGB_PATH}") from exc
-    return _cached_document(mtime_ns)
+        return _cached_document(mtime_ns)
+    except OSError:
+        return {
+            "terms_version": "v1.0",
+            "effective_date": "2026-01-01",
+            "title": "Nutzungsbedingungen – NachtSilo Hub",
+            "body_md": "# Nutzungsbedingungen\n\nNutzung nur für autorisierte Benutzer.",
+            "raw": "",
+        }
 
 
 def current_version() -> str:

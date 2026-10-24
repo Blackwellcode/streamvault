@@ -17,6 +17,11 @@ import subprocess
 import tempfile
 import threading
 import time
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -1087,7 +1092,8 @@ def save_json(path, data):
     fd, tmp_path = tempfile.mkstemp(prefix=".tmp_", suffix=".json", dir=os.path.dirname(path))
     try:
         if is_meta_path(path):
-            os.fchmod(fd, 0o600)
+            if hasattr(os, "fchmod"):
+                os.fchmod(fd, 0o600)
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f)
             f.flush()
@@ -1584,7 +1590,14 @@ def streamer_dir(slug):
     archive = archive_name_for(slug)
     if not archive:
         return None
-    return safe_join(BASE_DIR, archive)
+    p = safe_join(BASE_DIR, archive)
+    if p and os.path.isdir(p):
+        return p
+    files_dir = getattr(config, "FILES_DIR", None) or os.path.join(BASE_DIR, "files")
+    p_files = safe_join(files_dir, archive)
+    if p_files and os.path.isdir(p_files):
+        return p_files
+    return p
 
 
 def media_accel_path(streamer, filename, *, clip=False):
@@ -6525,20 +6538,22 @@ def resolve_media_path(streamer, filename, route):
     except Exception:
         pass
     seen = set()
+    files_dir = getattr(config, "FILES_DIR", None) or os.path.join(BASE_DIR, "files")
     for cand in candidates:
         if not cand or cand in seen:
             continue
         seen.add(cand)
-        safe_dir = safe_join(BASE_DIR, cand)
-        if not safe_dir or not os.path.isdir(safe_dir):
-            continue
-        if route == "clip":
-            clip_dir = safe_join(safe_dir, CLIP_SUBDIR)
-            file_path = safe_join(clip_dir, filename) if clip_dir else None
-        else:
-            file_path = safe_join(safe_dir, filename)
-        if file_path and os.path.isfile(file_path):
-            return file_path
+        for root in (BASE_DIR, files_dir):
+            safe_dir = safe_join(root, cand)
+            if not safe_dir or not os.path.isdir(safe_dir):
+                continue
+            if route == "clip":
+                clip_dir = safe_join(safe_dir, CLIP_SUBDIR)
+                file_path = safe_join(clip_dir, filename) if clip_dir else None
+            else:
+                file_path = safe_join(safe_dir, filename)
+            if file_path and os.path.isfile(file_path):
+                return file_path
     return None
 
 

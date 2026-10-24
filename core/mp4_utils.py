@@ -28,11 +28,33 @@ def is_archive_mp4_filename(filename):
     return not is_transient_media_filename(name)
 
 
+def _pread(fd, size, position):
+    if hasattr(os, "pread"):
+        return os.pread(fd, size, position)
+    cur = os.lseek(fd, 0, os.SEEK_CUR)
+    try:
+        os.lseek(fd, position, os.SEEK_SET)
+        return os.read(fd, size)
+    finally:
+        os.lseek(fd, cur, os.SEEK_SET)
+
+
+def _pwrite(fd, data, position):
+    if hasattr(os, "pwrite"):
+        return os.pwrite(fd, data, position)
+    cur = os.lseek(fd, 0, os.SEEK_CUR)
+    try:
+        os.lseek(fd, position, os.SEEK_SET)
+        return os.write(fd, data)
+    finally:
+        os.lseek(fd, cur, os.SEEK_SET)
+
+
 def _top_level_atoms(fd, file_size):
     atoms = []
     position = 0
     while position + 8 <= file_size:
-        header = os.pread(fd, 16, position)
+        header = _pread(fd, 16, position)
         if len(header) < 8:
             raise ValueError(f"Truncated MP4 atom at byte {position}")
         atom_size = int.from_bytes(header[:4], "big")
@@ -61,7 +83,7 @@ def top_level_atom_types(file_path, max_atoms=24):
         file_size = os.fstat(fd).st_size
         position = 0
         while position + 8 <= file_size and len(atoms) < max_atoms:
-            header = os.pread(fd, 16, position)
+            header = _pread(fd, 16, position)
             if len(header) < 8:
                 break
             atom_size = int.from_bytes(header[:4], "big")
@@ -165,7 +187,7 @@ def finalize_browser_mp4(file_path):
             for index, position in enumerate(moof_positions)
         ]
 
-        first_sidx = bytearray(os.pread(fd, first_sidx_size, first_sidx_position))
+        first_sidx = bytearray(_pread(fd, first_sidx_size, first_sidx_position))
         version, first_offset_position, reference_sizes = _parse_sidx(first_sidx)
         if reference_sizes != fragment_sizes:
             raise ValueError("Video sidx does not match MP4 fragment boundaries")
@@ -175,7 +197,7 @@ def finalize_browser_mp4(file_path):
             first_offset_position,
             0,
         )
-        os.pwrite(fd, first_sidx, first_sidx_position)
+        _pwrite(fd, first_sidx, first_sidx_position)
 
         media_size = mfra_position - first_moof_position
         source_position = first_moof_position
@@ -183,10 +205,10 @@ def finalize_browser_mp4(file_path):
         remaining = media_size
         while remaining:
             chunk_size = min(_COPY_CHUNK_SIZE, remaining)
-            chunk = os.pread(fd, chunk_size, source_position)
+            chunk = _pread(fd, chunk_size, source_position)
             if len(chunk) != chunk_size:
                 raise ValueError("Unexpected EOF while compacting MP4")
-            os.pwrite(fd, chunk, destination_position)
+            _pwrite(fd, chunk, destination_position)
             source_position += chunk_size
             destination_position += chunk_size
             remaining -= chunk_size

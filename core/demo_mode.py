@@ -265,12 +265,33 @@ def seed_demo_environment() -> dict:
         streamer_dir = os.path.join(files_dir, streamer)
         video_path = os.path.join(streamer_dir, filename)
         chat_path = os.path.join(streamer_dir, filename.replace(".mp4", ".chat.json"))
-        thumb_path = os.path.join(thumb_dir, streamer, f"{filename}.jpg")
+        base_stem = os.path.splitext(filename)[0]
+        thumb_path = os.path.join(thumb_dir, streamer, f"{base_stem}.jpg")
         meta_path = os.path.join(meta_dir, f"{filename}.json")
 
         if ensure_sample_mp4(video_path, duration_sec=duration):
             ensure_thumbnail(video_path, thumb_path)
+            # Also create .mp4.jpg copy if requested anywhere
+            alt_thumb = os.path.join(thumb_dir, streamer, f"{filename}.jpg")
+            if os.path.exists(thumb_path) and not os.path.exists(alt_thumb):
+                try:
+                    shutil.copy2(thumb_path, alt_thumb)
+                except Exception:
+                    pass
             generate_chat_json(chat_path, duration_sec=duration)
+
+            # Ensure files exist in both files_dir and BASE_DIR
+            base_s_dir = os.path.join(config.BASE_DIR, streamer)
+            os.makedirs(base_s_dir, exist_ok=True)
+            try:
+                base_v_p = os.path.join(base_s_dir, filename)
+                base_c_p = os.path.join(base_s_dir, filename.replace(".mp4", ".chat.json"))
+                if not os.path.exists(base_v_p) and os.path.exists(video_path):
+                    shutil.copy2(video_path, base_v_p)
+                if not os.path.exists(base_c_p) and os.path.exists(chat_path):
+                    shutil.copy2(chat_path, base_c_p)
+            except Exception:
+                pass
             
             # Write metadata json
             meta_payload = {

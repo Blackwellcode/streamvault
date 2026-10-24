@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from core import database
@@ -45,7 +45,10 @@ def _tz():
     try:
         return ZoneInfo(name)
     except Exception:
-        return ZoneInfo("Europe/Berlin")
+        try:
+            return ZoneInfo("Europe/Berlin")
+        except Exception:
+            return timezone.utc
 
 
 def day_key(ts=None):
