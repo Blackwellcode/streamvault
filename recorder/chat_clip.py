@@ -220,7 +220,7 @@ def notify_discord_chat_clip(
     upload_path = _compress_clip(file_path)
     clip_title = title.strip() if title.strip() else f"Clip von {username}"
     content = f"🎬 **{clip_title}**\nvon **{username}** · !clip · {duration}s"
-    # Video attachment only (no NachtSilo links).
+    # Video attachment only (no external links).
     return discord_notify.post_channel_message(
         channel_id,
         content,

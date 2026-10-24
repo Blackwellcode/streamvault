@@ -41,7 +41,7 @@
           poster="{{ url_for('thumb_view', streamer=streamer, filename=filename) }}"
           data-media-title="{{ vod_display_title or filename }}"
           data-media-artist="{{ streamer }}"
-          data-media-album="NachtSilo Tube"
+          data-media-album="StreamVault"
           data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
         >
           Dein Browser unterstuetzt das Video-Tag nicht.
@@ -250,7 +250,7 @@
         >
           <div class="vod-transcript-panel-head">
             <div>
-              <div class="vod-transcript-kicker">NachtSilo Tube</div>
+              <div class="vod-transcript-kicker">StreamVault</div>
               <h2 id="vodTranscriptTitle">Transkript</h2>
             </div>
             <div class="vod-transcript-panel-meta">
@@ -349,7 +349,7 @@
       <section class="vod-clip-panel" role="dialog" aria-modal="true" aria-labelledby="vodClipDialogTitle">
         <div class="vod-clip-head">
           <div>
-            <div class="vod-clip-kicker">NachtSilo Tube</div>
+            <div class="vod-clip-kicker">StreamVault</div>
             <h2 id="vodClipDialogTitle">Clip erstellen</h2>
           </div>
           <div class="vod-clip-head-actions">
@@ -433,31 +433,31 @@
     <script>
       const vPlayer = document.getElementById('vodPlayer');
       if (vPlayer) {
-        window.__NACHTSILO_CSRF = {{ csrf_token()|tojson }};
-        window.NACHTSILO_VOD_DEBUG_DEFAULT = true;
+        window.__STREAMVAULT_CSRF = {{ csrf_token()|tojson }};
+        window.STREAMVAULT_VOD_DEBUG_DEFAULT = true;
         vPlayer.addEventListener('error', function() {
           const errEl = document.getElementById('vodPlayerError');
           if (errEl) errEl.hidden = false;
         });
-        window.NachtSiloVodDebug && window.NachtSiloVodDebug.attach(vPlayer, {
+        window.StreamVaultVodDebug && window.StreamVaultVodDebug.attach(vPlayer, {
           streamer: {{ streamer|tojson }},
           filename: {{ filename|tojson }},
           drive: {{ 'true' if on_drive else 'false' }},
           asset: {{ ASSET_VERSION|tojson }}
         });
         {% if is_tv %}
-        window.NachtSiloMediaSession && window.NachtSiloMediaSession.attach(vPlayer);
-        window.NachtSiloVodSlot && window.NachtSiloVodSlot.attach(vPlayer, {{ (vod_slot or {})|tojson }});
+        window.StreamVaultMediaSession && window.StreamVaultMediaSession.attach(vPlayer);
+        window.StreamVaultVodSlot && window.StreamVaultVodSlot.attach(vPlayer, {{ (vod_slot or {})|tojson }});
         {% else %}
-        window.NachtSiloMediaSession?.attach(vPlayer);
-        window.NachtSiloVodSlot?.attach(vPlayer, {{ (vod_slot or {})|tojson }});
+        window.StreamVaultMediaSession?.attach(vPlayer);
+        window.StreamVaultVodSlot?.attach(vPlayer, {{ (vod_slot or {})|tojson }});
         {% endif %}
         const directMediaUrl = {{ media_url|tojson }};
         const vodHlsUrl = {{ (hls_playlist_url or '')|tojson }};
         const useVodHls = {{ 'true' if hls_ready else 'false' }};
         window.CLIP_SETTINGS = {{ clip_settings|tojson }};
-        if (window.NachtSiloLiveClip) {
-          window.NachtSiloLiveClip.init({
+        if (window.StreamVaultLiveClip) {
+          window.StreamVaultLiveClip.init({
             player: vPlayer,
             source: 'vod',
             filename: {{ filename|tojson }},
@@ -477,12 +477,12 @@
         let vodAutoplayAttempted = false;
 
         function vodUserPaused() {
-          if (typeof vPlayer._nachtSiloPlaybackUserPaused === 'function'
-              && vPlayer._nachtSiloPlaybackUserPaused()) {
+          if (typeof vPlayer._streamVaultPlaybackUserPaused === 'function'
+              && vPlayer._streamVaultPlaybackUserPaused()) {
             return true;
           }
-          return typeof vPlayer._nachtSiloUserPaused === 'function'
-            && vPlayer._nachtSiloUserPaused();
+          return typeof vPlayer._streamVaultUserPaused === 'function'
+            && vPlayer._streamVaultUserPaused();
         }
 
         function playVodFromCurrentPosition() {
@@ -535,7 +535,7 @@
         }
 
         function installSeekPlaybackKick() {
-          // Thin safety net only: NachtSiloVodPlayback owns stall/nudge recovery.
+          // Thin safety net only: StreamVaultVodPlayback owns stall/nudge recovery.
           // Do not re-arm play() on waiting/stalled — that fought Range fetches
           // and created seek storms with the freeze detector.
           let seekPlayIntent = false;
@@ -556,7 +556,7 @@
             if (vodUserPaused()) return;
             seekPlayIntent = true;
           }
-          vPlayer._nachtSiloArmSeekPlayIntent = armPlayIntent;
+          vPlayer._streamVaultArmSeekPlayIntent = armPlayIntent;
           vPlayer.addEventListener('play', armPlayIntent);
           vPlayer.addEventListener('pause', () => {
             // Only clear on confirmed user pause — slot claim / buffer pauses
@@ -583,9 +583,9 @@
         }
         installSeekPlaybackKick();
         {% if is_tv %}
-        window.NachtSiloVodPlayback && window.NachtSiloVodPlayback.guard(vPlayer, {
+        window.StreamVaultVodPlayback && window.StreamVaultVodPlayback.guard(vPlayer, {
         {% else %}
-        window.NachtSiloVodPlayback?.guard(vPlayer, {
+        window.StreamVaultVodPlayback?.guard(vPlayer, {
         {% endif %}
           knownDuration: {{ (vod_duration_sec or 0)|float }},
           setCurrentTime: setVodCurrentTime,
@@ -594,9 +594,9 @@
           onDrive: {{ 'true' if on_drive else 'false' }}
         });
         {% if is_tv %}
-        window.NachtSiloSeekHover && window.NachtSiloSeekHover.attach(vPlayer, {
+        window.StreamVaultSeekHover && window.StreamVaultSeekHover.attach(vPlayer, {
         {% else %}
-        window.NachtSiloSeekHover?.attach(vPlayer, {
+        window.StreamVaultSeekHover?.attach(vPlayer, {
         {% endif %}
           knownDuration: {{ (vod_duration_sec or 0)|float }}
         });
@@ -604,11 +604,11 @@
         function attemptVodAutoplay() {
           if (vodAutoplayAttempted) return;
           vodAutoplayAttempted = true;
-          if (typeof vPlayer._nachtSiloArmSeekPlayIntent === 'function') {
-            vPlayer._nachtSiloArmSeekPlayIntent();
+          if (typeof vPlayer._streamVaultArmSeekPlayIntent === 'function') {
+            vPlayer._streamVaultArmSeekPlayIntent();
           }
-          if (typeof vPlayer._nachtSiloRequestPlay === 'function') {
-            vPlayer._nachtSiloRequestPlay();
+          if (typeof vPlayer._streamVaultRequestPlay === 'function') {
+            vPlayer._streamVaultRequestPlay();
           } else {
             playVodFromCurrentPosition();
           }
@@ -617,8 +617,8 @@
           [250, 700, 1600].forEach((ms) => {
             window.setTimeout(() => {
               if (vPlayer.ended || !vPlayer.paused || vodUserPaused()) return;
-              if (typeof vPlayer._nachtSiloRequestPlay === 'function') {
-                vPlayer._nachtSiloRequestPlay();
+              if (typeof vPlayer._streamVaultRequestPlay === 'function') {
+                vPlayer._streamVaultRequestPlay();
               } else {
                 playVodFromCurrentPosition();
               }
@@ -689,15 +689,15 @@
         });
 
         {% if is_tv %}
-        window.NachtSiloCast && window.NachtSiloCast.bindVideo(vPlayer, {
+        window.StreamVaultCast && window.StreamVaultCast.bindVideo(vPlayer, {
         {% else %}
-        window.NachtSiloCast?.bindVideo(vPlayer, {
+        window.StreamVaultCast?.bindVideo(vPlayer, {
         {% endif %}
           url: directMediaUrl,
           live: false,
           contentType: 'video/mp4'
         });
-        if (useVodHls && window.NachtSiloCast && NachtSiloCast.preferNativeHls(vPlayer)) {
+        if (useVodHls && window.StreamVaultCast && StreamVaultCast.preferNativeHls(vPlayer)) {
           vPlayer.src = vodHlsUrl;
         } else if (useVodHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
           const hlsStartPosition = Number.isFinite(requestedStart) && requestedStart > 1
@@ -765,12 +765,12 @@
       const chatFilterClear = document.getElementById('chatFilterClear');
 
       const chatAssetsReady = Promise.allSettled([
-        window.NachtSiloChat.loadEmotes({{ streamer|tojson }}),
-        window.NachtSiloChat.loadBadges({{ streamer|tojson }})
+        window.StreamVaultChat.loadEmotes({{ streamer|tojson }}),
+        window.StreamVaultChat.loadBadges({{ streamer|tojson }})
       ]);
       chatAssetsReady.then(() => renderTo(lastRenderSec, true));
       function processMsg(item) {
-        return window.NachtSiloChat.renderMessageHtml(item);
+        return window.StreamVaultChat.renderMessageHtml(item);
       }
       function getUserColor(username) {
         const colors = [
@@ -872,13 +872,13 @@
             continue;
           }
           const line = document.createElement('div');
-          const userColor = window.NachtSiloChat.userColor(m.color) || getUserColor(m.user || '');
-          line.className = window.NachtSiloChat.chatLineClassName(m);
+          const userColor = window.StreamVaultChat.userColor(m.color) || getUserColor(m.user || '');
+          line.className = window.StreamVaultChat.chatLineClassName(m);
           line.innerHTML = '<span class="chat-time">' + formatTime(m.rel) + '</span>' +
                            '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user" style="color:' + userColor + '"></span>' +
                            '<span class="chat-msg"></span></span>';
           if (!m.event) {
-            line.querySelector('.chat-badges').innerHTML = window.NachtSiloChat.renderBadgesHtml(m);
+            line.querySelector('.chat-badges').innerHTML = window.StreamVaultChat.renderBadgesHtml(m);
             line.querySelector('.chat-user').textContent = (m.user || '') + (m.reward ? ' ' : ': ');
           }
           line.querySelector('.chat-msg').innerHTML = processMsg(m);
@@ -951,18 +951,18 @@
           const clickX = e.clientX - rect.left;
           const fraction = Math.max(0, Math.min(1, clickX / rect.width));
           const targetTime = fraction * (player.duration || 0);
-          if (typeof player._nachtSiloNoteUserSeek === 'function') {
-            try { player._nachtSiloNoteUserSeek(targetTime); } catch (_) {}
+          if (typeof player._streamVaultNoteUserSeek === 'function') {
+            try { player._streamVaultNoteUserSeek(targetTime); } catch (_) {}
           }
-          if (typeof player._nachtSiloArmSeekPlayIntent === 'function') {
-            try { player._nachtSiloArmSeekPlayIntent(); } catch (_) {}
+          if (typeof player._streamVaultArmSeekPlayIntent === 'function') {
+            try { player._streamVaultArmSeekPlayIntent(); } catch (_) {}
           }
-          if (typeof player._nachtSiloSetUserPaused === 'function') {
-            try { player._nachtSiloSetUserPaused(false); } catch (_) {}
+          if (typeof player._streamVaultSetUserPaused === 'function') {
+            try { player._streamVaultSetUserPaused(false); } catch (_) {}
           }
           player.currentTime = targetTime;
-          if (typeof player._nachtSiloRequestPlay === 'function') {
-            try { player._nachtSiloRequestPlay(); } catch (_) {}
+          if (typeof player._streamVaultRequestPlay === 'function') {
+            try { player._streamVaultRequestPlay(); } catch (_) {}
           } else {
             const p = player.play();
             if (p && p.catch) p.catch(() => {});
@@ -1229,7 +1229,7 @@
       <section class="vod-admin-dialog" role="dialog" aria-modal="true" aria-labelledby="adminMetaDialogTitle">
         <div class="vod-admin-dialog-head">
           <div class="vod-admin-dialog-titles">
-            <span class="vod-admin-kicker">NachtSilo Tube · Admin</span>
+            <span class="vod-admin-kicker">StreamVault · Admin</span>
             <h2 id="adminMetaDialogTitle" class="vod-admin-title">Titel &amp; Beschreibung</h2>
           </div>
           <button type="button" class="vod-clip-icon-button" id="adminMetaCloseBtn" title="Schließen" aria-label="Schließen">

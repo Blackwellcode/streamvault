@@ -122,10 +122,10 @@
         row.className = "chat-row";
 
         // Badges
-        if (Array.isArray(item.badges) && item.badges.length > 0 && window.NachtSiloChat && window.NachtSiloChat.renderBadgesHtml) {
+        if (Array.isArray(item.badges) && item.badges.length > 0 && window.StreamVaultChat && window.StreamVaultChat.renderBadgesHtml) {
           const badgeSpan = document.createElement("span");
           badgeSpan.className = "chat-badges";
-          badgeSpan.innerHTML = window.NachtSiloChat.renderBadgesHtml(item.badges);
+          badgeSpan.innerHTML = window.StreamVaultChat.renderBadgesHtml(item.badges);
           row.appendChild(badgeSpan);
         }
 
@@ -133,8 +133,8 @@
         const author = document.createElement("span");
         author.className = "chat-author";
         author.textContent = (item.user || "Anonym") + ":";
-        if (window.NachtSiloChat && window.NachtSiloChat.userColor) {
-          author.style.color = window.NachtSiloChat.userColor(item.user || "", item.color);
+        if (window.StreamVaultChat && window.StreamVaultChat.userColor) {
+          author.style.color = window.StreamVaultChat.userColor(item.user || "", item.color);
         } else if (item.color) {
           author.style.color = item.color;
         }
@@ -143,8 +143,8 @@
         // Body
         const body = document.createElement("span");
         body.className = "chat-body";
-        if (window.NachtSiloChat && window.NachtSiloChat.renderMessageHtml) {
-          body.innerHTML = window.NachtSiloChat.renderMessageHtml(item);
+        if (window.StreamVaultChat && window.StreamVaultChat.renderMessageHtml) {
+          body.innerHTML = window.StreamVaultChat.renderMessageHtml(item);
         } else {
           body.textContent = item.msg || "";
         }
@@ -198,10 +198,10 @@
       }
 
       // Initialize emote and badge caches
-      if (window.NachtSiloChat) {
+      if (window.StreamVaultChat) {
         Promise.allSettled([
-          window.NachtSiloChat.loadEmotes ? window.NachtSiloChat.loadEmotes(streamer) : Promise.resolve(),
-          window.NachtSiloChat.loadBadges ? window.NachtSiloChat.loadBadges(streamer) : Promise.resolve()
+          window.StreamVaultChat.loadEmotes ? window.StreamVaultChat.loadEmotes(streamer) : Promise.resolve(),
+          window.StreamVaultChat.loadBadges ? window.StreamVaultChat.loadBadges(streamer) : Promise.resolve()
         ]).finally(() => {
           fetchLiveChat();
         });

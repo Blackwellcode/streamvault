@@ -160,7 +160,7 @@ CAST_TOKEN_TTL_SEC = int(os.environ.get("VOD_CAST_TTL_SEC", str(12 * 3600)))
 # OBS browser sources stay open for days; keep that bearer link shorter than a session cookie.
 # OBS browser sources stay open indefinitely in streaming setups; default to 10 years (or set OBS_CAST_TTL_SEC=0 for infinite)
 OBS_CAST_TTL_SEC = int(os.environ.get("OBS_CAST_TTL_SEC", str(3650 * 24 * 3600)))
-CAST_TOKEN_SALT = "nachtsilo-cast-v1"
+CAST_TOKEN_SALT = "streamvault-cast-v1"
 _MEDIA_HTTP_METHODS = ("GET", "HEAD", "OPTIONS")
 LOGIN_BAN_TTL_SEC = int(os.environ.get("VOD_LOGIN_BAN_TTL_SEC", "1800"))
 # OBS browser sources historically pass overlay tokens in the query string.
@@ -1346,9 +1346,9 @@ def send_test_mail_via_submission(sender, password, recipient):
     message = EmailMessage()
     message["From"] = sender
     message["To"] = recipient
-    message["Subject"] = "NachtSilo Tube Mail-Test"
+    message["Subject"] = "StreamVault Mail-Test"
     message.set_content(
-        "Das ist eine Testmail aus dem NachtSilo Tube Admin-Panel.\n\n"
+        "Das ist eine Testmail aus dem StreamVault Admin-Panel.\n\n"
         "Wenn diese Nachricht extern nicht ankommt, pruefe die Mailqueue "
         "und outbound TCP/25 oder konfiguriere einen SMTP-Relayhost."
     )
@@ -4220,7 +4220,7 @@ def enforce_vod_watch_slot(streamer="", filename=""):
         return resp
     resp = Response(result.get("message") or vod_watch_slots.BUSY_MESSAGE, status=429, mimetype="text/plain; charset=utf-8")
     resp.headers["Retry-After"] = str(retry_after)
-    resp.headers["X-NachtSilo-Vod-Slot"] = "full"
+    resp.headers["X-StreamVault-Vod-Slot"] = "full"
     return resp
 
 
@@ -7845,7 +7845,7 @@ def _path_exempt_from_maintenance(path: str) -> bool:
 
 def _maintenance_response(custom_message: str | None = None):
     msg = custom_message or (
-        "NachtSilo Tube ist wegen Wartungsarbeiten vorübergehend nicht verfügbar. "
+        "StreamVault ist wegen Wartungsarbeiten vorübergehend nicht verfügbar. "
         "Bitte hab etwas Geduld — die Seite ist bald wieder da."
     )
     if _request_wants_json_response():
@@ -8100,7 +8100,7 @@ def csrf_protect():
         and not current_user_bypasses_maintenance()
         and not _path_exempt_from_maintenance(request.path)
     ):
-        return _maintenance_response("Die mobile Version von NachtSilo Tube wird aktuell gewartet. Bitte nutze die Desktop-Version.")
+        return _maintenance_response("Die mobile Version von StreamVault wird aktuell gewartet. Bitte nutze die Desktop-Version.")
     # Token-auth TTS / alert overlay APIs (OBS browser source) — not session CSRF.
     # Twitch EventSub webhooks authenticate via HMAC signature, not CSRF.
     if (
@@ -8199,7 +8199,6 @@ def inject_theme_context():
         "is_mobile": mobile_flag,
         "mobile_live_enabled": mobile_live_enabled(),
         "streamers": rail_streamers,
-        "is_demo_mode": getattr(config, "DEMO_MODE", False),
     }
 
 
@@ -8330,7 +8329,7 @@ def login_tv_auto():
         return redirect(url_for("login"))
 
     users = load_users()
-    target_user = "gatekeeper_nachtsilo"
+    target_user = "gatekeeper_streamvault"
     if target_user not in users or not users[target_user].get("active", True):
         return redirect(url_for("login"))
 
@@ -11152,9 +11151,9 @@ def clip_download(streamer, filename):
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
-PWA_CACHE_VERSION = f"nachtsilo-tube-{ASSET_VERSION}"
+PWA_CACHE_VERSION = f"streamvault-{ASSET_VERSION}"
 PWA_THEME_COLOR = "#0b0b0b"
-PWA_HEAD_MARKER = "<!-- NachtSilo mobile app -->"
+PWA_HEAD_MARKER = "<!-- StreamVault mobile app -->"
 _APP_ICON_CACHE = {}
 
 
@@ -11300,7 +11299,7 @@ def mobile_app_head_tags():
     <meta name="color-scheme" content="dark">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="NachtSilo Tube">
+    <meta name="apple-mobile-web-app-title" content="StreamVault">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="{url_for('web_manifest')}">
     <link rel="apple-touch-icon" sizes="180x180" href="{url_for('apple_touch_icon')}">
@@ -11344,7 +11343,7 @@ def mobile_app_head_tags():
           banner.setAttribute("aria-label", "App installieren");
           banner.innerHTML = ""
             + "<div class=\\"ns-pwa-install__copy\\">"
-            + "<strong>NachtSilo Tube</strong>"
+            + "<strong>StreamVault</strong>"
             + "<span>Als App auf dem Startbildschirm installieren</span>"
             + "</div>"
             + "<div class=\\"ns-pwa-install__actions\\">"
@@ -11406,8 +11405,8 @@ def web_manifest():
     manifest = {
         "id": "/",
         "lang": "de",
-        "name": "NachtSilo Tube",
-        "short_name": "NachtSilo",
+        "name": "StreamVault",
+        "short_name": "StreamVault",
         "description": "Private Video- und Stream-Archiv-Konsole.",
         "start_url": url_for("index"),
         "scope": "/",
@@ -11456,7 +11455,7 @@ def offline_page():
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NachtSilo Tube offline</title>
+    <title>StreamVault offline</title>
     <style>
       :root{color-scheme:dark}
       body{margin:0;min-height:100vh;display:grid;place-items:center;background:#05070b;color:#f5f7fb;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -11467,7 +11466,7 @@ def offline_page():
   </head>
   <body>
     <main>
-      <h1>NachtSilo Tube</h1>
+      <h1>StreamVault</h1>
       <p>Keine Verbindung. Sobald das Gerät wieder online ist, lädt die App die Seite normal weiter.</p>
     </main>
   </body>
@@ -12301,7 +12300,7 @@ def tube_chat_sse(streamer):
             yield "data: {\"type\": \"fallback\"}\n\n"
             return
         pubsub = r.pubsub()
-        channel = f"nachtsilo:chat:tube:{room}"
+        channel = f"streamvault:chat:tube:{room}"
         pubsub.subscribe(channel)
         try:
             yield "data: {\"type\": \"connected\"}\n\n"
@@ -14482,18 +14481,10 @@ def streamer_avatar_update(streamer):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="NachtSilo Hub (Open Core)")
-    parser.add_argument("--demo", action="store_true", help="Launch in demo mode with seeded mock data")
+    parser = argparse.ArgumentParser(description="StreamVault (Open Core)")
     parser.add_argument("--host", default=HOST, help="Bind host (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=PORT, help="Bind port (default: 8080)")
     args = parser.parse_args()
-
-    if args.demo:
-        os.environ["DEMO_MODE"] = "1"
-        config.DEMO_MODE = True
-        from core import demo_mode
-        demo_mode.seed_demo_environment()
-        logging.info("Started NachtSilo Hub in DEMO MODE")
 
     if config.SECRET_KEY == "change-me":
         logging.warning("WARN: Setze VOD_SECRET_KEY fuer Sessions.")

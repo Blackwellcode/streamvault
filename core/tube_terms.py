@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NachtSilo Tube AGB — single source of truth.
+"""StreamVault AGB — single source of truth.
 
 Web (`/agb` + consent gate) and Discord (`#agb`, `/agb sync`) read the same
 markdown file. Bump `termsVersion` in content/agb.md whenever the binding
@@ -65,7 +65,7 @@ def _load_document() -> dict[str, Any]:
     return {
         "terms_version": version,
         "effective_date": str(meta.get("effectiveDate") or "").strip(),
-        "title": str(meta.get("title") or "Allgemeine Nutzungsbedingungen – NachtSilo Tube").strip(),
+        "title": str(meta.get("title") or "Allgemeine Nutzungsbedingungen – StreamVault").strip(),
         "body_md": body,
         "raw": raw,
     }
@@ -86,7 +86,7 @@ def load_document(*, force: bool = False) -> dict[str, Any]:
         return {
             "terms_version": "v1.0",
             "effective_date": "2026-01-01",
-            "title": "Nutzungsbedingungen – NachtSilo Hub",
+            "title": "Nutzungsbedingungen – StreamVault",
             "body_md": "# Nutzungsbedingungen\n\nNutzung nur für autorisierte Benutzer.",
             "raw": "",
         }
@@ -215,7 +215,7 @@ def _cached_privacy(mtime_ns: int) -> dict[str, Any]:
     return {
         "privacy_version": version,
         "effective_date": str(meta.get("effectiveDate") or "").strip(),
-        "title": str(meta.get("title") or "Datenschutzerklärung – NachtSilo Tube").strip(),
+        "title": str(meta.get("title") or "Datenschutzerklärung – StreamVault").strip(),
         "body_md": body,
         "raw": raw,
     }

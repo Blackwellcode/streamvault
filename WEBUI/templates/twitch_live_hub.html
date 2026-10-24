@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Live · NachtSilo Tube</title>
+    <title>Live · StreamVault</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
@@ -16,7 +16,7 @@
       <header class="twitch-live-header">
         <div>
           <h1 class="page-title">Live</h1>
-          <p class="page-subtitle">Twitch-Streams in NachtSilo entdecken und ansehen</p>
+          <p class="page-subtitle">Twitch-Streams in StreamVault entdecken und ansehen</p>
         </div>
         <div class="twitch-live-search">
           <label class="sr-only" for="twitchSearchInput">Streamer suchen</label>
@@ -108,7 +108,7 @@
 
     <script>
     (function() {
-      const RECENT_KEY = 'nachtsilo_twitch_recent_v1';
+      const RECENT_KEY = 'streamvault_twitch_recent_v1';
       const watchBase = {{ url_for('twitch_watch', channel='__LOGIN__')|tojson }};
       const apiMonitored = {{ url_for('api_twitch_monitored')|tojson }};
       const apiSearch = {{ url_for('api_twitch_search')|tojson }};

@@ -12,7 +12,7 @@
   const tubeChatUnmuteUrl = {{ (tube_chat_unmute_url or '')|tojson }};
   const tubeChatCanModerate = {{ (tube_chat_can_moderate or false)|tojson }};
   const csrfToken = {{ csrf_token()|tojson }};
-  const RECENT_KEY = 'nachtsilo_twitch_recent_v1';
+  const RECENT_KEY = 'streamvault_twitch_recent_v1';
 
   try {
     let items = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
@@ -41,8 +41,8 @@
   const renderedChatKeys = new Set();
   const renderedTubeIds = new Set();
   const chatAssetsReady = Promise.allSettled([
-    (window.NachtSiloChat && window.NachtSiloChat.loadEmotes && window.NachtSiloChat.loadEmotes(chatStreamer)),
-    (window.NachtSiloChat && window.NachtSiloChat.loadBadges && window.NachtSiloChat.loadBadges(chatStreamer))
+    (window.StreamVaultChat && window.StreamVaultChat.loadEmotes && window.StreamVaultChat.loadEmotes(chatStreamer)),
+    (window.StreamVaultChat && window.StreamVaultChat.loadBadges && window.StreamVaultChat.loadBadges(chatStreamer))
   ]);
 
   function getUserColor(username) {
@@ -62,7 +62,7 @@
   }
 
   function processMsg(item) {
-    return (window.NachtSiloChat && window.NachtSiloChat.renderMessageHtml && window.NachtSiloChat.renderMessageHtml(item)) || (item.msg || '');
+    return (window.StreamVaultChat && window.StreamVaultChat.renderMessageHtml && window.StreamVaultChat.renderMessageHtml(item)) || (item.msg || '');
   }
 
   function atBottom(list, thresholdPx) {
@@ -120,7 +120,7 @@
   });
 
   // After landscape chat opens, jump to latest if Auto is on.
-  document.body && document.body.addEventListener('nachtsilo:landscape-chat', (ev) => {
+  document.body && document.body.addEventListener('streamvault:landscape-chat', (ev) => {
     if (!(ev && ev.detail && ev.detail.open)) return;
     if (autoScrollTwitch) scrollChatToBottom(chatList, 'twitch');
     if (autoScrollTube) scrollChatToBottom(tubeChatList, 'tube');
@@ -136,14 +136,14 @@
     renderedChatKeys.add(key);
     if (chatEmpty) chatEmpty.hidden = true;
     const line = document.createElement('div');
-    const userColor = (window.NachtSiloChat && window.NachtSiloChat.userColor && window.NachtSiloChat.userColor(item.color)) || getUserColor(item.user || '');
-    line.className = (window.NachtSiloChat && window.NachtSiloChat.chatLineClassName && window.NachtSiloChat.chatLineClassName(item))
+    const userColor = (window.StreamVaultChat && window.StreamVaultChat.userColor && window.StreamVaultChat.userColor(item.color)) || getUserColor(item.user || '');
+    line.className = (window.StreamVaultChat && window.StreamVaultChat.chatLineClassName && window.StreamVaultChat.chatLineClassName(item))
       || (item.reward ? 'chat-line chat-line-redeem' : 'chat-line');
     line.innerHTML = '<span class="chat-time">' + formatTime(item.t) + '</span>' +
       '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user" style="color:' + userColor + '"></span><span class="chat-msg"></span></span>';
     if (!item.event) {
       const badges = line.querySelector('.chat-badges');
-      if (badges) badges.innerHTML = (window.NachtSiloChat && window.NachtSiloChat.renderBadgesHtml && window.NachtSiloChat.renderBadgesHtml(item)) || '';
+      if (badges) badges.innerHTML = (window.StreamVaultChat && window.StreamVaultChat.renderBadgesHtml && window.StreamVaultChat.renderBadgesHtml(item)) || '';
       line.querySelector('.chat-user').textContent = (item.user || '') + (item.reward ? ' ' : ': ');
     }
     line.querySelector('.chat-msg').innerHTML = processMsg(item);
@@ -316,7 +316,7 @@
       chatPolls += 1;
       if (!Array.isArray(data) || !data.length) {
         if (chatEmpty && !chatEmpty.hidden && chatPolls >= 2 && renderedChatKeys.size === 0) {
-          chatEmpty.textContent = 'Kein Live-Chat verfügbar. Chat erscheint, wenn NachtSilo den Stream aufnimmt.';
+          chatEmpty.textContent = 'Kein Live-Chat verfügbar. Chat erscheint, wenn StreamVault den Stream aufnimmt.';
         }
         return;
       }
@@ -477,7 +477,7 @@
           viewers.textContent = live ? String(stream.viewer_count || 0) : '—';
         }
       }
-      document.title = (live ? 'LIVE ' : '') + (stream.display_name || displayName) + ' · NachtSilo Tube';
+      document.title = (live ? 'LIVE ' : '') + (stream.display_name || displayName) + ' · StreamVault';
     } catch (e) {}
   }
   setInterval(pollStatus, 60000);
@@ -489,7 +489,7 @@
     const tabs = Array.from(tabRoot.querySelectorAll('[data-chat-tab]'));
     const panes = Array.from(tabRoot.querySelectorAll('[data-chat-pane]'));
     if (!tabs.length || !panes.length) return;
-    const storageKey = 'nachtsilo_mobile_chat_tab_v1';
+    const storageKey = 'streamvault_mobile_chat_tab_v1';
 
     function activate(name) {
       const target = name === 'tube' ? 'tube' : 'twitch';

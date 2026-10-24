@@ -35,7 +35,7 @@
           x-webkit-airplay="allow"
           data-media-title="{{ filename }}"
           data-media-artist="{{ streamer }}"
-          data-media-album="NachtSilo Tube"
+          data-media-album="StreamVault"
           data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
         ></video>
       </div>
@@ -45,7 +45,7 @@
       <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
       <script>
         const video = document.getElementById('player');
-        window.NachtSiloMediaSession && window.NachtSiloMediaSession.attach(video);
+        window.StreamVaultMediaSession && window.StreamVaultMediaSession.attach(video);
         const src = {{ (playlist_url or url_for('hls_playlist', streamer=streamer, filename=filename))|tojson }};
         let autoplayAttempted = false;
         function playFromCurrentPosition() {
@@ -63,12 +63,12 @@
           playFromCurrentPosition();
         }
         video.addEventListener('loadedmetadata', attemptAutoplay, {once: true});
-        window.NachtSiloCast && window.NachtSiloCast.bindVideo(video, {
+        window.StreamVaultCast && window.StreamVaultCast.bindVideo(video, {
           url: src,
           live: false,
           contentType: 'application/vnd.apple.mpegurl'
         });
-        if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(video)) {
+        if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(video)) {
           video.src = src;
         } else if (window.Hls && Hls.isSupported()) {
           let hlsNetworkRecoveries = 0;

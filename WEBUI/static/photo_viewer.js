@@ -223,7 +223,7 @@
     });
   }
 
-  window.NachtSiloPhotoViewer = {
+  window.StreamVaultPhotoViewer = {
     open: open,
     close: close,
     bind: bindTriggers

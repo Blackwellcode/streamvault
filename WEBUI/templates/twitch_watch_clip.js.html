@@ -3,10 +3,10 @@
 <script>
 (function() {
   window.CLIP_SETTINGS = {{ clip_settings|tojson }};
-  if (!window.NachtSiloLiveClip) return;
+  if (!window.StreamVaultLiveClip) return;
   // Instant clips must work on Twitch-embed watch too (no #proxyPlayer there).
   const player = document.getElementById('proxyPlayer');
-  window.NachtSiloLiveClip.init({
+  window.StreamVaultLiveClip.init({
     player: player || null,
     source: "live",
     instantUrl: {{ url_for('clip_instant', streamer=proxy_key or channel)|tojson }},

@@ -42,7 +42,7 @@
             muted
             data-media-title="LIVE {{ streamer }}"
             data-media-artist="{{ streamer }}"
-            data-media-album="NachtSilo Tube Live"
+            data-media-album="StreamVault Live"
             data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
             data-media-live="true"
           ></video>
@@ -109,7 +109,7 @@
       <section class="vod-clip-panel" role="dialog" aria-modal="true" aria-labelledby="vodClipDialogTitle">
         <div class="vod-clip-head">
           <div>
-            <div class="vod-clip-kicker">NachtSilo Tube</div>
+            <div class="vod-clip-kicker">StreamVault</div>
             <h2 id="vodClipDialogTitle">Clip erstellen</h2>
           </div>
           <div class="vod-clip-head-actions">
@@ -179,10 +179,10 @@
       <script src="{{ url_for('static', filename='live_clip_overlay.js', v=ASSET_VERSION) }}"></script>
       <script>
         const video = document.getElementById('player');
-        window.NachtSiloMediaSession && window.NachtSiloMediaSession.attach(video, {live: true});
+        window.StreamVaultMediaSession && window.StreamVaultMediaSession.attach(video, {live: true});
         window.CLIP_SETTINGS = {{ clip_settings|tojson }};
-        if (window.NachtSiloLiveClip) {
-          window.NachtSiloLiveClip.init({
+        if (window.StreamVaultLiveClip) {
+          window.StreamVaultLiveClip.init({
             player: video,
             source: 'live',
             instantUrl: {{ url_for('clip_instant', streamer=streamer)|tojson }},
@@ -192,7 +192,7 @@
         const statusBox = document.getElementById('hlsStatus');
         const liveNote = document.getElementById('liveNote');
         const src = {{ (playlist_url or url_for('live_playlist', streamer=streamer))|tojson }};
-        window.NachtSiloCast && window.NachtSiloCast.bindVideo(video, {
+        window.StreamVaultCast && window.StreamVaultCast.bindVideo(video, {
           url: src,
           live: true,
           contentType: 'application/vnd.apple.mpegurl'
@@ -209,12 +209,12 @@
         function initPlayer() {
             if (isPlayerReady) return;
 
-            if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(video)) {
+            if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(video)) {
                 video.src = src;
                 isPlayerReady = true;
                 setStatus('Live');
                 if(liveNote) liveNote.style.display = 'none';
-                window.NachtSiloCast.bindVideo(video, {
+                window.StreamVaultCast.bindVideo(video, {
                   url: src,
                   live: true,
                   contentType: 'application/vnd.apple.mpegurl'
@@ -317,7 +317,7 @@
                 });
                 hls.on(Hls.Events.MANIFEST_PARSED, function () {
                     setStatus('Live');
-                    if (!(window.NachtSiloLiveClip && window.NachtSiloLiveClip.isOverlayOpen())) {
+                    if (!(window.StreamVaultLiveClip && window.StreamVaultLiveClip.isOverlayOpen())) {
                         video.muted = false;
                         video.defaultMuted = false;
                         video.removeAttribute('muted');
@@ -395,11 +395,11 @@
         } else {
 
         const chatAssetsReady = Promise.allSettled([
-          window.NachtSiloChat.loadEmotes({{ streamer|tojson }}),
-          window.NachtSiloChat.loadBadges({{ streamer|tojson }})
+          window.StreamVaultChat.loadEmotes({{ streamer|tojson }}),
+          window.StreamVaultChat.loadBadges({{ streamer|tojson }})
         ]);
         function processMsg(item) {
-          return window.NachtSiloChat.renderMessageHtml(item);
+          return window.StreamVaultChat.renderMessageHtml(item);
         }
         function getUserColor(username) {
           const colors = [
@@ -452,12 +452,12 @@
           }
           renderedChatKeys.add(key);
           const line = document.createElement('div');
-          const userColor = window.NachtSiloChat.userColor(item.color) || getUserColor(item.user || '');
-          line.className = window.NachtSiloChat.chatLineClassName(item);
+          const userColor = window.StreamVaultChat.userColor(item.color) || getUserColor(item.user || '');
+          line.className = window.StreamVaultChat.chatLineClassName(item);
           line.innerHTML = '<span class="chat-time">' + formatTime(item.t) + '</span>' +
                            '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user" style="color:' + userColor + '"></span><span class="chat-msg"></span></span>';
           if (!item.event) {
-            line.querySelector('.chat-badges').innerHTML = window.NachtSiloChat.renderBadgesHtml(item);
+            line.querySelector('.chat-badges').innerHTML = window.StreamVaultChat.renderBadgesHtml(item);
             line.querySelector('.chat-user').textContent = (item.user || '') + (item.reward ? ' ' : ': ');
           }
           line.querySelector('.chat-msg').innerHTML = processMsg(item);

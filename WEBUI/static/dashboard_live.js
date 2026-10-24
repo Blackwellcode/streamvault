@@ -1,5 +1,5 @@
 /**
- * NachtSilo Tube — Dashboard Realtime VOD Sync
+ * StreamVault — Dashboard Realtime VOD Sync
  * Automatically detects and renders new VODs on the start page without full reload.
  */
 (function () {

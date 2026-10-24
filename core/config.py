@@ -42,7 +42,6 @@ def _env_flag(name, default=False):
     return str(raw).strip().lower() in ("1", "true", "yes", "on")
 
 
-DEMO_MODE = _env_flag("DEMO_MODE", False)
 
 
 def _normalize_twitch_oauth_token(token):
@@ -134,26 +133,18 @@ VOD_ALLOW_ENV_LOGIN = str(os.environ.get("VOD_ALLOW_ENV_LOGIN", "")).strip().low
     "1", "true", "yes", "on",
 )
 
-if DEMO_MODE:
-    if not VOD_USER:
-        VOD_USER = "demoadmin"
-    if not VOD_PASS:
-        VOD_PASS = "demopassword123"
-    if SECRET_KEY == "change-me":
-        SECRET_KEY = "demo-secret-key-12345"
-else:
-    if not VOD_USER or not VOD_PASS:
-        raise RuntimeError(
-            "CRITICAL: VOD_USER and VOD_PASS environment variables are REQUIRED and must be set to secure values. "
-            "Default credentials are disabled for security. "
-            "Set them in your environment before starting the application."
-        )
+if not VOD_USER or not VOD_PASS:
+    raise RuntimeError(
+        "CRITICAL: VOD_USER and VOD_PASS environment variables are REQUIRED and must be set to secure values. "
+        "Default credentials are disabled for security. "
+        "Set them in your environment before starting the application."
+    )
 
-    if VOD_USER.lower() == "admin" or VOD_PASS == "admin":
-        raise RuntimeError(
-            "SECURITY ERROR: VOD_USER cannot be 'admin' and VOD_PASS cannot be 'admin'. "
-            "Please set secure, unique credentials."
-        )
+if VOD_USER.lower() == "admin" or VOD_PASS == "admin":
+    raise RuntimeError(
+        "SECURITY ERROR: VOD_USER cannot be 'admin' and VOD_PASS cannot be 'admin'. "
+        "Please set secure, unique credentials."
+    )
 
 LEGACY_CHANNELS_FILE = os.path.join(BASE_DIR, ".channels.json")
 LEGACY_LIVE_CHANNEL_FILE = os.path.join(BASE_DIR, ".live_channels.json")

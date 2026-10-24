@@ -1,4 +1,4 @@
-"""Jinja templates for NachtSilo Twitch live hub and embed player."""
+"""Jinja templates for StreamVault Twitch live hub and embed player."""
 
 import os
 

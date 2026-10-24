@@ -1,5 +1,5 @@
 """
-Central Redis Client & State Management for NachtSilo Tube.
+Central Redis Client & State Management for StreamVault.
 Provides thread-safe in-memory caching, distributed locks, task queue, and PubSub.
 Falls back gracefully if Redis is unreachable.
 """
@@ -10,7 +10,7 @@ import time
 import logging
 from typing import Any, Optional, Dict
 
-logger = logging.getLogger("nachtsilo.redis")
+logger = logging.getLogger("streamvault.redis")
 
 _REDIS_CLIENT = None
 _REDIS_AVAILABLE = None
@@ -22,7 +22,7 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 REDIS_DB = int(os.environ.get("REDIS_DB", "0"))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
 
-KEY_PREFIX = "nachtsilo:"
+KEY_PREFIX = "streamvault:"
 TASK_QUEUE_KEY = f"{KEY_PREFIX}tasks:pending"
 TASK_INFLIGHT_KEY = f"{KEY_PREFIX}tasks:inflight"
 STATE_KEY_PREFIX = f"{KEY_PREFIX}state:"

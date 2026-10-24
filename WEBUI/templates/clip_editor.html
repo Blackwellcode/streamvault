@@ -114,7 +114,7 @@ async function shareClip(filename) {
       const slider = document.getElementById('rangeSlider');
       const isLive = {{ 'true' if is_live else 'false' }};
       const mediaUrl = {{ media_url|tojson }};
-      window.NachtSiloCast && window.NachtSiloCast.bindVideo(vPlayer, {
+      window.StreamVaultCast && window.StreamVaultCast.bindVideo(vPlayer, {
         url: mediaUrl,
         live: isLive,
         contentType: isLive ? 'application/vnd.apple.mpegurl' : 'video/mp4'
@@ -129,7 +129,7 @@ async function shareClip(filename) {
 
       // Init Player
       if (isLive) {
-          if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(vPlayer)) {
+          if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(vPlayer)) {
               vPlayer.src = mediaUrl;
           } else if (window.Hls && Hls.isSupported()) {
               const hls = new Hls();

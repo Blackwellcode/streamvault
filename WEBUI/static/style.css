@@ -3401,7 +3401,7 @@ body.page-mobile-index .nav a.active {
   }
 }
 
-/* NACHTSILO TWITCH CONTROL - 2026-06 */
+/* STREAMVAULT TWITCH CONTROL - 2026-06 */
 :root {
   --ns-bg: #08070d;
   --ns-bg-2: #0e0b17;
@@ -3473,7 +3473,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
 }
 
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .brand::before {
-  content: "NachtSilo";
+  content: "StreamVault";
   display: block;
   font-size: 22px;
   line-height: 1;
@@ -3550,7 +3550,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
 }
 
 body.page-index .page-title::after {
-  content: "NachtSilo Control";
+  content: "StreamVault Control";
 }
 
 body.page-index .page-title {
@@ -4469,7 +4469,7 @@ body.page-login h1 {
 }
 
 body.page-login h1::after {
-  content: "NachtSilo";
+  content: "StreamVault";
 }
 
 body.page-login h1 {
@@ -4552,7 +4552,7 @@ body.page-login .portal-frame {
 }
 
 
-/* NACHTSILO STUDIO CONSOLE */
+/* STREAMVAULT STUDIO CONSOLE */
 :root {
   --ns-bg: #0b0d10;
   --ns-rail: #101318;
@@ -5685,7 +5685,7 @@ body.page-mplus .brand {
 }
 
 body.page-mplus .brand::before {
-  content: "NachtSilo";
+  content: "StreamVault";
   display: block;
   font-size: 22px;
   line-height: 1;
@@ -6341,7 +6341,7 @@ body.page-mplus select:focus {
   }
 }
 
-/* Unified NachtSilo Tube theme */
+/* Unified StreamVault theme */
 :root {
   --ns-bg-0: #050909;
   --ns-bg-1: #07100f;
@@ -6438,7 +6438,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
 }
 
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-mplus) .brand::before {
-  content: "NachtSilo Tube" !important;
+  content: "StreamVault" !important;
   display: block !important;
   color: #fff !important;
   font-size: 23px !important;
@@ -6885,7 +6885,7 @@ body.page-chat-export .vod-group {
   }
 }
 
-/* NachtSilo Tube clean platform shell - 2026-06-07 */
+/* StreamVault clean platform shell - 2026-06-07 */
 :root {
   --tube-bg: #050505;
   --tube-surface: #111111;
@@ -8498,7 +8498,7 @@ body.page-mobile-player .chat-container {
     .page-twitch-live,
     .page-twitch-watch
   ) .brand::after {
-    content: "NachtSilo Tube" !important;
+    content: "StreamVault" !important;
     display: block !important;
     color: var(--tube-text) !important;
     font-size: 13px !important;
@@ -12138,7 +12138,7 @@ body.page-stalk .fail{ color:#f87171; }
   body.page-stalk .stalk-form-grid{ grid-template-columns:1fr; }
 }
 
-/* ===== Twitch Live Hub + Embed Watch (NachtSilo Tube) ===== */
+/* ===== Twitch Live Hub + Embed Watch (StreamVault) ===== */
 .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
 .btn-live-watch{
@@ -13610,7 +13610,7 @@ body.page-index .drive-chip {
 }
 
 
-/* NachtSilo Tube — photo viewer lightbox */
+/* StreamVault — photo viewer lightbox */
 html.ns-photo-viewer-open,
 html.ns-photo-viewer-open body {
   overflow: hidden;
@@ -13720,8 +13720,8 @@ html.ns-photo-viewer-open body {
   transition: none;
 }
 
-/* === NachtSilo UI polish (2026-09-05) — see also static/css/ui-polish.css === */
-/* NachtSilo Tube — safe visual polish (tokens + grid + action tools).
+/* === StreamVault UI polish (2026-09-05) — see also static/css/ui-polish.css === */
+/* StreamVault — safe visual polish (tokens + grid + action tools).
  * Loaded last via style.css append. No JS/ID/route changes.
  */
 
@@ -14305,7 +14305,7 @@ body.page-twitch-watch-mobile .chat-split-tube {
   flex: 1 1 55%;
 }
 
-/* NachtSilo Regeln */
+/* StreamVault Regeln */
 body.page-regeln {
   margin: 0;
   min-height: 100vh;

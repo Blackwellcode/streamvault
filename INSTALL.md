@@ -1,6 +1,6 @@
-# NachtSilo Hub / StreamVault — Installation & Deployment Guide
+# StreamVault — Installation & Deployment Guide
 
-This document provides a comprehensive, production-tested deployment guide for **NachtSilo Hub** on Linux (Ubuntu/Debian) and Docker, as well as instructions for local developer setups.
+This document provides a comprehensive, production-tested deployment guide for **StreamVault** on Linux (Ubuntu/Debian) and Docker, as well as instructions for local developer setups.
 
 ---
 
@@ -21,27 +21,26 @@ This document provides a comprehensive, production-tested deployment guide for *
 On any clean Ubuntu 22.04+ or Debian 12+ VPS:
 
 ```bash
-git clone https://github.com/Blackwellcode/nachtsilo-hub.git /tmp/nachtsilo
-cd /tmp/nachtsilo
+git clone https://github.com/Blackwellcode/streamvault.git /tmp/streamvault
+cd /tmp/streamvault
 sudo ./install.sh
 ```
 
 ### What the installer handles automatically:
 - Installs all apt dependencies (`ffmpeg`, `python3-venv`, `nginx`, `sqlite3`).
-- Sets up system user `nachtsilo` and directories (`/opt/nachtsilo`, `/var/lib/nachtsilo`).
-- Generates cryptographically secure secrets in `/etc/nachtsilo/env`.
-- Deploys and enables systemd daemons (`nachtsilo-webui.service`, `nachtsilo-recorder.service`).
+- Sets up system user `streamvault` and directories (`/opt/streamvault`, `/var/lib/streamvault`).
+- Generates cryptographically secure secrets in `/etc/streamvault/env`.
+- Deploys and enables systemd daemons (`streamvault-webui.service`, `streamvault-recorder.service`).
 - Configures Nginx with `X-Accel-Redirect` byte-range media offloading.
-- **Registers the global Linux management command** `/usr/local/bin/nachtsilo`:
+- **Registers the global Linux management command** `/usr/local/bin/streamvault`:
 
 ```bash
-nachtsilo status       # Check daemons and live health
-nachtsilo logs webui   # View WebUI log stream
-nachtsilo logs recorder# View Stream Recorder log stream
-nachtsilo restart      # Restart application daemons
-nachtsilo demo         # Run standalone sandbox demo mode
-nachtsilo update       # Pull updates, upgrade dependencies, and reload
-nachtsilo check        # Validate Python syntax & Nginx configurations
+streamvault status       # Check daemons and live health
+streamvault logs webui   # View WebUI log stream
+streamvault logs recorder# View Stream Recorder log stream
+streamvault restart      # Restart application daemons
+streamvault update       # Pull updates, upgrade dependencies, and reload
+streamvault check        # Validate Python syntax & Nginx configurations
 ```
 
 ---
@@ -50,8 +49,8 @@ nachtsilo check        # Validate Python syntax & Nginx configurations
 
 ### Step 1: Clone Repository & Prepare Environment
 ```bash
-git clone https://github.com/Blackwellcode/nachtsilo-hub.git
-cd nachtsilo-hub
+git clone https://github.com/Blackwellcode/streamvault.git
+cd streamvault
 cp .env.example .env
 ```
 
@@ -89,14 +88,14 @@ sudo apt update && sudo apt install -y \
 ### Step 2: Create Dedicated Service User & Directories
 ```bash
 sudo useradd -r -s /bin/bash -d /opt/streamvault streamvault
-sudo mkdir -p /opt/streamvault /var/log/streamvault /var/lib/streamvault/data /dev/shm/streamrecorder_hls
-sudo chown -R streamvault:streamvault /opt/streamvault /var/log/streamvault /var/lib/streamvault /dev/shm/streamrecorder_hls
+sudo mkdir -p /opt/streamvault /var/log/streamvault /var/lib/streamvault/data /dev/shm/streamvault_hls
+sudo chown -R streamvault:streamvault /opt/streamvault /var/log/streamvault /var/lib/streamvault /dev/shm/streamvault_hls
 sudo chmod 755 /opt/streamvault
 ```
 
 ### Step 3: Deploy Application Code
 ```bash
-sudo -u streamvault git clone https://github.com/Blackwellcode/nachtsilo-hub.git /opt/streamvault/app
+sudo -u streamvault git clone https://github.com/Blackwellcode/streamvault.git /opt/streamvault/app
 cd /opt/streamvault/app
 sudo -u streamvault python3 -m venv /opt/streamvault/venv
 sudo -u streamvault /opt/streamvault/venv/bin/pip install --upgrade pip
@@ -116,7 +115,7 @@ Ensure `/etc/streamvault/env` contains:
 VOD_HOST=127.0.0.1
 VOD_PORT=8080
 VOD_BASE_DIR=/var/lib/streamvault/data
-LIVE_HLS_DIR=/dev/shm/streamrecorder_hls
+LIVE_HLS_DIR=/dev/shm/streamvault_hls
 VOD_USER=vaultadmin
 VOD_PASS=YourSuperSecretPasswordHere987!
 VOD_SECRET_KEY=generate_a_random_32_character_string_here
@@ -125,12 +124,12 @@ VOD_USE_X_ACCEL=true
 
 ---
 
-## 4. Systemd Daemon Units
+## 5. Systemd Daemon Units
 
 ### WebUI Service (`/etc/systemd/system/streamvault-webui.service`)
 ```ini
 [Unit]
-Description=NachtSilo Hub - WebUI Daemon
+Description=StreamVault - WebUI Daemon
 After=network.target redis.service
 
 [Service]
@@ -159,7 +158,7 @@ WantedBy=multi-user.target
 ### Stream Recorder Daemon (`/etc/systemd/system/streamvault-recorder.service`)
 ```ini
 [Unit]
-Description=NachtSilo Hub - Stream Recorder Daemon
+Description=StreamVault - Stream Recorder Daemon
 After=network.target streamvault-webui.service
 
 [Service]
@@ -186,7 +185,7 @@ sudo systemctl enable --now streamvault-recorder
 
 ---
 
-## 5. Nginx Reverse Proxy with X-Accel-Redirect
+## 6. Nginx Reverse Proxy with X-Accel-Redirect
 
 Nginx performs direct kernel-level offloading (`sendfile`) for video Range requests, preventing Python worker starvation during scrubbing:
 
@@ -227,7 +226,7 @@ server {
 
     # 3. Live HLS RAM-Disk Offload
     location /_hls_live/ {
-        alias /dev/shm/streamrecorder_hls/;
+        alias /dev/shm/streamvault_hls/;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Access-Control-Allow-Origin *;
     }
@@ -242,20 +241,25 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 6. Turnkey Demo Mode (Developer / Local Evaluation)
+## 7. Local Developer Setup
 
-To run the application locally without any real Twitch streams or credentials:
+To run the application locally for development:
 
 ```bash
-# Windows / Linux / macOS
+# Clone the repository
+git clone https://github.com/Blackwellcode/streamvault.git
+cd streamvault
+
+# Setup Python virtual environment
 python -m venv .venv
 source .venv/bin/activate  # (Windows: .venv\Scripts\activate)
 pip install -r requirements.txt
 
-# Start in Demo Mode
-python WEBUI/webui.py --demo --port 8080
-```
+# Configure environment variables
+cp .env.example .env
+# Edit .env with your desired VOD_USER and VOD_PASS credentials
 
-1. Open `http://localhost:8080/login`.
-2. Credentials: Username `admin`, Password `admin`.
-3. The demo environment automatically seeds neutral streamers, playable VODs, thumbnails, synchronized chat replay, and live HLS streams.
+# Start WebUI server
+python WEBUI/webui.py --port 8080
+```
+Open `http://localhost:8080/login` and log in with the credentials set in your `.env`.

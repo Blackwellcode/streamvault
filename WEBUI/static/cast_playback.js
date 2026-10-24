@@ -263,7 +263,7 @@
     const el = document.getElementById("watchDisplayName")
       || document.querySelector(".vod-display-title");
     const text = el && el.textContent ? el.textContent.trim() : "";
-    return text || "NachtSilo Tube";
+    return text || "StreamVault";
   }
 
   async function loadResolvedOnSession(session, resolved) {
@@ -286,7 +286,7 @@
     if (chrome.cast.media.GenericMediaMetadata) {
       const meta = new chrome.cast.media.GenericMediaMetadata();
       meta.title = mediaTitle();
-      meta.subtitle = live ? "Live" : "NachtSilo Tube";
+      meta.subtitle = live ? "Live" : "StreamVault";
       mediaInfo.metadata = meta;
     }
     const request = new chrome.cast.media.LoadRequest(mediaInfo);
@@ -442,7 +442,7 @@
     return { mode: "src", hls: null };
   }
 
-  global.NachtSiloCast = {
+  global.StreamVaultCast = {
     canNativeHls: canNativeHls,
     preferNativeHls: preferNativeHls,
     enableAirPlay: enableAirPlay,

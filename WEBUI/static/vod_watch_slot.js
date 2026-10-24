@@ -96,14 +96,14 @@
         if (playAfter) playAfter();
         else if (shouldPlay && video.paused && !video.ended) {
           if (
-            typeof video._nachtSiloPlaybackUserPaused === "function"
-            && video._nachtSiloPlaybackUserPaused()
+            typeof video._streamVaultPlaybackUserPaused === "function"
+            && video._streamVaultPlaybackUserPaused()
           ) {
             return;
           }
           if (
-            typeof video._nachtSiloUserPaused === "function"
-            && video._nachtSiloUserPaused()
+            typeof video._streamVaultUserPaused === "function"
+            && video._streamVaultUserPaused()
           ) {
             return;
           }
@@ -132,14 +132,14 @@
       pendingPlayAfterClaim = true;
       claimThen(function () {
         if (
-          typeof video._nachtSiloPlaybackUserPaused === "function"
-          && video._nachtSiloPlaybackUserPaused()
+          typeof video._streamVaultPlaybackUserPaused === "function"
+          && video._streamVaultPlaybackUserPaused()
         ) {
           return;
         }
         if (
-          typeof video._nachtSiloUserPaused === "function"
-          && video._nachtSiloUserPaused()
+          typeof video._streamVaultUserPaused === "function"
+          && video._streamVaultUserPaused()
         ) {
           return;
         }
@@ -186,5 +186,5 @@
     });
   }
 
-  window.NachtSiloVodSlot = { attach: attach };
+  window.StreamVaultVodSlot = { attach: attach };
 })();

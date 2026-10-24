@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: streamrecorder_app
+    container_name: streamvault_app
     build:
       context: .
       dockerfile_inline: |
@@ -37,7 +37,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: streamrecorder_nginx
+    container_name: streamvault_nginx
     restart: unless-stopped
     ports:
       - "8090:80"

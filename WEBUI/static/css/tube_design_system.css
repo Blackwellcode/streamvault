@@ -812,7 +812,7 @@ body.ns-platform .card-actions .action-btn:hover {
   border-color: var(--ns-border-medium) !important;
 }
 /* ==========================================================================
-   STREAMER DETAIL & VIDEO ARCHIVE COMPLETE REDESIGN ("NACHTSILO COMMAND")
+   STREAMER DETAIL & VIDEO ARCHIVE COMPLETE REDESIGN ("STREAMVAULT COMMAND")
    ========================================================================== */
 
 /* 1. Viewport & Main Container Fixes */
@@ -1515,7 +1515,7 @@ body.ns-platform .ns-app-main {
 }
 
 /* ==========================================================================
-   ADMIN PANEL COMPLETE VISUAL OVERHAUL ("NACHTSILO COMMAND")
+   ADMIN PANEL COMPLETE VISUAL OVERHAUL ("STREAMVAULT COMMAND")
    ========================================================================== */
 
 body.ns-platform.page-admin .main,
@@ -1688,7 +1688,7 @@ body.ns-platform.page-stalk-admin tr:hover td {
 }
 
 /* ==========================================================================
-   NACHTSILO COMMAND: GLOBAL PLATFORM-WIDE CLEARANCE & RAIL RESILIENCE
+   STREAMVAULT COMMAND: GLOBAL PLATFORM-WIDE CLEARANCE & RAIL RESILIENCE
    ========================================================================== */
 
 :root {

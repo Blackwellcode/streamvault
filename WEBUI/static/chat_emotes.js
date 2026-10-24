@@ -538,7 +538,7 @@
   // Seed immediately so first paint already uses official Twitch icons.
   seedCoreTwitchBadges();
 
-  window.NachtSiloChat = {
+  window.StreamVaultChat = {
     escapeHtml,
     loadBadges,
     loadEmotes,

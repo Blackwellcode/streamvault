@@ -1,8 +1,8 @@
-"""Google Drive archive for NachtSilo Tube.
+"""Google Drive archive for StreamVault.
 
-Creates/uses a `nachtsilo.tube` root folder, one subfolder per streamer,
+Creates/uses a `streamvault.archive` root folder, one subfolder per streamer,
 uploads local archive MP4s (+ matching chat JSONL sidecars), and indexes
-Drive-only videos for private playback through NachtSilo Tube.
+Drive-only videos for private playback through StreamVault.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3"
 FOLDER_MIME = "application/vnd.google-apps.folder"
 CHAT_MIME = "application/x-ndjson"
 DRIVE_SCOPE = "https://www.googleapis.com/auth/drive"
-VISIBILITY_KEY = "nachtsilo_visibility"
+VISIBILITY_KEY = "streamvault_visibility"
 ROOT_SENTINEL = "__root__"
 # Größere Chunks (64MB statt 8MB) reduzieren die Anzahl der API-Calls massiv (Quota-Schonung)
 UPLOAD_CHUNK = 64 * 1024 * 1024
@@ -615,7 +615,7 @@ def ensure_root_folder():
         return configured_id
     status = load_status()
     cached = str(status.get("root_id") or "").strip()
-    root_name = str(getattr(config, "GDRIVE_ROOT_NAME", "nachtsilo.tube") or "nachtsilo.tube").strip()
+    root_name = str(getattr(config, "GDRIVE_ROOT_NAME", "streamvault.archive") or "streamvault.archive").strip()
     if cached:
         return cached
     found = _find_named_folder(root_name)
@@ -3986,7 +3986,7 @@ def sync_once(upload_limit=None):
             "connected": True,
             "auth_mode": auth_mode(),
             "root_id": root_id,
-            "root_name": getattr(config, "GDRIVE_ROOT_NAME", "nachtsilo.tube"),
+            "root_name": getattr(config, "GDRIVE_ROOT_NAME", "streamvault.archive"),
             "last_sync_at": time.time(),
             "last_error": "",
             "uploaded": uploaded,
@@ -4155,7 +4155,7 @@ def public_status():
         "configured": configured(),
         "connected": bool(data.get("connected")) and configured(),
         "auth_mode": data.get("auth_mode") or auth_mode(),
-        "root_name": data.get("root_name") or getattr(config, "GDRIVE_ROOT_NAME", "nachtsilo.tube"),
+        "root_name": data.get("root_name") or getattr(config, "GDRIVE_ROOT_NAME", "streamvault.archive"),
         "last_sync_at": last_sync,
         "last_sync_str": last_sync_str,
         "last_error": str(data.get("last_error") or "")[:240],

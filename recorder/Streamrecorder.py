@@ -219,7 +219,7 @@ def find_ytdlp():
     raise FileNotFoundError("yt-dlp nicht gefunden. Installiere es im aktiven Python-Venv.")
 
 def ytdlp_js_runtime_args():
-    """yt-dlp enables only Deno by default; NachtSilo has Node (/usr/bin/node), not Deno."""
+    """yt-dlp enables only Deno by default; StreamVault has Node (/usr/bin/node), not Deno."""
     runtime = os.environ.get("STREAM_RECORDER_YTDLP_JS_RUNTIME", "").strip()
     if runtime.lower() in ("none", "off", "0"):
         return []

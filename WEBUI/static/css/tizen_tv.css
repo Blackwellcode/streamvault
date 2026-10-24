@@ -1,4 +1,4 @@
-/* NachtSilo Tube - Tizen 5.0 (Samsung TV 2019) Optimized Compatibility Layer */
+/* StreamVault - Tizen 5.0 (Samsung TV 2019) Optimized Compatibility Layer */
 
 /* Auto-generated Chromium 63 / Tizen 5.0 Compatibility Layer */
 html.is-tizen-tv body.page-admin .recording-health-panel, html.is-tizen-tv body.page-index .recording-health-panel, html.is-tizen-tv body.page-streamer .streamer-insights {
@@ -652,7 +652,7 @@ html.is-tizen-tv .brand {
 }
 
 html.is-tizen-tv .brand::before {
-  content: "NachtSilo"; display: block; font-size: 22px; line-height: 1; letter-spacing: 0; color: #fff;
+  content: "StreamVault"; display: block; font-size: 22px; line-height: 1; letter-spacing: 0; color: #fff;
 }
 
 html.is-tizen-tv .brand::after {
@@ -1055,7 +1055,7 @@ html.is-tizen-tv .brand {
 }
 
 html.is-tizen-tv .brand::before {
-  content: "NachtSilo Tube" !important; display: block !important; color: #fff !important; font-size: 23px !important; line-height: 1.05 !important; font-weight: 900 !important; letter-spacing: 0 !important;
+  content: "StreamVault" !important; display: block !important; color: #fff !important; font-size: 23px !important; line-height: 1.05 !important; font-weight: 900 !important; letter-spacing: 0 !important;
 }
 
 html.is-tizen-tv .brand::after {
@@ -1379,7 +1379,7 @@ html.is-tizen-tv .brand::before {
 }
 
 html.is-tizen-tv .brand::after {
-  content: "NachtSilo Tube" !important; display: block !important; color: var(--tube-text) !important; font-size: 13px !important; font-weight: 850 !important; letter-spacing: -0.02em !important;
+  content: "StreamVault" !important; display: block !important; color: var(--tube-text) !important; font-size: 13px !important; font-weight: 850 !important; letter-spacing: -0.02em !important;
 }
 
 html.is-tizen-tv nav {
@@ -2811,7 +2811,7 @@ html.is-tizen-tv .nebula-modal-backdrop {
 }
 
 /* ==========================================================================
-   NACHTSILO TUBE — SAMSUNG TIZEN 5.0 (55" 10-FOOT SMART TV UI SCALING)
+   STREAMVAULT — SAMSUNG TIZEN 5.0 (55" 10-FOOT SMART TV UI SCALING)
    ========================================================================== */
 
 html.is-tizen-tv.is-tizen-tv.is-tizen-tv.is-tizen-tv, html.is-tizen-tv.is-tizen-tv.is-tizen-tv.is-tizen-tv body {

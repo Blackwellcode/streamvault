@@ -121,8 +121,8 @@
    * should stick — occlusion often leaves document.visibilityState=visible.
    */
   function keepPlaying(video) {
-    if (!video || video._nachtSiloKeepPlaying) return;
-    video._nachtSiloKeepPlaying = true;
+    if (!video || video._streamVaultKeepPlaying) return;
+    video._streamVaultKeepPlaying = true;
 
     var wantPlaying = !video.paused;
     var intentionalPause = false;
@@ -204,7 +204,7 @@
 
     video.addEventListener("play", function () {
       // Do not clear intentionalPause on spurious play() — only Media Session
-      // play action / _nachtSiloSetUserPaused(false) may resume.
+      // play action / _streamVaultSetUserPaused(false) may resume.
       if (intentionalPause) return;
       noteWantPlaying();
     });
@@ -215,7 +215,7 @@
     video.addEventListener("seeking", markScrub);
     video.addEventListener("seeked", function () {
       markScrub();
-      // Foreground seek resume is owned by NachtSiloVodPlayback — only help
+      // Foreground seek resume is owned by StreamVaultVodPlayback — only help
       // when the PWA/tab is backgrounded and Chromium paused media.
       if (wantPlaying && !intentionalPause && !video.ended && pageIsBackgrounded()) {
         safePlay(video);
@@ -311,10 +311,10 @@
       noteWantPlaying();
     }
 
-    video._nachtSiloUserPaused = function () {
+    video._streamVaultUserPaused = function () {
       return intentionalPause;
     };
-    video._nachtSiloSetUserPaused = function (value) {
+    video._streamVaultSetUserPaused = function (value) {
       if (value) noteIntentionalPause();
       else noteWantPlaying();
     };
@@ -327,8 +327,8 @@
     const data = video.dataset || {};
     const isLive = data.mediaLive === "true" || (options && options.live === true);
     const artwork = text(data.mediaArtwork || (options && options.artwork), "/app-icon-512.png");
-    const title = text(data.mediaTitle || (options && options.title), document.title || "NachtSilo Tube");
-    const artist = text(data.mediaArtist || (options && options.artist), "NachtSilo Tube");
+    const title = text(data.mediaTitle || (options && options.title), document.title || "StreamVault");
+    const artist = text(data.mediaArtist || (options && options.artist), "StreamVault");
     const album = text(data.mediaAlbum || (options && options.album), isLive ? "Live" : "Archiv");
 
     try {
@@ -344,20 +344,20 @@
     } catch (_) {}
 
     setAction("play", function () {
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        video._nachtSiloSetUserPaused(false);
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        video._streamVaultSetUserPaused(false);
       }
       safePlay(video);
     });
     setAction("pause", function () {
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        video._nachtSiloSetUserPaused(true);
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        video._streamVaultSetUserPaused(true);
       }
       video.pause();
     });
     setAction("stop", function () {
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        video._nachtSiloSetUserPaused(true);
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        video._streamVaultSetUserPaused(true);
       }
       video.pause();
     });
@@ -380,8 +380,8 @@
 
     function updateState() {
       var forcePlaying =
-        typeof video._nachtSiloUserPaused === "function"
-          ? !video._nachtSiloUserPaused() && !video.ended
+        typeof video._streamVaultUserPaused === "function"
+          ? !video._streamVaultUserPaused() && !video.ended
           : !video.paused;
       try {
         navigator.mediaSession.playbackState =
@@ -406,7 +406,7 @@
     updateState();
   }
 
-  window.NachtSiloMediaSession = {
+  window.StreamVaultMediaSession = {
     attach: attach,
     keepPlaying: keepPlaying,
     safePlay: safePlay,

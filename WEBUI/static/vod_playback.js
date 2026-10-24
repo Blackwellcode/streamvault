@@ -5,8 +5,8 @@
 
   function dbg(kind, detail) {
     try {
-      if (window.NachtSiloVodDebug && typeof window.NachtSiloVodDebug.log === "function") {
-        window.NachtSiloVodDebug.log("playback", kind, detail || {});
+      if (window.StreamVaultVodDebug && typeof window.StreamVaultVodDebug.log === "function") {
+        window.StreamVaultVodDebug.log("playback", kind, detail || {});
       }
     } catch (_) {}
   }
@@ -26,8 +26,8 @@
   }
 
   function guard(video, options) {
-    if (!video || video._nachtSiloPlaybackGuardInstalled) return;
-    video._nachtSiloPlaybackGuardInstalled = true;
+    if (!video || video._streamVaultPlaybackGuardInstalled) return;
+    video._streamVaultPlaybackGuardInstalled = true;
     const opts = options || {};
     const knownDuration = isFiniteNumber(Number(opts.knownDuration))
       ? Number(opts.knownDuration)
@@ -164,14 +164,14 @@
     }
 
     function clearMediaSessionPause() {
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        try { video._nachtSiloSetUserPaused(false); } catch (_) {}
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        try { video._streamVaultSetUserPaused(false); } catch (_) {}
       }
     }
 
     function syncMediaSessionPaused(paused) {
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        try { video._nachtSiloSetUserPaused(!!paused); } catch (_) {}
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        try { video._streamVaultSetUserPaused(!!paused); } catch (_) {}
       }
     }
 
@@ -207,8 +207,8 @@
     }
 
     function mediaSessionSaysPaused() {
-      return typeof video._nachtSiloUserPaused === "function"
-        && video._nachtSiloUserPaused();
+      return typeof video._streamVaultUserPaused === "function"
+        && video._streamVaultUserPaused();
     }
 
     function forcePlay() {
@@ -350,8 +350,8 @@ function refreshDecodeAtPlayhead(forceReconnect) {
         return;
       }
       if (
-        typeof video._nachtSiloUserPaused === "function"
-        && video._nachtSiloUserPaused()
+        typeof video._streamVaultUserPaused === "function"
+        && video._streamVaultUserPaused()
       ) {
         userPaused = true;
         wantPlaying = false;
@@ -443,8 +443,8 @@ function refreshDecodeAtPlayhead(forceReconnect) {
             target: lastUserSeekTarget,
           });
           try {
-            if (window.NachtSiloVodDebug && window.NachtSiloVodDebug.showQuotaToast) {
-              window.NachtSiloVodDebug.showQuotaToast(60);
+            if (window.StreamVaultVodDebug && window.StreamVaultVodDebug.showQuotaToast) {
+              window.StreamVaultVodDebug.showQuotaToast(60);
             }
           } catch (_) {}
           noteQuotaHold(90);
@@ -471,8 +471,8 @@ function refreshDecodeAtPlayhead(forceReconnect) {
           if (isDriveOnly) {
             dbg("stall-drive-quota-timeout", { stuckFor: stuckFor, t: video.currentTime });
             try {
-              if (window.NachtSiloVodDebug && window.NachtSiloVodDebug.showQuotaToast) {
-                window.NachtSiloVodDebug.showQuotaToast(60);
+              if (window.StreamVaultVodDebug && window.StreamVaultVodDebug.showQuotaToast) {
+                window.StreamVaultVodDebug.showQuotaToast(60);
               }
             } catch (_) {}
             noteQuotaHold(60);
@@ -699,13 +699,13 @@ function refreshDecodeAtPlayhead(forceReconnect) {
       forcePlay();
     }
 
-    video._nachtSiloRequestPlay = requestPlay;
-    video._nachtSiloNoteUserSeek = noteUserSeek;
-    video._nachtSiloNoteQuotaHold = noteQuotaHold;
-    video._nachtSiloPlaybackUserPaused = function () {
+    video._streamVaultRequestPlay = requestPlay;
+    video._streamVaultNoteUserSeek = noteUserSeek;
+    video._streamVaultNoteQuotaHold = noteQuotaHold;
+    video._streamVaultPlaybackUserPaused = function () {
       return !!userPaused || mediaSessionSaysPaused();
     };
-    video._nachtSiloPlaybackGuard = {
+    video._streamVaultPlaybackGuard = {
       lastGoodTime: function () { return lastGoodTime; },
       wantPlaying: function () { return wantPlaying; },
       userPaused: function () { return !!userPaused; },
@@ -715,7 +715,7 @@ function refreshDecodeAtPlayhead(forceReconnect) {
     };
   }
 
-  window.NachtSiloVodPlayback = {
+  window.StreamVaultVodPlayback = {
     guard: guard,
   };
 })();

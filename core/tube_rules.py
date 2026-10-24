@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""NachtSilo Tube Hausordnung — single source of truth for the short rules.
+"""StreamVault Hausordnung — single source of truth for the short rules.
 
 Shared by webui (Anlage in /agb).
 Legal frame is content/agb.md via tube_terms.py. Consent is one checkbox/phrase
 for AGB inkl. Nutzungsregeln. Bump RULES_VERSION when RULES_ITEMS change;
 also bump termsVersion in content/agb.md so users must re-accept.
 
-Maintenance: edit RULES_ITEMS / RULES_VERSION here only. See docs/nachtsilo-regeln.md
+Maintenance: edit RULES_ITEMS / RULES_VERSION here only. See docs/regeln.md
 and docs/agb.md.
 """
 
@@ -17,7 +17,7 @@ from typing import Any
 
 # Bump this string whenever RULES_ITEMS change in a binding way.
 RULES_VERSION = "2026-09-07-v1"
-RULES_TITLE = "NachtSilo / Zugang — verbindliche Regeln"
+RULES_TITLE = "StreamVault / Zugang — verbindliche Regeln"
 RULES_ACCEPT_PHRASE = "AKZEPTIERE"
 RULES_FOOTER = (
     "Hinweis: Diese Regeln sind Hausordnung für den Kreis. "
@@ -27,7 +27,7 @@ RULES_FOOTER = (
 RULES_ITEMS: list[str] = [
     "**Zugang nur für Freigeschaltete.** Accounts, Invites und Login-Daten nicht weitergeben. Wer jemanden mitbringt, fragt vorher den Approver — kein Self-Invite.",
     "**Keine öffentlichen Spuren.** Keine Screenshots, Clips, Links oder Mentions in anderen Discords, Reddit, Twitter/X, Twitch-Chat, Foren usw.",
-    "**Links nur intern.** NachtSilo-Links, Share-Tokens und Einladungen bleiben in diesem Server / freigegebenen Kanälen. Kein Forwarding an Nicht-Mitglieder.",
+    "**Links nur intern.** StreamVault-Links, Share-Tokens und Einladungen bleiben in diesem Server / freigegebenen Kanälen. Kein Forwarding an Nicht-Mitglieder.",
     "**Keine Weitergabe von Dateien.** VODs, Downloads, Chat-Exporte, Screen-Recordings: nicht in Clouds, andere Server oder an Dritte.",
     "**Kein Download-Bulk / kein Spiegel.** Kein Massen-Download, kein zweites Archiv, kein Re-Host.",
     "**Keine Monetisierung.** Keine Spenden, Ads, Paid Access, Giveaways mit Zugang als Preis.",
@@ -112,7 +112,7 @@ def validate_accept_input(raw: str | None) -> None:
     if normalize_accept_input(raw) != RULES_ACCEPT_PHRASE:
         raise ValueError(
             f"AGB inkl. Nutzungsregeln nicht akzeptiert. Bitte exakt `{RULES_ACCEPT_PHRASE}` eingeben "
-            f"(siehe #nachtsilo-regeln / #agb bzw. {LOGIN_RULES_HINT})."
+            f"(siehe #regeln / #agb bzw. {LOGIN_RULES_HINT})."
         )
 
 

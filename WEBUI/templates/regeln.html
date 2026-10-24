@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NachtSilo Tube · Regeln</title>
+    <title>StreamVault · Regeln</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
@@ -11,7 +11,7 @@
   <body class="page-regeln {{ theme_class }} ns-platform">
     <main class="regeln-shell">
       <header class="regeln-head">
-        <div class="regeln-brand">NachtSilo Tube</div>
+        <div class="regeln-brand">StreamVault</div>
         <h1>{{ rules_title }}</h1>
         <p class="regeln-sub">Hausordnung für den Invite-only-Kreis. Kein „offiziell“-Framing — nur verbindliche Nutzungsregeln.</p>
         <div class="regeln-meta">Version <code>{{ rules_version }}</code></div>
@@ -39,7 +39,7 @@
         <input type="hidden" name="rules_version" value="{{ rules_version }}">
         <label class="regeln-check">
           <input type="checkbox" name="rules_accepted" value="1" id="regelnCheck" required>
-          <span>Ich habe die NachtSilo-Regeln gelesen und akzeptiere sie. Ich weiß, dass Verstöße zum sofortigen Entzug des Zugangs führen.</span>
+          <span>Ich habe die StreamVault-Regeln gelesen und akzeptiere sie. Ich weiß, dass Verstöße zum sofortigen Entzug des Zugangs führen.</span>
         </label>
         <button type="submit" class="btn-primary" id="regelnSubmit" disabled>Regeln akzeptieren</button>
       </form>

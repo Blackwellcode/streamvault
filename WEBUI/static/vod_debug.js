@@ -1,6 +1,6 @@
 (function () {
-  var STORAGE_KEY = "nachtsilo_vod_debug";
-  var UI_KEY = "nachtsilo_vod_debug_ui";
+  var STORAGE_KEY = "streamvault_vod_debug";
+  var UI_KEY = "streamvault_vod_debug_ui";
   var MAX_EVENTS = 500;
   var events = [];
   var seq = 0;
@@ -37,7 +37,7 @@
     try {
       if (window.localStorage.getItem(STORAGE_KEY) === "0") return false;
     } catch (_) {}
-    if (window.NACHTSILO_VOD_DEBUG_DEFAULT === true) return true;
+    if (window.STREAMVAULT_VOD_DEBUG_DEFAULT === true) return true;
     try {
       return window.localStorage.getItem(STORAGE_KEY) === "1";
     } catch (_) {
@@ -151,7 +151,7 @@
     if (!force && events.length === lastFlushLen) return;
     var csrf = "";
     try {
-      csrf = window.__NACHTSILO_CSRF
+      csrf = window.__STREAMVAULT_CSRF
         || (document.querySelector('input[name="csrf_token"]') || {}).value
         || "";
     } catch (_) {}
@@ -273,8 +273,8 @@
               showQuotaToast(retry);
               try {
                 var v = videoRef || document.getElementById("vodPlayer") || document.getElementById("player");
-                if (v && typeof v._nachtSiloNoteQuotaHold === "function") {
-                  v._nachtSiloNoteQuotaHold(retry);
+                if (v && typeof v._streamVaultNoteQuotaHold === "function") {
+                  v._streamVaultNoteQuotaHold(retry);
                 }
               } catch (_) {}
             }
@@ -289,7 +289,7 @@
   }
 
   function wrapFn(scopeName, obj, key) {
-    if (!obj || typeof obj[key] !== "function" || obj[key]._nachtSiloDbgWrapped) return;
+    if (!obj || typeof obj[key] !== "function" || obj[key]._streamVaultDbgWrapped) return;
     var original = obj[key];
     function wrapped() {
       var args;
@@ -306,7 +306,7 @@
       push(scopeName, "call:" + key, { args: args });
       return original.apply(this, arguments);
     }
-    wrapped._nachtSiloDbgWrapped = true;
+    wrapped._streamVaultDbgWrapped = true;
     obj[key] = wrapped;
   }
 
@@ -314,11 +314,11 @@
     hookPageFetch();
     // Lightweight wraps for known page helpers once they exist.
     try {
-      if (window.NachtSiloVodPlayback && window.NachtSiloVodPlayback.guard) {
-        wrapFn("api", window.NachtSiloVodPlayback, "guard");
+      if (window.StreamVaultVodPlayback && window.StreamVaultVodPlayback.guard) {
+        wrapFn("api", window.StreamVaultVodPlayback, "guard");
       }
-      if (window.NachtSiloSeekHover && window.NachtSiloSeekHover.attach) {
-        wrapFn("api", window.NachtSiloSeekHover, "attach");
+      if (window.StreamVaultSeekHover && window.StreamVaultSeekHover.attach) {
+        wrapFn("api", window.StreamVaultSeekHover, "attach");
       }
     } catch (_) {}
     [
@@ -360,19 +360,19 @@
         }
         // progress is frequent — sample.
         if (name === "progress") {
-          var last = video._nachtSiloDbgLastProg || 0;
+          var last = video._streamVaultDbgLastProg || 0;
           if (nowMs() - last < 2000) return;
-          video._nachtSiloDbgLastProg = nowMs();
+          video._streamVaultDbgLastProg = nowMs();
         }
         push("video", name, detail);
       });
     });
 
     video.addEventListener("timeupdate", function () {
-      var last = video._nachtSiloDbgLastTu || 0;
+      var last = video._streamVaultDbgLastTu || 0;
       var t = nowMs();
       if (t - last < 2500 && !video.seeking) return;
-      video._nachtSiloDbgLastTu = t;
+      video._streamVaultDbgLastTu = t;
       push("video", "timeupdate", {});
     });
 
@@ -395,27 +395,27 @@
     } catch (_) {}
 
     video.addEventListener("seeking", function () {
-      video._nachtSiloDbgSeekStart = nowMs();
+      video._streamVaultDbgSeekStart = nowMs();
     });
     video.addEventListener("seeked", function () {
-      video._nachtSiloDbgSeekStart = 0;
+      video._streamVaultDbgSeekStart = 0;
     });
     video.addEventListener("waiting", function () {
-      if (!video._nachtSiloDbgWaitStart) video._nachtSiloDbgWaitStart = nowMs();
+      if (!video._streamVaultDbgWaitStart) video._streamVaultDbgWaitStart = nowMs();
     });
     video.addEventListener("playing", function () {
-      video._nachtSiloDbgWaitStart = 0;
+      video._streamVaultDbgWaitStart = 0;
     });
 
     if (heartbeatTimer) window.clearInterval(heartbeatTimer);
     heartbeatTimer = window.setInterval(function () {
       if (!enabled() || !videoRef) return;
       var v = videoRef;
-      var stuckSeeking = v.seeking && (nowMs() - (v._nachtSiloDbgSeekStart || nowMs())) > 4000;
-      var stuckWait = !v.paused && v.readyState < 3 && (nowMs() - (v._nachtSiloDbgWaitStart || 0)) > 4000;
+      var stuckSeeking = v.seeking && (nowMs() - (v._streamVaultDbgSeekStart || nowMs())) > 4000;
+      var stuckWait = !v.paused && v.readyState < 3 && (nowMs() - (v._streamVaultDbgWaitStart || 0)) > 4000;
       var frozen = !v.paused && !v.seeking && v.readyState >= 2
-        && (nowMs() - (v._nachtSiloDbgLastTu || nowMs())) > 5000
-        && (v._nachtSiloDbgLastTu || 0) > 0;
+        && (nowMs() - (v._streamVaultDbgLastTu || nowMs())) > 5000
+        && (v._streamVaultDbgLastTu || 0) > 0;
       if (stuckSeeking || stuckWait || frozen) {
         push("watchdog", "hang", {
           stuckSeeking: !!stuckSeeking,
@@ -425,8 +425,8 @@
         // Native <video> Range 503s are invisible to fetch(); surface quota UI
         // when playback freezes without buffered media ahead.
         try {
-          if (window.NachtSiloVodDebug && window.NachtSiloVodDebug.showQuotaToast) {
-            window.NachtSiloVodDebug.showQuotaToast(180);
+          if (window.StreamVaultVodDebug && window.StreamVaultVodDebug.showQuotaToast) {
+            window.StreamVaultVodDebug.showQuotaToast(180);
           }
         } catch (_) {}
       }
@@ -445,7 +445,7 @@
     return push(source, kind, detail || {});
   }
 
-  window.NachtSiloVodDebug = {
+  window.StreamVaultVodDebug = {
     enabled: enabled,
     attach: attachVideo,
     log: log,

@@ -132,8 +132,8 @@
     var video = getActiveVideo();
     if (pw) pw.classList.add("ns-tv-controls-awake");
     if (bar) bar.classList.remove("vod-controlbar--hidden");
-    if (video && typeof video._nachtSiloShowControls === "function") {
-      try { video._nachtSiloShowControls(); } catch (_) {}
+    if (video && typeof video._streamVaultShowControls === "function") {
+      try { video._streamVaultShowControls(); } catch (_) {}
     }
     var seekEl = document.querySelector(".vod-seekbar");
     if (seekEl && !seekEl.hasAttribute("tabindex")) {
@@ -237,8 +237,8 @@
     wakeControlBar();
     if (video.paused) {
       try {
-        if (typeof video._nachtSiloSetUserPaused === "function") {
-          video._nachtSiloSetUserPaused(false);
+        if (typeof video._streamVaultSetUserPaused === "function") {
+          video._streamVaultSetUserPaused(false);
         }
         var p = video.play();
         if (p && typeof p.catch === "function") {
@@ -251,8 +251,8 @@
       } catch (e) {}
     } else {
       try {
-        if (typeof video._nachtSiloSetUserPaused === "function") {
-          video._nachtSiloSetUserPaused(true);
+        if (typeof video._streamVaultSetUserPaused === "function") {
+          video._streamVaultSetUserPaused(true);
         }
         video.pause();
         showToast("⏸ Pause");
@@ -282,8 +282,8 @@
     var cur = Number(video.currentTime) || 0;
     var target = Math.max(0, Math.min(dur, cur + dir * step));
 
-    if (typeof video._nachtSiloNoteUserSeek === "function") {
-      try { video._nachtSiloNoteUserSeek(target); } catch (_) {}
+    if (typeof video._streamVaultNoteUserSeek === "function") {
+      try { video._streamVaultNoteUserSeek(target); } catch (_) {}
     }
     video.currentTime = target;
 

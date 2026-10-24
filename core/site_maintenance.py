@@ -1,4 +1,4 @@
-"""Runtime maintenance / WIP gate for NachtSilo Tube.
+"""Runtime maintenance / WIP gate for StreamVault.
 
 Persists in META_DIR so admins can toggle without restarting the process.
 Env ``MAINTENANCE_MODE`` is only a bootstrap default when no state file exists.
@@ -6,7 +6,7 @@ Supports global maintenance as well as granular scopes:
 - vod: VOD playback and archive
 - live: Live streams and Twitch viewer
 - mobile: Mobile version
-Also supports a whitelist of bypass usernames (e.g. gatekeeper_nachtsilo).
+Also supports a whitelist of bypass usernames (e.g. gatekeeper_streamvault).
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ _LOCK = threading.Lock()
 _CACHE = None
 _CACHE_MTIME = None
 
-DEFAULT_BYPASS_USERS = ["gatekeeper_nachtsilo"]
+DEFAULT_BYPASS_USERS = ["gatekeeper_streamvault"]
 VALID_SCOPES = ("vod", "live", "mobile")
 
 

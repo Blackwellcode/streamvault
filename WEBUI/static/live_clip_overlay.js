@@ -791,5 +791,5 @@
       return document.body.classList.contains("clip-overlay-open");
     }
   };
-  window.NachtSiloLiveClip = clipApi;
+  window.StreamVaultLiveClip = clipApi;
 })();

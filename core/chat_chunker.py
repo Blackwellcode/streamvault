@@ -1,5 +1,5 @@
 """
-High-Performance VOD Chat Chunking Engine for NachtSilo Tube.
+High-Performance VOD Chat Chunking Engine for StreamVault.
 Splits linear JSONL chat logs into static 10-minute JSON blocks (600 seconds)
 that can be served directly by Nginx via X-Accel-Redirect and cached by browsers.
 """
@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Optional, Dict, Any, List
 
-logger = logging.getLogger("nachtsilo.chat_chunker")
+logger = logging.getLogger("streamvault.chat_chunker")
 
 CHUNK_DURATION_SEC = 600  # 10 minutes per chunk
 CHAT_CHUNKS_DIRNAME = "chat_chunks"

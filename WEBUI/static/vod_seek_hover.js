@@ -1,5 +1,5 @@
 /**
- * NachtSilo Tube – Custom VOD Control Bar
+ * StreamVault – Custom VOD Control Bar
  * Replaces native browser controls with a unified, auto-hiding control bar.
  * Features: Play/Pause · Time display · Seekbar (with buffer + thumbnail tooltip) · Volume · Fullscreen
  * Auto-hides after 3s of inactivity, re-appears on mouse/touch/keyboard.
@@ -32,8 +32,8 @@
 
   function dbg(kind, detail) {
     try {
-      if (window.NachtSiloVodDebug && typeof window.NachtSiloVodDebug.log === "function") {
-        window.NachtSiloVodDebug.log("seekbar", kind, detail || {});
+      if (window.StreamVaultVodDebug && typeof window.StreamVaultVodDebug.log === "function") {
+        window.StreamVaultVodDebug.log("seekbar", kind, detail || {});
       }
     } catch (_) {}
   }
@@ -48,8 +48,8 @@
 
   /* ── Main attach function ─────────────────────────────────────────── */
   function attach(video, options) {
-    if (!video || video._nachtSiloSeekHoverInstalled) return;
-    video._nachtSiloSeekHoverInstalled = true;
+    if (!video || video._streamVaultSeekHoverInstalled) return;
+    video._streamVaultSeekHoverInstalled = true;
 
     var opts = options || {};
     var knownDuration = Number(opts.knownDuration) || 0;
@@ -148,7 +148,7 @@
     }
 
     host.addEventListener("mousemove", showControls);
-    video._nachtSiloShowControls = showControls;
+    video._streamVaultShowControls = showControls;
     host.addEventListener("mouseleave", function () {
       clearTimeout(hideTimer);
       if (!video.paused && !dragging) {
@@ -180,12 +180,12 @@
 
     /* ── Play / Pause ───────────────────────────────────────────────── */
     function togglePlay() {
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        video._nachtSiloSetUserPaused(!video.paused);
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        video._streamVaultSetUserPaused(!video.paused);
       }
       if (video.paused) {
-        if (typeof video._nachtSiloRequestPlay === "function") {
-          try { video._nachtSiloRequestPlay(); } catch (_) {}
+        if (typeof video._streamVaultRequestPlay === "function") {
+          try { video._streamVaultRequestPlay(); } catch (_) {}
         } else {
           var p = video.play();
           if (p && p.catch) p.catch(function () {});
@@ -236,9 +236,9 @@
     /* ── Fullscreen ─────────────────────────────────────────────────── */
     function toggleFullscreen() {
       if (document.body && document.body.classList.contains("page-mobile-player")
-          && window.NachtSiloMobileLandscape) {
-        window.NachtSiloMobileLandscape.toggle();
-        var forced = window.NachtSiloMobileLandscape.isForced();
+          && window.StreamVaultMobileLandscape) {
+        window.StreamVaultMobileLandscape.toggle();
+        var forced = window.StreamVaultMobileLandscape.isForced();
         fsBtn.innerHTML = forced ? ICON_EXIT_FULL : ICON_FULL;
         fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
         return;
@@ -255,8 +255,8 @@
     });
     document.addEventListener("fullscreenchange", function () {
       if (document.body && document.body.classList.contains("page-mobile-player")
-          && window.NachtSiloMobileLandscape) {
-        var forced = window.NachtSiloMobileLandscape.isForced();
+          && window.StreamVaultMobileLandscape) {
+        var forced = window.StreamVaultMobileLandscape.isForced();
         fsBtn.innerHTML = forced ? ICON_EXIT_FULL : ICON_FULL;
         fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
         return;
@@ -265,14 +265,14 @@
       fsBtn.setAttribute("aria-label", document.fullscreenElement ? "Vollbild beenden" : "Vollbild");
     });
     function syncMobileFsIcon() {
-      if (!window.NachtSiloMobileLandscape) return;
-      var forced = window.NachtSiloMobileLandscape.isForced();
+      if (!window.StreamVaultMobileLandscape) return;
+      var forced = window.StreamVaultMobileLandscape.isForced();
       fsBtn.innerHTML = forced ? ICON_EXIT_FULL : ICON_FULL;
       fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
     }
     if (document.body) {
-      document.body.addEventListener("nachtsilo:landscape-chat", syncMobileFsIcon);
-      document.body.addEventListener("nachtsilo:landscape-force", syncMobileFsIcon);
+      document.body.addEventListener("streamvault:landscape-chat", syncMobileFsIcon);
+      document.body.addEventListener("streamvault:landscape-force", syncMobileFsIcon);
     }
 
     /* ── Seekbar UI update ──────────────────────────────────────────── */
@@ -326,8 +326,8 @@
     }
 
     function noteUserSeek(seconds) {
-      if (typeof video._nachtSiloNoteUserSeek === "function") {
-        try { video._nachtSiloNoteUserSeek(seconds); } catch (_) {}
+      if (typeof video._streamVaultNoteUserSeek === "function") {
+        try { video._streamVaultNoteUserSeek(seconds); } catch (_) {}
       }
     }
 
@@ -349,17 +349,17 @@
       var target = frac * dur;
 
       noteUserSeek(target);
-      if (typeof video._nachtSiloArmSeekPlayIntent === "function") {
-        try { video._nachtSiloArmSeekPlayIntent(); } catch (_) {}
+      if (typeof video._streamVaultArmSeekPlayIntent === "function") {
+        try { video._streamVaultArmSeekPlayIntent(); } catch (_) {}
       }
-      if (typeof video._nachtSiloSetUserPaused === "function") {
-        try { video._nachtSiloSetUserPaused(false); } catch (_) {}
+      if (typeof video._streamVaultSetUserPaused === "function") {
+        try { video._streamVaultSetUserPaused(false); } catch (_) {}
       }
       video.currentTime = target;
 
       // Actively kick decode / playback at the seek target
-      if (typeof video._nachtSiloRequestPlay === "function") {
-        try { video._nachtSiloRequestPlay(); } catch (_) {}
+      if (typeof video._streamVaultRequestPlay === "function") {
+        try { video._streamVaultRequestPlay(); } catch (_) {}
       } else {
         var p = video.play();
         if (p && p.catch) p.catch(function () {});
@@ -430,7 +430,7 @@
     updateVolBtn();
   }
 
-  window.NachtSiloSeekHover = {
+  window.StreamVaultSeekHover = {
     attach: attach,
     formatTime: formatTime,
   };

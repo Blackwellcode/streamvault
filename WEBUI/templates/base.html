@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% block title %}NachtSilo Tube{% endblock %}</title>
+    <title>{% block title %}StreamVault{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}" media="print" onload="this.media='all'">
@@ -20,7 +20,7 @@
       {% if (not is_tv and not is_mobile) or request.endpoint != 'index' %}
       <header class="ns-workspace-header">
         <div class="ns-header-title-block">
-          <h1>{% block page_title %}NachtSilo Tube{% endblock %}</h1>
+          <h1>{% block page_title %}StreamVault{% endblock %}</h1>
           {% if not is_tv and not is_mobile %}<p>{% block page_subtitle %}Cosmic Streaming & Media Vault{% endblock %}</p>{% endif %}
         </div>
         

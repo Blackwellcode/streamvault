@@ -51,7 +51,7 @@
       src="{{ media_url }}"
       data-media-title="{{ vod_display_title or filename }}"
       data-media-artist="{{ display_name or streamer }}"
-      data-media-album="NachtSilo Tube"
+      data-media-album="StreamVault"
       data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
       data-media-live="{{ 'true' if is_live else 'false' }}"
     ></video>
@@ -202,30 +202,30 @@
     })();
 
     const video = document.getElementById('player');
-    window.__NACHTSILO_CSRF = {{ csrf_token()|tojson }};
-    window.NACHTSILO_VOD_DEBUG_DEFAULT = false; // Fast & lightweight by default
-    window.NachtSiloVodDebug?.attach(video, {
+    window.__STREAMVAULT_CSRF = {{ csrf_token()|tojson }};
+    window.STREAMVAULT_VOD_DEBUG_DEFAULT = false; // Fast & lightweight by default
+    window.StreamVaultVodDebug?.attach(video, {
       streamer: {{ streamer|tojson }},
       filename: {{ filename|tojson }},
       drive: {{ 'true' if drive_only else 'false' }},
       asset: {{ ASSET_VERSION|tojson }},
       mobile: true
     });
-    window.NachtSiloMediaSession?.attach(video, {live: {{ 'true' if is_live else 'false' }}});
+    window.StreamVaultMediaSession?.attach(video, {live: {{ 'true' if is_live else 'false' }}});
     {% if not is_live and vod_slot %}
-    window.NachtSiloVodSlot?.attach(video, {{ vod_slot|tojson }});
+    window.StreamVaultVodSlot?.attach(video, {{ vod_slot|tojson }});
     {% endif %}
     const chatList = document.getElementById('chatList');
     const chatEmpty = document.getElementById('chatEmpty');
     const isLive = {{ 'true' if is_live else 'false' }};
     const isHls = {{ 'true' if is_hls else 'false' }};
     const mediaUrl = {{ media_url|tojson }};
-    window.NachtSiloCast?.bindVideo(video, {
+    window.StreamVaultCast?.bindVideo(video, {
       url: mediaUrl,
       live: isLive,
       contentType: (isLive || isHls) ? "application/vnd.apple.mpegurl" : "video/mp4"
     });
-    if (window.NachtSiloCast && NachtSiloCast.preferNativeHls(video)) {
+    if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(video)) {
       video.src = mediaUrl;
     }
     const chatUrl = "{{ chat_url }}";
@@ -237,12 +237,12 @@
     let vodAutoplayAttempted = false;
 
     function vodUserPaused() {
-        if (typeof video._nachtSiloPlaybackUserPaused === 'function'
-            && video._nachtSiloPlaybackUserPaused()) {
+        if (typeof video._streamVaultPlaybackUserPaused === 'function'
+            && video._streamVaultPlaybackUserPaused()) {
             return true;
         }
-        return typeof video._nachtSiloUserPaused === 'function'
-            && video._nachtSiloUserPaused();
+        return typeof video._streamVaultUserPaused === 'function'
+            && video._streamVaultUserPaused();
     }
 
     function playVodFromCurrentPosition() {
@@ -306,7 +306,7 @@
             if (vodUserPaused()) return;
             seekPlayIntent = true;
         }
-        video._nachtSiloArmSeekPlayIntent = armPlayIntent;
+        video._streamVaultArmSeekPlayIntent = armPlayIntent;
         video.addEventListener('play', armPlayIntent);
         video.addEventListener('pause', () => {
             if (!video.seeking && vodUserPaused()) {
@@ -331,12 +331,12 @@
     }
     if (!isLive) {
         installSeekPlaybackKick();
-        window.NachtSiloVodPlayback?.guard(video, {
+        window.StreamVaultVodPlayback?.guard(video, {
           knownDuration: {{ (vod_duration_sec or 0)|float }},
           setCurrentTime: setVodCurrentTime,
           play: playVodFromCurrentPosition
         });
-        window.NachtSiloSeekHover?.attach(video, {
+        window.StreamVaultSeekHover?.attach(video, {
           knownDuration: {{ (vod_duration_sec or 0)|float }}
         });
     }
@@ -344,11 +344,11 @@
     function attemptVodAutoplay() {
         if (vodAutoplayAttempted) return;
         vodAutoplayAttempted = true;
-        if (typeof video._nachtSiloArmSeekPlayIntent === 'function') {
-            video._nachtSiloArmSeekPlayIntent();
+        if (typeof video._streamVaultArmSeekPlayIntent === 'function') {
+            video._streamVaultArmSeekPlayIntent();
         }
-        if (typeof video._nachtSiloRequestPlay === 'function') {
-            video._nachtSiloRequestPlay();
+        if (typeof video._streamVaultRequestPlay === 'function') {
+            video._streamVaultRequestPlay();
         } else {
             playVodFromCurrentPosition();
         }
@@ -475,8 +475,8 @@
     let seenMessages = new Set();
     let autoScrollChat = true;
     let suppressChatScroll = false;
-    window.NachtSiloChat?.loadEmotes({{ streamer|tojson }});
-    window.NachtSiloChat?.loadBadges({{ streamer|tojson }});
+    window.StreamVaultChat?.loadEmotes({{ streamer|tojson }});
+    window.StreamVaultChat?.loadBadges({{ streamer|tojson }});
 
     function chatAtBottom(thresholdPx) {
       if (!chatList) return true;
@@ -503,7 +503,7 @@
       autoScrollChat = chatAtBottom();
     }, { passive: true });
 
-    document.body?.addEventListener('nachtsilo:landscape-chat', (ev) => {
+    document.body?.addEventListener('streamvault:landscape-chat', (ev) => {
       if (!ev?.detail?.open) return;
       if (autoScrollChat) scrollChatToBottom();
     });
@@ -578,17 +578,17 @@
         if (!chatList) return;
         if (chatEmpty) chatEmpty.hidden = true;
         const div = document.createElement('div');
-        div.className = window.NachtSiloChat ? window.NachtSiloChat.chatLineClassName(msg) : 'chat-line';
+        div.className = window.StreamVaultChat ? window.StreamVaultChat.chatLineClassName(msg) : 'chat-line';
         const timestamp = !isLive && Number.isFinite(Number(msg.rel))
           ? `<span class="t">${formatVodTime(msg.rel)}</span>`
           : '';
-        const message = window.NachtSiloChat ? window.NachtSiloChat.renderMessageHtml(msg) : (msg.msg || '');
+        const message = window.StreamVaultChat ? window.StreamVaultChat.renderMessageHtml(msg) : (msg.msg || '');
         if (msg.event) {
           div.innerHTML = `${timestamp}<span class="m">${message}</span>`;
         } else {
-          const user = window.NachtSiloChat ? window.NachtSiloChat.escapeHtml(msg.user || '') : (msg.user || '');
-          const userColor = (window.NachtSiloChat && window.NachtSiloChat.userColor(msg.color)) || '#a970ff';
-          const badges = window.NachtSiloChat ? window.NachtSiloChat.renderBadgesHtml(msg) : '';
+          const user = window.StreamVaultChat ? window.StreamVaultChat.escapeHtml(msg.user || '') : (msg.user || '');
+          const userColor = (window.StreamVaultChat && window.StreamVaultChat.userColor(msg.color)) || '#a970ff';
+          const badges = window.StreamVaultChat ? window.StreamVaultChat.renderBadgesHtml(msg) : '';
           const userSuffix = msg.reward ? '' : ':';
           div.innerHTML = `${timestamp}<span class="chat-badges">${badges}</span><span class="u" style="color:${userColor}">${user}${userSuffix}</span><span class="m">${message}</span>`;
         }

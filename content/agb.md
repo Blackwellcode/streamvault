@@ -1,7 +1,7 @@
 ---
 termsVersion: 2026-09-09-v3
 effectiveDate: 2026-09-09
-title: Allgemeine Nutzungsbedingungen – NachtSilo Hub
+title: Allgemeine Nutzungsbedingungen – StreamVault
 ---
 
 ## Zusatzhinweis

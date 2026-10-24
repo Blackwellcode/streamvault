@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# NachtSilo Hub — Automated Linux Installer & System Registration
+# StreamVault — Automated Linux Installer & System Registration
 # Compatible with Ubuntu 22.04+, Debian 12+, and Linux systems with systemd.
 # ==============================================================================
 set -euo pipefail
@@ -16,7 +16,7 @@ NC='\033[0m'
 
 echo -e "${CYAN}${BOLD}"
 echo "======================================================================"
-echo "    NachtSilo Hub — Automated Production Installer & Registration     "
+echo "    StreamVault — Automated Production Installer & Registration       "
 echo "======================================================================"
 echo -e "${NC}"
 
@@ -25,15 +25,15 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-INSTALL_DIR="/opt/nachtsilo"
+INSTALL_DIR="/opt/streamvault"
 APP_DIR="${INSTALL_DIR}/app"
 VENV_DIR="${INSTALL_DIR}/venv"
-DATA_DIR="/var/lib/nachtsilo/data"
-LOG_DIR="/var/log/nachtsilo"
-CONFIG_DIR="/etc/nachtsilo"
-RAMDISK_DIR="/dev/shm/streamrecorder_hls"
-SERVICE_USER="nachtsilo"
-REPO_URL="https://github.com/Blackwellcode/nachtsilo-hub.git"
+DATA_DIR="/var/lib/streamvault/data"
+LOG_DIR="/var/log/streamvault"
+CONFIG_DIR="/etc/streamvault"
+RAMDISK_DIR="/dev/shm/streamvault_hls"
+SERVICE_USER="streamvault"
+REPO_URL="https://github.com/Blackwellcode/streamvault.git"
 
 # 1. System Package Installation
 echo -e "${BLUE}[1/8] Installing system dependencies (apt)...${NC}"
@@ -98,7 +98,7 @@ if [[ ! -f "${ENV_FILE}" ]]; then
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
     INITIAL_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(16))")
     cat > "${ENV_FILE}" <<EOF
-# NachtSilo Hub Production Environment
+# StreamVault Production Environment
 VOD_HOST=127.0.0.1
 VOD_PORT=8080
 VOD_PUBLIC_BASE=http://localhost:8080
@@ -108,7 +108,6 @@ VOD_USER=vaultadmin
 VOD_PASS=${INITIAL_PASS}
 VOD_SECRET_KEY=${SECRET_KEY}
 VOD_USE_X_ACCEL=true
-DEMO_MODE=false
 EOF
     chown root:"${SERVICE_USER}" "${ENV_FILE}"
     chmod 640 "${ENV_FILE}"
@@ -122,9 +121,9 @@ fi
 # 7. Systemd Service Registration
 echo -e "${BLUE}[7/8] Registering systemd daemons...${NC}"
 
-cat > /etc/systemd/system/nachtsilo-webui.service <<EOF
+cat > /etc/systemd/system/streamvault-webui.service <<EOF
 [Unit]
-Description=NachtSilo Hub - WebUI Daemon
+Description=StreamVault - WebUI Daemon
 After=network.target
 
 [Service]
@@ -142,10 +141,10 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
 
-cat > /etc/systemd/system/nachtsilo-recorder.service <<EOF
+cat > /etc/systemd/system/streamvault-recorder.service <<EOF
 [Unit]
-Description=NachtSilo Hub - Stream Recorder Daemon
-After=network.target nachtsilo-webui.service
+Description=StreamVault - Stream Recorder Daemon
+After=network.target streamvault-webui.service
 
 [Service]
 Type=simple
@@ -163,17 +162,17 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable nachtsilo-webui.service nachtsilo-recorder.service
+systemctl enable streamvault-webui.service streamvault-recorder.service
 
 # 8. Registering Global CLI Binary
-echo -e "${BLUE}[8/8] Registering global command '/usr/local/bin/nachtsilo'...${NC}"
-chmod +x "${APP_DIR}/bin/nachtsilo"
-ln -sf "${APP_DIR}/bin/nachtsilo" /usr/local/bin/nachtsilo
+echo -e "${BLUE}[8/8] Registering global command '/usr/local/bin/streamvault'...${NC}"
+chmod +x "${APP_DIR}/bin/streamvault"
+ln -sf "${APP_DIR}/bin/streamvault" /usr/local/bin/streamvault
 
 # Nginx Site Setup
 if [[ -d /etc/nginx/sites-available ]]; then
     echo -e "${CYAN}[*] Configuring Nginx reverse proxy...${NC}"
-    cat > /etc/nginx/sites-available/nachtsilo.conf <<EOF
+    cat > /etc/nginx/sites-available/streamvault.conf <<EOF
 server {
     listen 80;
     server_name localhost;
@@ -210,22 +209,19 @@ server {
     }
 }
 EOF
-    ln -sf /etc/nginx/sites-available/nachtsilo.conf /etc/nginx/sites-enabled/
+    ln -sf /etc/nginx/sites-available/streamvault.conf /etc/nginx/sites-enabled/
     nginx -t && systemctl reload nginx || true
 fi
 
 # Start services
-systemctl restart nachtsilo-webui.service nachtsilo-recorder.service
+systemctl restart streamvault-webui.service streamvault-recorder.service
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"
-echo -e "${GREEN}${BOLD}      NachtSilo Hub Installation & Registration Complete!             ${NC}"
+echo -e "${GREEN}${BOLD}      StreamVault Installation & Registration Complete!               ${NC}"
 echo -e "${GREEN}${BOLD}======================================================================${NC}"
 echo -e "You can now control the installation from anywhere using the command:"
-echo -e "  ${CYAN}${BOLD}nachtsilo status${NC}     - View running daemons and health"
-echo -e "  ${CYAN}${BOLD}nachtsilo logs${NC}       - Stream real-time logs"
-echo -e "  ${CYAN}${BOLD}nachtsilo restart${NC}    - Restart services"
-echo -e "  ${CYAN}${BOLD}nachtsilo demo${NC}       - Run standalone sandbox demo mode"
+echo -e "  ${CYAN}${BOLD}streamvault status${NC}     - View running daemons and health"
+echo -e "  ${CYAN}${BOLD}streamvault logs${NC}       - Stream real-time logs"
+echo -e "  ${CYAN}${BOLD}streamvault restart${NC}    - Restart services"
 echo -e "\nConfiguration: ${CONFIG_DIR}/env"
 echo -e "Web Access:    http://localhost"
-EOF
-chmod +x "${APP_DIR}/bin/nachtsilo"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NachtSilo Tube authentication & RBAC integration helpers.
+"""StreamVault authentication & RBAC integration helpers.
 
 Note: Direct Discord registration bot is decommissioned.
 Account creation and role assignments are managed via WebUI RBAC (/admin/users).
@@ -265,7 +265,7 @@ def register_from_discord(
     else:
         raise ValueError(
             f"AGB inkl. Nutzungsregeln nicht akzeptiert. Bitte `{tube_rules.accept_phrase()}` eingeben "
-            f"(siehe #nachtsilo-regeln / #agb / {tube_terms.LOGIN_AGB_HINT})."
+            f"(siehe #regeln / #agb / {tube_terms.LOGIN_AGB_HINT})."
         )
 
     if chosen_username is not None and str(chosen_username).strip():

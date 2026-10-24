@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': window.__NACHTSILO_CSRF || '' 
+                    'X-CSRFToken': window.__STREAMVAULT_CSRF || '' 
                 },
                 body: JSON.stringify({
                     vod_id: vodId,

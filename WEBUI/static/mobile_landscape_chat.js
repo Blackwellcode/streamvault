@@ -6,7 +6,7 @@
 
   const chatBtn = document.getElementById("landscapeChatToggle");
   const fsBtn = document.getElementById("forceLandscapeToggle");
-  const KEY = "nachtsilo_landscape_chat_open_v2";
+  const KEY = "streamvault_landscape_chat_open_v2";
   const landscapeMq = window.matchMedia ? window.matchMedia("(orientation: landscape)") : null;
 
   let chatOpen = false;
@@ -36,7 +36,7 @@
   function emitForceChange() {
     try {
       body.dispatchEvent(
-        new CustomEvent("nachtsilo:landscape-force", {
+        new CustomEvent("streamvault:landscape-force", {
           detail: { forced: forcedLandscape(), active: body.classList.contains("is-landscape-active") },
         })
       );
@@ -85,7 +85,7 @@
     } catch (_) {}
     try {
       body.dispatchEvent(
-        new CustomEvent("nachtsilo:landscape-chat", {
+        new CustomEvent("streamvault:landscape-chat", {
           detail: { open: chatOpen },
         })
       );
@@ -190,7 +190,7 @@
     el.addEventListener("touchend", run, { passive: false });
   }
 
-  global.NachtSiloMobileLandscape = {
+  global.StreamVaultMobileLandscape = {
     enter: enterForcedLandscape,
     exit: exitForcedLandscape,
     toggle: toggleForcedLandscape,

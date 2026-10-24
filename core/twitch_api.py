@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Server-side Twitch Helix/GQL helpers for NachtSilo Tube live viewing.
+"""Server-side Twitch Helix/GQL helpers for StreamVault live viewing.
 
 Secrets never leave this module toward the browser. Discovery uses Helix
 Client Credentials when configured; monitored live status can fall back to
@@ -983,7 +983,7 @@ def download_clip(
         req = urllib.request.Request(
             url,
             headers={
-                "User-Agent": "Mozilla/5.0 (NachtSiloTube clip fetch)",
+                "User-Agent": "Mozilla/5.0 (StreamVault clip fetch)",
                 "Accept": "*/*",
                 "Referer": "https://clips.twitch.tv/",
             },
