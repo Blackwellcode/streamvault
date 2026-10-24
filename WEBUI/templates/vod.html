@@ -107,7 +107,7 @@
               {% if drive_only %}
               <span class="vod-storage-badge badge-drive">Google Drive</span>
               {% else %}
-              <span class="vod-storage-badge badge-cache">Silo Cache</span>
+              <span class="vod-storage-badge badge-cache">Vault Cache</span>
               {% endif %}
               <a class="vod-channel-link" href="{{ url_for('streamer_view', streamer=streamer) }}">{{ streamer }}</a>
               {% if vod_category %}
@@ -139,7 +139,7 @@
           {% endif %}
           {% else %}
           <div class="vod-details-main">
-            <div class="vod-kicker">{% if not is_tv and not is_mobile %}<span class="kicker-type">{{ 'Clip' if route_type == 'clip' else 'Aufnahme' }}</span>{% endif %}{% if vod_platform %} · <span class="platform-badge {% if 'youtube' in (vod_platform|lower) %}platform-youtube{% else %}platform-twitch{% endif %}">{% if 'youtube' in (vod_platform|lower) %}YT{% else %}TW{% endif %}</span>{% endif %} · {% if drive_only %}<span class="vod-storage-badge badge-drive">Google Drive</span>{% else %}<span class="vod-storage-badge badge-cache">Silo Cache</span>{% endif %}</div>
+            <div class="vod-kicker">{% if not is_tv and not is_mobile %}<span class="kicker-type">{{ 'Clip' if route_type == 'clip' else 'Aufnahme' }}</span>{% endif %}{% if vod_platform %} · <span class="platform-badge {% if 'youtube' in (vod_platform|lower) %}platform-youtube{% else %}platform-twitch{% endif %}">{% if 'youtube' in (vod_platform|lower) %}YT{% else %}TW{% endif %}</span>{% endif %} · {% if drive_only %}<span class="vod-storage-badge badge-drive">Google Drive</span>{% else %}<span class="vod-storage-badge badge-cache">Vault Cache</span>{% endif %}</div>
             <h1 id="vod-title" class="vod-display-title">{{ vod_display_title or filename }}</h1>
             <a class="vod-channel-link" href="{{ url_for('streamer_view', streamer=streamer) }}">{{ streamer }}</a>
             {% if vod_display_title and vod_display_title != filename %}<div class="muted vod-filename-meta" title="{{ filename }}">{{ filename }}</div>{% endif %}

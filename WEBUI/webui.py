@@ -216,9 +216,9 @@ TWITCH_BADGE_ASSET_DIR = os.path.join(TWITCH_BADGE_CACHE_DIR, "assets")
 TWITCH_BADGE_GLOBAL_KEY = "global"
 _TWITCH_BADGE_SYNC_LOCK = threading.Lock()
 _TWITCH_BADGE_SYNC_STATE = {"running": False, "last": None, "error": ""}
-DEFAULT_THEME = "silo"
+DEFAULT_THEME = "vault"
 THEME_OPTIONS = [
-    {"key": "silo", "name": "Graphit Lime"},
+    {"key": "vault", "name": "Graphit Lime"},
     {"key": "aurora", "name": "Aurora Mint"},
     {"key": "cyber", "name": "Neon Cyberpunk 2.0"},
     {"key": "ember", "name": "Ember Red"},

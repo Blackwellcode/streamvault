@@ -1818,7 +1818,7 @@ html.is-tizen-tv .main {
   min-height: 100vh !important; height: auto !important; overflow: visible !important;
 }
 
-html.is-tizen-tv body.theme-silo, html.is-tizen-tv body.theme-aurora, html.is-tizen-tv body.theme-cyber, html.is-tizen-tv body.theme-ember, html.is-tizen-tv body.theme-ocean {
+html.is-tizen-tv body.theme-silo, html.is-tizen-tv body.theme-vault, html.is-tizen-tv body.theme-aurora, html.is-tizen-tv body.theme-cyber, html.is-tizen-tv body.theme-ember, html.is-tizen-tv body.theme-ocean {
   --tube-bg: var(--bg); --tube-surface: var(--surface); --tube-surface-2: var(--surface-raised); --tube-surface-3: var(--surface-hover); --tube-line: var(--border-strong); --tube-line-soft: var(--border); --tube-text: var(--text-primary); --tube-text-2: var(--text-secondary); --tube-muted: var(--text-muted); --tube-accent: var(--brand); --tube-accent-hover: var(--brand-hover); --tube-live: var(--danger); --tube-success: var(--success); --primary: var(--brand); --primary-hover: var(--brand-hover); --accent: var(--brand); --accent-2: var(--success); --text: var(--text-primary); --text-main: var(--text-primary); --muted: var(--text-muted); --card: var(--surface); --glass: var(--surface); --glass-hover: var(--surface-hover); --ns-bg-0: var(--bg); --ns-bg-1: var(--surface); --ns-panel: var(--surface); --ns-line: var(--border); --ns-line-strong: var(--border-strong); --ns-text: var(--text-primary); --ns-text-2: var(--text-secondary); --ns-muted: var(--text-muted); --ns-accent: var(--brand); --ns-accent-2: var(--success);
 }
 
@@ -4691,7 +4691,7 @@ html.is-tizen-tv #btnInstantClip {
   cursor: pointer !important;
 }
 
-/* 6. VOD Storage Badge (Silo Cache vs Google Drive) */
+/* 6. VOD Storage Badge (Vault Cache vs Google Drive) */
 html.is-tizen-tv .vod-storage-badge {
   font-size: 11px !important;
   font-weight: 800 !important;

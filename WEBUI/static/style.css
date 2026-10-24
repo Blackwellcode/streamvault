@@ -10588,7 +10588,7 @@ body:is(
   --radius-lg: 14px;
 }
 
-body.theme-silo {
+body.theme-silo, body.theme-vault {
   --bg: #0b0b0b;
   --sidebar: #0f0f0f;
   --surface: #141414;
@@ -10713,7 +10713,7 @@ body.theme-ocean {
   --theme-button-text: #06101b;
 }
 
-body:is(.theme-silo,.theme-aurora,.theme-cyber,.theme-ember,.theme-ocean) {
+body:is(.theme-silo,.theme-vault,.theme-aurora,.theme-cyber,.theme-ember,.theme-ocean) {
   --tube-bg: var(--bg);
   --tube-surface: var(--surface);
   --tube-surface-2: var(--surface-raised);
@@ -11040,7 +11040,7 @@ body.page-index .theme-picker .theme-swatch {
   box-shadow: none !important;
 }
 
-body.page-index .theme-picker .swatch-silo {
+body.page-index .theme-picker .swatch-silo, body.page-index .theme-picker .swatch-vault {
   --swatch-a: #d8eb72;
   --swatch-b: #65d59a;
   --swatch-c: #202329;
