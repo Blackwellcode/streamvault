@@ -59,9 +59,7 @@ from werkzeug.utils import safe_join, secure_filename
 from recorder import chat_events
 from recorder import clip_engine
 from core import config
-config.setup_discord_logging()
 from core import database
-from core import gdrive
 from core import twitch_api
 from core import twitch_eventsub
 from core import twitch_templates
@@ -555,7 +553,6 @@ def load_users():
             "discord_username": row.get("discord_username") or "",
             "created_via": row.get("created_via") or "",
             "created_at": row.get("created_at") or 0,
-            "livechat_mod": bool(row.get("livechat_mod")),
             "register_note": row.get("register_note") or "",
             "rules_accepted_at": float(row.get("rules_accepted_at") or 0),
             "rules_version": row.get("rules_version") or "",
@@ -1537,7 +1534,7 @@ def normalize_channel_name(name):
 
 
 def archive_name_for(streamer):
-    """Map a source channel (e.g. beatek1_youtube or beatek) to its shared archive folder name."""
+    """Map a source channel to its shared archive folder name."""
     name = normalize_channel_name(streamer) or str(streamer or "").strip().lower()
     if not name:
         return None
@@ -1550,39 +1547,15 @@ def archive_name_for(streamer):
                     break
     if conf:
         return normalize_channel_name(conf.get("archive_name")) or name
-    try:
-        local = gdrive.local_archive_slug(name)
-        if local:
-            return local
-    except Exception:
-        pass
     return name
 
 
 def archive_display_name(streamer):
-    """Human label for UI (Beatek instead of beatek_)."""
+    """Human label for UI."""
     slug = archive_name_for(streamer) or normalize_channel_name(streamer) or str(streamer or "").strip()
     if not slug:
         return ""
-    try:
-        mapped = gdrive.drive_folder_title(slug)
-        if mapped and mapped != slug:
-            return mapped
-    except Exception:
-        pass
-    try:
-        for alt in related_drive_slugs(slug):
-            folder = database.get_drive_folder(alt)
-            title = str((folder or {}).get("title") or "").strip()
-            if not title:
-                continue
-            if title.lower() not in {str(alt).lower(), str(slug).lower()}:
-                return title
-            if title != alt and title[:1].isupper():
-                return title
-    except Exception:
-        pass
-    return slug
+    return slug.rstrip("_") or slug
 
 
 def streamer_dir(slug):
@@ -1613,21 +1586,9 @@ def media_accel_path(streamer, filename, *, clip=False):
 
 
 def vod_cache_accel_path(streamer, filename, cached_path=None):
-    """X-Accel path for a completed Drive playback cache file."""
-    if cached_path:
-        try:
-            cache_root = gdrive.playback_cache_root()
-            rel = os.path.relpath(cached_path, cache_root).replace("\\", "/")
-            prefix = VOD_CACHE_ACCEL_PREFIX.rstrip("/")
-            return f"{prefix}/{urllib.parse.quote(rel, safe='/')}"
-        except Exception:
-            pass
-    archive = (
-        archive_name_for(streamer)
-        or gdrive.local_archive_slug(streamer)
-        or gdrive.normalize_folder_slug(streamer)
-        or str(streamer or "").strip()
-    )
+    """X-Accel path for a local playback cache file."""
+    _ = cached_path
+    archive = archive_name_for(streamer) or str(streamer or "").strip()
     name = os.path.basename(str(filename or ""))
     if not archive or not name:
         return None
@@ -2119,8 +2080,7 @@ def is_system_backup_slug(name):
     if not name:
         return False
     val = str(name).strip().lower().replace("-", "").replace("_", "")
-    backup_cfg = str(getattr(config, "GDRIVE_SYSTEM_BACKUP_FOLDER", "System-Backups") or "System-Backups").strip().lower().replace("-", "").replace("_", "")
-    return val in ("systembackups", "systembackup", "backups", "backup", backup_cfg)
+    return val in ("systembackups", "systembackup", "backups", "backup")
 
 
 def find_local_streamer_banner_file(streamer):
@@ -2314,7 +2274,7 @@ def resolve_streamer_avatar(streamer, archive_key=None, p_data=None):
 
 
 def list_all_streamer_folders():
-    """Returns a list of all folders (streamers, drive folders, local folders), excluding system backups."""
+    """Returns a list of all local streamer/archive folders, excluding system backups."""
     folders = set()
     base_ok = os.path.isdir(BASE_DIR)
     if base_ok:
@@ -2325,13 +2285,6 @@ def list_all_streamer_folders():
                 continue
             if os.path.isdir(os.path.join(BASE_DIR, name)):
                 folders.add(name)
-    try:
-        for f in database.list_drive_folders():
-            slug = str(f.get("streamer") or "").strip()
-            if slug and not is_system_backup_slug(slug) and slug != getattr(gdrive, "ROOT_SENTINEL", "__root__"):
-                folders.add(slug)
-    except Exception:
-        pass
     try:
         for c in database.list_channel_configs():
             name = str(c.get("name") or "").strip()
@@ -2380,11 +2333,10 @@ def list_all_streamer_folders():
 
 
 def list_system_backups():
-    """Lists local and remote system backups."""
+    """Lists local system backups."""
     backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
     items = {}
 
-    # 1. Local files in BACKUP_DIR
     if os.path.isdir(backups_dir):
         for fname in os.listdir(backups_dir):
             if fname.startswith("streamrecorder_") and fname.endswith(".tar.gz"):
@@ -2398,38 +2350,9 @@ def list_system_backups():
                         "mtime": st.st_mtime,
                         "date_str": time.strftime("%d.%m.%Y %H:%M:%S", time.localtime(st.st_mtime)),
                         "on_disk": True,
-                        "on_drive": False,
-                        "file_id": None,
                     }
                 except OSError:
                     pass
-
-    # 2. Remote files on Google Drive (from drive_files DB)
-    try:
-        drive_rows = database.list_drive_files("systembackups") or []
-        for row in drive_rows:
-            fname = row.get("filename")
-            if not fname or not fname.startswith("streamrecorder_") or not fname.endswith(".tar.gz"):
-                continue
-            size = int(row.get("size") or 0)
-            mtime = float(row.get("modified_at") or 0)
-            fid = row.get("file_id")
-            if fname in items:
-                items[fname]["on_drive"] = True
-                items[fname]["file_id"] = fid
-            else:
-                items[fname] = {
-                    "filename": fname,
-                    "size": size,
-                    "size_str": f"{size / (1024 * 1024):.1f} MB",
-                    "mtime": mtime,
-                    "date_str": time.strftime("%d.%m.%Y %H:%M:%S", time.localtime(mtime)) if mtime else "—",
-                    "on_disk": False,
-                    "on_drive": True,
-                    "file_id": fid,
-                }
-    except Exception as exc:
-        logging.warning("Error fetching drive system backups: %s", exc)
 
     return sorted(items.values(), key=lambda x: x["mtime"], reverse=True)
 
@@ -3534,81 +3457,6 @@ def send_mp4_range_advertising_size(file_path, start, end, total_size):
     return apply_cast_cors(resp)
 
 
-def send_cached_drive_range(streamer, filename, start, end, total_size, file_id=None):
-    """Serve a Drive VOD range from aligned local playback chunks."""
-    try:
-        start = int(start)
-        end = int(end)
-        total_size = int(total_size)
-    except (TypeError, ValueError):
-        abort(404)
-    if start < 0 or end < start or total_size <= 0 or start >= total_size:
-        abort(416)
-    end = min(end, total_size - 1)
-    length = end - start + 1
-    logging.info(
-        "VODDBG media cache-hit %s/%s bytes=%s-%s len=%s",
-        streamer,
-        filename,
-        start,
-        end,
-        length,
-    )
-    # Sequential play: warm only the next aligned chunk (never scrub storms).
-    if file_id and not gdrive.playback_quota_blocked(file_id):
-        try:
-            gdrive.prefetch_next_chunk(streamer, filename, file_id, end, total_size)
-        except Exception:
-            pass
-
-    def generate():
-        sent = 0
-        try:
-            for chunk in gdrive.iter_cached_range(
-                streamer,
-                filename,
-                start,
-                end,
-                total_size,
-                file_id=file_id,
-            ):
-                if chunk:
-                    sent += len(chunk)
-                    yield chunk
-        except gdrive.DriveError as exc:
-            logging.warning(
-                "VODDBG media cache-body-fail %s/%s bytes=%s-%s sent=%s err=%s",
-                streamer,
-                filename,
-                start,
-                end,
-                sent,
-                exc,
-            )
-            return
-        if sent != length:
-            logging.warning(
-                "VODDBG media cache-truncated %s/%s bytes=%s-%s sent=%s want=%s",
-                streamer,
-                filename,
-                start,
-                end,
-                sent,
-                length,
-            )
-
-    headers = {
-        "Accept-Ranges": "bytes",
-        "Content-Range": f"bytes {start}-{end}/{total_size}",
-        "Content-Length": str(length),
-        "Cache-Control": "private, max-age=3600",
-        "X-Accel-Buffering": "no",
-        "X-Vod-Source": "cache",
-    }
-    resp = Response(generate(), status=206, headers=headers, mimetype="video/mp4")
-    return apply_cast_cors(resp)
-
-
 def remux_media_file(file_path, reencode_audio=False):
     if not os.path.exists(file_path):
         return False, "Datei nicht gefunden"
@@ -3960,7 +3808,7 @@ def thumb_paths(streamer, filename):
 
 
 def resolve_thumb_paths(streamer, filename, slugs=None):
-    """Prefer an existing thumb under the archive slug or related Drive aliases."""
+    """Prefer an existing thumb under the archive slug or related local aliases."""
     primary_dir, primary_path, primary_lock = thumb_paths(streamer, filename)
     if primary_path and os.path.isfile(primary_path):
         return primary_dir, primary_path, primary_lock
@@ -3968,17 +3816,13 @@ def resolve_thumb_paths(streamer, filename, slugs=None):
     if not base:
         return primary_dir, primary_path, primary_lock
     if slugs is None:
-        try:
-            slugs = related_drive_slugs(streamer)
-        except Exception:
-            slugs = []
+        slugs = related_archive_slugs(streamer)
     for slug in slugs:
         thumb_dir = safe_join(config.THUMB_ROOT, slug)
         if not thumb_dir:
             continue
         thumb_path = os.path.join(thumb_dir, f"{base}.jpg")
         if os.path.isfile(thumb_path):
-            # Keep generating under the archive slug when missing.
             return thumb_dir, thumb_path, (
                 os.path.join(primary_dir, f"{base}.lock") if primary_dir else os.path.join(thumb_dir, f"{base}.lock")
             )
@@ -4077,13 +3921,7 @@ def clip_output_path(streamer, source_name, start_sec, duration_sec, label=""):
 
 
 def resolve_vod_clip_source(streamer, filename):
-    """Resolve a local path or cloud HTTP source for VOD clipping.
-
-    Preference order:
-    1. Local archive file
-    2. Complete (or assemblable) Drive playback cache
-    3. Localhost Drive Range proxy (bounded chunks — raw Drive alt=media 403s FFmpeg)
-    """
+    """Resolve a local archive file for VOD clipping."""
     local_path = resolve_media_path(streamer, filename, "vod")
     if local_path:
         return {
@@ -4093,47 +3931,6 @@ def resolve_vod_clip_source(streamer, filename):
             "source": "local",
             "error": None,
         }
-    drive_row = resolve_drive_file(streamer, filename)
-    file_id = str((drive_row or {}).get("file_id") or "").strip()
-    if file_id and gdrive.enabled() and gdrive.configured():
-        try:
-            expected_size = int((drive_row or {}).get("size") or 0) or None
-        except (TypeError, ValueError):
-            expected_size = None
-        try:
-            cached = gdrive.complete_playback_cache(
-                streamer, filename, expected_size=expected_size
-            )
-            if not cached and expected_size:
-                cached = gdrive.assemble_playback_cache(streamer, filename, expected_size)
-            if cached and os.path.isfile(cached) and os.path.getsize(cached) > 1024:
-                return {
-                    "ok": True,
-                    "input_path": cached,
-                    "http_headers": None,
-                    "source": "cache",
-                    "error": None,
-                }
-        except Exception as exc:
-            logging.warning("Drive clip cache lookup failed for %s/%s: %s", streamer, filename, exc)
-        try:
-            url, headers = gdrive.clip_http_source(file_id)
-            return {
-                "ok": True,
-                "input_path": url,
-                "http_headers": headers,
-                "source": "drive",
-                "error": None,
-            }
-        except Exception as exc:
-            logging.warning("Drive clip source failed for %s/%s: %s", streamer, filename, exc)
-            return {
-                "ok": False,
-                "input_path": None,
-                "http_headers": None,
-                "source": "drive",
-                "error": "Cloud-VOD nicht erreichbar.",
-            }
     return {
         "ok": False,
         "input_path": None,
@@ -4143,13 +3940,9 @@ def resolve_vod_clip_source(streamer, filename):
     }
 
 
-def vod_clip_ui_enabled(file_path, drive_row):
-    """Show clip controls for local VODs and configured Drive-only VODs."""
-    if file_path:
-        return True
-    if drive_row and drive_row.get("file_id") and gdrive.enabled() and gdrive.configured():
-        return True
-    return False
+def vod_clip_ui_enabled(file_path):
+    """Show clip controls for local VODs."""
+    return bool(file_path)
 
 
 def get_duration(file_path):
@@ -4410,6 +4203,23 @@ STREAMER_CACHE_TTL = 30  # Online-Status soll sichtbar frisch bleiben.
 
 
 _MEDIA_TOKEN_CACHE = {"ts": 0.0, "token": 0.0}
+
+
+def _cache_bust_path():
+    return os.path.join(config.META_DIR, "media_cache_bust.stamp")
+
+
+def bust_media_cache():
+    stamp = _cache_bust_path()
+    try:
+        os.makedirs(os.path.dirname(stamp), exist_ok=True)
+        with open(stamp, "w", encoding="utf-8") as handle:
+            handle.write(str(time.time()))
+    except OSError:
+        pass
+    _MEDIA_TOKEN_CACHE["ts"] = 0.0
+
+
 def _media_cache_token():
     from flask import has_request_context, g
     if has_request_context() and hasattr(g, "_media_token"):
@@ -4419,7 +4229,7 @@ def _media_cache_token():
         token = _MEDIA_TOKEN_CACHE["token"]
     else:
         try:
-            token = os.path.getmtime(gdrive.cache_bust_path())
+            token = os.path.getmtime(_cache_bust_path())
         except (OSError, Exception):
             token = 0.0
         _MEDIA_TOKEN_CACHE["token"] = token
@@ -4444,14 +4254,11 @@ def current_user_role():
 
 
 def streamer_visibility(streamer):
-    for slug in related_drive_slugs(streamer):
-        try:
-            folder = database.get_drive_folder(slug)
-        except Exception:
-            folder = None
-        if folder:
-            return gdrive.normalize_visibility(folder.get("visibility"))
-    return "members"
+    primary = archive_name_for(streamer) or str(streamer or "").strip()
+    profiles = load_profiles()
+    entry = profiles.get(primary) or profiles.get(streamer) or {}
+    vis = str(entry.get("visibility") or "").strip().lower()
+    return "admin" if vis == "admin" else "members"
 
 
 def can_view_streamer(streamer):
@@ -4462,9 +4269,9 @@ def can_view_streamer(streamer):
 
     from core import tube_auth
     role = current_user_role()
-    if tube_auth.is_beatek_only(role):
-        related = related_drive_slugs(streamer)
-        if not tube_auth.streamer_allowed_for_beatek_only(
+    if tube_auth.is_member(role):
+        related = related_archive_slugs(streamer)
+        if not tube_auth.streamer_allowed_for_member(
             streamer,
             related,
             role=role,
@@ -4493,7 +4300,7 @@ def can_view_streamer(streamer):
     except Exception:
         pass
     try:
-        for s in related_drive_slugs(streamer) or []:
+        for s in related_archive_slugs(streamer) or []:
             candidates.add(str(s).strip().lower())
     except Exception:
         pass
@@ -4520,9 +4327,9 @@ def can_view_streamer(streamer):
 
     from core import tube_auth
     role = current_user_role()
-    if tube_auth.is_beatek_only(role):
-        related = related_drive_slugs(streamer)
-        return tube_auth.streamer_allowed_for_beatek_only(streamer, related, role=role)
+    if tube_auth.is_member(role):
+        related = related_archive_slugs(streamer)
+        return tube_auth.streamer_allowed_for_member(streamer, related, role=role)
 
     return False
 
@@ -4550,7 +4357,7 @@ def abort_deleted_media(streamer, filename, file_id=None):
         return
     slugs = set()
     try:
-        slugs.update(related_drive_slugs(streamer) or [])
+        slugs.update(related_archive_slugs(streamer) or [])
     except Exception:
         pass
     primary = archive_name_for(streamer) or str(streamer or "").strip()
@@ -4602,304 +4409,6 @@ def visible_streamers(streamers=None):
     return filtered
 
 
-_DRIVE_INDEX_CACHE = {"token": None, "ts": 0.0, "data": None}
-
-def _drive_index():
-    now = time.time()
-    token = _media_cache_token()
-    if _DRIVE_INDEX_CACHE["data"] is not None and _DRIVE_INDEX_CACHE["token"] == token and (now - _DRIVE_INDEX_CACHE["ts"] < 30.0):
-        return {k: dict(v, names=set(v["names"])) for k, v in _DRIVE_INDEX_CACHE["data"].items()}
-
-    summaries = {}
-    try:
-        del_names, del_fids = database.get_deleted_media_set()
-    except Exception:
-        del_names, del_fids = set(), set()
-
-    try:
-        for folder in database.list_drive_folders():
-            slug = str(folder.get("streamer") or "").strip()
-            if not slug or slug == gdrive.ROOT_SENTINEL or is_system_backup_slug(slug):
-                continue
-            summaries[slug] = {
-                "folder_id": folder.get("folder_id") or "",
-                "visibility": gdrive.normalize_visibility(folder.get("visibility")),
-                "title": folder.get("title") or slug,
-                "count": 0,
-                "latest_ts": None,
-                "names": set(),
-                "on_drive": bool(folder.get("folder_id")),
-            }
-        for row in database.list_drive_files():
-            slug = str(row.get("streamer") or "").strip()
-            name = str(row.get("filename") or "").strip()
-            mime = str(row.get("mime_type") or "").strip()
-            fid = row.get("file_id")
-            if not slug:
-                continue
-            # Homepage VOD counts: only archive videos, not chats/assets.
-            if name and not gdrive.is_playable_video(name, mime):
-                continue
-            if (name and name in del_names) or (fid and fid in del_fids):
-                continue
-            info = summaries.setdefault(slug, {
-                "folder_id": "",
-                "visibility": "members",
-                "title": slug,
-                "count": 0,
-                "latest_ts": None,
-                "names": set(),
-                "on_drive": True,
-            })
-            if name:
-                info["names"].add(name)
-            info["count"] = len(info["names"])
-            info["on_drive"] = True
-            ts = parse_timestamp_from_filename(name, row.get("modified_at") or 0)
-            if ts and (not info.get("latest_ts") or ts > info["latest_ts"]):
-                info["latest_ts"] = ts
-    except Exception as exc:
-        logging.warning("Drive-Index nicht lesbar: %s", exc)
-
-    _DRIVE_INDEX_CACHE["token"] = token
-    _DRIVE_INDEX_CACHE["ts"] = now
-    _DRIVE_INDEX_CACHE["data"] = {k: dict(v, names=set(v["names"])) for k, v in summaries.items()}
-    return summaries
-
-
-def _attach_drive_meta(row, drive_info):
-    info = drive_info or {}
-    row["visibility"] = info.get("visibility") or "members"
-    row["on_drive"] = bool(info.get("on_drive") or info.get("folder_id") or info.get("names"))
-    title = str(info.get("title") or "").strip()
-    name = str(row.get("name") or "").strip()
-    if title and title != name:
-        row["display_name"] = title
-    else:
-        try:
-            row["display_name"] = archive_display_name(name) or name
-        except Exception:
-            row["display_name"] = name or title
-    return row
-
-
-def send_drive_media(file_id, attachment_name=None, *, range_chunk_size=None, streamer=None, filename=None, expected_size=None):
-    file_id = str(file_id or "").strip()
-    if not file_id:
-        abort(404)
-
-    total_size = None
-    mime = "application/octet-stream"
-    try:
-        meta = gdrive.get_file_metadata(file_id)
-        mime = str(meta.get("mimeType") or "").strip() or mime
-        try:
-            total_size = int(meta.get("size") or 0) or None
-        except (TypeError, ValueError):
-            total_size = None
-    except gdrive.DriveError:
-        if request.method == "HEAD":
-            abort(404)
-        meta = None
-
-    if request.method == "HEAD":
-        if meta is None:
-            abort(404)
-        resp = Response(status=200, mimetype=mime)
-        if total_size:
-            resp.headers["Content-Length"] = str(total_size)
-        resp.headers["Accept-Ranges"] = "bytes"
-        resp.headers["Cache-Control"] = "private, max-age=3600"
-        if attachment_name:
-            safe_name = attachment_name.encode("ascii", "ignore").decode("ascii").replace('"', "")
-            resp.headers["Content-Disposition"] = f'attachment; filename="{safe_name}"'
-        return apply_cast_cors(resp)
-
-    # Full attachment downloads must be stitched from closed ranges — open-ended /
-    # full-file Drive fetches hit downloadQuotaExceeded after repeated plays.
-    if attachment_name and not request.headers.get("Range"):
-        if not total_size:
-            abort(404)
-
-        def generate_full():
-            try:
-                yield from gdrive.iter_drive_media(file_id, total_size=total_size)
-            except gdrive.DriveError:
-                return
-
-        headers = {
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "private, max-age=3600",
-            "X-Accel-Buffering": "no",
-            "Content-Length": str(total_size),
-            "Content-Type": mime,
-        }
-        safe_name = attachment_name.encode("ascii", "ignore").decode("ascii").replace('"', "")
-        headers["Content-Disposition"] = f'attachment; filename="{safe_name}"'
-        resp = Response(generate_full(), status=200, headers=headers, mimetype=mime)
-        return apply_cast_cors(resp)
-
-    range_header = gdrive.bound_media_range_header(
-        request.headers.get("Range"),
-        chunk_size=range_chunk_size if range_chunk_size is not None else gdrive.playback_live_range_bytes(),
-        total_size=total_size,
-    )
-    t0 = time.time()
-    # Never probe Drive while the shared quota circuit is open. Each 403
-    # re-arms the cooldown and makes "wait then Play" fail immediately again.
-    if gdrive.playback_quota_blocked(file_id):
-        retry = gdrive.playback_quota_retry_after(file_id) or int(gdrive.playback_quota_cooldown_sec())
-        logging.warning(
-            "VODDBG media live-skipped-quota file=%s range=%s retry=%ss",
-            str(file_id)[:16],
-            range_header,
-            retry,
-        )
-        resp = Response(
-            "Drive download quota exceeded",
-            status=503,
-            mimetype="text/plain",
-        )
-        resp.headers["Retry-After"] = str(max(60, int(retry)))
-        resp.headers["X-Vod-Quota"] = "1"
-        resp.headers["X-Vod-Source"] = "quota-circuit"
-        return apply_cast_cors(resp)
-    try:
-        upstream = gdrive.open_media(
-            file_id,
-            range_header=range_header,
-            bound_range=False,
-            total_size=total_size,
-            ignore_quota_circuit=False,
-        )
-    except gdrive.DriveError as exc:
-        logging.warning(
-            "VODDBG media live-open-fail file=%s range=%s err=%s ms=%.0f",
-            str(file_id)[:16],
-            range_header,
-            exc,
-            (time.time() - t0) * 1000,
-        )
-        if gdrive.is_download_quota_error(exc):
-            retry = gdrive.playback_quota_retry_after(file_id) or 120
-            resp = Response(
-                "Drive download quota exceeded",
-                status=503,
-                mimetype="text/plain",
-            )
-            resp.headers["Retry-After"] = str(int(retry))
-            resp.headers["X-Vod-Quota"] = "1"
-            resp.headers["X-Vod-Source"] = "quota"
-            return apply_cast_cors(resp)
-        abort(404)
-
-    closed = gdrive.parse_closed_bytes_range(range_header)
-    # Drive sometimes answers a bounded Range with HTTP 200 and no Content-Range.
-    # Browsers then treat the chunk as the whole file, stall, and restart at 0.
-    if total_size and closed:
-        start, end = closed
-        end = min(end, int(total_size) - 1)
-        start = min(max(0, start), end)
-        status = 206
-        content_length = end - start + 1
-        content_range = f"bytes {start}-{end}/{int(total_size)}"
-    else:
-        status = upstream.status_code if upstream.status_code in (200, 206) else 206
-        content_length = None
-        content_range = upstream.headers.get("Content-Range")
-        if not content_range and closed and total_size:
-            status = 206
-            content_range = f"bytes {closed[0]}-{closed[1]}/{int(total_size)}"
-            content_length = closed[1] - closed[0] + 1
-
-    logging.info(
-        "VODDBG media live-open file=%s range=%s upstream=%s cr=%s len=%s ms=%.0f",
-        str(file_id)[:16],
-        range_header,
-        upstream.status_code,
-        content_range,
-        content_length,
-        (time.time() - t0) * 1000,
-    )
-    if closed and streamer and filename and expected_size and not gdrive.playback_quota_blocked(file_id):
-        try:
-            gdrive.prefetch_next_chunk(streamer, filename, file_id, closed[1], expected_size)
-        except Exception:
-            pass
-
-    def generate():
-        remaining = content_length
-        sent = 0
-        cache_start = closed[0] if closed else None
-        cache_buf = bytearray()
-        try:
-            for chunk in upstream.iter_content(64 * 1024):
-                if not chunk:
-                    continue
-                if remaining is not None:
-                    if remaining <= 0:
-                        break
-                    if len(chunk) > remaining:
-                        chunk = chunk[:remaining]
-                    remaining -= len(chunk)
-                sent += len(chunk)
-                if cache_start is not None and streamer and filename and expected_size:
-                    cache_buf.extend(chunk)
-                    if len(cache_buf) >= 256 * 1024:
-                        try:
-                            gdrive.ingest_playback_bytes(
-                                streamer, filename, cache_start, bytes(cache_buf), expected_size
-                            )
-                        except Exception:
-                            pass
-                        cache_start += len(cache_buf)
-                        cache_buf.clear()
-                yield chunk
-        finally:
-            upstream.close()
-            if cache_buf and cache_start is not None and streamer and filename and expected_size:
-                try:
-                    gdrive.ingest_playback_bytes(
-                        streamer, filename, cache_start, bytes(cache_buf), expected_size
-                    )
-                except Exception:
-                    pass
-            if content_length is not None and sent != content_length:
-                logging.warning(
-                    "VODDBG media live-truncated file=%s range=%s sent=%s want=%s",
-                    str(file_id)[:16],
-                    range_header,
-                    sent,
-                    content_length,
-                )
-
-    headers = {
-        "Accept-Ranges": "bytes",
-        "Cache-Control": "private, max-age=3600",
-        "X-Accel-Buffering": "no",
-        "Content-Type": upstream.headers.get("Content-Type") or mime,
-        "X-Vod-Source": "live",
-    }
-    if content_range:
-        headers["Content-Range"] = content_range
-    if content_length is not None:
-        headers["Content-Length"] = str(content_length)
-    else:
-        upstream_len = upstream.headers.get("Content-Length")
-        if upstream_len:
-            headers["Content-Length"] = upstream_len
-    if attachment_name:
-        safe_name = attachment_name.encode("ascii", "ignore").decode("ascii").replace('"', "")
-        headers["Content-Disposition"] = f'attachment; filename="{safe_name}"'
-    resp = Response(
-        generate(),
-        status=status,
-        headers=headers,
-        mimetype=headers.get("Content-Type") or mime,
-    )
-    return apply_cast_cors(resp)
-
-
 def format_bytes_short(size_bytes):
     try:
         value = float(size_bytes or 0)
@@ -4912,8 +4421,8 @@ def format_bytes_short(size_bytes):
     return f"{value / (1024 * 1024):.1f} MB"
 
 
-def related_drive_slugs(streamer):
-    """Map archive names like beatek_ to Drive folders like Beatek/beatek."""
+def related_archive_slugs(streamer):
+    """Map archive names and channel aliases locally."""
     primary = archive_name_for(streamer) or str(streamer or "").strip()
     slugs = set()
     if primary:
@@ -4922,122 +4431,7 @@ def related_drive_slugs(streamer):
         if base:
             slugs.add(base)
             slugs.add(f"{base}_")
-        try:
-            mapped = gdrive.drive_index_slug(primary)
-            if mapped:
-                slugs.add(mapped)
-            title = gdrive.drive_folder_title(primary)
-            title_slug = gdrive.normalize_folder_slug(title)
-            if title_slug:
-                slugs.add(title_slug)
-        except Exception:
-            pass
-    # Reverse map: Beatek → also include archives that point here
-    try:
-        for src, title in (gdrive.folder_map() or {}).items():
-            dest = gdrive.normalize_folder_slug(title) or ""
-            if primary in (src, dest) or (primary and primary.rstrip("_") == dest):
-                slugs.add(src)
-                if dest:
-                    slugs.add(dest)
-    except Exception:
-        pass
-    try:
-        for folder in database.list_drive_folders():
-            name = str(folder.get("streamer") or "").strip()
-            title = str(folder.get("title") or "").strip()
-            title_slug = gdrive.normalize_folder_slug(title) or ""
-            for candidate in list(slugs):
-                cand_base = candidate.rstrip("_")
-                if name == candidate or title_slug == candidate or title_slug == cand_base:
-                    if name:
-                        slugs.add(name)
-                    break
-    except Exception:
-        pass
     return sorted(s for s in slugs if s)
-
-
-def list_admin_drive_assets(streamer, kind=None, q=None):
-    """Drive-only non-VOD files for admin gallery (images, audio, pdf, …)."""
-    if not current_user_is_admin():
-        return []
-    assets = []
-    seen_ids = set()
-    kind_rank = {"image": 0, "audio": 1, "pdf": 2, "text": 3, "file": 4}
-    kind_filter = str(kind or "").strip().lower()
-    query = str(q or "").strip().casefold()
-    rel_slugs = set(related_drive_slugs(streamer))
-    if streamer:
-        rel_slugs.add(str(streamer).strip())
-    try:
-        del_names, del_fids = database.get_deleted_media_set(rel_slugs)
-    except Exception:
-        del_names, del_fids = set(), set()
-
-    for slug in related_drive_slugs(streamer):
-        try:
-            rows = database.list_drive_files(slug)
-        except Exception:
-            continue
-        for row in rows:
-            name = str(row.get("filename") or "").strip()
-            mime = str(row.get("mime_type") or "").strip()
-            file_id = str(row.get("file_id") or "").strip()
-            if not name or not file_id or file_id in seen_ids:
-                continue
-            if (name and name in del_names) or (file_id and file_id in del_fids):
-                continue
-            if gdrive.is_playable_video(name, mime) or gdrive.is_chat_log(name, mime):
-                continue
-            if not gdrive.is_drive_asset(name, mime):
-                continue
-            asset_kind = gdrive.asset_kind(name, mime)
-            if kind_filter == "file":
-                if asset_kind in ("image", "audio"):
-                    continue
-            elif kind_filter and asset_kind != kind_filter:
-                continue
-            if query and query not in name.casefold():
-                continue
-            seen_ids.add(file_id)
-            mtime = float(row.get("modified_at") or 0)
-            # Dedicated preview route avoids broken /thumb X-Accel paths for images.
-            preview_url = url_for("drive_asset_preview", streamer=streamer, filename=name)
-            full_url = url_for("drive_asset_media", streamer=streamer, filename=name)
-            assets.append({
-                "name": name,
-                "file_id": file_id,
-                "mime_type": mime,
-                "kind": asset_kind,
-                "drive_slug": slug,
-                "size_bytes": int(row.get("size") or 0),
-                "size_str": format_bytes_short(row.get("size")),
-                "date_str": parse_date_from_filename(name, mtime) if mtime else "-",
-                "preview_url": preview_url if asset_kind == "image" else full_url,
-                "thumb_url": preview_url if asset_kind == "image" else "",
-                "open_url": full_url,
-                "download_url": (
-                    url_for("drive_asset_media", streamer=streamer, filename=name, download=1)
-                    if downloads_enabled()
-                    else ""
-                ),
-            })
-    assets.sort(
-        key=lambda item: (
-            kind_rank.get(item.get("kind"), 9),
-            str(item.get("name") or "").lower(),
-        )
-    )
-    return assets
-
-
-def paginate_drive_assets(assets, page=1, page_size=PAGE_SIZE):
-    total = len(assets or [])
-    total_pages = max(1, (total + page_size - 1) // page_size)
-    page = max(1, min(int(page or 1), total_pages))
-    start = (page - 1) * page_size
-    return (assets or [])[start:start + page_size], total, total_pages, page
 
 
 def _iter_runtime_state_files(safe_dir, exact_name, prefix, suffix):
@@ -5155,8 +4549,7 @@ def read_recording_status_raw(streamer):
             best_any_ts = updated
             best_any = data
         state = str(data.get("state") or "").lower()
-        # Prefer a fresh recording/starting status over a newer sibling "offline"
-        # (e.g. beatek1_youtube offline beating beatek_ Twitch recording).
+        # Prefer a fresh recording/starting status over a newer sibling "offline".
         if state in ("recording", "starting") and now - updated <= 180 and updated >= best_active_ts:
             best_active_ts = updated
             best_active = data
@@ -5223,7 +4616,7 @@ def recording_health_rows(streamers=None, limit=12, active_only=False):
         archive = archive_name_for(name) or name
         if active_only:
             preferred = str((active_info or {}).get("source") or "").strip()
-            # Shared archive (beatek_ + beatek1_youtube): show the recording source once.
+            # Shared archive: show the recording source once.
             if preferred and preferred != name and preferred in candidate_set:
                 continue
             if archive in seen_archives:
@@ -5432,9 +4825,8 @@ def list_streamers():
     streamers = []
     live_channels = set(load_live_channels())
     base_ok = os.path.isdir(BASE_DIR)
-    drive_index = _drive_index()
 
-    profiles = load_profiles() if base_ok or drive_index else {}
+    profiles = load_profiles() if base_ok else {}
     missing_profiles = []
     seen = set()
     archive_sources = {}
@@ -5472,29 +4864,6 @@ def list_streamers():
 
     for archive, sources in sorted(archive_sources.items(), key=lambda item: item[0]):
         count, latest_ts, local_names = _scan_local(archive)
-        drive_info = dict(drive_index.get(archive) or {})
-        for slug in related_drive_slugs(archive):
-            alt = drive_index.get(slug) or {}
-            if not alt:
-                continue
-            names = set(drive_info.get("names") or set()) | set(alt.get("names") or set())
-            drive_info["names"] = names
-            drive_info["count"] = len(names)
-            drive_info["on_drive"] = True
-            if alt.get("folder_id") and not drive_info.get("folder_id"):
-                drive_info["folder_id"] = alt.get("folder_id")
-            if alt.get("visibility") and not drive_info.get("visibility"):
-                drive_info["visibility"] = alt.get("visibility")
-            if alt.get("title") and not drive_info.get("title"):
-                drive_info["title"] = alt.get("title")
-            ts = alt.get("latest_ts") or 0
-            if ts and (not drive_info.get("latest_ts") or ts > drive_info["latest_ts"]):
-                drive_info["latest_ts"] = ts
-        extra = (drive_info.get("names") or set()) - local_names
-        count += len(extra)
-        drive_latest = drive_info.get("latest_ts")
-        if drive_latest and (latest_ts is None or drive_latest > latest_ts):
-            latest_ts = drive_latest
         latest_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(latest_ts)) if latest_ts else None
         latest_label, latest_title = dashboard_time_label(latest_ts)
         live = any(src in live_channels for src in sources) or archive in live_channels
@@ -5502,7 +4871,7 @@ def list_streamers():
 
         p_data = profiles.get(archive)
         if not p_data:
-            for src in list(sources) + related_drive_slugs(archive):
+            for src in list(sources) + related_archive_slugs(archive):
                 p_data = profiles.get(src)
                 if p_data:
                     break
@@ -5534,8 +4903,10 @@ def list_streamers():
                 external_platform = "youtube"
 
         twitch_login = twitch_login_from_sources(sources, configs)
-        streamers.append(_attach_drive_meta({
+        streamers.append({
             "name": archive,
+            "display_name": archive_display_name(archive) or archive,
+            "visibility": streamer_visibility(archive),
             "count": count,
             "latest": latest_str,
             "latest_label": latest_label,
@@ -5556,7 +4927,7 @@ def list_streamers():
             "twitch_title": "",
             "twitch_game": "",
             "twitch_thumbnail": "",
-        }, drive_info))
+        })
         seen.add(archive)
         seen.update(sources)
 
@@ -5566,11 +4937,11 @@ def list_streamers():
                 continue
             if name.startswith(".") or name == "__pycache__":
                 continue
-            # Skip Drive/archive aliases of an already listed streamer (beatek vs beatek_).
+            # Skip archive aliases of an already listed streamer.
             aliased = False
             try:
                 for existing in list(seen):
-                    if name in related_drive_slugs(existing):
+                    if name in related_archive_slugs(existing):
                         aliased = True
                         break
             except Exception:
@@ -5583,13 +4954,7 @@ def list_streamers():
             if not os.path.isdir(path):
                 continue
             count, latest_ts, local_names = _scan_local(name)
-            drive_info = drive_index.get(name) or {}
-            extra = (drive_info.get("names") or set()) - local_names
-            count += len(extra)
-            drive_latest = drive_info.get("latest_ts")
-            if drive_latest and (latest_ts is None or drive_latest > latest_ts):
-                latest_ts = drive_latest
-            if count == 0 and not drive_info:
+            if count == 0:
                 continue
             latest_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(latest_ts)) if latest_ts else None
             latest_label, latest_title = dashboard_time_label(latest_ts)
@@ -5603,8 +4968,10 @@ def list_streamers():
 
             viewer_info = live_viewer_info(name)
             twitch_login = twitch_api.normalize_login(name)
-            streamers.append(_attach_drive_meta({
+            streamers.append({
                 "name": name,
+                "display_name": archive_display_name(name) or name,
+                "visibility": streamer_visibility(name),
                 "count": count,
                 "latest": latest_str,
                 "latest_label": latest_label,
@@ -5624,57 +4991,8 @@ def list_streamers():
                 "twitch_title": "",
                 "twitch_game": "",
                 "twitch_thumbnail": "",
-            }, drive_info))
+            })
             seen.add(name)
-
-    for slug, drive_info in sorted(drive_index.items()):
-        if slug in seen or is_system_backup_slug(slug):
-            continue
-        aliased = False
-        for name in seen:
-            try:
-                if slug in related_drive_slugs(name):
-                    aliased = True
-                    break
-            except Exception:
-                continue
-        if aliased:
-            continue
-        latest_ts = drive_info.get("latest_ts")
-        latest_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(latest_ts)) if latest_ts else None
-        latest_label, latest_title = dashboard_time_label(latest_ts)
-        p_data = profiles.get(slug)
-        if not p_data:
-            for alt in related_drive_slugs(slug):
-                p_data = profiles.get(alt)
-                if p_data:
-                    break
-        avatar_url, _ = resolve_streamer_avatar(slug, slug, p_data)
-        if not p_data:
-            missing_profiles.append(slug)
-        viewer_info = live_viewer_info(slug)
-        twitch_login = twitch_api.normalize_login(slug)
-        streamers.append(_attach_drive_meta({
-            "name": slug,
-            "count": int(drive_info.get("count") or 0),
-            "latest": latest_str,
-            "latest_label": latest_label,
-            "latest_title": latest_title,
-            "live": slug in live_channels,
-            "online": is_streamer_online(slug),
-            "viewers": viewer_info["viewers"],
-            "avatar_url": avatar_url,
-            "sources": [slug],
-            "platforms": ["twitch"],
-            "external_url": f"https://twitch.tv/{slug}",
-            "external_platform": "twitch",
-            "twitch_login": twitch_login,
-            "twitch_live": False,
-            "twitch_title": "",
-            "twitch_game": "",
-            "twitch_thumbnail": "",
-        }, drive_info))
-        seen.add(slug)
 
     for row in streamers:
         if not row.get("display_name"):
@@ -5729,7 +5047,7 @@ def parse_timestamp_from_filename(filename, mtime=None):
         (r"(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})", "ymdHMS"),
         (r"(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})", "ymdHMS"),
         (r"(\d{4})_(\d{2})_(\d{2})_(\d{2})-(\d{2})-(\d{2})", "ymdHMS"),
-        # legacy EU: 10.08.2025 or Beatek_18.08.2025
+        # legacy EU: 10.08.2025 or Channel_18.08.2025
         (r"(?<!\d)(\d{2})\.(\d{2})\.(\d{4})(?!\d)", "dmy"),
         (r"^(\d{4})(\d{2})(\d{2})_", "ymd"),
         (r"^(\d{4})-(\d{2})-(\d{2})", "ymd"),
@@ -6114,27 +5432,6 @@ def media_item_from_entry(entry, is_clip=False):
     }
 
 
-def media_item_from_drive(row):
-    size_bytes = int((row or {}).get("size") or 0)
-    mtime = float((row or {}).get("modified_at") or time.time())
-    duration_ms = int((row or {}).get("duration_ms") or 0)
-    filename = str((row or {}).get("filename") or "")
-    return {
-        "name": filename,
-        "mtime": mtime,
-        "size": f"{size_bytes / (1024 * 1024):.1f}",
-        "size_bytes": size_bytes,
-        "is_clip": False,
-        "route": "vod",
-        "full_path": "",
-        "date_str": parse_date_from_filename(filename, mtime),
-        "drive_only": True,
-        "on_drive": True,
-        "drive_file_id": str((row or {}).get("file_id") or ""),
-        "duration_sec": (duration_ms / 1000.0) if duration_ms else 0.0,
-    }
-
-
 def collect_streamer_media_items(streamer):
     from flask import has_request_context, g
     if has_request_context():
@@ -6144,9 +5441,8 @@ def collect_streamer_media_items(streamer):
             return [dict(it) for it in g._cached_streamer_items[streamer]]
 
     items = []
-    local_names = set()
     try:
-        suppress_slugs = set(related_drive_slugs(streamer) or [])
+        suppress_slugs = set(related_archive_slugs(streamer) or [])
     except Exception:
         suppress_slugs = set()
     primary = archive_name_for(streamer) or str(streamer or "").strip()
@@ -6174,7 +5470,6 @@ def collect_streamer_media_items(streamer):
                 if is_archive_mp4_filename(entry.name) and entry.is_file():
                     if _suppressed(entry.name):
                         continue
-                    local_names.add(entry.name)
                     items.append(media_item_from_entry(entry, is_clip=False))
 
         clips_dir = os.path.join(safe_dir, CLIP_SUBDIR)
@@ -6186,47 +5481,6 @@ def collect_streamer_media_items(streamer):
                             continue
                         items.append(media_item_from_entry(entry, is_clip=True))
 
-    try:
-        drive_rows = []
-        seen_drive_ids = set()
-        for slug in related_drive_slugs(streamer):
-            for row in database.list_drive_files(slug):
-                file_id = str(row.get("file_id") or "")
-                name = str(row.get("filename") or "")
-                if _suppressed(name, file_id):
-                    continue
-                if file_id and file_id in seen_drive_ids:
-                    continue
-                if file_id:
-                    seen_drive_ids.add(file_id)
-                elif name and any(str(r.get("filename") or "") == name for r in drive_rows):
-                    continue
-                drive_rows.append(row)
-    except Exception:
-        drive_rows = []
-    drive_names = {}
-    for row in drive_rows:
-        name = str(row.get("filename") or "")
-        if name:
-            drive_names[name] = row
-    for item in items:
-        row = drive_names.get(item["name"])
-        if row:
-            item["on_drive"] = True
-            item["drive_file_id"] = row.get("file_id") or ""
-        else:
-            item["on_drive"] = False
-            item["drive_only"] = False
-    for row in drive_rows:
-        name = str(row.get("filename") or "")
-        mime = str(row.get("mime_type") or "")
-        if not name or name in local_names:
-            continue
-        # Drive may hold legacy .mov/.mkv uploads; local archive scan stays MP4-only.
-        if not gdrive.is_playable_video(name, mime):
-            continue
-        local_names.add(name)  # dedupe duplicate Drive copies of the same title
-        items.append(media_item_from_drive(row))
     if has_request_context():
         g._cached_streamer_items[streamer] = [dict(it) for it in items]
     return items
@@ -6264,12 +5518,7 @@ def streamer_archive_stats(streamer):
             record["mtime"] = item["mtime"]
             cache_changed = True
         duration = record.get("duration")
-        if duration is None and item.get("drive_only"):
-            duration = item.get("duration_sec") or 0
-            if float(duration or 0) > 0:
-                record["duration"] = duration
-                cache_changed = True
-        elif duration is None and should_scan_duration and item.get("full_path"):
+        if duration is None and should_scan_duration and item.get("full_path"):
             duration = get_duration(item["full_path"])
             if float(duration or 0) > 0:
                 record["duration"] = duration
@@ -6442,35 +5691,21 @@ def list_vods(
     
     page_items = items[start:end]
     try:
-        drive_slugs = related_drive_slugs(streamer)
+        archive_slugs = related_archive_slugs(streamer)
     except Exception:
-        drive_slugs = []
-    probe_enqueued = 0
+        archive_slugs = []
 
     for item in page_items:
         fid = f"{streamer}/{item['name']}"
-        
-        # Metadaten laden/cachen — Drive-Dauer bevorzugen; 0 nicht dauerhaft cachen.
+
         cached = metadata.get(fid)
-        drive_dur = 0.0
-        try:
-            drive_dur = float(item.get("duration_sec") or 0)
-        except (TypeError, ValueError):
-            drive_dur = 0.0
         cached_dur = 0.0
         if cached and "duration" in cached:
             try:
                 cached_dur = float(cached.get("duration") or 0)
             except (TypeError, ValueError):
                 cached_dur = 0.0
-        if drive_dur > 0:
-            dur = drive_dur
-            if not cached or cached.get("mtime") != item["mtime"] or cached_dur != drive_dur:
-                record = metadata.setdefault(fid, {})
-                record["mtime"] = item["mtime"]
-                record["duration"] = drive_dur
-                cache_changed = True
-        elif cached and cached.get("mtime") == item["mtime"] and cached_dur > 0:
+        if cached and cached.get("mtime") == item["mtime"] and cached_dur > 0:
             dur = cached_dur
         elif item.get("full_path") and os.path.isfile(item.get("full_path") or ""):
             dur = get_duration(item.get("full_path") or "")
@@ -6481,22 +5716,15 @@ def list_vods(
                 cache_changed = True
         else:
             dur = 0.0
-            if (item.get("drive_only") or item.get("on_drive")) and probe_enqueued < 6:
-                try:
-                    gdrive.enqueue_duration_probe(streamer, item.get("name") or "")
-                    probe_enqueued += 1
-                except Exception:
-                    pass
         item["duration_sec"] = float(dur or 0)
         item["duration_str"] = format_seconds(dur)
         item["watch_key"] = vod_watch_key(streamer, item["name"])
         item["done_key"] = vod_done_key(streamer, item["name"])
         
         gen_dir, gen_path, lock_path = thumb_paths(streamer, item["name"])
-        thumb_dir, thumb_path, _ = resolve_thumb_paths(streamer, item["name"], slugs=drive_slugs)
+        thumb_dir, thumb_path, _ = resolve_thumb_paths(streamer, item["name"], slugs=archive_slugs)
         if (
-            not item.get("drive_only")
-            and gen_path
+            gen_path
             and not os.path.exists(gen_path)
             and item.get("size_bytes", 0) > 0
             and item.get("full_path")
@@ -6534,7 +5762,7 @@ def resolve_media_path(streamer, filename, route):
     if streamer:
         candidates.append(streamer)
     try:
-        candidates.extend(related_drive_slugs(streamer))
+        candidates.extend(related_archive_slugs(streamer))
     except Exception:
         pass
     seen = set()
@@ -6558,7 +5786,7 @@ def resolve_media_path(streamer, filename, route):
 
 
 def chat_log_path(streamer, filename):
-    """Local chat JSONL path for a VOD (exists even when the MP4 is Drive-only)."""
+    """Local chat JSONL path for a VOD."""
     if os.path.basename(filename) != filename or not filename.endswith(".mp4"):
         return None
     safe_dir = streamer_dir(streamer)
@@ -6569,18 +5797,9 @@ def chat_log_path(streamer, filename):
 
 
 def ensure_vod_chat_path(streamer, filename):
-    """Prefer local chat; pull from Drive when the sidecar only exists remotely."""
+    """Return local chat log path if present."""
     path = chat_log_path(streamer, filename)
-    if path and os.path.isfile(path) and os.path.getsize(path) > 0:
-        return path
-    try:
-        if gdrive.enabled() and gdrive.configured():
-            fetched = gdrive.ensure_local_chat(archive_name_for(streamer) or streamer, filename)
-            if fetched and os.path.isfile(fetched):
-                return fetched
-    except Exception:
-        pass
-    return path if path and os.path.isfile(path) else None
+    return path if path and os.path.isfile(path) and os.path.getsize(path) > 0 else None
 
 
 def _platform_kind(value):
@@ -7364,27 +6583,12 @@ def live_playlist_exists(streamer):
     return live_playlist_fresh(streamer)
 
 
-def resolve_drive_file(streamer, filename):
-    if os.path.basename(filename) != filename:
-        return None
-    for slug in related_drive_slugs(streamer):
-        try:
-            row = database.get_drive_file(slug, filename)
-        except Exception:
-            row = None
-        if row:
-            return row
-    return None
-
-
 def delete_video_file(streamer, filename, is_clip):
     route = "clip" if is_clip else "vod"
     filename = os.path.basename(str(filename or ""))
     if not filename or filename in (".", ".."):
         return False
     file_path = resolve_media_path(streamer, filename, route)
-    drive_row = None if is_clip else resolve_drive_file(streamer, filename)
-    file_id = str((drive_row or {}).get("file_id") or "").strip()
     removed = False
     if file_path:
         try:
@@ -7393,14 +6597,13 @@ def delete_video_file(streamer, filename, is_clip):
         except OSError:
             return False
 
-    # Tombstone so Drive re-sync cannot bring the item back into the Tube UI.
     try:
         deleted_by = current_username()
     except Exception:
         deleted_by = None
     tombstone_slugs = set()
     try:
-        tombstone_slugs.update(related_drive_slugs(streamer) or [])
+        tombstone_slugs.update(related_archive_slugs(streamer) or [])
     except Exception:
         pass
     primary = archive_name_for(streamer) or str(streamer or "").strip()
@@ -7410,35 +6613,16 @@ def delete_video_file(streamer, filename, is_clip):
         tombstone_slugs.add(str(streamer).strip())
     chat_name = ""
     if not is_clip:
-        try:
-            chat_name = gdrive.chat_filename_for_vod(filename) or ""
-        except Exception:
-            chat_name = ""
+        stem, _ = os.path.splitext(filename)
+        chat_name = f"{stem}.jsonl" if stem else ""
     for slug in tombstone_slugs:
         if not slug:
             continue
-        database.upsert_deleted_media(slug, filename, file_id=file_id or None, deleted_by=deleted_by)
+        database.upsert_deleted_media(slug, filename, file_id=None, deleted_by=deleted_by)
         if chat_name:
             database.upsert_deleted_media(slug, chat_name, deleted_by=deleted_by)
 
-    if drive_row and file_id and gdrive.enabled() and gdrive.configured():
-        try:
-            gdrive.delete_remote_file(file_id)
-            removed = True
-        except gdrive.DriveError as exc:
-            logging.warning("Drive-Datei nicht geloescht: %s", exc)
-            database.delete_drive_file(file_id=file_id)
-            # Still treat as removed from Tube: tombstone keeps sync from resurfacing it.
-            removed = True
-    elif drive_row:
-        database.delete_drive_file(
-            file_id=drive_row.get("file_id"),
-            streamer=drive_row.get("streamer"),
-            filename=drive_row.get("filename") or filename,
-        )
-        removed = True
     if not removed:
-        # Drive-only missing from index, or already gone — tombstone still hides it.
         removed = True
     remove_shares_for(streamer, filename, route)
     if not is_clip:
@@ -7448,7 +6632,7 @@ def delete_video_file(streamer, filename, is_clip):
         thumb_dir, thumb_path, lock_path = thumb_paths(streamer, filename)
         paths_to_clear = {thumb_path, lock_path}
         try:
-            for slug in related_drive_slugs(streamer):
+            for slug in related_archive_slugs(streamer):
                 _td, alt_path, alt_lock = thumb_paths(slug, filename)
                 paths_to_clear.add(alt_path)
                 paths_to_clear.add(alt_lock)
@@ -7469,7 +6653,7 @@ def delete_video_file(streamer, filename, is_clip):
                 pass
     _VOD_LIST_CACHE.pop(streamer, None)
     STREAMER_CACHE["ts"] = 0
-    gdrive.bust_media_cache()
+    bust_media_cache()
     try:
         invalidate_dashboard_media_cache()
     except Exception:
@@ -7552,7 +6736,7 @@ def update_vod_info_fields(streamer, filename, *, title=None, description=None):
 
 
 def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
-    """Rename a VOD/clip locally and on Drive; retarget metadata, chat, thumbs, shares."""
+    """Rename a VOD/clip locally; retarget metadata, chat, thumbs, shares."""
     route = "clip" if is_clip else "vod"
     old_name = os.path.basename(str(old_filename or "").strip())
     new_name = normalize_vod_rename_filename(new_filename, old_name)
@@ -7563,46 +6747,33 @@ def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
 
     if resolve_media_path(streamer, new_name, route):
         return False, "Zielname existiert bereits lokal.", old_name
-    if not is_clip:
-        existing_drive = resolve_drive_file(streamer, new_name)
-        if existing_drive:
-            return False, "Zielname existiert bereits auf Drive.", old_name
 
     old_path = resolve_media_path(streamer, old_name, route)
-    drive_row = None if is_clip else resolve_drive_file(streamer, old_name)
-    file_id = str((drive_row or {}).get("file_id") or "").strip()
+    if not old_path:
+        return False, "Datei lokal nicht gefunden.", old_name
 
-    if old_path:
-        new_path = os.path.join(os.path.dirname(old_path), new_name)
+    new_path = os.path.join(os.path.dirname(old_path), new_name)
+    try:
+        _rename_local_path(old_path, new_path)
+    except OSError as exc:
+        return False, f"Lokales Umbennen fehlgeschlagen: {exc}", old_name
+    for sidecar in sidecar_metadata_candidates(old_path):
+        if not os.path.isfile(sidecar):
+            continue
+        dest_side = sidecar.replace(old_name, new_name, 1)
         try:
-            _rename_local_path(old_path, new_path)
-        except OSError as exc:
-            return False, f"Lokales Umbennen fehlgeschlagen: {exc}", old_name
-        for sidecar in sidecar_metadata_candidates(old_path):
-            if not os.path.isfile(sidecar):
-                continue
-            dest_side = sidecar.replace(old_name, new_name, 1)
-            try:
-                _rename_local_path(sidecar, dest_side)
-            except OSError:
-                pass
+            _rename_local_path(sidecar, dest_side)
+        except OSError:
+            pass
 
-    chat_old = ""
-    chat_new = ""
     if not is_clip:
         try:
-            chat_old = gdrive.chat_filename_for_vod(old_name) or ""
-            chat_new = gdrive.chat_filename_for_vod(new_name) or ""
-        except Exception:
-            chat_old = chat_new = ""
-        if chat_old and chat_new:
-            try:
-                old_chat_path = gdrive.local_chat_path(streamer, old_name)
-                new_chat_path = gdrive.local_chat_path(streamer, new_name)
-                if old_chat_path and os.path.isfile(old_chat_path):
-                    _rename_local_path(old_chat_path, new_chat_path)
-            except OSError as exc:
-                logging.warning("Chat-Rename lokal fehlgeschlagen: %s", exc)
+            old_chat_path = chat_log_path(streamer, old_name)
+            new_chat_path = chat_log_path(streamer, new_name)
+            if old_chat_path and new_chat_path and os.path.isfile(old_chat_path):
+                _rename_local_path(old_chat_path, new_chat_path)
+        except OSError as exc:
+            logging.warning("Chat-Rename lokal fehlgeschlagen: %s", exc)
 
         try:
             _td, old_thumb, old_lock = thumb_paths(streamer, old_name)
@@ -7624,35 +6795,6 @@ def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
             except OSError:
                 pass
 
-    drive_ok = True
-    if drive_row and file_id and gdrive.enabled() and gdrive.configured():
-        try:
-            gdrive.rename_remote_file(file_id, new_name)
-            updated = dict(drive_row)
-            updated["filename"] = new_name
-            database.upsert_drive_file(updated)
-        except Exception as exc:
-            logging.warning("Drive-VOD-Rename fehlgeschlagen: %s", exc)
-            drive_ok = False
-        if chat_old and chat_new:
-            try:
-                chat_row = (
-                    database.get_drive_file(drive_row.get("streamer") or streamer, chat_old)
-                    or resolve_drive_file(streamer, chat_old)
-                )
-                chat_id = str((chat_row or {}).get("file_id") or "").strip()
-                if chat_id:
-                    gdrive.rename_remote_file(chat_id, chat_new)
-                    chat_updated = dict(chat_row)
-                    chat_updated["filename"] = chat_new
-                    database.upsert_drive_file(chat_updated)
-            except Exception as exc:
-                logging.warning("Drive-Chat-Rename fehlgeschlagen: %s", exc)
-    elif drive_row:
-        updated = dict(drive_row)
-        updated["filename"] = new_name
-        database.upsert_drive_file(updated)
-
     metadata = get_metadata_cache()
     old_key = f"{streamer}/{old_name}"
     new_key = f"{streamer}/{new_name}"
@@ -7663,20 +6805,14 @@ def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
         save_metadata_cache(metadata)
 
     retarget_shares_filename(streamer, old_name, new_name, route)
-    try:
-        database.retarget_vod_comments(f"{streamer}/{old_name}", f"{streamer}/{new_name}")
-    except Exception as exc:
-        logging.warning("Kommentar-Retarget fehlgeschlagen: %s", exc)
 
     _VOD_LIST_CACHE.pop(streamer, None)
     STREAMER_CACHE["ts"] = 0
     try:
-        gdrive.bust_media_cache()
+        bust_media_cache()
     except Exception:
         pass
 
-    if drive_row and file_id and not drive_ok:
-        return True, "Lokal umbenannt, Drive-Rename fehlgeschlagen.", new_name
     return True, "Umbenannt.", new_name
 
 
@@ -8285,10 +7421,6 @@ def login():
             session["user_permissions"] = database.get_user_permissions(username)
             # Fresh CSRF for post-login forms; old login-form token is intentionally invalid.
             session["_csrf_token"] = secrets.token_hex(16)
-            try:
-                sync_livechat_mod_for_username(username)
-            except Exception:
-                logging.exception("livechat_mod sync after login failed for %s", username)
 
             clear_login_attempts(ip)
             log_login_attempt(ip, username, True)
@@ -8432,7 +7564,6 @@ def admin_view():
             recording_health=recording_health_rows(),
             recent_task_errors=recent_task_error_rows(),
             share_rows=share_admin_rows(),
-            gdrive_status=gdrive.public_status(),
             role_label=tube_auth.role_label,
             vod_access_defaults=vod_access_defaults,
             vod_access_candidates=vod_access_candidates,
@@ -8500,33 +7631,25 @@ def admin_remux_all():
         return redirect(url_for("admin_view", error=f"Remux-Job konnte nicht gestartet werden: {e}"))
 
 
-@app.route("/admin/gdrive/sync", methods=["POST"])
-@admin_required
-def admin_gdrive_sync():
-    if not gdrive.enabled():
-        return redirect(url_for("admin_view", error="Google Drive ist deaktiviert (GDRIVE_ENABLED)."))
-    if not gdrive.configured():
-        return redirect(url_for("admin_view", error="Drive-Credentials fehlen. Siehe /etc/streamrecorder."))
-    try:
-        gdrive.enqueue_sync(force=True)
-        return redirect(url_for("admin_view", msg="Drive-Sync in die Warteschlange gestellt."))
-    except Exception as exc:
-        return redirect(url_for("admin_view", error=f"Drive-Sync konnte nicht gestartet werden: {exc}"))
-
-
 @app.route("/streamer/<streamer>/visibility", methods=["POST"])
 @admin_required
 def streamer_visibility_update(streamer):
     abort_hidden_streamer(streamer)
     archive = archive_name_for(streamer) or normalize_channel_name(streamer) or str(streamer or "").strip()
-    vis = gdrive.normalize_visibility(request.form.get("visibility"))
+    raw_vis = str(request.form.get("visibility") or "").strip().lower()
+    vis = "admin" if raw_vis in ("admin", "admins", "private", "hidden", "1") else "members"
     try:
-        gdrive.set_folder_visibility(archive, vis)
+        profiles = load_profiles()
+        entry = dict(profiles.get(archive) or {})
+        entry["visibility"] = vis
+        profiles[archive] = entry
+        save_profiles(profiles)
+        bust_media_cache()
         STREAMER_CACHE["ts"] = 0
         label = "nur Admins" if vis == "admin" else "alle Nutzer"
         return redirect(url_for("streamer_view", streamer=archive, msg=f"Sichtbarkeit: {label}."))
     except Exception as exc:
-        logging.error("Drive-Sichtbarkeit fehlgeschlagen: %s", exc)
+        logging.error("Sichtbarkeit fehlgeschlagen: %s", exc)
         return redirect(url_for("streamer_view", streamer=archive, msg="Sichtbarkeit konnte nicht gespeichert werden."))
 
 
@@ -9352,19 +8475,12 @@ def api_admin_group_delete(group_id):
 
 
 def _vod_access_candidate_slugs():
-    """Existing archive / Drive folder slugs admins can grant to Discord-Members."""
+    """Existing archive folder slugs admins can grant to Members."""
     found = set()
     try:
         for item in list_streamers() or []:
             name = str((item or {}).get("name") or "").strip()
             if name:
-                found.add(database._normalize_vod_access_slug(name) or name.rstrip("_").lower())
-    except Exception:
-        pass
-    try:
-        for folder in database.list_drive_folders():
-            name = str(folder.get("streamer") or "").strip()
-            if name and name != getattr(gdrive, "ROOT_SENTINEL", "__root__"):
                 found.add(database._normalize_vod_access_slug(name) or name.rstrip("_").lower())
     except Exception:
         pass
@@ -9401,11 +8517,11 @@ def admin_vod_access_role(role=None):
     from core import tube_auth
 
     role_key = tube_auth.normalize_role(
-        role or request.form.get("role") or tube_auth.BEATEK_ONLY_ROLE,
-        default=tube_auth.BEATEK_ONLY_ROLE,
+        role or request.form.get("role") or tube_auth.MEMBER_ROLE,
+        default=tube_auth.MEMBER_ROLE,
     )
-    if role_key != tube_auth.BEATEK_ONLY_ROLE:
-        return redirect(url_for("admin_view", error="VOD-Freigaben derzeit nur fuer Discord-Member."))
+    if role_key != tube_auth.MEMBER_ROLE:
+        return redirect(url_for("admin_view", error="VOD-Freigaben derzeit nur fuer Member."))
     action = str(request.form.get("action") or "save").strip().lower()
     if action == "add":
         slug = database.add_role_vod_access(role_key, request.form.get("streamer_add"))
@@ -9419,7 +8535,7 @@ def admin_vod_access_role(role=None):
         return redirect(url_for("admin_view", msg=f"Rollen-Freigabe '{slug}' entfernt."))
     streamers = _parse_vod_access_form_streamers()
     database.set_role_vod_access(role_key, streamers)
-    return redirect(url_for("admin_view", msg="Discord-Member VOD-Freigaben gespeichert."))
+    return redirect(url_for("admin_view", msg="Member VOD-Freigaben gespeichert."))
 
 
 @app.route("/admin/users/approve/<username>", methods=["POST"])
@@ -9522,11 +8638,11 @@ def live_watch():
     channel = twitch_api.normalize_login(request.form.get("channel"))
     if not channel:
         return redirect(url_for("index", channels_msg="Ungueltiger Twitch-Kanal."))
-    # Discord-Member may only open live channels from their VOD allowlist.
+    # Members may only open live channels from their VOD allowlist.
     from core import tube_auth
 
-    if tube_auth.is_beatek_only(current_user_role()):
-        if not tube_auth.streamer_allowed_for_beatek_only(
+    if tube_auth.is_member(current_user_role()):
+        if not tube_auth.streamer_allowed_for_member(
             channel, role=current_user_role()
         ):
             abort(403)
@@ -10111,11 +9227,8 @@ def streamer_view(streamer):
             "avatar_url": avatar_url,
         }
     filter_type = request.args.get("type", "vod")
-    if filter_type not in ("vod", "clip", "media"):
+    if filter_type not in ("vod", "clip"):
         filter_type = "vod"
-    media_kind = request.args.get("kind", "").strip().lower()
-    if media_kind not in ("", "image", "audio", "pdf", "text", "file"):
-        media_kind = ""
     q = request.args.get("q", "").strip()
     sort = request.args.get("sort", "newest")
     if filter_type in ("vod", "clip") and not str(sort or "").strip():
@@ -10134,49 +9247,17 @@ def streamer_view(streamer):
     except ValueError:
         page = 1
 
-    drive_assets_all = list_admin_drive_assets(streamer) if current_user_is_admin() else []
-    cnt_media = len(drive_assets_all)
-    cnt_media_image = sum(1 for a in drive_assets_all if a.get("kind") == "image")
-    cnt_media_audio = sum(1 for a in drive_assets_all if a.get("kind") == "audio")
-    cnt_media_other = sum(1 for a in drive_assets_all if a.get("kind") not in ("image", "audio"))
-
-    if filter_type == "media":
-        # Counts for tabs still come from the VOD/clip archive.
-        _files, _total, _pages, _page, cnt_vod, cnt_clip = list_vods(
-            streamer,
-            q="",
-            sort="newest",
-            filter_type="vod",
-            show_empty=True,
-            page=1,
-            page_size=1,
-        )
-        filtered_assets = list_admin_drive_assets(streamer, kind=media_kind or None, q=q)
-        if sort == "oldest":
-            filtered_assets = list(reversed(filtered_assets))
-        elif sort == "name":
-            filtered_assets = sorted(filtered_assets, key=lambda a: str(a.get("name") or "").lower())
-        elif sort == "size_desc":
-            filtered_assets = sorted(filtered_assets, key=lambda a: int(a.get("size_bytes") or 0), reverse=True)
-        elif sort == "size_asc":
-            filtered_assets = sorted(filtered_assets, key=lambda a: int(a.get("size_bytes") or 0))
-        drive_assets, total_count, total_pages, page = paginate_drive_assets(
-            filtered_assets, page=page, page_size=PAGE_SIZE
-        )
-        files = []
-    else:
-        files, total_count, total_pages, page, cnt_vod, cnt_clip = list_vods(
-            streamer,
-            q=q,
-            sort=sort,
-            filter_type=filter_type,
-            show_empty=show_empty,
-            page=page,
-            page_size=PAGE_SIZE,
-            category=category,
-            platform=platform,
-        )
-        drive_assets = []
+    files, total_count, total_pages, page, cnt_vod, cnt_clip = list_vods(
+        streamer,
+        q=q,
+        sort=sort,
+        filter_type=filter_type,
+        show_empty=show_empty,
+        page=page,
+        page_size=PAGE_SIZE,
+        category=category,
+        platform=platform,
+    )
 
     page_numbers = list(range(1, int(total_pages) + 1))
 
@@ -10238,7 +9319,6 @@ def streamer_view(streamer):
             selected_cat=category,
             categories=categories,
             platform=platform,
-            media_kind=media_kind,
             show_empty=show_empty,
             archive_sources=archive_sources,
         )
@@ -10284,18 +9364,10 @@ def streamer_view(streamer):
         page_numbers=page_numbers,
         download_status=get_download_status(streamer),
         current_type=filter_type,
-        media_kind=media_kind,
         cnt_vod=cnt_vod,
         cnt_clip=cnt_clip,
-        cnt_media=cnt_media,
-        cnt_media_image=cnt_media_image,
-        cnt_media_audio=cnt_media_audio,
-        cnt_media_other=cnt_media_other,
         archive_sources=archive_sources,
         folder_visibility=streamer_visibility(archive_key),
-        on_drive=any(bool(database.get_drive_folder(slug)) for slug in related_drive_slugs(archive_key)),
-        gdrive_enabled=gdrive.enabled(),
-        drive_assets=drive_assets,
     )
 
 @app.route("/streamer/<streamer>/download_all", methods=["POST"])
@@ -10303,76 +9375,6 @@ def streamer_view(streamer):
 def streamer_download_all(streamer):
     threading.Thread(target=run_vod_download_task, args=(streamer,)).start()
     return redirect(url_for("streamer_view", streamer=streamer, msg="Download aller VODs im Hintergrund gestartet."))
-
-
-@app.route("/drive/preview/<streamer>/<path:filename>", methods=["GET", "HEAD"])
-@admin_required
-def drive_asset_preview(streamer, filename):
-    """Admin image preview: local cached thumb when present, otherwise Drive proxy."""
-    abort_hidden_streamer(streamer)
-    name = os.path.basename(str(filename or ""))
-    if not name or name != str(filename or ""):
-        abort(404)
-    row = resolve_drive_file(streamer, name)
-    if not row or not row.get("file_id"):
-        abort(404)
-    mime = str(row.get("mime_type") or "")
-    if gdrive.is_playable_video(name, mime) or gdrive.is_chat_log(name, mime):
-        abort(404)
-    if not gdrive.is_drive_asset(name, mime):
-        abort(404)
-
-    # Serve cached JPEG thumbs directly (no X-Accel — nginx alias often misses these).
-    _td, thumb_path, _lock = resolve_thumb_paths(streamer, name)
-    if thumb_path and os.path.isfile(thumb_path) and os.path.getsize(thumb_path) > 0:
-        if request.method == "HEAD":
-            resp = Response(status=200, mimetype="image/jpeg")
-            resp.headers["Content-Length"] = str(os.path.getsize(thumb_path))
-            resp.headers["Cache-Control"] = "private, max-age=86400"
-            return resp
-        resp = send_file(thumb_path, mimetype="image/jpeg", conditional=True, max_age=86400)
-        resp.headers["Cache-Control"] = "private, max-age=86400"
-        return resp
-
-    # No local thumb yet — try to cache Google's thumbnail, then fall back to full file.
-    if gdrive.is_preview_image(name, mime) and row.get("thumbnail_url"):
-        try:
-            gdrive._cache_thumbnail(
-                archive_name_for(streamer) or streamer,
-                name,
-                row.get("thumbnail_url"),
-            )
-        except Exception:
-            pass
-        _td, thumb_path, _lock = resolve_thumb_paths(streamer, name)
-        if thumb_path and os.path.isfile(thumb_path) and os.path.getsize(thumb_path) > 0:
-            resp = send_file(thumb_path, mimetype="image/jpeg", conditional=True, max_age=86400)
-            resp.headers["Cache-Control"] = "private, max-age=86400"
-            return resp
-
-    return send_drive_media(row["file_id"])
-
-
-@app.route("/drive/asset/<streamer>/<path:filename>", methods=["GET", "HEAD"])
-@admin_required
-def drive_asset_media(streamer, filename):
-    """Admin-only proxy for non-VOD Drive files (images, audio, pdf, …)."""
-    abort_hidden_streamer(streamer)
-    name = os.path.basename(str(filename or ""))
-    if not name or name != str(filename or ""):
-        abort(404)
-    row = resolve_drive_file(streamer, name)
-    if not row or not row.get("file_id"):
-        abort(404)
-    mime = str(row.get("mime_type") or "")
-    if gdrive.is_playable_video(name, mime) or gdrive.is_chat_log(name, mime):
-        abort(404)
-    if not gdrive.is_drive_asset(name, mime):
-        abort(404)
-    as_download = str(request.args.get("download") or "").lower() in ("1", "true", "yes", "on")
-    if as_download and not downloads_enabled():
-        abort(403)
-    return send_drive_media(row["file_id"], attachment_name=name if as_download else None)
 
 
 
@@ -10422,51 +9424,18 @@ def vod_view(streamer, filename):
     share_link = request.args.get("share_link") if public_shares_enabled() else None
     action_msg = request.args.get("msg")
     file_path = resolve_media_path(streamer, filename, "vod")
-    drive_row = resolve_drive_file(streamer, filename)
-    if not file_path and not drive_row:
+    if not file_path:
         abort(404)
-    drive_only = not bool(file_path)
-    # Drive-only VOD pages: always pin watched files; only full-hydrate newest
-    # (within the pin window) so interactive playback does not fight Drive quota.
-    if drive_only and drive_row and drive_row.get("file_id"):
-        try:
-            try:
-                modified_at = float((drive_row or {}).get("modified_at") or 0)
-            except (TypeError, ValueError):
-                modified_at = 0.0
-            pin_cutoff = time.time() - (gdrive.playback_pin_newest_days() * 86400.0)
-            if modified_at >= pin_cutoff:
-                gdrive.ensure_vod_playback_cache(
-                    streamer,
-                    filename,
-                    file_id=drive_row.get("file_id"),
-                    expected_size=drive_row.get("size"),
-                    hydrate=True,
-                )
-        except Exception as exc:
-            logging.warning("Playback-Cache ensure %s/%s: %s", streamer, filename, exc)
     vod_stat = None
     try:
-        if file_path:
-            vod_stat = os.stat(file_path)
-            vod_size_str = format_bytes(vod_stat.st_size)
-            vod_recorded_str = parse_date_from_filename(filename, vod_stat.st_mtime)
-        else:
-            vod_size_str = format_bytes(int((drive_row or {}).get("size") or 0))
-            vod_recorded_str = parse_date_from_filename(filename, (drive_row or {}).get("modified_at"))
+        vod_stat = os.stat(file_path)
+        vod_size_str = format_bytes(vod_stat.st_size)
+        vod_recorded_str = parse_date_from_filename(filename, vod_stat.st_mtime)
     except OSError:
         vod_size_str = "0 B"
         vod_recorded_str = "-"
     vod_meta = media_display_metadata(streamer, filename, file_path or "", stat=vod_stat, is_clip=False)
-    if drive_only:
-        vod_duration_sec = float((drive_row or {}).get("duration_ms") or 0) / 1000.0
-        if vod_duration_sec <= 0:
-            try:
-                gdrive.enqueue_duration_probe(streamer, filename)
-            except Exception:
-                pass
-    else:
-        vod_duration_sec = get_duration(file_path)
+    vod_duration_sec = get_duration(file_path)
     vod_duration_str = format_seconds(vod_duration_sec)
     seek_profile = vod_seek_profile(file_path) if file_path else {"needs_repair": False}
     seek_repair_pending = bool(file_path and active_vod_remux_task(streamer, filename))
@@ -10528,7 +9497,6 @@ def vod_view(streamer, filename):
             back_url=url_for("streamer_view", streamer=streamer),
             is_live=False,
             is_hls=False,
-            drive_only=drive_only,
             watch_key=vod_watch_key(streamer, filename),
             done_key=vod_done_key(streamer, filename),
             vod_category=vod_meta.get("category", ""),
@@ -10551,23 +9519,21 @@ def vod_view(streamer, filename):
         share_link=share_link,
         action_msg=action_msg,
         media_url=url_with_cast("media", "vod", streamer, filename),
-        hls_playlist_url=None if drive_only else hls_playlist_url,
+        hls_playlist_url=hls_playlist_url,
         hls_ready=False,
         download_url=(
             url_for("download", streamer=streamer, filename=filename)
             if downloads_enabled()
             else None
         ),
-        hls_url=None if drive_only else url_for("hls_view", streamer=streamer, filename=filename),
+        hls_url=url_for("hls_view", streamer=streamer, filename=filename),
         back_url=url_for("streamer_view", streamer=streamer),
-        show_clip_form=vod_clip_ui_enabled(file_path, drive_row),
-        show_hls=not drive_only,
+        show_clip_form=vod_clip_ui_enabled(file_path),
+        show_hls=True,
         show_chat=chat_available,
-        show_share=bool(public_shares_enabled() and not drive_only),
+        show_share=bool(public_shares_enabled()),
         route_type="vod",
         is_video=True,
-        drive_only=drive_only,
-        on_drive=bool(drive_row),
         vod_size_str=vod_size_str,
         vod_duration_str=vod_duration_str,
         vod_recorded_str=vod_recorded_str,
@@ -10800,8 +9766,6 @@ def clip_view(streamer, filename):
         seek_profile={"needs_repair": False},
         seek_repair_pending=False,
         related_recordings=[],
-        drive_only=False,
-        on_drive=False,
         vod_slot=vod_slot_client_config(streamer, filename, enabled=False),
     )
 
@@ -10816,14 +9780,6 @@ def thumb_view(streamer, filename):
     if not gen_dir or not gen_path:
         abort(404)
     if thumb_path and os.path.isfile(thumb_path):
-        # Mirror alias thumbs into the archive slug so nginx accel keeps working.
-        if gen_path != thumb_path and not os.path.isfile(gen_path):
-            try:
-                gdrive._mirror_thumb_file(thumb_path, archive_name_for(streamer) or streamer, filename)
-            except Exception:
-                pass
-            if os.path.isfile(gen_path):
-                thumb_dir, thumb_path = gen_dir, gen_path
         same_slug = os.path.dirname(thumb_path) == gen_dir
         if USE_X_ACCEL and same_slug and request.headers.get("X-Forwarded-For"):
             base = os.path.splitext(filename)[0]
@@ -10839,23 +9795,6 @@ def thumb_view(streamer, filename):
     media_path = resolve_media_path(streamer, filename, "vod") or resolve_media_path(streamer, filename, "clip")
     if media_path:
         start_thumb_generate(media_path, gen_dir, gen_path, lock_path)
-    else:
-        # Drive-only: try to materialize a cached Google thumbnail under aliases.
-        drive_row = resolve_drive_file(streamer, filename)
-        if drive_row and drive_row.get("thumbnail_url"):
-            try:
-                gdrive._cache_thumbnail(
-                    archive_name_for(streamer) or streamer,
-                    filename,
-                    drive_row.get("thumbnail_url"),
-                )
-            except Exception:
-                pass
-            thumb_dir, thumb_path, _ = resolve_thumb_paths(streamer, filename)
-            if thumb_path and os.path.isfile(thumb_path):
-                resp = send_from_directory(thumb_dir, os.path.basename(thumb_path))
-                resp.headers["Cache-Control"] = "public, max-age=86400"
-                return resp
 
     # Placeholder SVG wenn Thumbnail noch nicht existiert
     svg = """<svg width="320" height="180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" preserveAspectRatio="none">
@@ -10887,137 +9826,11 @@ def media(streamer, filename):
             user_traffic.record(current_username(), "media", key=f"{streamer}/{filename}")
         except Exception:
             pass
-    t0 = time.time()
-    req_range = request.headers.get("Range")
     file_path = resolve_media_path(streamer, filename, "vod")
     if file_path:
         accel_path = media_accel_path(streamer, filename) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path)
-
-    # Fast path: Serve finished local NVMe SSD cache (.vodcache) without querying SQLite drive_files
-    cached = gdrive.complete_playback_cache(streamer, filename)
-    if cached:
-        accel_path = vod_cache_accel_path(streamer, filename, cached_path=cached) if USE_X_ACCEL else None
-        return send_mp4_with_range(cached, accel_path=accel_path)
-
-    drive_row = resolve_drive_file(streamer, filename)
-    if not (drive_row and drive_row.get("file_id")):
-        abort(404)
-    try:
-        expected_size = int((drive_row.get("size") or 0) or 0)
-    except (TypeError, ValueError):
-        expected_size = 0
-
-    if request.method == "HEAD":
-        resp = Response(status=200, mimetype=drive_row.get("mime_type") or "video/mp4")
-        if expected_size:
-            resp.headers["Content-Length"] = str(expected_size)
-        resp.headers["Accept-Ranges"] = "bytes"
-        resp.headers["Cache-Control"] = "private, max-age=3600"
-        return apply_cast_cors(resp)
-    # Interactive /media must NEVER start full-file hydrate or multi-chunk prefetch.
-    # Those background Drive downloads compete with live Ranges and trip
-    # downloadQuotaExceeded — playback then freezes after the current 8 MiB.
-    # Sequential next-chunk warm-up happens only after a cache/live hit serves bytes.
-    if request.method != "HEAD" and expected_size:
-        live_chunk = gdrive.playback_live_range_bytes()
-        bounded = gdrive.bound_media_range_header(
-            request.headers.get("Range"),
-            chunk_size=live_chunk,
-            total_size=expected_size,
-        )
-        closed = gdrive.parse_closed_bytes_range(bounded)
-        file_id = drive_row.get("file_id")
-        quota = gdrive.playback_quota_blocked(file_id)
-        if closed:
-            hot = gdrive.playback_range_cached(
-                streamer, filename, closed[0], closed[0], expected_size
-            )
-            logging.info(
-                "VODDBG media decide %s/%s req=%s bound=%s hot=%s quota=%s ms=%.0f",
-                streamer,
-                filename,
-                req_range,
-                bounded,
-                hot,
-                quota,
-                (time.time() - t0) * 1000,
-            )
-            if hot:
-                assembled = gdrive.assemble_playback_cache(streamer, filename, expected_size)
-                if assembled:
-                    accel_path = vod_cache_accel_path(streamer, filename, cached_path=assembled) if USE_X_ACCEL else None
-                    return send_mp4_with_range(assembled, accel_path=accel_path)
-                local_end = gdrive.contiguous_cached_end(
-                    streamer, filename, closed[0], expected_size
-                )
-                if local_end >= closed[0]:
-                    serve_end = min(closed[1], local_end)
-                    return send_cached_drive_range(
-                        streamer,
-                        filename,
-                        closed[0],
-                        serve_end,
-                        expected_size,
-                        file_id=None if quota else file_id,
-                    )
-            if quota:
-                # Uncached / unservable range + open circuit: never call Drive.
-                retry = gdrive.playback_quota_retry_after(file_id) or int(
-                    gdrive.playback_quota_cooldown_sec()
-                )
-                logging.warning(
-                    "VODDBG media quota-no-cache %s/%s range=%s retry=%ss",
-                    streamer,
-                    filename,
-                    req_range,
-                    retry,
-                )
-                resp = Response(
-                    "Drive download quota exceeded",
-                    status=503,
-                    mimetype="text/plain",
-                )
-                resp.headers["Retry-After"] = str(max(60, int(retry)))
-                resp.headers["X-Vod-Quota"] = "1"
-                resp.headers["X-Vod-Source"] = "quota-no-cache"
-                return apply_cast_cors(resp)
-            # Uncached + circuit clear: try a live Drive Range.
-        elif quota:
-            retry = gdrive.playback_quota_retry_after(file_id) or int(
-                gdrive.playback_quota_cooldown_sec()
-            )
-            logging.warning(
-                "VODDBG media quota-no-cache %s/%s range=%s retry=%ss",
-                streamer,
-                filename,
-                req_range,
-                retry,
-            )
-            resp = Response(
-                "Drive download quota exceeded",
-                status=503,
-                mimetype="text/plain",
-            )
-            resp.headers["Retry-After"] = str(max(60, int(retry)))
-            resp.headers["X-Vod-Quota"] = "1"
-            resp.headers["X-Vod-Source"] = "quota-no-range"
-            return apply_cast_cors(resp)
-    logging.info(
-        "VODDBG media fallback-live %s/%s range=%s quota=%s ms=%.0f",
-        streamer,
-        filename,
-        req_range,
-        gdrive.playback_quota_blocked(drive_row.get("file_id")),
-        (time.time() - t0) * 1000,
-    )
-    return send_drive_media(
-        drive_row["file_id"],
-        range_chunk_size=gdrive.playback_live_range_bytes(),
-        streamer=streamer,
-        filename=filename,
-        expected_size=expected_size or None,
-    )
+    abort(404)
 
 
 @app.route("/api/vod/debug", methods=["POST"])
@@ -11114,9 +9927,6 @@ def download(streamer, filename):
     if file_path:
         accel_path = media_accel_path(streamer, filename) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
-    drive_row = resolve_drive_file(streamer, filename)
-    if drive_row and drive_row.get("file_id"):
-        return send_drive_media(drive_row["file_id"], attachment_name=filename)
     abort(404)
 
 
@@ -11305,7 +10115,7 @@ def mobile_app_head_tags():
     <link rel="apple-touch-icon" sizes="180x180" href="{url_for('apple_touch_icon')}">
     <link rel="icon" type="image/png" sizes="192x192" href="{url_for('app_icon_png', size=192)}">
     <link rel="icon" type="image/png" sizes="512x512" href="{url_for('app_icon_png', size=512)}">
-    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var isTv=/Tizen|SMART-TV|SmartTV|NetCast|Web0S/i.test(navigator.userAgent)||location.search.indexOf("tv=1")!==-1;if(isTv){{document.documentElement.classList.add("is-tizen-tv");}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-comments-split-col","#vodCommentsSection","#chatTabComments","#chatPaneComments",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{if(isTv)return;var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
+    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var isTv=/Tizen|SMART-TV|SmartTV|NetCast|Web0S/i.test(navigator.userAgent)||location.search.indexOf("tv=1")!==-1;if(isTv){{document.documentElement.classList.add("is-tizen-tv");}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{if(isTv)return;var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
     {f'<link id="ns-tizen-tv-css" rel="stylesheet" href="{url_for("static", filename="css/tizen_tv.css", v=ASSET_VERSION)}">\n    <script src="{url_for("static", filename="tizen_tv_nav.js", v=ASSET_VERSION)}" defer></script>' if is_tizen_tv() else ''}
     <script>
       (function() {{
@@ -11667,39 +10477,11 @@ def clip_rename(streamer, filename):
 @app.route("/clip/discord/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def clip_discord_upload(streamer, filename):
-    import os
-    import json
-    from discord_bots import discord_notify
-    file_path = resolve_media_path(streamer, filename, "clip")
-    if not file_path or not os.path.isfile(file_path):
-        abort(404)
-    
-    channel_id = discord_notify.clip_channel_id()
-    if not channel_id:
-        return Response(json.dumps({"ok": False, "message": "Kein Clip-Channel konfiguriert"}), 400, mimetype="application/json")
-        
-    clip_meta = media_display_metadata(streamer, filename, file_path, is_clip=True)
-    title = clip_meta.get("display_title") or clip_meta.get("title") or filename
-    
-    tighter = 25_000_000
-    upload_path = file_path
-    if os.path.getsize(file_path) > tighter:
-        upload_path = discord_notify._compress_clip_for_discord(file_path, tighter)
-        if not upload_path or not os.path.isfile(upload_path):
-            return Response(json.dumps({"ok": False, "message": "Clip zu gross & Komprimierung fehlgeschlagen"}), 500, mimetype="application/json")
-            
-    content = f"**{title}**\n*(Lokaler Clip von {streamer})*"
-    ok = discord_notify.post_channel_message(
-        channel_id,
-        content,
-        file_path=upload_path,
-        flags=4
+    return Response(
+        json.dumps({"ok": False, "message": "Discord-Integration nicht aktiv"}),
+        400,
+        mimetype="application/json",
     )
-    
-    if ok:
-        return Response(json.dumps({"ok": True}), 200, mimetype="application/json")
-    else:
-        return Response(json.dumps({"ok": False, "message": "Upload von Discord abgelehnt"}), 500, mimetype="application/json")
 
 @app.route("/public/<token>")
 def public_view(token):
@@ -11760,8 +10542,6 @@ def public_view(token):
         seek_profile={"needs_repair": False},
         seek_repair_pending=False,
         related_recordings=[],
-        drive_only=False,
-        on_drive=False,
         vod_slot=vod_slot_client_config(streamer, filename, enabled=False),
     )
 
@@ -12084,347 +10864,6 @@ def chat_live(streamer):
         if len(items) >= 200:
             break
     return Response(json.dumps(items, ensure_ascii=False), 200, mimetype="application/json")
-
-
-TUBE_CHAT_MAX_LEN = 400
-TUBE_CHAT_MIN_INTERVAL_SEC = 2.0
-_TUBE_CHAT_LAST_POST: dict[str, float] = {}
-
-
-def tube_chat_room_for(streamer: str) -> str | None:
-    """Per-streamer Tube-chat room key, available for all streamers by default."""
-    from core import tube_auth
-
-    raw = normalize_channel_name(streamer) or twitch_api.normalize_login(streamer) or str(streamer or "").strip()
-    if not raw:
-        return None
-    # One room per archive/streamer — aliases like beatek1_youtube share beatek_.
-    room = archive_name_for(raw) or raw
-    if tube_auth.is_beatek_only(current_user_role()):
-        allowed = tube_auth.streamer_allowed_for_beatek_only(
-            raw, role=current_user_role()
-        ) or tube_auth.streamer_allowed_for_beatek_only(room, role=current_user_role())
-        if not allowed:
-            return None
-    base = tube_auth._slug_base(room)
-    if not base:
-        return room
-    try:
-        configs = database.list_channel_configs()
-    except Exception:
-        configs = []
-    if not configs:
-        return room
-    for conf in configs or []:
-        name = normalize_channel_name(conf.get("name")) or ""
-        archive = normalize_channel_name(conf.get("archive_name")) or name
-        if name == raw or archive == room:
-            return archive or name or room
-        if tube_auth._slug_base(name) == base or tube_auth._slug_base(archive) == base:
-            return archive or name or room
-    return None
-
-def tube_chat_can_moderate() -> bool:
-    if current_user_is_admin():
-        return True
-    return current_user_is_livechat_mod()
-
-
-def current_user_is_livechat_mod() -> bool:
-    from core import tube_auth
-
-    name = current_username()
-    if not name or name == "unknown":
-        return False
-    if session.get("livechat_mod") is True:
-        return True
-    try:
-        enabled = bool(tube_auth.user_is_livechat_mod(name))
-    except Exception:
-        enabled = False
-    session["livechat_mod"] = enabled
-    return enabled
-
-
-def tube_chat_display_role_for_post() -> str:
-    """Role badge stored on Tube chat messages (display only)."""
-    if current_user_is_admin():
-        return "admin"
-    if current_user_is_livechat_mod():
-        return "livechat_mod"
-    return current_user_role() or "beatek_only"
-
-
-def sync_livechat_mod_for_username(username: str | None = None) -> bool | None:
-    """Pull Discord guild roles for the linked account and update livechat_mod.
-
-    Returns True/False for the resulting flag, or None if sync was skipped.
-    """
-    from core import tube_auth
-
-    name = str(username or current_username() or "").strip()
-    if not name or name == "unknown":
-        return None
-    row = database.get_user(name)
-    if not row:
-        return None
-    discord_id = str(row.get("discord_id") or "").strip()
-    if not discord_id:
-        session["livechat_mod"] = False
-        return False
-    mod_role = tube_auth.livechat_mod_discord_role_id()
-    if not mod_role:
-        session["livechat_mod"] = bool(row.get("livechat_mod"))
-        return bool(row.get("livechat_mod"))
-    roles = _fetch_discord_member_role_ids(discord_id)
-    if roles is None:
-        # API failure — keep existing flag.
-        session["livechat_mod"] = bool(row.get("livechat_mod"))
-        return bool(row.get("livechat_mod"))
-    updated = tube_auth.apply_livechat_mod_from_discord_roles(discord_id, roles)
-    enabled = bool((updated or {}).get("livechat_mod"))
-    session["livechat_mod"] = enabled
-    return enabled
-
-
-def _fetch_discord_member_role_ids(discord_id: str) -> list[str] | None:
-    """Return role IDs for a guild member, or None if external discord role sync is inactive."""
-    return None
-
-
-def _sanitize_tube_chat_msg(raw: str) -> str:
-    text = " ".join(str(raw or "").replace("\x00", "").split())
-    if not text:
-        raise ValueError("Leere Nachricht.")
-    if len(text) > TUBE_CHAT_MAX_LEN:
-        raise ValueError(f"Maximal {TUBE_CHAT_MAX_LEN} Zeichen.")
-    return text
-
-
-@app.route("/chat/tube/<streamer>")
-@login_required
-def tube_chat_live(streamer):
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-    try:
-        since_id = int(request.args.get("since_id") or 0)
-    except (TypeError, ValueError):
-        since_id = 0
-    try:
-        since_delete = float(request.args.get("since_delete") or 0)
-    except (TypeError, ValueError):
-        since_delete = 0.0
-    items = database.list_tube_chat_messages(room, since_id=since_id, limit=200)
-    deletions = database.list_tube_chat_deletions(room, since_ts=since_delete, limit=200)
-    return jsonify({
-        "ok": True,
-        "messages": items,
-        "deleted": deletions,
-        "can_moderate": tube_chat_can_moderate(),
-    })
-
-
-@app.route("/chat/tube/<streamer>", methods=["POST"])
-@login_required
-def tube_chat_post(streamer):
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-    username = current_username()
-    if not username or username == "unknown":
-        return jsonify({"ok": False, "error": "Nicht eingeloggt."}), 401
-    mute = database.tube_chat_mute_status(room, username)
-    if mute:
-        left = max(1, int((float(mute["muted_until"]) - time.time()) / 60))
-        return jsonify({
-            "ok": False,
-            "error": f"Du bist im Tube-Chat stummgeschaltet (~{left} Min.).",
-        }), 403
-    payload = request.get_json(silent=True) if request.is_json else None
-    if not isinstance(payload, dict):
-        payload = {}
-    raw_msg = payload.get("msg") if "msg" in payload else request.form.get("msg")
-    try:
-        msg = _sanitize_tube_chat_msg(raw_msg)
-    except ValueError as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 400
-
-    now = time.time()
-    key = username.lower()
-    last = float(_TUBE_CHAT_LAST_POST.get(key) or 0.0)
-    if now - last < TUBE_CHAT_MIN_INTERVAL_SEC:
-        return jsonify({"ok": False, "error": "Bitte kurz warten."}), 429
-    _TUBE_CHAT_LAST_POST[key] = now
-
-    try:
-        row = database.insert_tube_chat_message(
-            room,
-            username,
-            msg,
-            user_role=tube_chat_display_role_for_post(),
-            created_at=now,
-        )
-        try:
-            user_traffic.record(username, "chat")
-        except Exception:
-            pass
-    except ValueError as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 400
-    try:
-        database.prune_tube_chat_messages(room)
-    except Exception:
-        pass
-    try:
-        from core import redis_client
-        redis_client.publish_event(f"chat:tube:{room}", json.dumps({"type": "message", "message": row}))
-    except Exception:
-        pass
-    return jsonify({"ok": True, "message": row})
-
-
-@app.route("/chat/tube/<streamer>/sse")
-@login_required
-def tube_chat_sse(streamer):
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-
-    def sse_generator():
-        from core import redis_client
-        r = redis_client.get_redis()
-        if not r:
-            yield "data: {\"type\": \"fallback\"}\n\n"
-            return
-        pubsub = r.pubsub()
-        channel = f"streamvault:chat:tube:{room}"
-        pubsub.subscribe(channel)
-        try:
-            yield "data: {\"type\": \"connected\"}\n\n"
-            while True:
-                msg = pubsub.get_message(timeout=15.0)
-                if msg and msg.get("type") == "message":
-                    payload = msg.get("data", "")
-                    yield f"data: {payload}\n\n"
-                else:
-                    yield ": ping\n\n"
-        except GeneratorExit:
-            try:
-                pubsub.unsubscribe(channel)
-                pubsub.close()
-            except Exception:
-                pass
-        except Exception:
-            try:
-                pubsub.unsubscribe(channel)
-                pubsub.close()
-            except Exception:
-                pass
-
-    return Response(
-        sse_generator(),
-        mimetype="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-            "Connection": "keep-alive",
-        }
-    )
-
-
-@app.route("/chat/tube/<streamer>/message/<int:message_id>", methods=["DELETE", "POST"])
-@login_required
-def tube_chat_delete_message(streamer, message_id):
-    if not tube_chat_can_moderate():
-        abort(403)
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-    # Allow POST with action=delete for clients that cannot DELETE easily.
-    if request.method == "POST":
-        payload = request.get_json(silent=True) if request.is_json else {}
-        if not isinstance(payload, dict):
-            payload = {}
-        action = str(payload.get("action") or request.form.get("action") or "delete").lower()
-        if action not in ("delete", "remove"):
-            return jsonify({"ok": False, "error": "Ungueltige Aktion."}), 400
-    result = database.soft_delete_tube_chat_message(
-        message_id, deleted_by=current_username()
-    )
-    if not result:
-        return jsonify({"ok": False, "error": "Nachricht nicht gefunden."}), 404
-    if result.get("streamer") != room:
-        return jsonify({"ok": False, "error": "Falscher Raum."}), 404
-    return jsonify({"ok": True, "deleted": result})
-
-
-@app.route("/chat/tube/<streamer>/clear", methods=["POST"])
-@login_required
-def tube_chat_clear(streamer):
-    if not tube_chat_can_moderate():
-        abort(403)
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-    count = database.soft_clear_tube_chat(room, deleted_by=current_username())
-    return jsonify({"ok": True, "cleared": count, "deleted_at": time.time()})
-
-
-@app.route("/chat/tube/<streamer>/mute", methods=["POST"])
-@login_required
-def tube_chat_mute(streamer):
-    if not tube_chat_can_moderate():
-        abort(403)
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-    payload = request.get_json(silent=True) if request.is_json else None
-    if not isinstance(payload, dict):
-        payload = {}
-    target = str(payload.get("username") or request.form.get("username") or "").strip()
-    if not target:
-        return jsonify({"ok": False, "error": "Username fehlt."}), 400
-    try:
-        minutes = float(payload.get("minutes") or request.form.get("minutes") or 30)
-    except (TypeError, ValueError):
-        minutes = 30.0
-    reason = str(payload.get("reason") or request.form.get("reason") or "").strip()
-    try:
-        row = database.set_tube_chat_mute(
-            room,
-            target,
-            minutes=minutes,
-            muted_by=current_username(),
-            reason=reason,
-        )
-    except ValueError as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 400
-    return jsonify({"ok": True, "mute": row})
-
-
-@app.route("/chat/tube/<streamer>/unmute", methods=["POST"])
-@login_required
-def tube_chat_unmute(streamer):
-    if not tube_chat_can_moderate():
-        abort(403)
-    room = tube_chat_room_for(streamer)
-    if not room:
-        abort(404)
-    abort_hidden_streamer(room)
-    payload = request.get_json(silent=True) if request.is_json else None
-    if not isinstance(payload, dict):
-        payload = {}
-    target = str(payload.get("username") or request.form.get("username") or "").strip()
-    if not target:
-        return jsonify({"ok": False, "error": "Username fehlt."}), 400
-    ok = database.clear_tube_chat_mute(room, target)
-    return jsonify({"ok": True, "unmuted": ok, "user": target})
 
 
 @app.route("/editor/<streamer>/<filename>")
@@ -13077,8 +11516,8 @@ def twitch_watch(channel):
         abort(404)
     from core import tube_auth
 
-    if tube_auth.is_beatek_only(current_user_role()):
-        if not tube_auth.streamer_allowed_for_beatek_only(
+    if tube_auth.is_member(current_user_role()):
+        if not tube_auth.streamer_allowed_for_member(
             login, role=current_user_role()
         ):
             abort(403)
@@ -13147,13 +11586,6 @@ def twitch_watch(channel):
 
     chat_streamer = archive_name or login
     chat_feed_url = url_for("chat_live", streamer=chat_streamer)
-    tube_chat_room = tube_chat_room_for(chat_streamer) or tube_chat_room_for(login)
-    show_tube_chat = bool(tube_chat_room)
-    if show_tube_chat:
-        try:
-            sync_livechat_mod_for_username()
-        except Exception:
-            logging.exception("livechat_mod sync on watch page failed")
     watch_embed_url = url_for("twitch_watch", channel=login, embed=1)
     watch_proxy_url = url_for("twitch_watch", channel=login, proxy=1)
     live_debug = (request.args.get("debug") or "").strip().lower() in ("1", "true", "yes", "on")
@@ -13168,13 +11600,6 @@ def twitch_watch(channel):
         "player_url": twitch_api.player_embed_url(login, parents),
         "chat_feed_url": chat_feed_url,
         "chat_streamer": chat_streamer,
-        "show_tube_chat": show_tube_chat,
-        "tube_chat_url": url_for("tube_chat_live", streamer=tube_chat_room) if show_tube_chat else "",
-        "tube_chat_username": current_username() if show_tube_chat else "",
-        "tube_chat_can_moderate": bool(show_tube_chat and tube_chat_can_moderate()),
-        "tube_chat_clear_url": url_for("tube_chat_clear", streamer=tube_chat_room) if show_tube_chat else "",
-        "tube_chat_mute_url": url_for("tube_chat_mute", streamer=tube_chat_room) if show_tube_chat else "",
-        "tube_chat_unmute_url": url_for("tube_chat_unmute", streamer=tube_chat_room) if show_tube_chat else "",
         "archive_name": archive_name,
         "hls_available": hls_available,
         "use_hls_proxy": use_hls_proxy,
@@ -13607,70 +12032,6 @@ def links_remove():
 @limiter.limit("60 per minute")  # SECURITY: API rate limit
 def api_stats():
     return Response(json.dumps(get_sys_stats()), 200, mimetype="application/json")
-
-@app.route("/api/vod_comments", methods=["GET"])
-@login_required
-@limiter.limit("60 per minute")
-def api_vod_comments_get():
-    vod_id = request.args.get("vod_id", "")
-    if not vod_id:
-        return Response("Missing vod_id", 400)
-    
-    conn = database.get_db()
-    try:
-        c = conn.cursor()
-        c.execute("SELECT id, username, comment, timestamp, is_deleted FROM vod_comments WHERE vod_id=? ORDER BY timestamp DESC", (vod_id,))
-        rows = c.fetchall()
-    finally:
-        conn.close()
-        
-    comments = []
-    for r in rows:
-        comments.append({
-            "id": r[0],
-            "username": r[1],
-            "comment": r[2] if not r[4] else "[Gelöscht]",
-            "timestamp": r[3],
-            "is_deleted": bool(r[4])
-        })
-        
-    return Response(json.dumps(comments), 200, mimetype="application/json")
-
-@app.route("/api/vod_comments", methods=["POST"])
-@login_required
-@limiter.limit("30 per minute")
-def api_vod_comments_post():
-    data = request.get_json()
-    if not data:
-        return Response("Invalid JSON", 400)
-        
-    vod_id = data.get("vod_id", "").strip()
-    comment = data.get("comment", "").strip()
-    
-    if not vod_id or not comment:
-        return Response("Missing fields", 400)
-        
-    username = session.get("username", "unknown")
-    now = time.time()
-    
-    conn = database.get_db()
-    try:
-        c = conn.cursor()
-        c.execute("INSERT INTO vod_comments (vod_id, username, comment, timestamp, is_deleted) VALUES (?, ?, ?, ?, ?)",
-                  (vod_id, username, comment, now, 0))
-        new_id = c.lastrowid
-        conn.commit()
-    finally:
-        conn.close()
-        
-    new_comment = {
-        "id": new_id,
-        "username": username,
-        "comment": comment,
-        "timestamp": now,
-        "is_deleted": False
-    }
-    return Response(json.dumps(new_comment), 200, mimetype="application/json")
 
 
 def _overlay_token_from_request(*preferred_headers):
@@ -14190,7 +12551,7 @@ def streamer_banner_update(streamer):
                         pass
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Banner auf Standard zurückgesetzt."))
 
     file = request.files.get("banner_file")
@@ -14212,7 +12573,7 @@ def streamer_banner_update(streamer):
         entry.pop("custom_banner_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Banner-Grafik erfolgreich hochgeladen."))
 
     custom_url = request.form.get("custom_banner_url", "").strip()
@@ -14227,13 +12588,13 @@ def streamer_banner_update(streamer):
                     pass
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Banner-URL erfolgreich gespeichert."))
     elif "custom_banner_url" in request.form:
         entry.pop("custom_banner_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Banner entfernt."))
 
     return redirect(url_for("streamer_view", streamer=streamer))
@@ -14268,7 +12629,7 @@ def admin_banner_update():
                         pass
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("admin_view", tab="banners", msg=f"Banner für {streamer} auf Standard zurückgesetzt."))
 
     file = request.files.get("banner_file")
@@ -14290,7 +12651,7 @@ def admin_banner_update():
         entry.pop("custom_banner_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("admin_view", tab="banners", msg=f"Banner-Grafik für {streamer} erfolgreich hochgeladen."))
 
     custom_url = request.form.get("custom_banner_url", "").strip()
@@ -14305,13 +12666,13 @@ def admin_banner_update():
                     pass
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("admin_view", tab="banners", msg=f"Banner-URL für {streamer} gespeichert."))
     elif "custom_banner_url" in request.form:
         entry.pop("custom_banner_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("admin_view", tab="banners", msg=f"Custom Banner für {streamer} entfernt."))
 
     return redirect(url_for("admin_view", tab="banners"))
@@ -14327,16 +12688,6 @@ def admin_backup_download(filename):
     local_path = os.path.join(backups_dir, clean)
     if os.path.isfile(local_path):
         return send_from_directory(backups_dir, clean, as_attachment=True)
-    try:
-        row = database.get_drive_file("systembackups", clean)
-        if row and row.get("file_id"):
-            content = gdrive._download_file_bytes(row["file_id"])
-            if content:
-                resp = Response(content, mimetype="application/gzip")
-                resp.headers["Content-Disposition"] = f'attachment; filename="{clean}"'
-                return resp
-    except Exception as exc:
-        logging.warning("Drive backup download failed: %s", exc)
     abort(404)
 
 
@@ -14349,8 +12700,8 @@ def admin_backup_create():
     try:
         res = subprocess.run(["bash", script_path], capture_output=True, text=True, timeout=120)
         if res.returncode == 0:
-            gdrive.bust_media_cache()
-            return redirect(url_for("admin_view", tab="backups", msg="System-Backup erfolgreich erstellt und synchronisiert."))
+            bust_media_cache()
+            return redirect(url_for("admin_view", tab="backups", msg="System-Backup erfolgreich erstellt."))
         else:
             logging.error("Backup script failed: %s", res.stderr)
             return redirect(url_for("admin_view", tab="backups", error=f"Backup-Fehler: {res.stderr[:100]}"))
@@ -14374,16 +12725,8 @@ def admin_backup_delete(filename):
             deleted = True
         except Exception:
             pass
-    try:
-        row = database.get_drive_file("systembackups", clean)
-        if row and row.get("file_id"):
-            if gdrive.delete_remote_file(row["file_id"]):
-                deleted = True
-            database.delete_drive_file(file_id=row["file_id"])
-    except Exception:
-        pass
     if deleted:
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("admin_view", tab="backups", msg=f"Backup {clean} erfolgreich gelöscht."))
     return redirect(url_for("admin_view", tab="backups", error=f"Backup {clean} konnte nicht gelöscht werden."))
 
@@ -14430,7 +12773,7 @@ def streamer_avatar_update(streamer):
                         pass
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Profilbild auf Standard zurückgesetzt."))
 
     file = request.files.get("avatar_file")
@@ -14452,7 +12795,7 @@ def streamer_avatar_update(streamer):
         entry.pop("custom_avatar_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Profilbild erfolgreich hochgeladen."))
 
     custom_url = request.form.get("custom_avatar_url", "").strip()
@@ -14467,13 +12810,13 @@ def streamer_avatar_update(streamer):
                     pass
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Profilbild-URL erfolgreich gespeichert."))
     elif "custom_avatar_url" in request.form:
         entry.pop("custom_avatar_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
-        gdrive.bust_media_cache()
+        bust_media_cache()
         return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Profilbild entfernt."))
 
     return redirect(url_for("streamer_view", streamer=streamer))

@@ -973,13 +973,7 @@ def extract_vod_range(
             result.returncode,
             detail,
         )
-        lower = detail.lower()
-        if "403" in lower or "forbidden" in lower or "access denied" in lower:
-            _set_extract_error("Cloud-VOD Zugriff verweigert (Drive). Bitte erneut versuchen.")
-        elif "404" in lower or "not found" in lower:
-            _set_extract_error("Cloud-VOD nicht gefunden.")
-        else:
-            _set_extract_error("Clip fehlgeschlagen.")
+        _set_extract_error("Clip fehlgeschlagen.")
         _cleanup_failed(output_path)
         return False
     except Exception as exc:
@@ -1570,7 +1564,7 @@ def enqueue_vod_range(
     http_headers: dict | None = None,
     source: str = "vod",
 ) -> dict:
-    """Queue an explicit VOD range cut (editor / overlay). Supports local paths and HTTP cloud sources."""
+    """Queue an explicit VOD range cut (editor / overlay)."""
     job = _new_job("vod_range", streamer)
     ok, err = check_ffmpeg()
     if not ok:

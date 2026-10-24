@@ -2378,26 +2378,6 @@ html.is-tizen-tv .vod-cb-time {
   grid-gap: 2px !important; grid-row-gap: 2px !important; grid-column-gap: 2px !important;
 }
 
-html.is-tizen-tv .vod-comments-header {
-  grid-gap: 8px; grid-row-gap: 8px; grid-column-gap: 8px;
-}
-
-html.is-tizen-tv .vod-comments-compose {
-  grid-gap: 12px; grid-row-gap: 12px; grid-column-gap: 12px;
-}
-
-html.is-tizen-tv .vod-comment-actions {
-  grid-gap: 8px; grid-row-gap: 8px; grid-column-gap: 8px;
-}
-
-html.is-tizen-tv .vod-comment-item {
-  grid-gap: 12px; grid-row-gap: 12px; grid-column-gap: 12px;
-}
-
-html.is-tizen-tv .vod-comment-meta {
-  grid-gap: 8px; grid-row-gap: 8px; grid-column-gap: 8px;
-}
-
 html.is-tizen-tv body.page-vod .vod-file-action, html.is-tizen-tv body.page-live .vod-file-action {
   width: auto !important; min-width: 0 !important; height: auto !important; min-height: 34px !important; padding: 0 12px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 7px !important; grid-gap: 7px !important; grid-row-gap: 7px !important; grid-column-gap: 7px !important; overflow: visible !important; border: 1px solid var(--tube-line, #2e2e2e) !important; border-radius: 8px !important; color: #f0f0f0 !important; background: var(--tube-surface-2, #1a1a1a) !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: 0.01em !important; line-height: 1 !important; text-decoration: none !important; cursor: pointer !important; box-shadow: none !important;
 }
@@ -2627,14 +2607,6 @@ html.is-tizen-tv .live-tap-unmute {
 }
 
 html.is-tizen-tv .vod-title-cluster {
-  grid-gap: 8px !important; grid-row-gap: 8px !important; grid-column-gap: 8px !important;
-}
-
-html.is-tizen-tv .vod-comments-split-col .vod-comment-item {
-  grid-gap: 10px !important; grid-row-gap: 10px !important; grid-column-gap: 10px !important;
-}
-
-html.is-tizen-tv .vod-comments-compose-tube {
   grid-gap: 8px !important; grid-row-gap: 8px !important; grid-column-gap: 8px !important;
 }
 
@@ -4341,7 +4313,7 @@ html.is-tizen-tv.is-tizen-tv body.page-twitch-watch .vod-display-title {
   display: block !important;
 }
 
-/* 5. Full-Height Clean Chat Panel (Twitch Live/VOD Chat Only, No Tube-Chat, No Comments) */
+/* 5. Full-Height Clean Chat Panel (Twitch Live/VOD Chat Only) */
 html.is-tizen-tv body.page-vod .chat-panel,
 html.is-tizen-tv body.page-live .chat-panel,
 html.is-tizen-tv body.page-twitch-watch .chat-panel {
@@ -4399,10 +4371,6 @@ html.is-tizen-tv body.page-twitch-watch .chat-split-twitch {
 }
 
 /* 6. Purge Irrelevant TV Features */
-html.is-tizen-tv .vod-comments-split-col,
-html.is-tizen-tv .chat-split-tube,
-html.is-tizen-tv #vodCommentsSection,
-html.is-tizen-tv #tubeChatForm,
 html.is-tizen-tv #btnAdminMetaToggle,
 html.is-tizen-tv #btnTranscriptToggle,
 html.is-tizen-tv #vodTranscriptPanel,
@@ -4691,7 +4659,7 @@ html.is-tizen-tv #btnInstantClip {
   cursor: pointer !important;
 }
 
-/* 6. VOD Storage Badge (Vault Cache vs Google Drive) */
+/* 6. VOD Storage Badge (Vault Cache) */
 html.is-tizen-tv .vod-storage-badge {
   font-size: 11px !important;
   font-weight: 800 !important;
@@ -4708,12 +4676,6 @@ html.is-tizen-tv .vod-storage-badge.badge-cache {
   background: rgba(34, 197, 94, 0.2) !important;
   border: 1px solid rgba(34, 197, 94, 0.5) !important;
   color: #4ade80 !important;
-}
-
-html.is-tizen-tv .vod-storage-badge.badge-drive {
-  background: rgba(59, 130, 246, 0.2) !important;
-  border: 1px solid rgba(59, 130, 246, 0.5) !important;
-  color: #60a5fa !important;
 }
 
 /* 7. Readable Chat Typography on 55-Inch TV */

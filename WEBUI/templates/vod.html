@@ -104,11 +104,7 @@
               {% if vod_platform %}
               <span class="platform-badge {% if 'youtube' in (vod_platform|lower) %}platform-youtube{% else %}platform-twitch{% endif %}">{% if 'youtube' in (vod_platform|lower) %}YT{% else %}TW{% endif %}</span>
               {% endif %}
-              {% if drive_only %}
-              <span class="vod-storage-badge badge-drive">Google Drive</span>
-              {% else %}
               <span class="vod-storage-badge badge-cache">Vault Cache</span>
-              {% endif %}
               <a class="vod-channel-link" href="{{ url_for('streamer_view', streamer=streamer) }}">{{ streamer }}</a>
               {% if vod_category %}
               <span class="vod-meta-sep">•</span>
@@ -139,7 +135,7 @@
           {% endif %}
           {% else %}
           <div class="vod-details-main">
-            <div class="vod-kicker">{% if not is_tv and not is_mobile %}<span class="kicker-type">{{ 'Clip' if route_type == 'clip' else 'Aufnahme' }}</span>{% endif %}{% if vod_platform %} · <span class="platform-badge {% if 'youtube' in (vod_platform|lower) %}platform-youtube{% else %}platform-twitch{% endif %}">{% if 'youtube' in (vod_platform|lower) %}YT{% else %}TW{% endif %}</span>{% endif %} · {% if drive_only %}<span class="vod-storage-badge badge-drive">Google Drive</span>{% else %}<span class="vod-storage-badge badge-cache">Vault Cache</span>{% endif %}</div>
+            <div class="vod-kicker">{% if not is_tv and not is_mobile %}<span class="kicker-type">{{ 'Clip' if route_type == 'clip' else 'Aufnahme' }}</span>{% endif %}{% if vod_platform %} · <span class="platform-badge {% if 'youtube' in (vod_platform|lower) %}platform-youtube{% else %}platform-twitch{% endif %}">{% if 'youtube' in (vod_platform|lower) %}YT{% else %}TW{% endif %}</span>{% endif %} · <span class="vod-storage-badge badge-cache">Vault Cache</span></div>
             <h1 id="vod-title" class="vod-display-title">{{ vod_display_title or filename }}</h1>
             <a class="vod-channel-link" href="{{ url_for('streamer_view', streamer=streamer) }}">{{ streamer }}</a>
             {% if vod_display_title and vod_display_title != filename %}<div class="muted vod-filename-meta" title="{{ filename }}">{{ filename }}</div>{% endif %}
@@ -197,7 +193,7 @@
               >Zuschneiden</a>
               {% endif %}
               {% endif %}
-              {% if is_video and route_type == 'vod' and not drive_only|default(false) and not is_tv and not is_mobile %}
+              {% if is_video and route_type == 'vod' and not is_tv and not is_mobile %}
               <button
                 type="button"
                 id="btnTranscriptToggle"
@@ -221,13 +217,6 @@
               </button>
               {% endif %}
 
-              {% if route_type == 'clip' and session.user_role == 'admin' and not is_tv and not is_mobile %}
-              <button class="vod-file-action" type="button" aria-label="Discord" title="In Discord hochladen" onclick="uploadClipToDiscord(this, '{{ url_for('clip_discord_upload', streamer=streamer, filename=filename) }}')">
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <span>Discord</span>
-              </button>
-              {% endif %}
-
               {% if download_url and not is_tv and not is_mobile %}
               <a class="vod-file-action" href="{{ download_url }}" aria-label="Download" title="Download">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -241,7 +230,7 @@
 
 
 
-        {% if is_video and route_type == 'vod' and not drive_only|default(false) and not is_tv and not is_mobile %}
+        {% if is_video and route_type == 'vod' and not is_tv and not is_mobile %}
         <section
           id="vodTranscriptPanel"
           class="vod-transcript-panel{% if transcript_status and transcript_status.state == 'running' %} is-open{% endif %}"
@@ -294,9 +283,8 @@
         {% endif %}
 
       </div>
-      {% if show_chat or (not is_tv and not is_mobile) %}
-      <aside class="chat-panel{% if show_chat and not is_tv and not is_mobile %} chat-panel-split{% endif %}">
-        {% if show_chat %}
+      {% if show_chat %}
+      <aside class="chat-panel">
         <div class="chat-split-col chat-split-twitch">
           <div class="chat-header">
             <span>Twitch Chat</span>
@@ -319,26 +307,6 @@
             </div>
           </div>
         </div>
-        {% endif %}
-
-        {% if not is_tv and not is_mobile %}
-        <div class="chat-split-col chat-split-tube vod-comments-split-col">
-          <div class="chat-header">
-            <span>Kommentare (<span id="vodCommentsCount">0</span>)</span>
-          </div>
-          <div class="vod-comments-section is-open" id="vodCommentsSection" data-vod-id="{{ streamer }}/{{ filename }}" data-mobile-always-open="1">
-            <div class="vod-comments-expanded">
-              <div id="vodCommentsList" class="chat-list vod-comments-list">
-                <!-- Comments injected here -->
-              </div>
-              <div class="tube-chat-compose vod-comments-compose-tube">
-                <input id="vodCommentInput" type="text" maxlength="400" placeholder="Als {{ session.username or 'Nutzer' }} kommentieren…" required>
-                <button type="button" id="vodCommentSubmit" class="tube-chat-send" title="Kommentieren" aria-label="Kommentieren" disabled>➔</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endif %}
       </aside>
       {% endif %}
     </div>
@@ -421,7 +389,6 @@
     {% endif %}
     {% if hls_ready %}<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>{% endif %}
     <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
-    {% if not is_tv and not is_mobile %}<script src="{{ url_for('static', filename='vod_comments.js', v=ASSET_VERSION) }}"></script>{% endif %}
 <script src="{{ url_for('static', filename='chat_bottom_sync.js', v=ASSET_VERSION) }}"></script>
     <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
     <script src="{{ url_for('static', filename='vod_debug.js', v=ASSET_VERSION) }}"></script>
@@ -442,7 +409,7 @@
         window.StreamVaultVodDebug && window.StreamVaultVodDebug.attach(vPlayer, {
           streamer: {{ streamer|tojson }},
           filename: {{ filename|tojson }},
-          drive: {{ 'true' if on_drive else 'false' }},
+          drive: false,
           asset: {{ ASSET_VERSION|tojson }}
         });
         {% if is_tv %}
@@ -590,8 +557,8 @@
           knownDuration: {{ (vod_duration_sec or 0)|float }},
           setCurrentTime: setVodCurrentTime,
           play: playVodFromCurrentPosition,
-          driveOnly: {{ 'true' if drive_only else 'false' }},
-          onDrive: {{ 'true' if on_drive else 'false' }}
+          driveOnly: false,
+          onDrive: false
         });
         {% if is_tv %}
         window.StreamVaultSeekHover && window.StreamVaultSeekHover.attach(vPlayer, {
@@ -1033,41 +1000,6 @@
         tick();
       }
       {% endif %}
-      
-
-      async function uploadClipToDiscord(btn, url) {
-        if (!confirm('Diesen Clip in den Discord Channel hochladen? (Kann bei gro??en Dateien einen Moment dauern)')) return;
-        const original = btn.innerHTML;
-        const originalTitle = btn.title;
-        btn.disabled = true;
-        btn.classList.add('is-loading');
-        try {
-            const fd = new FormData();
-            fd.append('csrf_token', '{{ csrf_token() }}');
-            const res = await fetch(url, {method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}});
-            const data = await res.json();
-            if(res.ok && data.ok) {
-                btn.classList.add('is-success');
-                btn.title = 'Erfolgreich hochgeladen';
-                alert('Clip wurde erfolgreich in Discord hochgeladen.');
-            } else {
-                btn.classList.add('is-error');
-                btn.title = 'Fehler beim Upload';
-                alert('Upload fehlgeschlagen: ' + (data.message || 'Unbekannter Fehler'));
-            }
-        } catch(e) {
-            console.error(e);
-            btn.classList.add('is-error');
-            btn.title = 'Netzwerkfehler';
-            alert('Upload fehlgeschlagen (Netzwerk/Timeout).');
-        }
-        setTimeout(() => {
-          btn.innerHTML = original;
-          btn.title = originalTitle;
-          btn.disabled = false;
-          btn.classList.remove('is-loading', 'is-success', 'is-error');
-        }, 5000);
-      }
 
       async function shareItem(btn, url, route) {
         const original = btn.innerHTML;
@@ -1256,10 +1188,10 @@
 
         <div class="vod-admin-divider"></div>
 
-        <form method="post" action="{{ url_for('vod_rename' if route_type == 'vod' else 'clip_rename', streamer=streamer, filename=filename) }}" class="vod-admin-rename-form" id="vodAdminRenameForm" onsubmit="return confirm('Datei wirklich umbenennen? Das aendert auch den Drive-Namen.');">
+        <form method="post" action="{{ url_for('vod_rename' if route_type == 'vod' else 'clip_rename', streamer=streamer, filename=filename) }}" class="vod-admin-rename-form" id="vodAdminRenameForm" onsubmit="return confirm('Datei wirklich umbenennen?');">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <label class="vod-admin-field">
-            <span>Dateiname (inkl. Drive)</span>
+            <span>Dateiname</span>
             <input type="text" name="new_name" maxlength="180" value="{{ filename }}" required pattern="[A-Za-z0-9._-]+\.(mp4|MP4)">
           </label>
           <div class="vod-admin-actions-row">

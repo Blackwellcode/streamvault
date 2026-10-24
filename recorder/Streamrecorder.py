@@ -26,8 +26,6 @@ from recorder import chat_clip
 from recorder import chat_events
 from core import config
 from core import database
-from discord_bots import discord_notify
-from discord_bots import streamer_bot
 from core import twitch_api
 from core import twitch_eventsub
 from core.mp4_utils import (
@@ -620,6 +618,7 @@ def thumbnail_file_ready(thumb_path):
         return False
 
 def enqueue_thumbnail_task(media_path, channel, discord_notify_ready=False):
+    _ = discord_notify_ready
     if not media_path or not os.path.isfile(media_path):
         return False
     if not is_archive_mp4_filename(media_path):
@@ -637,29 +636,7 @@ def enqueue_thumbnail_task(media_path, channel, discord_notify_ready=False):
     filename = os.path.basename(media_path)
     streamer = normalize_channel(channel) or channel
 
-    # Queue Discord intent first so remux/backfill lock races cannot drop the post.
-    if discord_notify_ready:
-        try:
-            discord_notify.queue_vod_notify(
-                streamer,
-                filename,
-                media_path=media_path,
-                thumb_path=thumb_path,
-            )
-        except Exception as exc:
-            logger.error("Discord VOD-Pending fehlgeschlagen: %s", exc)
-
     if thumbnail_file_ready(thumb_path):
-        if discord_notify_ready:
-            try:
-                discord_notify.notify_vod_ready(
-                    streamer,
-                    filename,
-                    media_path=media_path,
-                    thumb_path=thumb_path,
-                )
-            except Exception as exc:
-                logger.error("Discord VOD-Notify fehlgeschlagen: %s", exc)
         return False
 
     if os.path.exists(lock_path):
@@ -679,8 +656,6 @@ def enqueue_thumbnail_task(media_path, channel, discord_notify_ready=False):
             "streamer": streamer,
             "filename": filename,
         }
-        if discord_notify_ready:
-            payload["discord_notify"] = True
         database.add_task("thumbnail", payload)
         logger.info(f"Thumbnail-Task eingereiht: {media_path}")
         return True
@@ -694,76 +669,11 @@ def enqueue_thumbnail_task(media_path, channel, discord_notify_ready=False):
 
 
 def notify_discord_streamer_online(archive_channel, source_channel, recording_metadata, conf, recording_started_ts):
-    """Best-effort Discord live post; never raises into the recorder loop."""
-    try:
-        meta = recording_metadata or {}
-        conf = conf or {}
-        # Watch-only / transient channels must never ping Discord.
-        if (
-            not conf.get("record")
-            and not conf.get("notify", 1)
-            and not discord_notify.channel_is_recorded(archive_channel, source_channel)
-            and not discord_notify.channel_is_live_notified(archive_channel, source_channel)
-        ):
-            return
-        platform = str(meta.get("platform") or conf.get("platform") or "Twitch")
-        platform_l = platform.strip().lower()
-        video_id = str(meta.get("video_id") or "").strip()
-        twitch_login = source_channel
-        raw_url = str(conf.get("source_url") or meta.get("source_url") or "").strip()
-
-        if platform_l in ("youtube", "yt", "youtu.be"):
-            if video_id:
-                live_url = f"https://www.youtube.com/watch?v={video_id}"
-            elif raw_url and ("youtube.com" in raw_url.lower() or "youtu.be" in raw_url.lower()):
-                live_url = raw_url
-            else:
-                live_url = youtube_live_url(source_channel, conf)
-            image_url = str(meta.get("thumbnail") or "").strip()
-            if not image_url and video_id:
-                image_url = discord_notify.youtube_thumbnail_url(video_id)
-        else:
-            if raw_url and "twitch.tv" in raw_url.lower():
-                path = urllib.parse.urlsplit(raw_url).path.strip("/")
-                if path:
-                    twitch_login = path.split("/")[0].lower()
-                live_url = raw_url
-            else:
-                twitch_login = normalize_channel(source_channel) or source_channel
-                live_url = twitch_stream_url(source_channel, conf)
-            image_url = ""
-
-        started_at = str(meta.get("started_at") or "").strip()
-        platform_key = discord_notify.normalize_platform(platform)
-        archive = archive_channel or source_channel
-        if video_id:
-            session_key = f"{archive}:{platform_key}:{video_id}"
-        elif started_at:
-            session_key = f"{archive}:{platform_key}:{started_at}"
-        else:
-            session_key = f"{archive}:{platform_key}"
-
-        discord_notify.notify_streamer_online(
-            archive,
-            title=meta.get("title") or "",
-            platform=platform,
-            source_url=live_url,
-            twitch_login=twitch_login,
-            session_key=session_key,
-            video_id=video_id,
-            image_url=image_url,
-        )
-    except Exception as exc:
-        logger.error("Discord Live-Notify fehlgeschlagen: %s", exc)
+    _ = (archive_channel, source_channel, recording_metadata, conf, recording_started_ts)
 
 
 def clear_discord_live_session(archive_channel):
-    """Manual/admin helper; not used on brief offline blips (avoids re-spam)."""
-    try:
-        if archive_channel:
-            discord_notify.clear_live_notified(archive_channel)
-    except Exception as exc:
-        logger.error("Discord Live-Session-Reset fehlgeschlagen: %s", exc)
+    _ = archive_channel
 
 def source_state_suffix(source_channel):
     safe = normalize_channel(source_channel)
@@ -2294,20 +2204,6 @@ def chat_process(source_channel, chat_text_file):
                                             atomic_write(chat_text_file, content, is_json=False)
                                             last_written_content = content
                                         last_overlay_update = now
-                                    # Bot commands + channel points (before log writes).
-                                    try:
-                                        streamer_bot.handle_chat_commands(
-                                            source_channel,
-                                            username,
-                                            message or "",
-                                            tags=irc_tags,
-                                            archive_dir=recordings_dir,
-                                        )
-                                    except Exception:
-                                        logger.exception(
-                                            "[%s] streamer_bot command fehlgeschlagen",
-                                            source_channel,
-                                        )
                                     # !clip (skip if channel-points already handled above).
                                     try:
                                         if message and not reward_id:
@@ -3397,15 +3293,6 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                         if time.time() - last_output_time > FFMPEG_OUTPUT_TIMEOUT:
                             logger.warning("FFmpeg scheint hängen zu bleiben, beende Aufnahme...")
                             hang_detected = True
-                            
-                            try:
-                                discord_notify.notify_system_error(
-                                    message=f"Die Aufnahme von **{source_channel}** ist eingefroren.",
-                                    details=f"Seit {FFMPEG_OUTPUT_TIMEOUT} Sekunden gab es keinen Output mehr vom Recorder-Prozess. Der Stream wird nun automatisch neu gestartet (Self-Healing)."
-                                )
-                            except Exception as e:
-                                logger.error(f"Fehler beim Senden der Hang-Detection an Discord: {e}")
-                            
                             stop_process(process)
                             stop_process(source_process)
                             break
@@ -3452,7 +3339,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                         short_recording = recording_too_short(recording_started_ts)
                         if short_recording:
                             logger.info(
-                                "%s: Aufnahme zu kurz (%.0fs) — kein Discord-VOD/Remux.",
+                                "%s: Aufnahme zu kurz (%.0fs) — kein Remux.",
                                 source_channel,
                                 max(0.0, time.time() - float(recording_started_ts or 0)),
                             )
@@ -3462,70 +3349,16 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                                 remux_recording(finalized_path, reencode_audio=REENCODE_AUDIO)
                                 if finalized_path.lower().endswith(".mkv") and os.path.exists(output_file):
                                     finalized_path = output_file
-                                if str(finalized_path).lower().endswith(".mp4") and os.path.isfile(finalized_path):
-                                    try:
-                                        from core import gdrive
-                                        gdrive.enqueue_upload(archive_channel, os.path.basename(finalized_path))
-                                    except Exception as exc:
-                                        logger.warning("Drive-Upload enqueue fehlgeschlagen: %s", exc)
                             else:
                                 logger.info("Remux wird als Worker-Task eingeordnet...")
                                 enqueue_remux_vod(finalized_path, reencode_audio=REENCODE_AUDIO)
-                        elif (not short_recording) and str(finalized_path).lower().endswith(".mp4"):
-                            try:
-                                from core import gdrive
-                                gdrive.enqueue_upload(archive_channel, os.path.basename(finalized_path))
-                            except Exception as exc:
-                                logger.warning("Drive-Upload enqueue fehlgeschlagen: %s", exc)
-                        # Discord VOD intent always targets the final .mp4 name. Copy-mode
-                        # finalizes as .mkv first; remux may finish later in the worker.
-                        mp4_name = os.path.basename(output_file)
-                        if not short_recording:
-                            try:
-                                discord_notify.queue_vod_notify(
-                                    archive_channel,
-                                    mp4_name,
-                                    media_path=output_file if os.path.exists(output_file) else "",
-                                    title=str((recording_metadata or {}).get("title") or ""),
-                                    started_at=str((recording_metadata or {}).get("started_at") or ""),
-                                )
-                            except Exception as exc:
-                                logger.error("Discord VOD-Pending fehlgeschlagen: %s", exc)
                         thumb_target = output_file if os.path.exists(output_file) else finalized_path
                         if (not short_recording) and thumb_target.lower().endswith(".mp4"):
                             enqueue_thumbnail_task(
                                 thumb_target,
                                 archive_channel,
-                                discord_notify_ready=True,
+                                discord_notify_ready=False,
                             )
-                        if not short_recording:
-                            try:
-                                info_path = f"{output_file}.info.json"
-                                chat_log = ""
-                                started_at = float(recording_started_ts or 0)
-                                try:
-                                    cur = load_current_recording(recordings_dir, source_channel) or {}
-                                    chat_log = str(cur.get("log_file") or "")
-                                    if not started_at:
-                                        started_at = float(cur.get("start_ts") or 0)
-                                except Exception:
-                                    pass
-                                streamer_bot.notify_stream_ended(
-                                    archive_channel or source_channel,
-                                    archive_dir=recordings_dir,
-                                    title=str((recording_metadata or {}).get("title") or ""),
-                                    category=str((recording_metadata or {}).get("category") or ""),
-                                    started_at=started_at,
-                                    finished_at=time.time(),
-                                    info_path=info_path,
-                                    chat_log_path=chat_log,
-                                    media_path=thumb_target,
-                                )
-                            except Exception:
-                                logger.exception(
-                                    "[%s] Stream-Ende Summary fehlgeschlagen",
-                                    source_channel,
-                                )
                         if not test_video_file(finalized_path):
                             logger.warning("Video-Datei scheint beschädigt zu sein")
                         elif (not short_recording) and AUTO_TRANSCRIBE and (

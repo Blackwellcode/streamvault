@@ -161,49 +161,13 @@
       </button>
     </div>
   </div>
-  <div class="chat-container{% if show_tube_chat %} chat-panel-tabs{% endif %}">
-    {% if show_tube_chat %}
-    <div class="twitch-mobile-chat-head chat-tabs-head">
-      <div class="chat-tab-row" role="tablist" aria-label="Chat">
-        <button type="button" class="chat-tab is-active" data-chat-tab="twitch" role="tab" aria-selected="true" aria-controls="chatPaneTwitch" id="chatTabTwitch">Twitch</button>
-        <button type="button" class="chat-tab" data-chat-tab="tube" role="tab" aria-selected="false" aria-controls="chatPaneTube" id="chatTabTube">Tube</button>
-      </div>
-    </div>
-    <div id="chatPaneTwitch" class="chat-tab-pane" data-chat-pane="twitch" role="tabpanel" aria-labelledby="chatTabTwitch">
-      <div class="chat-pane-toolbar">
-        <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
-      </div>
-      <div id="chatEmpty" class="twitch-chat-empty compact">Chat wird geladen…</div>
-      <div id="chatList" class="chat-list"></div>
-    </div>
-    <div id="chatPaneTube" class="chat-tab-pane" data-chat-pane="tube" role="tabpanel" aria-labelledby="chatTabTube" hidden>
-      <div class="chat-pane-toolbar">
-        <div class="tube-chat-mod-actions">
-          {% if tube_chat_can_moderate %}
-          <button id="tubeChatClearBtn" class="chat-toggle tube-mod-btn" type="button" title="Tube-Chat leeren">Leeren</button>
-          {% endif %}
-          <button id="tubeChatAutoToggle" class="chat-toggle" type="button">Auto</button>
-        </div>
-      </div>
-      <div id="tubeChatList" class="chat-list" data-can-moderate="{{ '1' if tube_chat_can_moderate else '0' }}">
-        <div id="tubeChatEmpty" class="twitch-chat-empty compact">Noch keine Tube-Nachrichten. Schreib die Erste!</div>
-      </div>
-      <form id="tubeChatForm" class="tube-chat-compose" autocomplete="off">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label class="sr-only" for="tubeChatInput">Tube-Chat Nachricht</label>
-        <input id="tubeChatInput" name="msg" type="text" maxlength="400" placeholder="Als {{ tube_chat_username }} schreiben…" required>
-        <button type="submit" class="tube-chat-send" title="Senden" aria-label="Senden">➔</button>
-      </form>
-      <div id="tubeChatError" class="tube-chat-error" hidden></div>
-    </div>
-    {% else %}
+  <div class="chat-container">
     <div class="twitch-mobile-chat-head">
       <span>Live Chat</span>
       <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
     </div>
     <div id="chatEmpty" class="twitch-chat-empty compact">Chat wird geladen…</div>
     <div id="chatList" class="chat-list"></div>
-    {% endif %}
   </div>
   <h2 id="watchTitle" class="sr-only">{{ title or display_name }}</h2>
   <span id="offlinePill" hidden></span>

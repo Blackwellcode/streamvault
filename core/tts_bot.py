@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone Twitch IRC listener for Seele TTS.
+"""Standalone Twitch IRC listener for StreamVault TTS.
 
 Connects as an anonymous justinfan client and stays in chat whether or not
 the recorder is capturing. Synthesis and the OBS queue live in tts_service;
@@ -24,7 +24,7 @@ _stop = threading.Event()
 
 
 def streamers() -> list[str]:
-    raw = os.environ.get("TTS_STREAMERS", "seele_x3")
+    raw = os.environ.get("TTS_STREAMERS", "")
     names: list[str] = []
     seen: set[str] = set()
     for part in raw.split(","):

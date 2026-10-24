@@ -16,10 +16,6 @@ from recorder import chat_clip
 from recorder import clip_engine
 from core import config
 from core import database
-from discord_bots import discord_notify
-from core import gdrive
-from discord_bots import streamer_bot
-config.setup_discord_logging()
 from core.database import get_db, init_db
 from core.mp4_utils import (
     BROWSER_MP4_MOVFLAGS,
@@ -29,6 +25,7 @@ from core.mp4_utils import (
 )
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - WORKER - %(message)s', force=True)
+logger = logging.getLogger("worker")
 
 
 class TaskDeferred(Exception):
@@ -63,7 +60,7 @@ THUMB_LOCK_STALE_SEC = int(os.environ.get("THUMB_LOCK_STALE_SEC", "3600"))
 THUMB_LOCK_CLEANUP_INTERVAL_SEC = int(os.environ.get("THUMB_LOCK_CLEANUP_INTERVAL_SEC", "1800"))
 THUMB_BACKFILL_INTERVAL_SEC = int(os.environ.get("THUMB_BACKFILL_INTERVAL_SEC", "300"))
 THUMB_BACKFILL_MAX_PER_RUN = int(os.environ.get("THUMB_BACKFILL_MAX_PER_RUN", "20"))
-WORKER_ID = f"{os.uname().nodename}:{os.getpid()}"
+WORKER_ID = f"{os.uname().nodename}:{os.getpid()}" if hasattr(os, "uname") else f"local:{os.getpid()}"
 # Parallel pools (env):
 #   WORKER_THUMB_THREADS       — IO pool for thumbnail (+ delete/empty); default 2
 #   WORKER_REMUX_THREADS       — CPU/media pool for remux_vod / remux_all; default 1
@@ -73,7 +70,6 @@ WORKER_REMUX_THREADS = max(1, int(os.environ.get("WORKER_REMUX_THREADS", "1")))
 WORKER_TRANSCRIBE_THREADS = max(1, int(os.environ.get("WORKER_TRANSCRIBE_THREADS", "1")))
 IO_TASK_TYPES = frozenset({
     "thumbnail", "delete_folder", "empty_folder",
-    "drive_upload", "drive_sync", "drive_duration",
 })
 REMUX_TASK_TYPES = frozenset({"remux_vod", "remux_all"})
 ASR_TASK_TYPES = frozenset({"transcribe"})
@@ -84,11 +80,7 @@ TASK_MAX_ATTEMPTS = {
     "transcribe": int(os.environ.get("TASK_MAX_ATTEMPTS_TRANSCRIBE", "1")),
     "remux_all": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_ALL", "1")),
     "remux_vod": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_VOD", "2")),
-    "drive_upload": int(os.environ.get("TASK_MAX_ATTEMPTS_DRIVE_UPLOAD", "3")),
-    "drive_sync": int(os.environ.get("TASK_MAX_ATTEMPTS_DRIVE_SYNC", "2")),
-    "drive_duration": int(os.environ.get("TASK_MAX_ATTEMPTS_DRIVE_DURATION", "2")),
 }
-DRIVE_UPLOAD_RECORDING_DEFER_SEC = int(os.environ.get("DRIVE_UPLOAD_RECORDING_DEFER_SEC", "90"))
 REMUX_FILE_TIMEOUT_SEC = int(os.environ.get("REMUX_FILE_TIMEOUT_SEC", "7200"))
 
 _INFLIGHT = {"io": 0, "remux": 0, "asr": 0}
@@ -102,7 +94,6 @@ _LAST_STORAGE_CHECK = 0.0
 _LAST_TASK_CLEANUP = 0.0
 _LAST_THUMB_LOCK_CLEANUP = 0.0
 _LAST_THUMB_BACKFILL = 0.0
-_LAST_DRIVE_SYNC = 0.0
 MEDIA_SCAN_SKIP_DIRS = {
     ".hls",
     ".hls_live",
@@ -361,6 +352,7 @@ def thumbnail_path_for_media(media_path):
 
 
 def enqueue_thumbnail_if_missing(media_path, discord_notify_ready=False):
+    _ = discord_notify_ready
     if is_transient_media_filename(media_path):
         return False
     thumb_path = thumbnail_path_for_media(media_path)
@@ -374,28 +366,8 @@ def enqueue_thumbnail_if_missing(media_path, discord_notify_ready=False):
 
     streamer = os.path.basename(os.path.dirname(os.path.abspath(media_path)))
     filename = os.path.basename(media_path)
-    if discord_notify_ready and streamer and filename:
-        try:
-            discord_notify.queue_vod_notify(
-                streamer,
-                filename,
-                media_path=media_path,
-                thumb_path=thumb_path,
-            )
-        except Exception as exc:
-            logging.error("Discord VOD-Pending fehlgeschlagen: %s", exc)
 
     if thumbnail_file_ready(thumb_path):
-        if discord_notify_ready and streamer and filename:
-            try:
-                discord_notify.notify_vod_ready(
-                    streamer,
-                    filename,
-                    media_path=media_path,
-                    thumb_path=thumb_path,
-                )
-            except Exception as exc:
-                logging.error("Discord VOD-Notify fehlgeschlagen: %s", exc)
         return False
 
     lock_path = thumbnail_lock_path(thumb_path)
@@ -415,8 +387,6 @@ def enqueue_thumbnail_if_missing(media_path, discord_notify_ready=False):
         if streamer and filename:
             payload["streamer"] = streamer
             payload["filename"] = filename
-        if discord_notify_ready and streamer and filename:
-            payload["discord_notify"] = True
         database.add_task("thumbnail", payload)
         logging.info("Fehlendes Thumbnail eingereiht: %s", media_path)
         return True
@@ -453,13 +423,6 @@ def backfill_missing_thumbnails(force=False):
                     break
         if queued >= max(1, THUMB_BACKFILL_MAX_PER_RUN):
             break
-    # Drive-indexed VODs without a local JPEG (e.g. deleted after upload).
-    try:
-        remaining = max(0, max(1, THUMB_BACKFILL_MAX_PER_RUN) - queued)
-        if remaining and gdrive.enabled():
-            queued += int(gdrive.enqueue_missing_thumbnails(limit=remaining) or 0)
-    except Exception as exc:
-        logging.warning("Drive-Thumbnail-Backfill: %s", exc)
     return queued
 
 def media_duration(input_path, http_headers=None):
@@ -601,67 +564,15 @@ def _safe_path_under(path, *roots):
 
 
 def _resolve_thumbnail_source(payload, input_path):
-    """Prefer local media; fall back to Drive HTTP (+ Google thumb cache)."""
-    http_headers = None
+    """Resolve local media source for thumbnail generation."""
     source = input_path
-    streamer = str((payload or {}).get("streamer") or "").strip()
-    filename = str((payload or {}).get("filename") or "").strip()
-    drive_file_id = str((payload or {}).get("drive_file_id") or "").strip()
-
-    local_ok = False
     if source:
         try:
-            local_ok = os.path.isfile(source) and os.path.getsize(source) > 0
+            if os.path.isfile(source) and os.path.getsize(source) > 0:
+                return source, None
         except OSError:
-            local_ok = False
-    if local_ok:
-        return source, None
-
-    if not gdrive.enabled() or not gdrive.configured():
-        return source, None
-
-    if not filename and source:
-        filename = os.path.basename(source)
-    if not streamer and source:
-        try:
-            rel = os.path.relpath(source, config.BASE_DIR)
-            if not rel.startswith(".."):
-                streamer = rel.split(os.sep)[0]
-        except (TypeError, ValueError):
-            streamer = streamer
-
-    row = None
-    if streamer and filename:
-        index_slug = gdrive.drive_index_slug(streamer)
-        row = database.get_drive_file(index_slug, filename) or database.get_drive_file(streamer, filename)
-        if row and gdrive._cache_thumbnail(streamer, filename, row.get("thumbnail_url")):
-            return "", None
-        if not drive_file_id and row:
-            drive_file_id = str(row.get("file_id") or "").strip()
-
-    if not drive_file_id:
-        return source, None
-
-    # Refresh metadata once — older index rows may lack thumbnailLink.
-    try:
-        meta = gdrive.get_file_metadata(drive_file_id)
-        thumb_url = str((meta or {}).get("thumbnailLink") or "").strip()
-        if streamer and filename and thumb_url:
-            if gdrive._cache_thumbnail(streamer, filename, thumb_url):
-                return "", None
-            if row is not None:
-                updated = dict(row)
-                updated["thumbnail_url"] = thumb_url
-                database.upsert_drive_file(updated)
-    except Exception as exc:
-        logging.debug("Drive-Thumb-Metadaten %s: %s", drive_file_id, exc)
-
-    try:
-        source, http_headers = gdrive.media_http_source(drive_file_id)
-    except Exception as exc:
-        logging.warning("Drive-Thumb-Quelle fehlgeschlagen %s: %s", drive_file_id, exc)
-        return "", None
-    return source, http_headers
+            pass
+    return source, None
 
 
 def process_thumbnail(payload):
@@ -678,16 +589,8 @@ def process_thumbnail(payload):
     thumb_path = _safe_path_under(raw_thumb, config.THUMB_ROOT)
     if thumb_path and thumbnail_file_ready(thumb_path):
         remove_thumbnail_lock(thumb_path)
-        streamer = str((payload or {}).get("streamer") or "").strip()
-        filename = str((payload or {}).get("filename") or "").strip()
-        if streamer and filename:
-            try:
-                for slug in gdrive.thumb_mirror_slugs(streamer):
-                    gdrive._mirror_thumb_file(thumb_path, slug, filename)
-            except Exception:
-                pass
         return True
-    if raw_input and not input_path and not payload.get("drive_file_id"):
+    if raw_input and not input_path:
         logging.error("Unsicherer Thumbnail-Input abgelehnt: %s", raw_input)
         raise RuntimeError("thumbnail unsafe input path")
     if raw_thumb and not thumb_path:
@@ -696,29 +599,11 @@ def process_thumbnail(payload):
     if not thumb_path:
         return True
 
-    streamer = str((payload or {}).get("streamer") or "").strip()
     filename = str((payload or {}).get("filename") or "").strip()
     if not filename and input_path:
         filename = os.path.basename(input_path)
-    if streamer and filename and gdrive.local_thumb_ready(streamer, filename):
-        remove_thumbnail_lock(thumb_path)
-        return True
 
     source, http_headers = _resolve_thumbnail_source(payload, input_path)
-    if streamer and filename and gdrive.local_thumb_ready(streamer, filename):
-        try:
-            base = os.path.splitext(filename)[0]
-            for slug in gdrive.thumb_mirror_slugs(streamer):
-                candidate = os.path.join(config.THUMB_ROOT, slug, f"{base}.jpg")
-                if thumbnail_file_ready(candidate):
-                    dest_slug = os.path.basename(os.path.dirname(thumb_path))
-                    gdrive._mirror_thumb_file(candidate, dest_slug, filename)
-                    break
-        except Exception:
-            pass
-        if thumbnail_file_ready(thumb_path):
-            remove_thumbnail_lock(thumb_path)
-            return True
     if not source:
         raise RuntimeError(
             f"thumbnail input missing: {filename or os.path.basename(str(raw_input or '')) or 'unknown'}"
@@ -746,16 +631,10 @@ def process_thumbnail(payload):
         for _, timestamp in scored:
             if write_thumbnail(source, thumb_path, timestamp, http_headers=http_headers):
                 logging.info("Thumbnail erstellt: %s bei %.1fs", thumb_path, timestamp)
-                if streamer and filename:
-                    for slug in gdrive.thumb_mirror_slugs(streamer):
-                        gdrive._mirror_thumb_file(thumb_path, slug, filename)
                 return True
         fallback = min(30.0, max(1.0, duration / 2 if duration else 30.0))
         if write_thumbnail(source, thumb_path, fallback, http_headers=http_headers):
             logging.info("Thumbnail erstellt (fallback): %s bei %.1fs", thumb_path, fallback)
-            if streamer and filename:
-                for slug in gdrive.thumb_mirror_slugs(streamer):
-                    gdrive._mirror_thumb_file(thumb_path, slug, filename)
             return True
         raise RuntimeError(f"thumbnail ffmpeg failed: {filename or os.path.basename(str(source))}")
     except RuntimeError:
@@ -844,17 +723,15 @@ def process_delete_folder(payload):
     else:
         ok = not os.path.exists(folder_path)
 
-    # Sidecar caches / thumbs / vodcache for this archive (including trailing underscores)
+    # Sidecar caches / thumbs for this archive (including trailing underscores)
     for root in (
         getattr(config, "THUMB_ROOT", None),
         getattr(config, "HLS_ROOT", None),
-        getattr(config, "GDRIVE_PLAYBACK_CACHE_DIR", None),
         os.path.join(config.BASE_DIR, ".vodcache"),
     ):
         if not root or not os.path.exists(root):
             continue
         if streamer:
-            norm_s = streamer.strip().lower()
             for cand in (streamer, streamer + "_", streamer + "__", streamer.rstrip("_")):
                 extra = os.path.join(root, cand)
                 if extra and _is_direct_child(root, extra):
@@ -877,8 +754,6 @@ def process_delete_folder(payload):
     try:
         conn = database.get_db()
         for tbl, cl in [
-            ("tube_chat_messages", "streamer"),
-            ("tube_chat_mutes", "streamer"),
             ("vod_access_defaults", "streamer"),
             ("user_vod_access", "streamer"),
             ("role_vod_access", "streamer"),
@@ -888,48 +763,6 @@ def process_delete_folder(payload):
         conn.close()
     except Exception as exc:
         logging.warning("DB-Tabellen Bereinigung fuer %s fehlgeschlagen: %s", streamer, exc)
-
-    # Drop Drive index + tombstone remote files so sync cannot resurrect the card.
-    try:
-        drive_row = database.get_drive_folder(streamer)
-        files = database.list_drive_files(streamer) or []
-        for row in files:
-            filename = str((row or {}).get("filename") or "").strip()
-            file_id = str((row or {}).get("file_id") or "").strip()
-            if filename:
-                try:
-                    database.upsert_deleted_media(
-                        streamer,
-                        filename,
-                        file_id=file_id or None,
-                        deleted_by="delete_folder",
-                    )
-                except Exception:
-                    pass
-            if file_id:
-                try:
-                    from core import gdrive
-
-                    if gdrive.enabled() and gdrive.configured():
-                        gdrive.delete_remote_file(file_id)
-                    else:
-                        database.delete_drive_file(file_id=file_id)
-                except Exception as exc:
-                    logging.warning("Drive-Datei %s nicht geloescht: %s", file_id, exc)
-                    database.delete_drive_file(file_id=file_id)
-        folder_id = str((drive_row or {}).get("folder_id") or "").strip()
-        if folder_id:
-            try:
-                from core import gdrive
-
-                if gdrive.enabled() and gdrive.configured():
-                    gdrive.delete_remote_file(folder_id)
-            except Exception as exc:
-                logging.warning("Drive-Ordner %s nicht geloescht: %s", folder_id, exc)
-        database.delete_drive_folder(streamer)
-    except Exception as exc:
-        logging.warning("Drive-Index fuer %s nicht bereinigt: %s", streamer, exc)
-        ok = False
 
     return ok and not os.path.exists(folder_path)
 
@@ -1249,10 +1082,6 @@ def process_remux_vod(payload):
         except Exception as exc:
             logging.error("Post-remux Discord/thumb enqueue failed: %s: %s", final_path, exc)
         try:
-            gdrive.enqueue_upload(payload.get("streamer"), os.path.basename(final_path))
-        except Exception as exc:
-            logging.error("Drive-Upload enqueue fehlgeschlagen: %s: %s", final_path, exc)
-        try:
             from core import redis_client
             redis_client.invalidate_dashboard_cache()
         except Exception:
@@ -1306,143 +1135,9 @@ def process_remux_all(payload):
     _write_remux_status(status)
 
 
-def process_drive_upload(payload):
-    streamer = str((payload or {}).get("streamer") or "").strip()
-    filename = str((payload or {}).get("filename") or "").strip()
-    force = bool((payload or {}).get("force"))
-    if not gdrive.enabled():
-        return True
-    if not gdrive.configured():
-        logging.warning("Drive-Upload uebersprungen, Credentials fehlen: %s/%s", streamer, filename)
-        return True
-    local_path = ""
-    try:
-        slug = gdrive.normalize_folder_slug(streamer) or streamer
-        candidate = os.path.join(config.BASE_DIR, slug, os.path.basename(filename))
-        if os.path.isfile(candidate):
-            local_path = candidate
-    except Exception:
-        local_path = ""
-    if local_path:
-        try:
-            enqueue_thumbnail_if_missing(local_path)
-            # Ensure a thumb exists before local delete so the grid stays filled.
-            if bool(getattr(config, "GDRIVE_DELETE_LOCAL_AFTER_UPLOAD", False)):
-                stem = os.path.splitext(os.path.basename(local_path))[0]
-                thumb_path = os.path.join(config.THUMB_ROOT, slug, f"{stem}.jpg")
-                if not os.path.isfile(thumb_path):
-                    process_thumbnail({
-                        "input_path": local_path,
-                        "thumb_path": thumb_path,
-                        "streamer": slug,
-                        "filename": os.path.basename(local_path),
-                    })
-        except Exception as exc:
-            logging.warning("Pre-Upload-Thumbnail %s/%s: %s", streamer, filename, exc)
-    ok, msg = gdrive.upload_local_vod(streamer, filename, force=force)
-    if not ok:
-        if str(msg or "").strip() == "Aufnahme laeuft noch":
-            logging.info(
-                "Drive-Upload verschoben %s/%s: %s (retry in %ss)",
-                streamer,
-                filename,
-                msg,
-                DRIVE_UPLOAD_RECORDING_DEFER_SEC,
-            )
-            raise TaskDeferred(msg, delay_sec=DRIVE_UPLOAD_RECORDING_DEFER_SEC)
-        logging.error("Drive-Upload fehlgeschlagen %s/%s: %s", streamer, filename, msg)
-        return False
-    logging.info("Drive-Upload %s/%s: %s", streamer, filename, msg)
-    try:
-        # Newest uploads stay pinned locally for the pin window (seed-before-delete
-        # or background hydrate if the archive file is already gone).
-        cache = gdrive.ensure_vod_playback_cache(streamer, filename)
-        logging.info(
-            "Playback-Cache nach Upload %s/%s ready=%s queued=%s",
-            streamer,
-            filename,
-            cache.get("ready"),
-            cache.get("queued"),
-        )
-    except Exception as exc:
-        logging.warning("Playback-Cache nach Upload %s/%s: %s", streamer, filename, exc)
-    return True
-
-
-def process_drive_sync(payload):
-    if not gdrive.enabled():
-        return True
-    if not gdrive.configured():
-        logging.warning("Drive-Sync uebersprungen, Credentials fehlen.")
-        return True
-    result = gdrive.sync_once(upload_limit=(payload or {}).get("upload_limit"))
-    logging.info(
-        "Drive-Sync: folders=%s discovered=%s uploaded=%s durations_queued=%s thumbs_queued=%s",
-        result.get("folders"),
-        result.get("discovered"),
-        result.get("uploaded"),
-        result.get("duration_queued"),
-        result.get("thumb_queued"),
-    )
-    try:
-        cache = gdrive.maintain_recent_playback_cache(hydrate_limit=1)
-        logging.info(
-            "Playback-Cache Maintain: recent=%s pinned=%s ready=%s seeded=%s queued=%s resumed=%s mode=%s paused=%s days=%s",
-            cache.get("recent"),
-            cache.get("pinned"),
-            cache.get("ready"),
-            cache.get("seeded"),
-            cache.get("queued"),
-            cache.get("resumed"),
-            cache.get("hydrate_mode"),
-            cache.get("hydrate_paused"),
-            cache.get("days"),
-        )
-    except Exception as exc:
-        logging.warning("Playback-Cache Maintain fehlgeschlagen: %s", exc)
-    return True
-
-
-def process_drive_duration(payload):
-    if not gdrive.enabled() or not gdrive.configured():
-        return True
-    streamer = str((payload or {}).get("streamer") or "").strip()
-    filename = str((payload or {}).get("filename") or "").strip()
-    force = bool((payload or {}).get("force"))
-    if not streamer or not filename:
-        return True
-    ms = gdrive.refresh_file_duration(streamer, filename, force=force)
-    if ms > 0:
-        logging.info("Drive-Dauer %s/%s: %.1fs", streamer, filename, ms / 1000.0)
-    else:
-        logging.warning("Drive-Dauer unbekannt %s/%s", streamer, filename)
-    return True
-
-
-def maybe_enqueue_drive_sync():
-    global _LAST_DRIVE_SYNC
-    if not gdrive.enabled() or not gdrive.configured():
-        return
-    now = time.time()
-    interval = int(getattr(config, "GDRIVE_SYNC_INTERVAL_SEC", 300) or 300)
-    if now - _LAST_DRIVE_SYNC < interval:
-        return
-    _LAST_DRIVE_SYNC = now
-    try:
-        if gdrive.enqueue_sync():
-            logging.info("Drive-Sync in die Queue gestellt.")
-    except Exception as exc:
-        logging.error("Drive-Sync enqueue fehlgeschlagen: %s", exc)
-
-
 def process_task(task_type, payload):
     if task_type == 'thumbnail':
         process_thumbnail(payload)
-        try:
-            # Handles both flagged thumbnail tasks and pending-queue catch-up.
-            discord_notify.notify_vod_from_thumbnail_payload(payload or {})
-        except Exception as exc:
-            logging.error("Discord VOD-Notify fehlgeschlagen: %s", exc)
         return
     if task_type == 'delete_folder':
         ok = process_delete_folder(payload)
@@ -1466,21 +1161,6 @@ def process_task(task_type, payload):
         ok = process_remux_vod(payload)
         if not ok:
             raise RuntimeError("remux_vod failed")
-        return
-    if task_type == 'drive_upload':
-        ok = process_drive_upload(payload)
-        if not ok:
-            raise RuntimeError("drive_upload failed")
-        return
-    if task_type == 'drive_sync':
-        ok = process_drive_sync(payload)
-        if not ok:
-            raise RuntimeError("drive_sync failed")
-        return
-    if task_type == 'drive_duration':
-        ok = process_drive_duration(payload)
-        if not ok:
-            raise RuntimeError("drive_duration failed")
         return
     raise RuntimeError(f"unknown task type: {task_type}")
 
@@ -1554,8 +1234,6 @@ def main():
         WORKER_REMUX_THREADS,
         WORKER_TRANSCRIBE_THREADS,
     )
-    last_discord_flush = 0.0
-    maybe_enqueue_drive_sync()
     with ThreadPoolExecutor(max_workers=WORKER_THUMB_THREADS, thread_name_prefix="worker-io") as io_pool, \
          ThreadPoolExecutor(max_workers=WORKER_REMUX_THREADS, thread_name_prefix="worker-remux") as remux_pool, \
          ThreadPoolExecutor(max_workers=WORKER_TRANSCRIBE_THREADS, thread_name_prefix="worker-asr") as asr_pool:
@@ -1572,40 +1250,6 @@ def main():
                 _safe_run(cleanup_old_tasks)
                 _safe_run(cleanup_stale_thumbnail_locks)
                 _safe_run(backfill_missing_thumbnails)
-                _safe_run(maybe_enqueue_drive_sync)
-                now = time.time()
-                if now - last_discord_flush >= 60:
-                    try:
-                        flushed = discord_notify.flush_pending_vod_ready(limit=20)
-                        if flushed:
-                            logging.info("Discord pending VOD notifies: %s", flushed)
-                    except Exception as exc:
-                        logging.error("Discord pending flush fehlgeschlagen: %s", exc)
-                    try:
-                        role_sync = discord_notify.sync_live_ping_reactions()
-                        if role_sync:
-                            logging.info("Discord Live-Ping role sync changes: %s", role_sync)
-                    except Exception as exc:
-                        logging.error("Discord Live-Ping sync fehlgeschlagen: %s", exc)
-                    try:
-                        clip_posts = discord_notify.poll_twitch_clips()
-                        if clip_posts:
-                            logging.info("Discord Twitch clip notifies: %s", clip_posts)
-                    except Exception as exc:
-                        logging.error("Discord Twitch clip poll fehlgeschlagen: %s", exc)
-                    try:
-                        chat_cmds = chat_clip.poll_discord_clip_commands()
-                        if chat_cmds:
-                            logging.info("Discord !clip commands handled: %s", chat_cmds)
-                    except Exception as exc:
-                        logging.error("Discord !clip poll fehlgeschlagen: %s", exc)
-                    try:
-                        bot_cmds = streamer_bot.poll_discord_bot_commands()
-                        if bot_cmds:
-                            logging.info("Streamer-bot Discord commands: %s", bot_cmds)
-                    except Exception as exc:
-                        logging.error("Streamer-bot Discord poll fehlgeschlagen: %s", exc)
-                    last_discord_flush = now
 
                 allowed = _types_with_capacity()
                 if not allowed:

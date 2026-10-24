@@ -40,7 +40,6 @@
               <span class="ns-pulse-dot"></span>
               {% if online %}ON AIR{% else %}OFFLINE{% endif %}
             </span>
-            {% if on_drive %}<span class="ns-pill ns-pill-drive">DRIVE SYNC</span>{% endif %}
             {% if streamer in live_channels %}<span class="ns-pill ns-pill-live">AUFNAHME AKTIV</span>{% endif %}
             <span>•</span>
             <span>{{ cnt_vod }} Aufnahmen</span>
@@ -197,11 +196,6 @@
       <a href="{{ url_for('streamer_view', streamer=streamer, type='clip') }}" class="ns-btn {% if current_type == 'clip' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
         Clips ({{ cnt_clip }})
       </a>
-      {% if session.user_role == 'admin' and cnt_media %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type='media') }}" class="ns-btn {% if current_type == 'media' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
-        Dateien ({{ cnt_media }})
-      </a>
-      {% endif %}
     </div>
 
     <!-- Filter Form -->
@@ -231,21 +225,21 @@
   {% if total_pages and total_pages > 1 %}
   <nav class="ns-pagination ns-pagination-top" aria-label="Seiten-Navigation (Oben)">
     <div class="ns-pagination-info">
-      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> &bull; {{ total_count }} {% if current_type == 'clip' %}Clips{% elif current_type == 'media' %}Dateien{% else %}Aufnahmen{% endif %}
+      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> &bull; {{ total_count }} {% if current_type == 'clip' %}Clips{% else %}Aufnahmen{% endif %}
     </div>
     <div class="ns-pagination-controls pagination-pages">
       {% if page > 1 %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" aria-label="Vorherige Seite">&lsaquo; Zur&uuml;ck</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" aria-label="Vorherige Seite">&lsaquo; Zur&uuml;ck</a>
       {% endif %}
       {% for p in page_numbers %}
         {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
-        <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
+        <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
         {% elif p == page - 3 or p == page + 3 %}
         <span class="ns-page-ellipsis">&hellip;</span>
         {% endif %}
       {% endfor %}
       {% if page < total_pages %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" aria-label="N&auml;chste Seite">Weiter &rsaquo;</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" aria-label="N&auml;chste Seite">Weiter &rsaquo;</a>
       {% endif %}
     </div>
   </nav>
@@ -253,38 +247,6 @@
 
   <!-- 5. Cinema Video Grid -->
   <section class="ns-video-grid">
-    {% if current_type == 'media' %}
-      {% for a in drive_assets %}
-      <article class="ns-video-card">
-        <div class="ns-thumb-frame">
-          <a href="{{ a.open_url }}" target="_blank" style="display: block; width: 100%; height: 100%; background: #1f2937;">
-            {% if a.thumb_url %}
-            <img src="{{ a.thumb_url }}" alt="" loading="lazy" style="object-fit: contain;">
-            {% else %}
-            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:48px;">
-              📁
-            </div>
-            {% endif %}
-          </a>
-          <div class="ns-card-overlay-top">
-            <span class="ns-overlay-chip" style="background-color: var(--ns-drive-blue);">{{ a.kind|upper }}</span>
-          </div>
-        </div>
-        <div class="ns-video-meta">
-          <a href="{{ a.open_url }}" target="_blank" class="ns-video-title">
-            {{ a.name }}
-          </a>
-          <div class="ns-video-subline">
-            <span>{{ a.date_str }}</span>
-            <span>•</span>
-            <strong>{{ a.size_str }}</strong>
-          </div>
-        </div>
-      </article>
-      {% else %}
-      <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--ns-text-muted);">Keine Dateien gefunden.</div>
-      {% endfor %}
-    {% else %}
       {% for f in files %}
       <article class="ns-video-card" data-watch-card data-watch-key="{{ f.watch_key }}" data-done-key="{{ f.done_key }}" data-duration-sec="{{ f.duration_sec }}">
         <div class="ns-thumb-frame">
@@ -327,29 +289,28 @@
       {% else %}
       <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--ns-text-muted); background: var(--nebula-bg-surface); border-radius: 12px; border: 1px dashed var(--nebula-border);">Keine Aufnahmen gefunden.</div>
       {% endfor %}
-    {% endif %}
   </section>
 
   {% if total_pages and total_pages > 1 %}
   <nav class="streamer-pagination-panel ns-pagination ns-pagination-bottom" aria-label="Seiten-Navigation">
     <div class="ns-pagination-info">
-      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> &bull; Insgesamt <strong>{{ total_count }}</strong> {% if current_type == 'clip' %}Clips{% elif current_type == 'media' %}Dateien{% else %}Aufnahmen{% endif %}
+      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> &bull; Insgesamt <strong>{{ total_count }}</strong> {% if current_type == 'clip' %}Clips{% else %}Aufnahmen{% endif %}
     </div>
     <div class="ns-pagination-controls pagination-pages">
       {% if page > 2 %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" title="Erste Seite">&laquo; Erste</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" title="Erste Seite">&laquo; Erste</a>
       {% endif %}
       {% if page > 1 %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn">&lsaquo; Zur&uuml;ck</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn">&lsaquo; Zur&uuml;ck</a>
       {% endif %}
       {% for p in page_numbers %}
-        <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
+        <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
       {% endfor %}
       {% if page < total_pages %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn">Weiter &rsaquo;</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn">Weiter &rsaquo;</a>
       {% endif %}
       {% if page < total_pages - 1 %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=total_pages, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, kind=media_kind or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" title="Letzte Seite">Letzte &raquo;</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=total_pages, q=q or None, sort=sort if sort != 'newest' else None, category=category or None, platform=platform or None, show_empty='1' if show_empty else None) }}" class="pagination-nav ns-page-btn" title="Letzte Seite">Letzte &raquo;</a>
       {% endif %}
     </div>
     {% if total_pages > 3 %}
@@ -359,7 +320,6 @@
       {% if sort and sort != 'newest' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
       {% if category %}<input type="hidden" name="cat" value="{{ category }}">{% endif %}
       {% if platform %}<input type="hidden" name="platform" value="{{ platform }}">{% endif %}
-      {% if media_kind %}<input type="hidden" name="kind" value="{{ media_kind }}">{% endif %}
       {% if show_empty %}<input type="hidden" name="show_empty" value="1">{% endif %}
       <label for="ns-jump-page" style="font-size:12px; color:var(--ns-text-muted);">Seite:</label>
       <input id="ns-jump-page" type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" class="ns-input-field" style="width:62px; padding:4px 8px; font-size:12px; text-align:center;">

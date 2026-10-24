@@ -12,14 +12,33 @@ import logging
 import os
 import re
 import subprocess
+import threading
 import time
 import uuid
+from contextlib import contextmanager
 from typing import Any
 
 from core import config
-from discord_bots import discord_notify
 
 logger = logging.getLogger(__name__)
+_QUEUE_THREAD_LOCK = threading.Lock()
+
+
+@contextmanager
+def _file_lock(path: str):
+    lock_path = f"{path}.lock"
+    os.makedirs(os.path.dirname(lock_path) or ".", exist_ok=True)
+    with _QUEUE_THREAD_LOCK:
+        try:
+            import fcntl  # type: ignore
+            with open(lock_path, "a", encoding="utf-8") as fh:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        except ImportError:
+            yield
 
 KNOWN_EVENTS = (
     "live",
@@ -187,7 +206,7 @@ def enqueue(
         "created_at": time.time(),
         "status": "ready",
     }
-    with discord_notify._FileLock(queue_path()):
+    with _file_lock(queue_path()):
         data = _load_queue()
         items = [i for i in data.get("items") or [] if isinstance(i, dict)]
         # Drop stale / done
@@ -214,7 +233,7 @@ def enqueue(
 
 
 def claim_next() -> dict[str, Any] | None:
-    with discord_notify._FileLock(queue_path()):
+    with _file_lock(queue_path()):
         data = _load_queue()
         items = data.get("items") or []
         playing = next((i for i in items if i.get("status") == "playing"), None)
@@ -236,7 +255,7 @@ def claim_next() -> dict[str, Any] | None:
 
 
 def ack(item_id: str) -> bool:
-    with discord_notify._FileLock(queue_path()):
+    with _file_lock(queue_path()):
         data = _load_queue()
         for i in data.get("items") or []:
             if i.get("id") == item_id:

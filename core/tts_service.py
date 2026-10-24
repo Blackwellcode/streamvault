@@ -24,7 +24,6 @@ from contextlib import contextmanager
 from typing import Any
 
 from core import config
-from discord_bots import discord_notify
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +77,7 @@ def token_for_streamer(streamer: str) -> str:
     specific = os.environ.get(f"TTS_OVERLAY_TOKEN_{name.upper()}", "").strip()
     if specific:
         return specific
-    # The legacy single token belongs to Seele. It must not open another queue.
-    if name == "seele_x3":
-        return overlay_token()
-    return ""
+    return overlay_token()
 
 
 def token_ok_for(provided: str, streamer: str) -> bool:
@@ -174,8 +170,19 @@ def _save_state(streamer: str, data: dict[str, Any]) -> None:
 @contextmanager
 def _state_lock(streamer: str) -> Iterator[None]:
     """Cross-process + in-process lock around TTS queue JSON."""
-    with discord_notify._FileLock(_state_path(streamer)), _synth_lock:
-        yield
+    lock_path = f"{_state_path(streamer)}.lock"
+    os.makedirs(os.path.dirname(lock_path) or ".", exist_ok=True)
+    with _synth_lock:
+        try:
+            import fcntl  # type: ignore
+            with open(lock_path, "a", encoding="utf-8") as fh:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        except ImportError:
+            yield
 
 
 def sanitize_text(text: str) -> str:

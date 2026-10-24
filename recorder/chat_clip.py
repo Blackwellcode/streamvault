@@ -14,7 +14,7 @@ import urllib.parse
 
 from recorder import clip_engine
 from core import config
-from discord_bots import discord_notify
+from core import database
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,8 @@ def clip_enabled_for(streamer: str) -> bool:
     if not name:
         return False
     if not raw:
-        return discord_notify.channel_is_recorded(name)
+        conf = database.get_channel_config(name)
+        return bool(conf and conf.get("record"))
     allowed = {
         re.sub(r"[^a-z0-9_]+", "", part.strip().lower())
         for part in raw.split(",")
@@ -208,25 +209,8 @@ def notify_discord_chat_clip(
     title: str,
     duration: int,
 ) -> bool:
-    channel_id = discord_notify.clip_channel_id()
-    token = discord_notify.bot_token()
-    if not token or not channel_id:
-        return False
-    if not discord_notify.notify_streamer_allowed(streamer):
-        return False
-    if not file_path or not os.path.isfile(file_path):
-        return False
-
-    upload_path = _compress_clip(file_path)
-    clip_title = title.strip() if title.strip() else f"Clip von {username}"
-    content = f"🎬 **{clip_title}**\nvon **{username}** · !clip · {duration}s"
-    # Video attachment only (no external links).
-    return discord_notify.post_channel_message(
-        channel_id,
-        content,
-        file_path=upload_path,
-        token=token,
-    )
+    _ = (streamer, file_path, username, title, duration)
+    return False
 
 
 def _create_and_post(
@@ -261,27 +245,16 @@ def _create_and_post(
             return
         logger.info("!clip erstellt: %s (von %s, source=%s)", out_path, username, source_used)
 
-        posted = notify_discord_chat_clip(
-            streamer,
-            out_path,
-            username=username,
-            title=title,
-            duration=duration,
-        )
-        if posted:
-            logger.info("!clip Discord-Post ok: %s", streamer)
-            try:
-                from core import alert_sounds
+        try:
+            from core import alert_sounds
 
-                alert_sounds.enqueue(
-                    "clip",
-                    streamer=streamer,
-                    label=(title or username)[:40],
-                )
-            except Exception:
-                logger.exception("alert sound hook failed for chat clip")
-        else:
-            logger.warning("!clip Discord-Post fehlgeschlagen (Datei lokal: %s)", out_path)
+            alert_sounds.enqueue(
+                "clip",
+                streamer=streamer,
+                label=(title or username)[:40],
+            )
+        except Exception:
+            logger.exception("alert sound hook failed for chat clip")
     finally:
         with _LOCK:
             _IN_FLIGHT.discard(key)
@@ -301,123 +274,9 @@ def archive_dir_for_streamer(streamer: str) -> str:
     return os.path.join(base, login)
 
 
-def _discord_clip_cmd_state_path() -> str:
-    return os.path.join(config.META_DIR, "discord_clip_cmd_state.json")
-
-
 def poll_discord_clip_commands(limit: int = 30) -> int:
-    """Poll Discord #stream-chat for !clip and create clips (REST, no gateway)."""
-    channel_id = stream_chat_channel_id()
-    token = discord_notify.bot_token()
-    if not token or not channel_id:
-        return 0
-
-    try:
-        msgs = discord_notify._discord_api(
-            "GET",
-            f"/channels/{channel_id}/messages?limit={max(1, min(50, int(limit)))}",
-            token=token,
-        )
-    except urllib.error.HTTPError as exc:
-        if discord_notify.is_discord_channel_error(exc.code):
-            discord_notify.log_discord_access_denied("clip_cmd_poll", channel_id, exc.code)
-        else:
-            logger.exception("Discord !clip poll failed")
-        return 0
-    except Exception:
-        logger.exception("Discord !clip poll failed")
-        return 0
-    if not isinstance(msgs, list):
-        return 0
-
-    state = {}
-    try:
-        import json
-
-        with open(_discord_clip_cmd_state_path(), "r", encoding="utf-8") as handle:
-            state = json.load(handle)
-    except Exception:
-        state = {}
-    if not isinstance(state, dict):
-        state = {}
-    seen = state.get("seen_ids")
-    if not isinstance(seen, dict):
-        seen = {}
-    initialized = bool(state.get("initialized"))
-
-    # First run: seed only, avoid clipping old history.
-    if not initialized:
-        for msg in msgs:
-            mid = str(msg.get("id") or "")
-            if mid:
-                seen[mid] = time.time()
-        state = {"initialized": True, "seen_ids": seen}
-        try:
-            import json
-
-            os.makedirs(config.META_DIR, exist_ok=True)
-            with open(_discord_clip_cmd_state_path(), "w", encoding="utf-8") as handle:
-                json.dump(state, handle, indent=2)
-        except Exception:
-            logger.exception("Could not persist discord clip cmd state")
-        logger.info("Discord !clip watch seeded (%s messages)", len(seen))
-        return 0
-
-    handled = 0
-    # Oldest first
-    for msg in sorted(msgs, key=lambda m: int(m.get("id") or 0)):
-        mid = str(msg.get("id") or "")
-        if not mid or mid in seen:
-            continue
-        author = msg.get("author") if isinstance(msg.get("author"), dict) else {}
-        if author.get("bot"):
-            seen[mid] = time.time()
-            continue
-        content = str(msg.get("content") or "")
-        if parse_clip_command(content) is None:
-            seen[mid] = time.time()
-            continue
-
-        username = str(
-            author.get("global_name")
-            or author.get("username")
-            or "discord"
-        ).strip()
-        names = clip_streamers_primary()
-        if not names:
-            seen[mid] = time.time()
-            continue
-        streamer = names[0]
-        archive_dir = archive_dir_for_streamer(streamer)
-        outcome = request_clip_outcome(streamer, archive_dir, username, content)
-        seen[mid] = time.time()
-        if not outcome:
-            continue
-        handled += 1
-        # ✅ only when a job actually started; otherwise mild feedback.
-        emoji = "✅" if outcome == "started" else "⌛"
-        try:
-            discord_notify._discord_api(
-                "PUT",
-                f"/channels/{channel_id}/messages/{mid}/reactions/"
-                f"{urllib.parse.quote(emoji)}/@me",
-                token=token,
-            )
-        except Exception:
-            pass
-
-    if len(seen) > 300:
-        seen = dict(sorted(seen.items(), key=lambda item: item[1])[-200:])
-    state = {"initialized": True, "seen_ids": seen}
-    try:
-        import json
-
-        os.makedirs(config.META_DIR, exist_ok=True)
-        with open(_discord_clip_cmd_state_path(), "w", encoding="utf-8") as handle:
-            json.dump(state, handle, indent=2)
-    except Exception:
-        logger.exception("Could not persist discord clip cmd state")
-    return handled
+    _ = limit
+    return 0
 
 
 def clip_streamers_primary() -> list[str]:
@@ -432,7 +291,7 @@ def clip_streamers_primary() -> list[str]:
             for part in raw.split(",")
             if part.strip()
         ]
-    return list(discord_notify.clip_streamers())
+    return [str(c.get("name") or "") for c in database.list_channel_configs(mode="record") if c.get("name")]
 
 
 def request_clip_from_chat(

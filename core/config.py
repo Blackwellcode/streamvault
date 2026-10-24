@@ -30,6 +30,7 @@ def _load_env_file(path):
 
 
 _load_env_file(os.path.join(APP_DIR, ".env"))
+_load_env_file("/etc/streamvault/env")
 _load_env_file("/etc/streamrecorder/env")
 if os.environ.get("ENV_FILE"):
     _load_env_file(os.environ.get("ENV_FILE"))
@@ -40,8 +41,6 @@ def _env_flag(name, default=False):
     if raw is None or str(raw).strip() == "":
         return bool(default)
     return str(raw).strip().lower() in ("1", "true", "yes", "on")
-
-
 
 
 def _normalize_twitch_oauth_token(token):
@@ -80,7 +79,6 @@ def streamlink_twitch_config_args(token, config_dir=None):
         except OSError:
             pass
     except OSError:
-        # Last resort: keep streams working, but prefer config-file path above.
         return ["--no-config", "--twitch-api-header", f"Authorization=OAuth {token}"]
     return ["--config", path]
 
@@ -90,9 +88,6 @@ def streamlink_twitch_auth_args(token):
     return streamlink_twitch_config_args(token)
 
 
-# Captured at import (tests restore os.environ after load). Used only for
-# Streamlink HLS access tokens — chat stays anonymous justinfan, so this
-# account does not appear in the streamer's chatter/viewer list.
 RECORDER_TWITCH_OAUTH_TOKEN = _normalize_twitch_oauth_token(
     os.environ.get("STREAM_RECORDER_TWITCH_OAUTH", "")
 )
@@ -105,8 +100,6 @@ else:
         or ""
     )
 LIVE_TWITCH_OAUTH_ENABLED = bool(LIVE_TWITCH_OAUTH_TOKEN)
-# Mobile Live player is temporarily off until the mobile HLS/watch path is fixed.
-# Re-enable with MOBILE_LIVE_ENABLED=1 in /etc/streamrecorder/env.
 MOBILE_LIVE_ENABLED = _env_flag("MOBILE_LIVE_ENABLED", True)
 
 _default_base = os.path.join(APP_DIR, "data") if os.path.isdir(os.path.join(APP_DIR, "data")) else APP_DIR
@@ -119,7 +112,7 @@ THUMB_ROOT = os.environ.get("VOD_THUMB_DIR", os.path.join(BASE_DIR, ".thumbs"))
 META_DIR = os.environ.get("VOD_META_DIR", os.path.join(BASE_DIR, ".meta"))
 
 if os.path.isdir("/dev/shm"):
-    DEFAULT_LIVE_HLS_ROOT = os.path.join("/dev/shm", "streamrecorder_hls")
+    DEFAULT_LIVE_HLS_ROOT = os.path.join("/dev/shm", "streamvault_hls")
 else:
     DEFAULT_LIVE_HLS_ROOT = os.path.join(BASE_DIR, ".hls_live")
 LIVE_HLS_ROOT = os.environ.get("LIVE_HLS_DIR", DEFAULT_LIVE_HLS_ROOT)
@@ -151,128 +144,6 @@ LEGACY_LIVE_CHANNEL_FILE = os.path.join(BASE_DIR, ".live_channels.json")
 LEGACY_USERS_FILE = os.path.join(META_DIR, "users.json")
 LEGACY_BANS_FILE = os.path.join(META_DIR, "bans.json")
 
-# Google Drive archive (opt-in). Secrets live in /etc/streamrecorder, never in the UI.
-GDRIVE_ENABLED = _env_flag("GDRIVE_ENABLED", False)
-GDRIVE_ROOT_NAME = (os.environ.get("GDRIVE_ROOT_NAME", "streamvault.archive") or "streamvault.archive").strip()
-GDRIVE_ROOT_FOLDER_ID = os.environ.get("GDRIVE_ROOT_FOLDER_ID", "").strip()
-GDRIVE_SERVICE_ACCOUNT_FILE = os.environ.get(
-    "GDRIVE_SERVICE_ACCOUNT_FILE",
-    "/etc/streamrecorder/gdrive-service-account.json",
-).strip()
-GDRIVE_OAUTH_TOKEN_FILE = os.environ.get(
-    "GDRIVE_OAUTH_TOKEN_FILE",
-    "/etc/streamrecorder/gdrive-token.json",
-).strip()
-GDRIVE_OAUTH_CLIENT_FILE = os.environ.get(
-    "GDRIVE_OAUTH_CLIENT_FILE",
-    "/etc/streamrecorder/gdrive-oauth-client.json",
-).strip()
-GDRIVE_SHARED_DRIVE_ID = os.environ.get("GDRIVE_SHARED_DRIVE_ID", "").strip()
-try:
-    GDRIVE_SYNC_INTERVAL_SEC = max(60, int(os.environ.get("GDRIVE_SYNC_INTERVAL_SEC", "300")))
-except ValueError:
-    GDRIVE_SYNC_INTERVAL_SEC = 300
-try:
-    GDRIVE_UPLOAD_BATCH = max(1, int(os.environ.get("GDRIVE_UPLOAD_BATCH", "4")))
-except ValueError:
-    GDRIVE_UPLOAD_BATCH = 4
-try:
-    GDRIVE_DURATION_BACKFILL_BATCH = max(0, int(os.environ.get("GDRIVE_DURATION_BACKFILL_BATCH", "40")))
-except ValueError:
-    GDRIVE_DURATION_BACKFILL_BATCH = 40
-
-
-def _parse_folder_map(raw):
-    """Parse GDRIVE_FOLDER_MAP like 'beatek_:Beatek,foo:Bar' → {slug: Title}."""
-    mapping = {}
-    for part in str(raw or "").split(","):
-        part = part.strip()
-        if not part or ":" not in part:
-            continue
-        src, dst = part.split(":", 1)
-        src = "".join(ch for ch in src.strip().lower() if ch.isalnum() or ch == "_")
-        dst = dst.strip()
-        if src and dst:
-            mapping[src] = dst
-    return mapping
-
-
-# Local archive slug → Drive folder display name (e.g. channel_a uploads into "Channel A").
-GDRIVE_FOLDER_MAP = _parse_folder_map(os.environ.get("GDRIVE_FOLDER_MAP", ""))
-# After a successful Drive upload (size+MD5 verified), remove the local VOD (and chat).
-# KEEP_LOCAL_DAYS postpones that delete so recent VODs play from disk (no Drive quota).
-# Delete is also blocked until .vodcache holds a complete copy (seed/hydrate).
-GDRIVE_DELETE_LOCAL_AFTER_UPLOAD = _env_flag("GDRIVE_DELETE_LOCAL_AFTER_UPLOAD", False)
-GDRIVE_DELETE_LOCAL_CHAT = _env_flag("GDRIVE_DELETE_LOCAL_CHAT", True)
-try:
-    GDRIVE_KEEP_LOCAL_DAYS = max(
-        0, min(90, int(os.environ.get("GDRIVE_KEEP_LOCAL_DAYS", "14")))
-    )
-except ValueError:
-    GDRIVE_KEEP_LOCAL_DAYS = 14
-# Full-file Drive→cache hydrate for newest pins. Prefer local keep + seed; use 1 job.
-GDRIVE_PLAYBACK_HYDRATE = _env_flag("GDRIVE_PLAYBACK_HYDRATE", False)
-# Resume incomplete .chunks for pinned VODs even when full hydrate is off.
-GDRIVE_PLAYBACK_HYDRATE_RESUME = _env_flag("GDRIVE_PLAYBACK_HYDRATE_RESUME", True)
-# Shared Drive downloadQuotaExceeded circuit (seconds). Too short → Play retries extend the ban.
-try:
-    GDRIVE_PLAYBACK_QUOTA_COOLDOWN_SEC = max(
-        300,
-        min(86400, int(os.environ.get("GDRIVE_PLAYBACK_QUOTA_COOLDOWN_SEC", "10800"))),
-    )
-except ValueError:
-    GDRIVE_PLAYBACK_QUOTA_COOLDOWN_SEC = 10800
-try:
-    # Closed byte ranges avoid Google's downloadQuotaExceeded on full/open-ended fetches.
-    # 64 MiB is ~60-90s of typical VOD bitrate so the player is not waiting on Drive
-    # every few seconds.
-    GDRIVE_PLAYBACK_CHUNK_BYTES = max(
-        256 * 1024,
-        int(os.environ.get("GDRIVE_PLAYBACK_CHUNK_BYTES", str(64 * 1024 * 1024))),
-    )
-except ValueError:
-    GDRIVE_PLAYBACK_CHUNK_BYTES = 64 * 1024 * 1024
-try:
-    GDRIVE_PLAYBACK_READAHEAD_BYTES = max(
-        GDRIVE_PLAYBACK_CHUNK_BYTES,
-        int(os.environ.get("GDRIVE_PLAYBACK_READAHEAD_BYTES", str(128 * 1024 * 1024))),
-    )
-except ValueError:
-    GDRIVE_PLAYBACK_READAHEAD_BYTES = 128 * 1024 * 1024
-# Browser-facing live Ranges stay small so deep seeks start streaming immediately
-# instead of blocking on a full 64 MiB hydrate chunk (paused clock, no playback).
-try:
-    GDRIVE_PLAYBACK_LIVE_RANGE_BYTES = max(
-        256 * 1024,
-        min(
-            16 * 1024 * 1024,
-            int(os.environ.get("GDRIVE_PLAYBACK_LIVE_RANGE_BYTES", str(8 * 1024 * 1024))),
-        ),
-    )
-except ValueError:
-    GDRIVE_PLAYBACK_LIVE_RANGE_BYTES = 8 * 1024 * 1024
-GDRIVE_PLAYBACK_CACHE = _env_flag("GDRIVE_PLAYBACK_CACHE", True)
-GDRIVE_PLAYBACK_CACHE_DIR = (
-    os.environ.get("GDRIVE_PLAYBACK_CACHE_DIR") or os.path.join(BASE_DIR, ".vodcache")
-).strip()
-try:
-    GDRIVE_PLAYBACK_CACHE_MAX_BYTES = max(
-        512 * 1024 * 1024,
-        int(os.environ.get("GDRIVE_PLAYBACK_CACHE_MAX_BYTES", str(256 * 1024 * 1024 * 1024))),
-    )
-except ValueError:
-    GDRIVE_PLAYBACK_CACHE_MAX_BYTES = 256 * 1024 * 1024 * 1024
-try:
-    GDRIVE_PLAYBACK_CACHE_JOBS = max(1, min(6, int(os.environ.get("GDRIVE_PLAYBACK_CACHE_JOBS", "6"))))
-except ValueError:
-    GDRIVE_PLAYBACK_CACHE_JOBS = 6
-# Keep VODs newer than this many days fully cached (pinned against eviction).
-try:
-    GDRIVE_PLAYBACK_PIN_NEWEST_DAYS = max(
-        0, min(90, int(os.environ.get("GDRIVE_PLAYBACK_PIN_NEWEST_DAYS", "7")))
-    )
-except ValueError:
-    GDRIVE_PLAYBACK_PIN_NEWEST_DAYS = 7
 try:
     VOD_MAX_CONCURRENT_WATCHERS = max(0, int(os.environ.get("VOD_MAX_CONCURRENT_WATCHERS", "20")))
 except ValueError:
@@ -289,42 +160,22 @@ try:
     VOD_SLOT_HEARTBEAT_SEC = max(5, int(os.environ.get("VOD_SLOT_HEARTBEAT_SEC", "15")))
 except ValueError:
     VOD_SLOT_HEARTBEAT_SEC = 15
-# Bootstrap only: used when META_DIR/maintenance.json does not exist yet.
-# Prefer the Admin → Wartungsmodus toggle (runtime state) over this env flag.
+
 MAINTENANCE_MODE = _env_flag("MAINTENANCE_MODE", False)
-# Daily metadata/system backup upload into Drive root (see scripts/backup_streamrecorder.sh).
-GDRIVE_SYSTEM_BACKUP = _env_flag("GDRIVE_SYSTEM_BACKUP", True)
-GDRIVE_SYSTEM_BACKUP_FOLDER = (
-    os.environ.get("GDRIVE_SYSTEM_BACKUP_FOLDER", "System-Backups") or "System-Backups"
-).strip()
-
 DISCORD_ERROR_WEBHOOK_URL = os.environ.get("DISCORD_ERROR_WEBHOOK_URL", "").strip()
-
-_public_base = os.environ.get("VOD_PUBLIC_BASE", "http://localhost:5000").strip().rstrip("/")
-DISCORD_ERROR_WEBHOOK_AVATAR = os.environ.get(
-    "DISCORD_ERROR_WEBHOOK_AVATAR", 
-    f"{_public_base}/static/error_logger_avatar.jpg"
-).strip()
-
-def setup_discord_logging():
-    import logging
-    try:
-        from discord_bots.discord_notify import DiscordLogHandler
-        handler = DiscordLogHandler()
-        handler.setLevel(logging.ERROR)
-        logging.getLogger().addHandler(handler)
-    except Exception as e:
-        print(f"Failed to setup Discord logging: {e}")
 
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
 if SENTRY_DSN:
-    import sentry_sdk
-    from sentry_sdk.integrations.flask import FlaskIntegration
-    from sentry_sdk.integrations.threading import ThreadingIntegration
-    
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[FlaskIntegration(), ThreadingIntegration(propagate_hub=True)],
-        traces_sample_rate=1.0,
-        send_default_pii=True
-    )
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        from sentry_sdk.integrations.threading import ThreadingIntegration
+
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[FlaskIntegration(), ThreadingIntegration(propagate_hub=True)],
+            traces_sample_rate=1.0,
+            send_default_pii=True,
+        )
+    except ImportError:
+        pass

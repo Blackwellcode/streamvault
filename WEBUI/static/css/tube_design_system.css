@@ -2158,7 +2158,6 @@ a.btn:active,
 
 /* 3. GPU-accelerated smooth 120fps scrolling on mobile */
 .chat-list,
-.vod-comments-list,
 .content,
 .main,
 .page-mobile-index {
@@ -2174,13 +2173,6 @@ body:is(.page-mobile-player, .page-twitch-watch-mobile) .chat-list {
   overscroll-behavior: contain !important;
   padding: 8px 12px max(44px, calc(env(safe-area-inset-bottom, 20px) + 24px)) 12px !important;
   box-sizing: border-box !important;
-}
-
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .tube-chat-compose {
-  padding: 6px 12px max(10px, env(safe-area-inset-bottom, 10px)) 12px !important;
-  flex-shrink: 0 !important;
-  background: var(--ns-bg-surface, #12141c) !important;
-  border-top: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
 }
 
 /* 5. Landscape Mode & Chat Toggle Button Guaranteed Visibility */
@@ -2405,62 +2397,6 @@ body:is(.page-mobile-player, .page-twitch-watch-mobile) .mobile-landscape-chat-t
   }
 }
 
-/* 7. VOD Comments inside Unified Mobile Tab Pane */
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-section.mobile-comments {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-}
-
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-expanded {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  height: 100% !important;
-  overflow: hidden !important;
-}
-
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-expanded-header {
-  display: none !important;
-}
-
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-compose {
-  padding: 10px 14px !important;
-  flex-shrink: 0 !important;
-  background: var(--ns-bg-surface, #12141c) !important;
-  border-bottom: 1px solid var(--ns-border-subtle, rgba(255, 255, 255, 0.08)) !important;
-  gap: 10px !important;
-}
-
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comment-avatar {
-  width: 32px !important;
-  height: 32px !important;
-  font-size: 13px !important;
-  background: var(--ns-brand-crimson, #e11d48) !important;
-}
-
-body:is(.page-mobile-player, .page-twitch-watch-mobile) .vod-comments-list {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  height: auto !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  padding: 10px 14px max(44px, calc(env(safe-area-inset-bottom, 20px) + 24px)) 14px !important;
-  box-sizing: border-box !important;
-}
-
-
 /* --------------------------------------------------------------------------
    Mobile Player Top Overlay Quick Controls (Play/Pause, Mute, Clip)
    -------------------------------------------------------------------------- */
@@ -2677,103 +2613,6 @@ body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod
   color: #fbbf24 !important;
 }
 
-/* Split Chat: VOD Comments column matching live Tubechat */
-.vod-comments-split-col {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 50% !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.vod-comments-split-col .vod-comments-section {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 0% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: none !important;
-}
-
-.vod-comments-split-col .vod-comments-expanded {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 1 0% !important;
-  min-height: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-.vod-comments-split-col .vod-comments-list {
-  flex: 1 1 0% !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  padding: 0 12px !important;
-  margin: 0 !important;
-}
-
-.vod-comments-split-col .vod-comment-item {
-  padding: 8px 0 !important;
-  gap: 10px !important;
-}
-
-.vod-comments-split-col .vod-comment-avatar {
-  width: 28px !important;
-  height: 28px !important;
-  font-size: 12px !important;
-}
-
-.vod-comments-compose-tube {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 8px 12px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: var(--ns-bg-surface-raised, #161922) !important;
-  flex-shrink: 0 !important;
-}
-
-.vod-comments-compose-tube input {
-  flex: 1 !important;
-  min-width: 0 !important;
-  background: rgba(0, 0, 0, 0.3) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 6px !important;
-  padding: 7px 10px !important;
-  color: #fff !important;
-  font-size: 13px !important;
-  outline: none !important;
-}
-
-.vod-comments-compose-tube input:focus {
-  border-color: var(--ns-brand-crimson, #e11d48) !important;
-}
-
-.vod-comments-compose-tube .tube-chat-send {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 6px !important;
-  background: var(--ns-brand-crimson, #e11d48) !important;
-  color: #fff !important;
-  border: none !important;
-  cursor: pointer !important;
-  font-size: 14px !important;
-  transition: opacity 0.15s ease !important;
-}
-
-.vod-comments-compose-tube .tube-chat-send:disabled {
-  opacity: 0.35 !important;
-  cursor: not-allowed !important;
-}
-
 /* Admin Title & Description Modal Overlay */
 .vod-admin-overlay[hidden] {
   display: none !important;
@@ -2949,17 +2788,6 @@ body.page-vod .chat-panel.chat-panel-split .chat-split-col .chat-list {
 
 body.page-vod .chat-panel.chat-panel-split .chat-filter-bar {
   flex-shrink: 0 !important;
-}
-
-body.page-vod .chat-panel.chat-panel-split .tube-chat-compose,
-body:is(.page-twitch-watch, .page-twitch-watch-mobile) .tube-chat-compose {
-  display: flex !important;
-  flex-shrink: 0 !important;
-  margin-top: auto !important;
-  min-height: 48px !important;
-  box-sizing: border-box !important;
-  position: relative !important;
-  z-index: 5 !important;
 }
 
 /* Full Viewport Height Desktop Player & Chat (Standard everywhere) */
@@ -4800,10 +4628,6 @@ body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod
   #vodTranscriptPanel,
   #vodAdminMetaOverlay,
   .chat-filter-bar,
-  .vod-comments-split-col,
-  #vodCommentsSection,
-  #chatTabComments,
-  #chatPaneComments,
   .twitch-monitored-pill,
   #self-password-modal,
   form[action*="/remux"],

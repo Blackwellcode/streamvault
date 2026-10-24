@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Streamer Management — StreamVault{% endblock %}
 {% block page_title %}Streamer & Quellen Management{% endblock %}
@@ -26,7 +26,7 @@
       <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex: 2; min-width: 260px;">
-          <input name="channel" placeholder="Twitch-Name (z.B. seele_x3) oder YouTube-URL / @Handle..." required class="ns-input-field" style="width: 100%;">
+          <input name="channel" placeholder="Twitch-Name (z.B. shroud) oder YouTube-URL / @Handle..." required class="ns-input-field" style="width: 100%;">
         </div>
         <div style="flex: 1; min-width: 200px;">
           <input name="archive_name" placeholder="Ziel-Archivordner (optional)" class="ns-input-field" style="width: 100%;">

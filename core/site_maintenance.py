@@ -107,7 +107,7 @@ def load_state():
 
 def is_enabled(scope: str = "global") -> bool:
     """Check if maintenance is active for a given scope.
-    
+
     If global 'enabled' is True, all scopes return True.
     Otherwise, granular scopes ('vod', 'live', 'mobile') are checked individually.
     """
@@ -190,41 +190,16 @@ def save_state(
     return dict(state)
 
 
-def set_enabled(enabled, *, updated_by="", notify_discord=True):
-    """Enable/disable global maintenance. Discord notice on start and reopen when requested."""
+def set_enabled(enabled, *, updated_by="", notify_discord=False):
+    """Enable/disable global maintenance."""
+    _ = notify_discord
     was_enabled = is_enabled("global")
     want = bool(enabled)
-    notified_at = None
-    discord_ok = None
-    discord_error = ""
-
     changing = want != was_enabled
-    if changing and notify_discord:
-        try:
-            try:
-                import discord_notify
-            except ImportError:
-                from discord_bots import discord_notify
-
-            discord_ok = bool(
-                discord_notify.post_maintenance_notice(available_again=not want)
-            )
-            if discord_ok:
-                notified_at = time.time()
-            else:
-                discord_error = (
-                    "Discord-Nachricht konnte nicht gesendet werden "
-                    "(Channel/Rechte prüfen — siehe WebUI-Log)."
-                )
-        except Exception as exc:
-            logger.exception("maintenance Discord notify failed")
-            discord_ok = False
-            discord_error = str(exc)[:200]
-
-    state = save_state(want, updated_by=updated_by, discord_notified_at=notified_at)
+    state = save_state(want, updated_by=updated_by)
     return {
         "state": state,
         "changed": changing,
-        "discord_ok": discord_ok,
-        "discord_error": discord_error,
+        "discord_ok": None,
+        "discord_error": "",
     }

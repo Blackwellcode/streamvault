@@ -223,7 +223,7 @@
       {% endif %}
 
       <!-- Widget 4: Telemetrie & Speicher -->
-      {% if can_access_vods and session.user_role != 'member' and session.user_role != 'beatek_only' and session.user_role != 'live_only' %}
+      {% if can_access_vods and session.user_role != 'member' and session.user_role != 'live_only' %}
       <div class="nebula-side-widget ns-telemetry-bar" style="display:block;">
         <div class="nebula-widget-head">
           <h3>System Telemetrie</h3>
@@ -244,7 +244,7 @@
       {% endif %}
 
       <!-- Widget 5: Direkt-Stream Watch -->
-      {% if session.user_role != 'member' and session.user_role != 'beatek_only' %}
+      {% if session.user_role != 'member' %}
       <div class="nebula-side-widget">
         <div class="nebula-widget-head">
           <h3>Twitch Live-Stream</h3>

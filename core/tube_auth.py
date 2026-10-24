@@ -19,12 +19,10 @@ from werkzeug.security import generate_password_hash
 
 from core import database
 
-VALID_ROLES = {"admin", "viewer", "user", "member", "beatek_only", "live_only"}
-BEATEK_ONLY_ROLE = "beatek_only"
+VALID_ROLES = {"admin", "viewer", "user", "member", "live_only"}
 MEMBER_ROLE = "member"
 LIVE_ONLY_ROLE = "live_only"
 DEFAULT_REGISTER_ROLE = MEMBER_ROLE
-LIVECHAT_MOD_DISCORD_ROLE_NAME = "Livechat-MOD"
 USERNAME_RE = re.compile(r"^[a-zA-Z0-9_-]{3,32}$")
 RESERVED_USERNAMES = {"admin", "root", "system", "anonymous", "guest", "bot", "discord"}
 MIN_PASSWORD_LENGTH = 8
@@ -32,7 +30,6 @@ LOGIN_URL = (os.environ.get("VOD_PUBLIC_BASE") or "http://localhost:5000").rstri
 
 # UI labels
 ROLE_LABELS = {
-    "beatek_only": "Member",
     "member": "Member",
     "live_only": "Live-only",
     "viewer": "Viewer",
@@ -40,7 +37,7 @@ ROLE_LABELS = {
     "admin": "Admin",
 }
 
-# Seeded vod access bases (empty by default; configured per installation or demo)
+# Seeded vod access bases (empty by default; configured per installation)
 _VOD_ACCESS_SEED_BASES = frozenset()
 
 
@@ -49,12 +46,8 @@ def role_label(role: str | None) -> str:
     return ROLE_LABELS.get(key, key)
 
 
-def is_beatek_only(role: str | None) -> bool:
-    return str(role or "").strip().lower() in (BEATEK_ONLY_ROLE, MEMBER_ROLE)
-
-
 def is_member(role: str | None) -> bool:
-    return is_beatek_only(role)
+    return str(role or "").strip().lower() == MEMBER_ROLE
 
 
 def is_live_only(role: str | None) -> bool:
@@ -80,9 +73,8 @@ def _slug_base(slug: str) -> str:
 
 
 def _expand_access_slugs(raw_slugs) -> set[str]:
-    """Expand stored bases into common archive/Drive aliases."""
+    """Expand stored bases into common archive aliases."""
     slugs: set[str] = set()
-    bases: set[str] = set()
     for raw in raw_slugs or []:
         text = str(raw or "").strip()
         if not text:
@@ -90,44 +82,16 @@ def _expand_access_slugs(raw_slugs) -> set[str]:
         base = _slug_base(text)
         if not base:
             continue
-        bases.add(base)
         slugs.add(base)
         slugs.add(f"{base}_")
         slugs.add(text)
         slugs.add(text.lower())
-    try:
-        from core import gdrive
-
-        for src, title in (gdrive.folder_map() or {}).items():
-            src_n = str(src or "").strip()
-            dest = gdrive.normalize_folder_slug(title) or ""
-            if _slug_base(src_n) in bases or _slug_base(dest) in bases:
-                if src_n:
-                    slugs.add(src_n)
-                if dest:
-                    slugs.add(dest)
-                    slugs.add(f"{dest}_")
-    except Exception:
-        pass
-    try:
-        for folder in database.list_drive_folders():
-            name = str(folder.get("streamer") or "").strip()
-            title = str(folder.get("title") or "").strip()
-            if _slug_base(name) in bases or _slug_base(title) in bases:
-                if name:
-                    slugs.add(name)
-                base = _slug_base(name) or _slug_base(title)
-                if base:
-                    slugs.add(base)
-                    slugs.add(f"{base}_")
-    except Exception:
-        pass
     return {s for s in slugs if s}
 
 
 def list_default_vod_access_slugs() -> list[str]:
     try:
-        rows = database.list_role_vod_access(BEATEK_ONLY_ROLE)
+        rows = database.list_role_vod_access(MEMBER_ROLE)
     except Exception:
         rows = []
     if rows:
@@ -136,10 +100,10 @@ def list_default_vod_access_slugs() -> list[str]:
 
 
 def effective_vod_access_bases(role: str | None = None) -> list[str]:
-    """Stored allowlist bases for a role (Discord-Member by default)."""
-    role_key = normalize_role(role or BEATEK_ONLY_ROLE, default=BEATEK_ONLY_ROLE)
-    if role_key != BEATEK_ONLY_ROLE:
-        # Only Discord-Member uses a restricted VOD allowlist.
+    """Stored allowlist bases for a role (Member by default)."""
+    role_key = normalize_role(role or MEMBER_ROLE, default=MEMBER_ROLE)
+    if role_key != MEMBER_ROLE:
+        # Only Member uses a restricted VOD allowlist.
         return []
     try:
         rows = database.list_role_vod_access(role_key)
@@ -150,12 +114,12 @@ def effective_vod_access_bases(role: str | None = None) -> list[str]:
     return list_default_vod_access_slugs()
 
 
-def beatek_related_slugs(role: str | None = None) -> set[str]:
-    """Slugs the Discord-Member role may access."""
-    return _expand_access_slugs(effective_vod_access_bases(role or BEATEK_ONLY_ROLE))
+def member_related_slugs(role: str | None = None) -> set[str]:
+    """Slugs the Member role may access."""
+    return _expand_access_slugs(effective_vod_access_bases(role or MEMBER_ROLE))
 
 
-def streamer_allowed_for_beatek_only(
+def streamer_allowed_for_member(
     streamer: str,
     related_slugs: list[str] | None = None,
     username: str | None = None,
@@ -163,7 +127,7 @@ def streamer_allowed_for_beatek_only(
 ) -> bool:
     # username kept for call-site compatibility; allowlist is per role.
     _ = username
-    allow = beatek_related_slugs(role or BEATEK_ONLY_ROLE)
+    allow = member_related_slugs(role or MEMBER_ROLE)
     allow_bases = {_slug_base(s) for s in allow}
     candidates = set(related_slugs or [])
     raw = str(streamer or "").strip()
@@ -339,9 +303,8 @@ def approve_username(username: str) -> dict[str, Any]:
             "Freigabe erst nach Zustimmung auf der Website oder bei erneuter Registrierung."
         )
     database.set_user_active(row["username"], True)
-    # Assign beatek_only if still default/empty viewer-from-discord pending.
     role = normalize_role(row.get("role"), default=DEFAULT_REGISTER_ROLE)
-    if role not in ("admin", "viewer", BEATEK_ONLY_ROLE, LIVE_ONLY_ROLE):
+    if role not in ("admin", "viewer", MEMBER_ROLE, LIVE_ONLY_ROLE):
         role = DEFAULT_REGISTER_ROLE
         database.set_user_role(row["username"], role)
     updated = database.get_user(row["username"]) or row
@@ -381,10 +344,11 @@ def reset_password_for_discord(discord_id: str) -> dict[str, Any]:
 
 
 def status_for_discord(discord_id: str) -> dict[str, Any] | None:
+    from core import tube_terms
+
     row = database.get_user_by_discord_id(str(discord_id).strip())
     if not row:
         return None
-        from core import tube_terms
 
     consent = tube_terms.status_for_user_row(row)
     return {
@@ -432,32 +396,3 @@ def credentials_message(username: str, password: str, *, active: bool) -> str:
         f"Zugang: Standard-VODs (nach Freigabe).\n"
         f"Passwort sicher speichern — es wird nur einmal angezeigt."
     )
-
-
-def livechat_mod_discord_role_id() -> str:
-    return (os.environ.get("DISCORD_LIVECHAT_MOD_ROLE_ID") or "").strip()
-
-
-def apply_livechat_mod_from_discord_roles(
-    discord_id: str,
-    role_ids: list[str] | set[str] | None,
-) -> dict[str, Any] | None:
-    """Sync Tube livechat_mod flag from Discord role membership. Returns user row or None."""
-    discord_id = str(discord_id or "").strip()
-    if not discord_id:
-        return None
-    mod_role = livechat_mod_discord_role_id()
-    if not mod_role:
-        return database.get_user_by_discord_id(discord_id)
-    have = {str(r).strip() for r in (role_ids or []) if str(r).strip()}
-    enabled = mod_role in have
-    return database.set_livechat_mod_by_discord_id(discord_id, enabled)
-
-
-def user_is_livechat_mod(username: str | None = None, *, user_row: dict | None = None) -> bool:
-    row = user_row
-    if row is None and username:
-        row = database.get_user(username)
-    if not row:
-        return False
-    return bool(row.get("livechat_mod"))

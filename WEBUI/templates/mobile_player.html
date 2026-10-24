@@ -189,16 +189,6 @@
           }
         });
       });
-
-      // Sync comment count into tab badge
-      const countEl = document.getElementById('vodCommentsCount');
-      const countTabEl = document.getElementById('vodCommentsCountTab');
-      if (countEl && countTabEl) {
-        const obs = new MutationObserver(() => {
-          countTabEl.textContent = countEl.textContent || '0';
-        });
-        obs.observe(countEl, { childList: true, characterData: true, subtree: true });
-      }
     })();
 
     const video = document.getElementById('player');
@@ -207,7 +197,7 @@
     window.StreamVaultVodDebug?.attach(video, {
       streamer: {{ streamer|tojson }},
       filename: {{ filename|tojson }},
-      drive: {{ 'true' if drive_only else 'false' }},
+      drive: false,
       asset: {{ ASSET_VERSION|tojson }},
       mobile: true
     });
