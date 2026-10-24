@@ -11,9 +11,7 @@ services:
         CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
     restart: unless-stopped
     volumes:
-      # Das hier ist der entscheidende Teil:
-      # Dein Ordner /root/Streamrecorder wird direkt in den Container eingebunden.
-      # Alle Videos und Benutzerdaten bleiben erhalten!
+      # Mount application directory into container
       - ./:/app
       - ./docker-worker.conf:/etc/supervisor/conf.d/supervisord.conf
     environment:

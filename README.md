@@ -144,8 +144,11 @@ pip install -r requirements.txt
 python WEBUI/webui.py --demo --port 8080
 ```
 
-### 3. Access Demo
-Open your browser at `http://localhost:8080/login`:
+### 3. Access Local Demo
+> [!NOTE]
+> `http://localhost:8080` is a local loopback address. It is only accessible in your browser **after** you have cloned the repository and started the server locally on your machine.
+
+Once the command above is running, open your browser at `http://localhost:8080/login`:
 - **Username**: `admin`
 - **Password**: `admin`
 
