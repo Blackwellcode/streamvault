@@ -668,6 +668,35 @@ def enqueue_thumbnail_task(media_path, channel, discord_notify_ready=False):
         return False
 
 
+def maybe_enqueue_storage_upload(media_path):
+    """Queue a cloud upload after recording finalisation when enabled."""
+    try:
+        from core.storage import service as storage_service
+
+        settings = storage_service.get_settings()
+        if not settings.get("auto_upload"):
+            return False
+        if not media_path or not os.path.isfile(media_path):
+            return False
+        obj = storage_service.enqueue_upload(media_path, settings=settings)
+        if obj.get("task_id"):
+            logger.info(
+                "Cloud-Upload eingereiht: %s -> %s (Task %s)",
+                obj.get("local_path"),
+                obj.get("remote_path"),
+                obj.get("task_id"),
+            )
+            return True
+        return False
+    except Exception as exc:
+        from core.storage.base import mask_error
+
+        logger.warning(
+            "Cloud-Upload konnte nicht eingeordnet werden: %s", mask_error(exc)
+        )
+        return False
+
+
 def notify_discord_streamer_online(archive_channel, source_channel, recording_metadata, conf, recording_started_ts):
     _ = (archive_channel, source_channel, recording_metadata, conf, recording_started_ts)
 
@@ -3359,22 +3388,29 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                                 archive_channel,
                                 discord_notify_ready=False,
                             )
+                        # Never offload a file that failed integrity validation.
                         if not test_video_file(finalized_path):
                             logger.warning("Video-Datei scheint beschädigt zu sein")
-                        elif (not short_recording) and AUTO_TRANSCRIBE and (
-                            finalized_path.lower().endswith(".mp4") or os.path.exists(output_file)
-                        ):
-                            media_for_tx = output_file if os.path.exists(output_file) else finalized_path
-                            if media_for_tx.lower().endswith(".mp4"):
-                                transcript_path = os.path.splitext(output_file)[0] + ".transcript.txt"
-                                try:
-                                    database.add_task(
-                                        'transcribe',
-                                        {'media': output_file, 'transcript': transcript_path},
-                                    )
-                                    logger.info(f"Automatische Transkription eingeordnet: {output_file}")
-                                except Exception as exc:
-                                    logger.error(f"Konnte automatische Transkription nicht einreihen: {exc}")
+                        else:
+                            # An asynchronous remux may replace the file later; in
+                            # that case the periodic storage sync uploads the final
+                            # version instead of this intermediate file.
+                            if not (AUTO_REMUX and not SYNC_REMUX and not short_recording):
+                                maybe_enqueue_storage_upload(finalized_path)
+                            if (not short_recording) and AUTO_TRANSCRIBE and (
+                                finalized_path.lower().endswith(".mp4") or os.path.exists(output_file)
+                            ):
+                                media_for_tx = output_file if os.path.exists(output_file) else finalized_path
+                                if media_for_tx.lower().endswith(".mp4"):
+                                    transcript_path = os.path.splitext(output_file)[0] + ".transcript.txt"
+                                    try:
+                                        database.add_task(
+                                            'transcribe',
+                                            {'media': output_file, 'transcript': transcript_path},
+                                        )
+                                        logger.info(f"Automatische Transkription eingeordnet: {output_file}")
+                                    except Exception as exc:
+                                        logger.error(f"Konnte automatische Transkription nicht einreihen: {exc}")
                         cleanup_duplicate_recordings(
                             recordings_dir,
                             output_file,

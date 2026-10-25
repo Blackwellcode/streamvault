@@ -65,7 +65,11 @@ echo -e "${BLUE}[3/8] Creating directory structure...${NC}"
 mkdir -p "${INSTALL_DIR}" "${APP_DIR}" "${DATA_DIR}" "${LOG_DIR}" "${CONFIG_DIR}" "${RAMDISK_DIR}"
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}" "${DATA_DIR}" "${LOG_DIR}" "${RAMDISK_DIR}"
 chmod 755 "${INSTALL_DIR}" "${RAMDISK_DIR}"
-chmod 750 "${DATA_DIR}" "${LOG_DIR}"
+# Nginx (www-data) must be able to traverse and read the archive when it
+# serves X-Accel-Redirect responses. Access is still gated by the internal
+# Nginx location and the application's authentication checks.
+chmod 755 "${DATA_DIR}"
+chmod 750 "${LOG_DIR}"
 
 # 4. Deploying Source Code
 echo -e "${BLUE}[4/8] Deploying application codebase...${NC}"
@@ -101,7 +105,8 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 # StreamVault Production Environment
 VOD_HOST=127.0.0.1
 VOD_PORT=8080
-VOD_PUBLIC_BASE=http://localhost:8080
+# Leave empty to derive from the request, or set the public HTTPS origin.
+VOD_PUBLIC_BASE=
 VOD_BASE_DIR=${DATA_DIR}
 LIVE_HLS_DIR=${RAMDISK_DIR}
 VOD_USER=vaultadmin
@@ -161,8 +166,28 @@ RestartSec=10s
 WantedBy=multi-user.target
 EOF
 
+cat > /etc/systemd/system/streamvault-worker.service <<EOF
+[Unit]
+Description=StreamVault - Background Task Worker
+After=network.target streamvault-webui.service streamvault-recorder.service
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_USER}
+WorkingDirectory=${APP_DIR}
+EnvironmentFile=${ENV_FILE}
+Environment="PYTHONPATH=${APP_DIR}"
+ExecStart=${VENV_DIR}/bin/python3 recorder/worker.py
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
-systemctl enable streamvault-webui.service streamvault-recorder.service
+systemctl enable streamvault-webui.service streamvault-recorder.service streamvault-worker.service
 
 # 8. Registering Global CLI Binary
 echo -e "${BLUE}[8/8] Registering global command '/usr/local/bin/streamvault'...${NC}"
@@ -196,14 +221,54 @@ server {
 
     location /_protected/ {
         internal;
+        alias ${DATA_DIR}/;
+        mp4;
+        mp4_buffer_size 1m;
+        mp4_max_buffer_size 10m;
+    }
+
+    location /_protected_files/ {
+        internal;
         alias ${DATA_DIR}/files/;
         mp4;
         mp4_buffer_size 1m;
         mp4_max_buffer_size 10m;
     }
 
-    location /_hls_live/ {
+    location /_protected_vodcache/ {
+        internal;
+        alias ${DATA_DIR}/.vodcache/;
+    }
+
+    location /_protected_thumbs/ {
+        internal;
+        alias ${DATA_DIR}/.thumbs/;
+        expires 1d;
+        add_header Cache-Control "public";
+    }
+
+    location /_protected_hls/ {
+        internal;
+        alias ${DATA_DIR}/.hls/;
+        types {
+            application/vnd.apple.mpegurl m3u8;
+            video/mp2t ts;
+            video/mp4 m4s mp4;
+        }
+        default_type application/octet-stream;
+        add_header Cache-Control "no-cache";
+    }
+
+    location /_protected_hls_live/ {
+        internal;
         alias ${RAMDISK_DIR}/;
+        open_file_cache off;
+        types {
+            application/vnd.apple.mpegurl m3u8;
+            video/mp2t ts;
+            video/mp4 m4s mp4;
+        }
+        default_type application/octet-stream;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Access-Control-Allow-Origin *;
     }
@@ -214,7 +279,7 @@ EOF
 fi
 
 # Start services
-systemctl restart streamvault-webui.service streamvault-recorder.service
+systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"
 echo -e "${GREEN}${BOLD}      StreamVault Installation & Registration Complete!               ${NC}"

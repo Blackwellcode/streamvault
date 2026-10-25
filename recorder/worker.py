@@ -65,14 +65,24 @@ WORKER_ID = f"{os.uname().nodename}:{os.getpid()}" if hasattr(os, "uname") else 
 #   WORKER_THUMB_THREADS       — IO pool for thumbnail (+ delete/empty); default 2
 #   WORKER_REMUX_THREADS       — CPU/media pool for remux_vod / remux_all; default 1
 #   WORKER_TRANSCRIBE_THREADS  — ASR pool for Whisper; default 1 (keep low if RAM-heavy)
+#   WORKER_STORAGE_THREADS     — network pool for cloud uploads/downloads; default 1
 WORKER_THUMB_THREADS = max(1, int(os.environ.get("WORKER_THUMB_THREADS", "2")))
 WORKER_REMUX_THREADS = max(1, int(os.environ.get("WORKER_REMUX_THREADS", "1")))
 WORKER_TRANSCRIBE_THREADS = max(1, int(os.environ.get("WORKER_TRANSCRIBE_THREADS", "1")))
+WORKER_STORAGE_THREADS = max(1, int(os.environ.get("WORKER_STORAGE_THREADS", "1")))
 IO_TASK_TYPES = frozenset({
     "thumbnail", "delete_folder", "empty_folder",
 })
 REMUX_TASK_TYPES = frozenset({"remux_vod", "remux_all"})
 ASR_TASK_TYPES = frozenset({"transcribe"})
+STORAGE_TASK_TYPES = frozenset({
+    "storage_upload",
+    "storage_sync",
+    "storage_delete",
+    "storage_restore",
+    "storage_check",
+    "storage_cleanup",
+})
 TASK_MAX_ATTEMPTS = {
     "thumbnail": int(os.environ.get("TASK_MAX_ATTEMPTS_THUMBNAIL", "3")),
     "delete_folder": int(os.environ.get("TASK_MAX_ATTEMPTS_DELETE_FOLDER", "2")),
@@ -80,15 +90,22 @@ TASK_MAX_ATTEMPTS = {
     "transcribe": int(os.environ.get("TASK_MAX_ATTEMPTS_TRANSCRIBE", "1")),
     "remux_all": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_ALL", "1")),
     "remux_vod": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_VOD", "2")),
+    "storage_upload": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_UPLOAD", "3")),
+    "storage_sync": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_SYNC", "1")),
+    "storage_delete": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_DELETE", "3")),
+    "storage_restore": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_RESTORE", "3")),
+    "storage_check": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_CHECK", "1")),
+    "storage_cleanup": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_CLEANUP", "1")),
 }
 REMUX_FILE_TIMEOUT_SEC = int(os.environ.get("REMUX_FILE_TIMEOUT_SEC", "7200"))
 
-_INFLIGHT = {"io": 0, "remux": 0, "asr": 0}
+_INFLIGHT = {"io": 0, "remux": 0, "asr": 0, "storage": 0}
 _INFLIGHT_LOCK = threading.Lock()
 _POOL_LIMITS = {
     "io": WORKER_THUMB_THREADS,
     "remux": WORKER_REMUX_THREADS,
     "asr": WORKER_TRANSCRIBE_THREADS,
+    "storage": WORKER_STORAGE_THREADS,
 }
 _LAST_STORAGE_CHECK = 0.0
 _LAST_TASK_CLEANUP = 0.0
@@ -1045,6 +1062,26 @@ def _safe_vod_task_path(streamer, filename):
     return path
 
 
+def _maybe_enqueue_storage_upload(path):
+    """Queue the final remuxed archive when automatic cloud upload is enabled."""
+    try:
+        from core.storage import service as storage_service
+
+        obj = storage_service.enqueue_auto_upload(path)
+        if obj and obj.get("task_id"):
+            logging.info(
+                "Cloud-Upload nach Remux eingeordnet: %s (Task %s)",
+                path,
+                obj.get("task_id"),
+            )
+            return True
+    except Exception as exc:
+        from core.storage.base import mask_error
+
+        logging.warning("Cloud-Upload nach Remux fehlgeschlagen: %s", mask_error(exc))
+    return False
+
+
 def process_remux_vod(payload):
     path = _safe_vod_task_path(payload.get("streamer"), payload.get("filename"))
     if not path:
@@ -1086,6 +1123,7 @@ def process_remux_vod(payload):
             redis_client.invalidate_dashboard_cache()
         except Exception:
             pass
+    _maybe_enqueue_storage_upload(final_path)
     return True
 
 
@@ -1162,6 +1200,22 @@ def process_task(task_type, payload):
         if not ok:
             raise RuntimeError("remux_vod failed")
         return
+    if task_type in STORAGE_TASK_TYPES:
+        from core.storage import service as storage_service
+
+        if task_type == 'storage_upload':
+            storage_service.run_upload(payload)
+        elif task_type == 'storage_sync':
+            storage_service.run_sync(payload)
+        elif task_type == 'storage_delete':
+            storage_service.run_delete(payload)
+        elif task_type == 'storage_restore':
+            storage_service.run_restore(payload)
+        elif task_type == 'storage_check':
+            storage_service.run_check(payload)
+        elif task_type == 'storage_cleanup':
+            storage_service.run_cleanup(payload)
+        return
     raise RuntimeError(f"unknown task type: {task_type}")
 
 
@@ -1170,6 +1224,8 @@ def _pool_name_for_task(task_type):
         return "remux"
     if task_type in ASR_TASK_TYPES:
         return "asr"
+    if task_type in STORAGE_TASK_TYPES:
+        return "storage"
     # thumbnail, delete/empty, and unknown → IO pool
     return "io"
 
@@ -1184,7 +1240,16 @@ def _types_with_capacity():
             allowed.extend(REMUX_TASK_TYPES)
         if _INFLIGHT["asr"] < _POOL_LIMITS["asr"]:
             allowed.extend(ASR_TASK_TYPES)
+        if _INFLIGHT["storage"] < _POOL_LIMITS["storage"]:
+            allowed.extend(STORAGE_TASK_TYPES)
     return allowed
+
+
+def storage_tick():
+    """Enqueue due cloud sync/cleanup tasks from the maintenance loop."""
+    from core.storage import service as storage_service
+
+    return storage_service.tick()
 
 
 def _execute_claimed_task(task):
@@ -1208,10 +1273,16 @@ def _execute_claimed_task(task):
             status,
         )
     except Exception as e:
-        logging.error(f"Task {task_id} failed: {e}")
+        if task_type in STORAGE_TASK_TYPES:
+            from core.storage.base import mask_error
+
+            error_message = mask_error(e)
+        else:
+            error_message = str(e)
+        logging.error(f"Task {task_id} failed: {error_message}")
         max_attempts = TASK_MAX_ATTEMPTS.get(task_type, 1)
         status = database.fail_task(
-            task_id, str(e), max_attempts=max_attempts, worker_id=WORKER_ID
+            task_id, error_message, max_attempts=max_attempts, worker_id=WORKER_ID
         )
         if status == "pending":
             logging.info(
@@ -1228,16 +1299,18 @@ def _execute_claimed_task(task):
 def main():
     init_db()
     logging.info(
-        "Worker gestartet: %s (thumb=%s remux=%s asr=%s)",
+        "Worker gestartet: %s (thumb=%s remux=%s asr=%s storage=%s)",
         WORKER_ID,
         WORKER_THUMB_THREADS,
         WORKER_REMUX_THREADS,
         WORKER_TRANSCRIBE_THREADS,
+        WORKER_STORAGE_THREADS,
     )
     with ThreadPoolExecutor(max_workers=WORKER_THUMB_THREADS, thread_name_prefix="worker-io") as io_pool, \
          ThreadPoolExecutor(max_workers=WORKER_REMUX_THREADS, thread_name_prefix="worker-remux") as remux_pool, \
-         ThreadPoolExecutor(max_workers=WORKER_TRANSCRIBE_THREADS, thread_name_prefix="worker-asr") as asr_pool:
-        pools = {"io": io_pool, "remux": remux_pool, "asr": asr_pool}
+         ThreadPoolExecutor(max_workers=WORKER_TRANSCRIBE_THREADS, thread_name_prefix="worker-asr") as asr_pool, \
+         ThreadPoolExecutor(max_workers=WORKER_STORAGE_THREADS, thread_name_prefix="worker-storage") as storage_pool:
+        pools = {"io": io_pool, "remux": remux_pool, "asr": asr_pool, "storage": storage_pool}
         while True:
             try:
                 def _safe_run(func):
@@ -1250,6 +1323,7 @@ def main():
                 _safe_run(cleanup_old_tasks)
                 _safe_run(cleanup_stale_thumbnail_locks)
                 _safe_run(backfill_missing_thumbnails)
+                _safe_run(storage_tick)
 
                 allowed = _types_with_capacity()
                 if not allowed:

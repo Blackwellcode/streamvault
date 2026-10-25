@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import bisect
+import glob
 import json
 import logging
 import math
@@ -103,19 +104,30 @@ except ValueError:
 def detect_x_accel():
     if os.environ.get("VOD_USE_X_ACCEL", "false").lower() in ("true", "1", "yes"):
         return True
-    nginx_conf = "/etc/nginx/conf.d/streamrecorder.conf"
-    if os.path.isfile(nginx_conf):
+    candidates = [
+        "/etc/nginx/conf.d/streamrecorder.conf",
+        "/etc/nginx/conf.d/default.conf",
+        "/etc/nginx/sites-enabled/streamvault.conf",
+    ]
+    try:
+        candidates.extend(glob.glob("/etc/nginx/sites-enabled/*"))
+    except OSError:
+        pass
+    for nginx_conf in dict.fromkeys(candidates):
+        if not os.path.isfile(nginx_conf):
+            continue
         try:
             with open(nginx_conf, "r", encoding="utf-8") as f:
                 content = f.read()
-            if "/_protected/" in content and "proxy_pass http://127.0.0.1:8081" in content:
-                return True
-        except Exception:
-            pass
+        except OSError:
+            continue
+        if "/_protected/" in content and "proxy_pass" in content:
+            return True
     return False
 
 USE_X_ACCEL = detect_x_accel()
 X_ACCEL_PREFIX = os.environ.get("VOD_X_ACCEL_PREFIX", "/_protected")
+FILES_ACCEL_PREFIX = os.environ.get("VOD_FILES_ACCEL_PREFIX", "/_protected_files")
 VOD_CACHE_ACCEL_PREFIX = os.environ.get("VOD_CACHE_ACCEL_PREFIX", "/_protected_vodcache")
 HLS_TIME = int(os.environ.get("VOD_HLS_TIME", "4"))
 HLS_GENERATE_TIMEOUT_SEC = int(os.environ.get("VOD_HLS_GENERATE_TIMEOUT_SEC", "7200"))
@@ -271,14 +283,17 @@ TWITCH_EVENTSUB_ENABLED = os.environ.get("TWITCH_EVENTSUB_ENABLED", "false").low
 METRICS_TOKEN = os.environ.get("METRICS_TOKEN", "").strip()
 
 def load_secret_key():
-    if config.SECRET_KEY != "change-me":
-        return config.SECRET_KEY
+    from core.storage.crypto import is_weak_secret
+
+    configured = str(config.SECRET_KEY or "").strip()
+    if configured and not is_weak_secret(configured):
+        return configured
     key_path = os.path.join(config.META_DIR, "secret_key.txt")
     try:
         if os.path.isfile(key_path):
             with open(key_path, "r", encoding="utf-8") as f:
                 key = f.read().strip()
-                if key:
+                if key and not is_weak_secret(key):
                     try:
                         os.chmod(key_path, 0o600)
                     except OSError:
@@ -289,8 +304,20 @@ def load_secret_key():
     os.makedirs(config.META_DIR, exist_ok=True)
     key = secrets.token_hex(32)
     try:
-        with open(key_path, "w", encoding="utf-8") as f:
-            f.write(key)
+        fd = os.open(
+            key_path,
+            os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+            0o600,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(key)
+        except Exception:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            raise
         os.chmod(key_path, 0o600)
     except Exception:
         pass
@@ -668,6 +695,7 @@ DATENSCHUTZ_TEMPLATE = load_html_template("datenschutz.html")
 ADMIN_TEMPLATE = load_html_template("admin.html")
 ADMIN_TRAFFIC_TEMPLATE = load_html_template("admin_traffic.html")
 ADMIN_USERS_TEMPLATE = load_html_template("admin_users.html")
+STORAGE_TEMPLATE = load_html_template("storage.html")
 MAIL_ADMIN_TEMPLATE = None
 STALK_ADMIN_TEMPLATE = None
 STALK_DETAIL_TEMPLATE = None
@@ -1573,13 +1601,31 @@ def streamer_dir(slug):
     return p
 
 
-def media_accel_path(streamer, filename, *, clip=False):
+def _path_is_under(path, root):
+    path_value = str(path or "").strip()
+    root_value = str(root or "").strip()
+    if not path_value or not root_value:
+        return False
+    try:
+        path_real = os.path.realpath(path_value)
+        root_real = os.path.realpath(root_value)
+        common = os.path.commonpath([path_real, root_real])
+        return os.path.normcase(common) == os.path.normcase(root_real)
+    except (OSError, ValueError):
+        return False
+
+
+def media_accel_path(streamer, filename, *, clip=False, file_path=None):
     """X-Accel path using the on-disk archive slug (aliases map correctly)."""
     archive = archive_name_for(streamer) or normalize_channel_name(streamer) or str(streamer or "").strip()
     name = os.path.basename(str(filename or ""))
     if not archive or not name:
         return None
+    if file_path is None:
+        file_path = resolve_media_path(streamer, filename, "clip" if clip else "vod")
     prefix = X_ACCEL_PREFIX.rstrip("/")
+    if file_path and _path_is_under(file_path, getattr(config, "FILES_DIR", "")):
+        prefix = FILES_ACCEL_PREFIX.rstrip("/")
     if clip:
         return f"{prefix}/{urllib.parse.quote(archive)}/{CLIP_SUBDIR}/{urllib.parse.quote(name)}"
     return f"{prefix}/{urllib.parse.quote(archive)}/{urllib.parse.quote(name)}"
@@ -7609,6 +7655,317 @@ def admin_traffic_view():
         return "Fehler beim Laden der Traffic-Übersicht.", 500
 
 
+# ============ CLOUD STORAGE (Google Drive, S3, Dropbox, OneDrive, WebDAV) ============
+
+def _storage_service():
+    from core.storage import service as storage_service
+
+    return storage_service
+
+
+def _storage_error(exc):
+    from core.storage.base import mask_error
+
+    return mask_error(exc)
+
+
+def _storage_redirect(msg=None, error=None):
+    from core.storage.base import mask_text
+
+    params = {}
+    if msg:
+        params["msg"] = mask_text(msg)
+    if error:
+        params["error"] = mask_text(error)
+    return redirect(url_for("admin_storage_view", **params))
+
+
+def _storage_redirect_uri():
+    return absolute_public_url(url_for("storage_oauth_callback"))
+
+
+@app.route("/admin/storage")
+@admin_required
+@limiter.limit("120 per hour")
+def admin_storage_view():
+    try:
+        svc = _storage_service()
+        context = svc.admin_context()
+        provider_names = {row["id"]: row.get("name") or "" for row in context["providers"]}
+        return render_template_string(
+            STORAGE_TEMPLATE,
+            msg=request.args.get("msg"),
+            error=request.args.get("error"),
+            provider_names=provider_names,
+            format_bytes=svc.format_bytes,
+            format_ts=svc.format_timestamp,
+            oauth_redirect_uri=_storage_redirect_uri(),
+            **context,
+        )
+    except Exception as exc:
+        logging.error("Admin storage error: %s", _storage_error(exc))
+        return "Fehler beim Laden der Cloud-Speicher-Verwaltung.", 500
+
+
+@app.route("/admin/storage/settings", methods=["POST"])
+@admin_required
+@limiter.limit("60 per hour")
+def admin_storage_settings():
+    svc = _storage_service()
+    values = {
+        "auto_upload": request.form.get("auto_upload") == "1",
+        "delete_local_after_upload": request.form.get("delete_local_after_upload") == "1",
+        "verify_before_local_delete": request.form.get("verify_before_local_delete") == "1",
+        "include_chat_logs": request.form.get("include_chat_logs") == "1",
+        "include_thumbnails": request.form.get("include_thumbnails") == "1",
+        "local_retention_days": request.form.get("local_retention_days", "14"),
+        "auto_sync_interval_minutes": request.form.get("auto_sync_interval_minutes", "10"),
+        "cleanup_interval_minutes": request.form.get("cleanup_interval_minutes", "360"),
+        "max_sync_files": request.form.get("max_sync_files", "500"),
+        "default_provider_id": request.form.get("default_provider_id") or None,
+    }
+    try:
+        svc.save_settings(values)
+        return _storage_redirect(msg="Einstellungen gespeichert.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/add", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_provider_add():
+    svc = _storage_service()
+    from core.storage.registry import get_provider_class
+
+    try:
+        type_id = str(request.form.get("provider_type") or "").strip()
+        cls = get_provider_class(type_id)
+        values = {}
+        for field in cls.config_fields:
+            raw = request.form.get(f"cfg_{field.key}", "")
+            if field.secret and not str(raw or "").strip():
+                continue
+            values[field.key] = raw
+        provider_id = svc.create_provider(
+            request.form.get("name", ""),
+            type_id,
+            values,
+            enabled=request.form.get("enabled") == "1",
+        )
+        return _storage_redirect(
+            msg=f"Anbieter #{provider_id} angelegt. Bitte Verbindung testen."
+        )
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/update", methods=["POST"])
+@admin_required
+@limiter.limit("60 per hour")
+def admin_storage_provider_update(provider_id):
+    svc = _storage_service()
+    from core.storage.registry import get_provider_class
+
+    try:
+        row = svc.get_provider_record(provider_id)
+        if not row:
+            raise ValueError("Anbieter nicht gefunden.")
+        cls = get_provider_class(row["provider_type"])
+        values = {}
+        for field in cls.config_fields:
+            values[field.key] = request.form.get(f"cfg_{field.key}", "")
+        svc.update_provider(
+            provider_id,
+            name=request.form.get("name", row["name"]),
+            values=values,
+            enabled=request.form.get("enabled") == "1",
+        )
+        return _storage_redirect(msg=f"Anbieter #{provider_id} gespeichert.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/delete", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_provider_delete(provider_id):
+    svc = _storage_service()
+    try:
+        svc.delete_provider(provider_id)
+        return _storage_redirect(
+            msg=f"Anbieter #{provider_id} entfernt. Cloud-Dateien bleiben erhalten."
+        )
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/test", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_provider_test(provider_id):
+    svc = _storage_service()
+    try:
+        result = svc.test_provider(provider_id)
+        if result.get("ok"):
+            return _storage_redirect(msg=result.get("message"))
+        return _storage_redirect(error=result.get("message"))
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/check", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_provider_check(provider_id):
+    svc = _storage_service()
+    try:
+        task_id = svc.enqueue_check(provider_id)
+        return _storage_redirect(msg=f"Verbindungstest eingeordnet (Task #{task_id}).")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/oauth/start")
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_oauth_start(provider_id):
+    svc = _storage_service()
+    try:
+        return redirect(svc.oauth_authorize_url(provider_id, _storage_redirect_uri()))
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/oauth/callback")
+@admin_required
+@limiter.limit("30 per hour")
+def storage_oauth_callback():
+    svc = _storage_service()
+    if request.args.get("error"):
+        return _storage_redirect(error=f"Anbieter meldete: {request.args.get('error')}")
+    try:
+        provider_id = svc.verify_oauth_state(request.args.get("state", ""))
+        code = str(request.args.get("code") or "").strip()
+        if not code:
+            raise ValueError("OAuth-Code fehlt.")
+        svc.oauth_complete(provider_id, code, _storage_redirect_uri())
+        result = svc.test_provider(provider_id)
+        if result.get("ok"):
+            return _storage_redirect(msg=result.get("message"))
+        return _storage_redirect(error=result.get("message"))
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/sync", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_sync():
+    svc = _storage_service()
+    try:
+        provider_id = request.form.get("provider_id") or None
+        streamer = str(request.form.get("streamer") or "").strip() or None
+        task_id = svc.enqueue_sync(provider_id, streamer)
+        if task_id:
+            return _storage_redirect(msg=f"Cloud-Sync eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits ein Cloud-Sync.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/cleanup", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_cleanup():
+    svc = _storage_service()
+    try:
+        provider_id = request.form.get("provider_id") or None
+        task_id = svc.enqueue_cleanup(provider_id)
+        if task_id:
+            return _storage_redirect(msg=f"Aufräumung eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits eine Aufräumung.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/upload", methods=["POST"])
+@admin_required
+@limiter.limit("60 per hour")
+def admin_storage_object_upload(object_id):
+    svc = _storage_service()
+    try:
+        obj = database.get_storage_object(object_id)
+        if not obj:
+            raise ValueError("Archiv-Objekt nicht gefunden.")
+        if obj.get("local_deleted_at"):
+            raise ValueError("Die lokale Datei wurde bereits entfernt. Bitte zuerst wiederherstellen.")
+        result = svc.enqueue_upload(
+            obj["local_path"], obj["provider_id"], force=True
+        )
+        if result.get("task_id"):
+            return _storage_redirect(msg=f"Upload eingeordnet (Task #{result['task_id']}).")
+        return _storage_redirect(msg="Es läuft bereits ein Upload für diese Datei.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/restore", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_restore(object_id):
+    svc = _storage_service()
+    try:
+        task_id = svc.enqueue_restore(object_id)
+        if task_id:
+            return _storage_redirect(msg=f"Wiederherstellung eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits eine Wiederherstellung.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/delete-remote", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_delete_remote(object_id):
+    svc = _storage_service()
+    try:
+        task_id = svc.enqueue_delete(object_id)
+        if task_id:
+            return _storage_redirect(msg=f"Cloud-Löschung eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits eine Cloud-Löschung.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/delete-local", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_delete_local(object_id):
+    svc = _storage_service()
+    try:
+        ok, message = svc.delete_local_copy(object_id)
+        if ok:
+            return _storage_redirect(msg=message)
+        return _storage_redirect(error=message)
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/forget", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_forget(object_id):
+    try:
+        if database.delete_storage_object(object_id):
+            return _storage_redirect(
+                msg=f"Objekt #{object_id} aus der Datenbank entfernt. Dateien bleiben erhalten."
+            )
+        return _storage_redirect(error="Archiv-Objekt nicht gefunden.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
 @app.route("/admin/unban/<ip>", methods=["POST"])
 @admin_required
 def admin_unban(ip):
@@ -9828,7 +10185,7 @@ def media(streamer, filename):
             pass
     file_path = resolve_media_path(streamer, filename, "vod")
     if file_path:
-        accel_path = media_accel_path(streamer, filename) if USE_X_ACCEL else None
+        accel_path = media_accel_path(streamer, filename, file_path=file_path) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path)
     abort(404)
 
@@ -9925,7 +10282,7 @@ def download(streamer, filename):
     abort_hidden_streamer(streamer)
     file_path = resolve_media_path(streamer, filename, "vod")
     if file_path:
-        accel_path = media_accel_path(streamer, filename) if USE_X_ACCEL else None
+        accel_path = media_accel_path(streamer, filename, file_path=file_path) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
     abort(404)
 
@@ -9942,7 +10299,7 @@ def clip_media(streamer, filename):
     if not file_path:
         abort(404)
     if USE_X_ACCEL:
-        accel_path = media_accel_path(streamer, filename, clip=True)
+        accel_path = media_accel_path(streamer, filename, clip=True, file_path=file_path)
         return send_mp4_with_range(file_path, accel_path=accel_path)
     return send_mp4_with_range(file_path)
 
@@ -9957,7 +10314,7 @@ def clip_download(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "clip")
     if not file_path:
         abort(404)
-    accel_path = media_accel_path(streamer, filename, clip=True) if USE_X_ACCEL else None
+    accel_path = media_accel_path(streamer, filename, clip=True, file_path=file_path) if USE_X_ACCEL else None
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
@@ -10559,7 +10916,7 @@ def public_media(token):
         abort(404)
     accel_path = None
     if USE_X_ACCEL:
-        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"))
+        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"), file_path=file_path)
     return send_mp4_with_range(file_path, accel_path=accel_path)
 
 
@@ -10576,7 +10933,7 @@ def public_download(token):
         abort(404)
     accel_path = None
     if USE_X_ACCEL:
-        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"))
+        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"), file_path=file_path)
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 

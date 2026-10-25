@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+
+{% block title %}Cloud-Speicher — StreamVault{% endblock %}
+{% block page_title %}Cloud-Speicher{% endblock %}
+{% block page_subtitle %}VOD-Archiv automatisch oder manuell in externe Speicher auslagern{% endblock %}
+
+{% block header_actions %}
+  <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Systemsteuerung
+  </a>
+  <button type="button" class="ns-btn ns-btn-primary" onclick="openStorageModal('modal-add-provider')">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Anbieter hinzufügen
+  </button>
+{% endblock %}
+
+{% block head %}
+<style>
+  .storage-shell { max-width: 1480px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  .storage-alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .storage-alert.ok { background: rgba(72, 214, 162, 0.12); border: 1px solid rgba(72, 214, 162, 0.4); color: #7BEBC2; }
+  .storage-alert.err { background: rgba(240, 68, 88, 0.12); border: 1px solid rgba(240, 68, 88, 0.4); color: #FF8A98; }
+  .storage-alert.warn { background: rgba(255, 184, 76, 0.12); border: 1px solid rgba(255, 184, 76, 0.4); color: #FFD08A; }
+  .storage-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .storage-stat { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-subtle); border-radius: var(--ns-radius-lg); padding: 16px 18px; }
+  .storage-stat .label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ns-text-muted); }
+  .storage-stat .value { font-size: 22px; font-weight: 800; color: var(--ns-text-primary); margin-top: 6px; }
+  .storage-stat .sub { font-size: 12px; color: var(--ns-text-secondary); margin-top: 4px; }
+  .storage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .storage-card { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-subtle); border-radius: var(--ns-radius-lg); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .storage-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .storage-card-title { margin: 0; font-size: 15px; font-weight: 800; color: var(--ns-text-primary); }
+  .storage-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .storage-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+  .storage-badge.default { background: rgba(77, 99, 255, 0.2); color: #9FB0FF; border: 1px solid rgba(77, 99, 255, 0.45); }
+  .storage-badge.enabled { background: rgba(72, 214, 162, 0.15); color: #7BEBC2; border: 1px solid rgba(72, 214, 162, 0.35); }
+  .storage-badge.disabled { background: rgba(117, 131, 157, 0.15); color: #A2AEC8; border: 1px solid rgba(117, 131, 157, 0.3); }
+  .storage-badge.ok { background: rgba(72, 214, 162, 0.15); color: #7BEBC2; border: 1px solid rgba(72, 214, 162, 0.35); }
+  .storage-badge.err { background: rgba(240, 68, 88, 0.15); color: #FF8A98; border: 1px solid rgba(240, 68, 88, 0.35); }
+  .storage-badge.type { background: rgba(105, 201, 255, 0.12); color: #8DD8FF; border: 1px solid rgba(105, 201, 255, 0.3); }
+  .storage-meta { font-size: 12px; color: var(--ns-text-secondary); line-height: 1.55; }
+  .storage-meta strong { color: var(--ns-text-primary); }
+  .storage-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 4px; }
+  .storage-actions form { margin: 0; }
+  .storage-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; border: 1px solid var(--ns-border-medium); background: var(--ns-bg-surface-raised); color: var(--ns-text-primary); font-size: 12px; font-weight: 600; padding: 7px 10px; cursor: pointer; text-decoration: none; }
+  .storage-btn:hover { border-color: #4D63FF; color: #FFF; }
+  .storage-btn.primary { background: #4D63FF; border-color: #4D63FF; color: #FFF; }
+  .storage-btn.danger { border-color: rgba(240, 68, 88, 0.45); color: #FF8A98; }
+  .storage-btn.danger:hover { background: rgba(240, 68, 88, 0.15); }
+  .storage-panel { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-subtle); border-radius: var(--ns-radius-lg); padding: 18px 20px; }
+  .storage-panel h3 { margin: 0 0 4px 0; font-size: 16px; font-weight: 800; color: var(--ns-text-primary); }
+  .storage-panel .hint { margin: 0 0 14px 0; font-size: 12px; color: var(--ns-text-secondary); }
+  .storage-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .storage-field { display: flex; flex-direction: column; gap: 6px; }
+  .storage-field label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ns-text-secondary); }
+  .storage-field input[type="text"], .storage-field input[type="password"], .storage-field input[type="number"], .storage-field select { background: var(--ns-bg-canvas); border: 1px solid var(--ns-border-medium); border-radius: 8px; color: var(--ns-text-primary); padding: 9px 12px; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
+  .storage-field input:focus, .storage-field select:focus { border-color: #4D63FF; box-shadow: 0 0 0 2px rgba(77, 99, 255, 0.18); }
+  .storage-field .help { font-size: 11px; color: var(--ns-text-muted); line-height: 1.45; }
+  .storage-check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--ns-text-primary); line-height: 1.4; }
+  .storage-check input { margin-top: 2px; accent-color: #4D63FF; width: 16px; height: 16px; }
+  .storage-table-wrap { overflow-x: auto; border: 1px solid var(--ns-border-subtle); border-radius: 10px; }
+  .storage-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 980px; }
+  .storage-table th { text-align: left; padding: 10px 12px; background: var(--ns-bg-surface-raised); color: var(--ns-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--ns-border-subtle); white-space: nowrap; }
+  .storage-table td { padding: 10px 12px; border-bottom: 1px solid rgba(38, 52, 79, 0.45); color: var(--ns-text-primary); vertical-align: top; }
+  .storage-table tr:last-child td { border-bottom: none; }
+  .storage-table .path { font-family: var(--ns-font-mono, monospace); font-size: 11px; color: var(--ns-text-secondary); word-break: break-all; }
+  .storage-table .actions { display: flex; flex-wrap: wrap; gap: 5px; }
+  .storage-table .actions form { margin: 0; }
+  .storage-empty { padding: 26px; text-align: center; color: var(--ns-text-secondary); font-size: 13px; }
+  .storage-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(7, 11, 20, 0.86); backdrop-filter: blur(4px); z-index: 1200; align-items: center; justify-content: center; padding: 16px; }
+  .storage-modal-backdrop.is-open { display: flex; }
+  .storage-modal { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-medium); border-radius: var(--ns-radius-lg); box-shadow: var(--ns-shadow-lg); width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; }
+  .storage-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--ns-border-subtle); background: var(--ns-bg-surface-raised); position: sticky; top: 0; z-index: 2; }
+  .storage-modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ns-text-primary); }
+  .storage-modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .storage-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--ns-border-subtle); background: var(--ns-bg-surface-raised); position: sticky; bottom: 0; }
+  .storage-close { background: transparent; border: none; color: var(--ns-text-muted); font-size: 22px; line-height: 1; cursor: pointer; }
+  .storage-close:hover { color: #FFF; }
+  @media (max-width: 640px) {
+    .storage-grid { grid-template-columns: 1fr; }
+    .storage-actions .storage-btn { flex: 1 1 auto; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="storage-shell">
+  {% if msg %}<div class="storage-alert ok">{{ msg }}</div>{% endif %}
+  {% if error %}<div class="storage-alert err">{{ error }}</div>{% endif %}
+  {% if not encryption_ready %}
+  <div class="storage-alert warn">
+    <strong>Verschlüsselung nicht bereit.</strong>
+    Setze <code>VOD_SECRET_KEY</code> (mindestens 16 Zeichen) oder
+    <code>STORAGE_ENCRYPTION_KEY</code>, bevor Zugangsdaten gespeichert werden.
+  </div>
+  {% endif %}
+
+  <div class="storage-stats">
+    <div class="storage-stat">
+      <div class="label">Anbieter</div>
+      <div class="value">{{ providers|length }}</div>
+      <div class="sub">{{ providers|selectattr('enabled')|list|length }} aktiv</div>
+    </div>
+    <div class="storage-stat">
+      <div class="label">Archiv-Objekte</div>
+      <div class="value">{{ summary.total }}</div>
+      <div class="sub">{{ summary.statuses.get('uploaded', {}).get('count', 0) }} in der Cloud</div>
+    </div>
+    <div class="storage-stat">
+      <div class="label">Cloud-Volumen</div>
+      <div class="value">{{ format_bytes(summary.bytes) }}</div>
+      <div class="sub">laut Objekt-Datenbank</div>
+    </div>
+    <div class="storage-stat">
+      <div class="label">Standard-Ziel</div>
+      <div class="value" style="font-size:16px;">{{ default_provider.name if default_provider else '–' }}</div>
+      <div class="sub">{{ default_provider.type_label if default_provider else 'Kein Anbieter aktiv' }}</div>
+    </div>
+  </div>
+
+  <section class="storage-panel">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>
+        <h3>Speicher-Anbieter</h3>
+        <p class="hint">Google Drive, S3-kompatible Dienste, Dropbox, OneDrive und WebDAV. Zugangsdaten werden AES-GCM-verschlüsselt gespeichert.</p>
+      </div>
+      <button type="button" class="storage-btn primary" onclick="openStorageModal('modal-add-provider')">+ Anbieter</button>
+    </div>
+
+    {% if providers %}
+    <div class="storage-grid">
+      {% for p in providers %}
+      <article class="storage-card">
+        <div class="storage-card-head">
+          <div>
+            <h4 class="storage-card-title">{{ p.name }}</h4>
+            <div class="storage-badges" style="margin-top:7px;">
+              <span class="storage-badge type">{{ p.type_label or p.provider_type }}</span>
+              {% if p.id == settings.default_provider_id or (not settings.default_provider_id and default_provider and p.id == default_provider.id) %}
+              <span class="storage-badge default">Standard</span>
+              {% endif %}
+              {% if p.enabled %}
+              <span class="storage-badge enabled">Aktiv</span>
+              {% else %}
+              <span class="storage-badge disabled">Deaktiviert</span>
+              {% endif %}
+              {% if p.last_check_ok %}
+              <span class="storage-badge ok">Verbindung OK</span>
+              {% elif p.last_check_ok is sameas false %}
+              <span class="storage-badge err">Verbindung fehlerhaft</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="storage-meta">
+          {% if p.config_error %}
+          <div style="color:#FF8A98;">{{ p.config_error }}</div>
+          {% else %}
+          <div><strong>Basis:</strong> {{ p.config.get('base_path') or '–' }}</div>
+          {% if p.config.get('folder_id') %}<div><strong>Ordner-ID:</strong> {{ p.config.get('folder_id') }}</div>{% endif %}
+          {% if p.config.get('bucket') %}<div><strong>Bucket:</strong> {{ p.config.get('bucket') }}</div>{% endif %}
+          {% if p.config.get('endpoint_url') %}<div><strong>Endpunkt:</strong> {{ p.config.get('endpoint_url') }}</div>{% endif %}
+          {% if p.config.get('base_url') %}<div><strong>URL:</strong> {{ p.config.get('base_url') }}</div>{% endif %}
+          {% if p.last_check_at %}<div><strong>Letzter Test:</strong> {{ format_ts(p.last_check_at) }}</div>{% endif %}
+          {% if p.last_check_message %}<div><strong>Status:</strong> {{ p.last_check_message }}</div>{% endif %}
+          {% if p.last_error %}<div style="color:#FF8A98;"><strong>Fehler:</strong> {{ p.last_error }}</div>{% endif %}
+          {% endif %}
+        </div>
+
+        <div class="storage-actions">
+          <form method="post" action="{{ url_for('admin_storage_provider_test', provider_id=p.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="storage-btn">Testen</button>
+          </form>
+          {% if p.oauth_supported %}
+          <a class="storage-btn" href="{{ url_for('admin_storage_oauth_start', provider_id=p.id) }}">{{ p.oauth_label }}</a>
+          {% endif %}
+          <button type="button" class="storage-btn" data-update-url="{{ url_for('admin_storage_provider_update', provider_id=p.id) }}" onclick="openEditProvider({{ p.id }}, this.dataset.updateUrl)">Bearbeiten</button>
+          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" onsubmit="return confirm('Anbieter wirklich entfernen? Die Cloud-Dateien bleiben erhalten.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="storage-btn danger">Entfernen</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="storage-empty">
+      Noch kein Cloud-Speicher eingerichtet. Lege einen Anbieter an oder nutze die Konsole:
+      <code>streamvault storage add --type google_drive --name "Mein Drive"</code>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="storage-panel">
+    <h3>Automatisierung &amp; Aufbewahrung</h3>
+    <p class="hint">Standardmäßig wird nichts automatisch hochgeladen oder gelöscht. Aktiviere die Funktionen bewusst.</p>
+    <form method="post" action="{{ url_for('admin_storage_settings') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="storage-form-grid">
+        <div class="storage-field">
+          <label>Standard-Anbieter</label>
+          <select name="default_provider_id">
+            <option value="">Automatisch (erster aktiver)</option>
+            {% for p in providers if p.enabled %}
+            <option value="{{ p.id }}" {% if settings.default_provider_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="storage-field">
+          <label>Lokale Aufbewahrung (Tage)</label>
+          <input type="number" min="0" max="3650" name="local_retention_days" value="{{ settings.local_retention_days }}">
+          <span class="help">0 = sofort löschen, sobald die Cloud-Kopie verifiziert ist.</span>
+        </div>
+        <div class="storage-field">
+          <label>Auto-Sync-Intervall (Minuten)</label>
+          <input type="number" min="0" max="10080" name="auto_sync_interval_minutes" value="{{ settings.auto_sync_interval_minutes }}">
+          <span class="help">0 = kein automatischer Sync. Wird nur bei aktivem Auto-Upload genutzt.</span>
+        </div>
+        <div class="storage-field">
+          <label>Aufräum-Intervall (Minuten)</label>
+          <input type="number" min="0" max="10080" name="cleanup_interval_minutes" value="{{ settings.cleanup_interval_minutes }}">
+        </div>
+        <div class="storage-field">
+          <label>Max. Dateien pro Sync</label>
+          <input type="number" min="1" max="5000" name="max_sync_files" value="{{ settings.max_sync_files }}">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:16px;">
+        <label class="storage-check">
+          <input type="checkbox" name="auto_upload" value="1" {% if settings.auto_upload %}checked{% endif %}>
+          <span><strong>Automatisch hochladen</strong><br><span class="help">Neue Aufnahmen und periodische Archiv-Syncs in die Cloud übertragen.</span></span>
+        </label>
+        <label class="storage-check">
+          <input type="checkbox" name="delete_local_after_upload" value="1" {% if settings.delete_local_after_upload %}checked{% endif %}>
+          <span><strong>Lokale Kopien nach Aufbewahrung löschen</strong><br><span class="help">Erst nach erfolgreichem Upload und optionaler Cloud-Verifikation.</span></span>
+        </label>
+        <label class="storage-check">
+          <input type="checkbox" name="verify_before_local_delete" value="1" {% if settings.verify_before_local_delete %}checked{% endif %}>
+          <span><strong>Cloud-Kopie vor Löschung verifizieren</strong><br><span class="help">Empfohlen. Verhindert Datenverlust bei unvollständigen Uploads.</span></span>
+        </label>
+        <label class="storage-check">
+          <input type="checkbox" name="include_chat_logs" value="1" {% if settings.include_chat_logs %}checked{% endif %}>
+          <span><strong>Chat-Logs mitsichern</strong><br><span class="help">Überträgt zusätzlich <code>chat_logs/*.jsonl</code>.</span></span>
+        </label>
+        <label class="storage-check">
+          <input type="checkbox" name="include_thumbnails" value="1" {% if settings.include_thumbnails %}checked{% endif %}>
+          <span><strong>Thumbnails mitsichern</strong><br><span class="help">Überträgt zusätzlich Vorschaubilder aus <code>.thumbs</code>.</span></span>
+        </label>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+        <button type="submit" class="storage-btn primary">Einstellungen speichern</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="storage-panel">
+    <h3>Manueller Sync</h3>
+    <p class="hint">Der Recorder-Worker führt den Abgleich aus. Bereits hochgeladene unveränderte Dateien werden übersprungen.</p>
+    <form method="post" action="{{ url_for('admin_storage_sync') }}" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="storage-field" style="min-width:220px;">
+        <label>Anbieter</label>
+        <select name="provider_id">
+          <option value="">Standard</option>
+          {% for p in providers if p.enabled %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="storage-field" style="min-width:220px;">
+        <label>Streamer (optional)</label>
+        <input type="text" name="streamer" placeholder="z. B. montanablack88">
+      </div>
+      <button type="submit" class="storage-btn primary">Sync starten</button>
+      <button type="submit" class="storage-btn" formaction="{{ url_for('admin_storage_cleanup') }}">Lokale Aufräumung starten</button>
+    </form>
+  </section>
+
+  <section class="storage-panel">
+    <h3>Archiv-Objekte</h3>
+    <p class="hint">Status, Fortschritt und Aktionen der zuletzt synchronisierten Dateien. „Vergessen“ entfernt nur den Datenbankeintrag.</p>
+    {% if objects %}
+    <div class="storage-table-wrap">
+      <table class="storage-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Datei</th>
+            <th>Anbieter</th>
+            <th>Größe</th>
+            <th>Lokal</th>
+            <th>Aktualisiert</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in objects %}
+          <tr>
+            <td>#{{ o.id }}</td>
+            <td>
+              <span class="storage-badge {% if o.status in ('uploaded','restored') %}ok{% elif o.status in ('failed','remote_deleted') %}err{% else %}disabled{% endif %}">{{ o.status }}</span>
+              {% if o.progress and o.status in ('uploading','pending') %}<div class="storage-meta">{{ '%.0f'|format(o.progress) }} %</div>{% endif %}
+            </td>
+            <td>
+              <div><strong>{{ o.filename or o.local_path }}</strong></div>
+              <div class="path">{{ o.local_path }}</div>
+              <div class="path">→ {{ o.remote_path }}</div>
+              {% if o.last_error %}<div class="path" style="color:#FF8A98;">{{ o.last_error }}</div>{% endif %}
+            </td>
+            <td>{{ provider_names.get(o.provider_id, '–') }}</td>
+            <td>{{ format_bytes(o.remote_size or o.local_size) }}</td>
+            <td>{% if o.local_exists and not o.local_deleted_at %}<span class="storage-badge enabled">Vorhanden</span>{% else %}<span class="storage-badge disabled">Nur Cloud</span>{% endif %}</td>
+            <td>{{ format_ts(o.updated_at) }}</td>
+            <td>
+              <div class="actions">
+                {% if o.local_exists and not o.local_deleted_at and o.status != 'uploading' %}
+                <form method="post" action="{{ url_for('admin_storage_object_upload', object_id=o.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="storage-btn">Upload</button>
+                </form>
+                {% endif %}
+                {% if o.status in ('uploaded','restored') and o.local_exists and not o.local_deleted_at %}
+                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" onsubmit="return confirm('Lokale Datei wirklich löschen? Die Cloud-Kopie bleibt erhalten.');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="storage-btn danger">Lokal löschen</button>
+                </form>
+                {% endif %}
+                {% if o.status in ('uploaded','restored') and not o.local_exists and not o.remote_deleted_at %}
+                <form method="post" action="{{ url_for('admin_storage_object_restore', object_id=o.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="storage-btn">Wiederherstellen</button>
+                </form>
+                {% endif %}
+                {% if not o.remote_deleted_at and not o.local_deleted_at and o.local_exists and o.status in ('uploaded','restored') %}
+                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" onsubmit="return confirm('Cloud-Datei wirklich löschen? Eine lokale Kopie bleibt erhalten.');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="storage-btn danger">Cloud löschen</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" onsubmit="return confirm('Nur den Datenbankeintrag entfernen?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="storage-btn">Vergessen</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="storage-empty">Noch keine Archiv-Objekte. Starte einen Sync oder lade eine Aufnahme hoch.</div>
+    {% endif %}
+  </section>
+
+  <section class="storage-panel">
+    <h3>OAuth-Hinweis</h3>
+    <p class="hint" style="margin-bottom:0;">
+      Für Google Drive, Dropbox und OneDrive muss diese Callback-URL beim Anbieter registriert sein:
+      <code style="word-break:break-all;">{{ oauth_redirect_uri }}</code><br>
+      Setze bei Bedarf <code>VOD_PUBLIC_BASE</code> auf deine öffentliche HTTPS-Adresse, damit die URL exakt passt.
+    </p>
+  </section>
+</div>
+
+<div class="storage-modal-backdrop" id="modal-add-provider">
+  <div class="storage-modal">
+    <div class="storage-modal-head">
+      <h3>Anbieter hinzufügen</h3>
+      <button type="button" class="storage-close" onclick="closeStorageModal('modal-add-provider')">&times;</button>
+    </div>
+    <form method="post" action="{{ url_for('admin_storage_provider_add') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="storage-modal-body">
+        <div class="storage-field">
+          <label>Anbieter-Typ</label>
+          <select id="add-provider-type" name="provider_type" onchange="renderAddFields()">
+            {% for entry in catalog %}
+            <option value="{{ entry.type_id }}">{{ entry.label }}</option>
+            {% endfor %}
+          </select>
+          <span class="help" id="add-provider-description"></span>
+        </div>
+        <div class="storage-field">
+          <label>Anzeigename</label>
+          <input type="text" name="name" required maxlength="80" placeholder="z. B. Google Drive Archiv">
+        </div>
+        <div id="add-provider-fields" class="storage-form-grid"></div>
+        <label class="storage-check">
+          <input type="checkbox" name="enabled" value="1" checked>
+          <span><strong>Sofort aktivieren</strong></span>
+        </label>
+      </div>
+      <div class="storage-modal-foot">
+        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-add-provider')">Abbrechen</button>
+        <button type="submit" class="storage-btn primary">Anlegen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="storage-modal-backdrop" id="modal-edit-provider">
+  <div class="storage-modal">
+    <div class="storage-modal-head">
+      <h3>Anbieter bearbeiten</h3>
+      <button type="button" class="storage-close" onclick="closeStorageModal('modal-edit-provider')">&times;</button>
+    </div>
+    <form method="post" id="edit-provider-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="storage-modal-body">
+        <div class="storage-field">
+          <label>Anzeigename</label>
+          <input type="text" name="name" id="edit-provider-name" required maxlength="80">
+        </div>
+        <div id="edit-provider-fields" class="storage-form-grid"></div>
+        <label class="storage-check">
+          <input type="checkbox" name="enabled" id="edit-provider-enabled" value="1">
+          <span><strong>Aktiviert</strong></span>
+        </label>
+      </div>
+      <div class="storage-modal-foot">
+        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-edit-provider')">Abbrechen</button>
+        <button type="submit" class="storage-btn primary">Speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const STORAGE_CATALOG = {{ catalog|tojson }};
+  const STORAGE_PROVIDERS = {{ providers|tojson }};
+
+  function openStorageModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add('is-open');
+  }
+  function closeStorageModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('is-open');
+  }
+  document.querySelectorAll('.storage-modal-backdrop').forEach(function (modal) {
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) modal.classList.remove('is-open');
+    });
+  });
+
+  function catalogEntry(typeId) {
+    return STORAGE_CATALOG.find(function (entry) { return entry.type_id === typeId; }) || null;
+  }
+
+  function escapeHtml(value) {
+    return String(value === undefined || value === null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function fieldMarkup(field, values) {
+    const value = values && values[field.key] !== undefined ? values[field.key] : (field.default || '');
+    const setFlag = values && values[field.key + '__set'];
+    const key = escapeHtml(field.key);
+    const id = 'cfg_' + key;
+    let input = '';
+    if (field.type === 'select') {
+      input = '<select id="' + id + '" name="cfg_' + key + '">';
+      (field.choices || []).forEach(function (choice) {
+        const selected = String(choice.value) === String(value) ? ' selected' : '';
+        input += '<option value="' + escapeHtml(choice.value) + '"' + selected + '>' + escapeHtml(choice.label) + '</option>';
+      });
+      input += '</select>';
+    } else {
+      const type = field.type === 'password' || field.secret ? 'password' : (field.type === 'number' ? 'number' : 'text');
+      const placeholder = field.secret && setFlag ? 'Gespeichert – leer lassen zum Behalten' : (field.placeholder || '');
+      input = '<input id="' + id + '" type="' + escapeHtml(type) + '" name="cfg_' + key + '" value="' + (field.secret ? '' : escapeHtml(value)) + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="' + (field.secret ? 'new-password' : 'off') + '"' + (field.required && !field.secret ? ' required' : '') + '>';
+    }
+    let help = field.help || '';
+    if (field.secret && setFlag) help = (help ? help + ' ' : '') + 'Ein gespeicherter Wert bleibt erhalten, wenn das Feld leer bleibt.';
+    return '<div class="storage-field"><label>' + escapeHtml(field.label) + (field.required ? ' *' : '') + '</label>' + input + (help ? '<span class="help">' + escapeHtml(help) + '</span>' : '') + '</div>';
+  }
+
+  function renderFields(containerId, typeId, values) {
+    const container = document.getElementById(containerId);
+    const entry = catalogEntry(typeId);
+    if (!container || !entry) return;
+    container.innerHTML = (entry.fields || []).map(function (field) {
+      return fieldMarkup(field, values || {});
+    }).join('');
+  }
+
+  function renderAddFields() {
+    const select = document.getElementById('add-provider-type');
+    const entry = catalogEntry(select.value);
+    const description = document.getElementById('add-provider-description');
+    if (description && entry) description.textContent = entry.description || '';
+    renderFields('add-provider-fields', select.value, {});
+  }
+
+  function openEditProvider(providerId, updateUrl) {
+    const provider = STORAGE_PROVIDERS.find(function (row) { return row.id === providerId; });
+    if (!provider || !updateUrl) return;
+    const form = document.getElementById('edit-provider-form');
+    form.action = updateUrl;
+    document.getElementById('edit-provider-name').value = provider.name || '';
+    document.getElementById('edit-provider-enabled').checked = !!provider.enabled;
+    renderFields('edit-provider-fields', provider.provider_type, provider.config || {});
+    openStorageModal('modal-edit-provider');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    renderAddFields();
+  });
+</script>
+{% endblock %}

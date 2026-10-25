@@ -5,16 +5,26 @@ services:
       context: .
       dockerfile_inline: |
         FROM python:3.11-slim
-        RUN apt-get update && apt-get install -y ffmpeg procps supervisor fonts-dejavu && rm -rf /var/lib/apt/lists/*
-        RUN pip install flask werkzeug flask-limiter yt-dlp streamlink
+        ENV PYTHONUNBUFFERED=1 \
+            PIP_NO_CACHE_DIR=1 \
+            PYTHONDONTWRITEBYTECODE=1
+        RUN apt-get update \
+            && apt-get install -y --no-install-recommends ffmpeg procps supervisor fonts-dejavu-core ca-certificates \
+            && rm -rf /var/lib/apt/lists/*
+        COPY requirements.txt /tmp/requirements.txt
+        RUN pip install --no-cache-dir -r /tmp/requirements.txt
         WORKDIR /app
         CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
     restart: unless-stopped
+    stop_grace_period: 30s
     volumes:
-      # Mount application directory into container
+      # Application code and archive media (bind mount).
       - ./:/app
-      - ./docker-worker.conf:/etc/supervisor/conf.d/supervisord.conf
+      # Keep the live HLS segments shared with the Nginx container.
+      - hls_live:/app/.hls_live
+      - ./docker-worker.conf:/etc/supervisor/conf.d/supervisord.conf:ro
     environment:
+      - PYTHONPATH=/app
       - VOD_HOST=0.0.0.0
       - VOD_PORT=8080
       - VOD_BASE_DIR=/app
@@ -22,18 +32,25 @@ services:
       - VOD_USER=${VOD_USER:?set VOD_USER in .env}
       - VOD_PASS=${VOD_PASS:?set VOD_PASS in .env}
       - VOD_SECRET_KEY=${VOD_SECRET_KEY:?set VOD_SECRET_KEY in .env}
+      # Optional dedicated key for storage credentials. Falls back to VOD_SECRET_KEY.
+      - STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY:-}
       - VOD_SECURE_COOKIES=${VOD_SECURE_COOKIES:-false}
       - VOD_SHARE_TTL_SEC=${VOD_SHARE_TTL_SEC:-604800}
       - VOD_USE_X_ACCEL=true
       - LIVE_HLS_DIR=/app/.hls_live
-      # Oeffentliche Basis-URL fuer Share-Links, z.B. https://recorder.example.com
+      # Public base URL for share links and OAuth callbacks, e.g. https://recorder.example.com
       - VOD_PUBLIC_BASE=${VOD_PUBLIC_BASE:-}
-      # Speicherwarnung
+      # Background task pool sizing.
+      - WORKER_THUMB_THREADS=${WORKER_THUMB_THREADS:-2}
+      - WORKER_REMUX_THREADS=${WORKER_REMUX_THREADS:-1}
+      - WORKER_TRANSCRIBE_THREADS=${WORKER_TRANSCRIBE_THREADS:-1}
+      - WORKER_STORAGE_THREADS=${WORKER_STORAGE_THREADS:-1}
+      # Storage warning thresholds.
       - STORAGE_ALERT_THRESHOLD_PCT=90
       - STORAGE_ALERT_THRESHOLD_FREE_GB=20
       - STORAGE_ALERT_CHECK_INTERVAL_SEC=60
       - STORAGE_ALERT_COOLDOWN_SEC=21600
-      - STORAGE_ALERT_WEBHOOK_URL=
+      - STORAGE_ALERT_WEBHOOK_URL=${STORAGE_ALERT_WEBHOOK_URL:-}
 
   nginx:
     image: nginx:alpine
@@ -42,7 +59,11 @@ services:
     ports:
       - "8090:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./:/app
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./:/app:ro
+      - hls_live:/app/.hls_live:ro
     depends_on:
       - app
+
+volumes:
+  hls_live:
