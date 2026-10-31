@@ -34,6 +34,10 @@ os.environ["REDIS_HOST"] = "127.0.0.1"
 os.environ["REDIS_PORT"] = "1"
 os.environ.pop("REDIS_URL", None)
 os.environ.pop("VOD_RATELIMIT_STORAGE_URI", None)
+# WEBUI.webui starts a network-bound badge sync daemon thread on import. It
+# writes into whichever BASE_DIR is active and races TemporaryDirectory cleanup
+# (intermittent 'Directory not empty' teardown errors), so keep it off in tests.
+os.environ["TWITCH_BADGE_AUTO_SYNC"] = "0"
 
 from core import config, database  # noqa: E402
 from core.storage import cli, http, service  # noqa: E402
