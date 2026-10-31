@@ -60,6 +60,8 @@ THUMB_LOCK_STALE_SEC = int(os.environ.get("THUMB_LOCK_STALE_SEC", "3600"))
 THUMB_LOCK_CLEANUP_INTERVAL_SEC = int(os.environ.get("THUMB_LOCK_CLEANUP_INTERVAL_SEC", "1800"))
 THUMB_BACKFILL_INTERVAL_SEC = int(os.environ.get("THUMB_BACKFILL_INTERVAL_SEC", "300"))
 THUMB_BACKFILL_MAX_PER_RUN = int(os.environ.get("THUMB_BACKFILL_MAX_PER_RUN", "20"))
+# A current-recording pointer is considered live only while its media file is fresh.
+ACTIVE_RECORDING_FRESH_SEC = int(os.environ.get("WORKER_ACTIVE_RECORDING_FRESH_SEC", "60"))
 WORKER_ID = f"{os.uname().nodename}:{os.getpid()}" if hasattr(os, "uname") else f"local:{os.getpid()}"
 # Parallel pools (env):
 #   WORKER_THUMB_THREADS       — IO pool for thumbnail (+ delete/empty); default 2
@@ -676,20 +678,14 @@ def process_delete_folder(payload):
     if not streamer:
         streamer = os.path.basename(os.path.realpath(folder_path))
 
+    if _folder_has_active_recording(folder_path) or _folder_has_active_remux(folder_path):
+        raise TaskDeferred(
+            f"Ordner wird noch beschrieben: {folder_path}", delay_sec=120
+        )
+
     logging.info("Löschauftrag für: %s", folder_path)
     # Wartezeit, damit der Recorder-Prozess Zeit hat, sauber zu stoppen
     time.sleep(8)
-
-    # Prozesse killen, die den Ordner blockieren könnten
-    if os.path.exists(folder_path):
-        try:
-            subprocess.run(
-                ["fuser", "-k", "-9", folder_path],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except Exception:
-            pass
 
     def _rm_tree(path):
         if not path or not os.path.exists(path):
@@ -721,14 +717,6 @@ def process_delete_folder(payload):
                     logging.warning("Löschversuch %s fehlgeschlagen: %s", i + 1, exc)
                     ok = False
                     time.sleep(2)
-                    try:
-                        subprocess.run(
-                            ["fuser", "-k", "-9", folder_path],
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL,
-                        )
-                    except Exception:
-                        pass
                     continue
             logging.info("Ordner erfolgreich gelöscht: %s", folder_path)
             ok = True
@@ -793,6 +781,98 @@ def _is_direct_child(parent, path):
         return False
 
 
+def _pid_is_alive(pid):
+    """Best-effort PID liveness check that is safe on Windows test hosts."""
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return False
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        # os.kill(pid, 0) can terminate the target on Windows; fail closed.
+        return True
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _folder_has_active_recording(folder_path):
+    """Execution-time guard before destructive folder cleanup.
+
+    The WebUI check only runs when the task is enqueued; a recording can start
+    while the task waits in the queue.
+    """
+    try:
+        names = os.listdir(folder_path)
+    except OSError:
+        return False
+    now = time.time()
+    for name in names:
+        if not name.endswith(".part"):
+            continue
+        try:
+            if now - os.path.getmtime(os.path.join(folder_path, name)) <= ACTIVE_RECORDING_FRESH_SEC:
+                return True
+        except OSError:
+            continue
+    for name in names:
+        if name != ".recording.lock" and not (
+            name.startswith(".recording.") and name.endswith(".lock")
+        ):
+            continue
+        try:
+            with open(os.path.join(folder_path, name), "r", encoding="utf-8") as handle:
+                content = handle.read().strip()
+        except OSError:
+            continue
+        if _pid_is_alive(content):
+            return True
+    for name in names:
+        if name != ".current_recording.json" and not (
+            name.startswith(".current_recording.") and name.endswith(".json")
+        ):
+            continue
+        try:
+            with open(os.path.join(folder_path, name), "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, ValueError):
+            continue
+        filename = os.path.basename(str((data or {}).get("filename") or ""))
+        if not filename:
+            continue
+        for candidate in (
+            os.path.join(folder_path, filename),
+            os.path.join(folder_path, f"{filename}.part"),
+        ):
+            try:
+                if time.time() - os.path.getmtime(candidate) <= ACTIVE_RECORDING_FRESH_SEC:
+                    return True
+            except OSError:
+                continue
+    return False
+
+
+def _folder_has_active_remux(folder_path):
+    """True while a remux lock in this archive is still fresh."""
+    try:
+        names = os.listdir(folder_path)
+    except OSError:
+        return False
+    now = time.time()
+    for name in names:
+        if not name.endswith(".remux.lock"):
+            continue
+        try:
+            if now - os.path.getmtime(os.path.join(folder_path, name)) <= REMUX_FILE_TIMEOUT_SEC + 300:
+                return True
+        except OSError:
+            continue
+    return False
+
+
 def process_empty_folder(payload):
     folder_path = payload.get("path")
     if not folder_path or not os.path.isdir(folder_path):
@@ -800,6 +880,10 @@ def process_empty_folder(payload):
     if not _is_direct_child(config.BASE_DIR, folder_path):
         logging.error("Unsicherer empty_folder Pfad abgelehnt: %s", folder_path)
         return False
+    if _folder_has_active_recording(folder_path) or _folder_has_active_remux(folder_path):
+        raise TaskDeferred(
+            f"Ordner wird noch beschrieben: {folder_path}", delay_sec=120
+        )
 
     logging.info("Leere Ordnerinhalt: %s", folder_path)
     deleted = 0
@@ -825,6 +909,9 @@ def process_empty_folder(payload):
     )
 
     def _keep_runtime_file(name):
+        # Preserve in-progress FFmpeg output even if the active check raced.
+        if name.endswith(".part"):
+            return True
         if name in keep_names:
             return True
         for prefix, suffix in keep_prefixes:
@@ -885,6 +972,9 @@ def process_transcribe(payload):
     try:
         # Run the helper script so transcription runs in a separate process
         run_py = os.path.join(config.APP_DIR, 'run_transcribe.py')
+        if not os.path.isfile(run_py):
+            logging.error("Transcribe-Helfer fehlt: %s", run_py)
+            return False
         cmd = [sys.executable, run_py, media]
         if transcript:
             cmd.append(transcript)
@@ -1252,6 +1342,31 @@ def storage_tick():
     return storage_service.tick()
 
 
+def _submit_claimed_task(pools, pool_name, task):
+    """Submit a claimed task, releasing its capacity slot if dispatch fails."""
+    with _INFLIGHT_LOCK:
+        _INFLIGHT[pool_name] += 1
+    try:
+        pools[pool_name].submit(_execute_claimed_task, task)
+    except Exception:
+        with _INFLIGHT_LOCK:
+            _INFLIGHT[pool_name] = max(0, _INFLIGHT[pool_name] - 1)
+        try:
+            database.defer_task(
+                task["id"],
+                "Worker dispatch failed",
+                delay_sec=30,
+                worker_id=WORKER_ID,
+            )
+        except Exception as exc:
+            logging.error(
+                "Konnte Task %s nach Dispatch-Fehler nicht zurückstellen: %s",
+                task.get("id"),
+                exc,
+            )
+        raise
+
+
 def _execute_claimed_task(task):
     """Run one claimed task in a pool thread; each DB op uses its own get_db()."""
     task_id = task["id"]
@@ -1351,18 +1466,18 @@ def main():
                         WORKER_ID,
                         stale_after=TASK_STALE_SEC,
                         allowed_types=["thumbnail"],
+                        max_attempts_by_type=TASK_MAX_ATTEMPTS,
                     )
                 if not task:
                     task = database.claim_next_task(
                         WORKER_ID,
                         stale_after=TASK_STALE_SEC,
                         allowed_types=allowed,
+                        max_attempts_by_type=TASK_MAX_ATTEMPTS,
                     )
                 if task:
                     pool_name = _pool_name_for_task(task["type"])
-                    with _INFLIGHT_LOCK:
-                        _INFLIGHT[pool_name] += 1
-                    pools[pool_name].submit(_execute_claimed_task, task)
+                    _submit_claimed_task(pools, pool_name, task)
                 else:
                     time.sleep(2)
             except Exception as e:
