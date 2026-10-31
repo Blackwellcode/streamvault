@@ -112,6 +112,10 @@ LIVE_HLS_DIR=${RAMDISK_DIR}
 VOD_USER=vaultadmin
 VOD_PASS=${INITIAL_PASS}
 VOD_SECRET_KEY=${SECRET_KEY}
+# Nginx in this installer terminates plain HTTP on port 80. Secure-only
+# cookies would make login fail until TLS is configured; set this to true
+# after enabling HTTPS.
+VOD_SECURE_COOKIES=false
 VOD_USE_X_ACCEL=true
 EOF
     chown root:"${SERVICE_USER}" "${ENV_FILE}"

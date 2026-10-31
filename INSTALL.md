@@ -124,6 +124,9 @@ LIVE_HLS_DIR=/dev/shm/streamvault_hls
 VOD_USER=vaultadmin
 VOD_PASS=
 VOD_SECRET_KEY=
+# The bundled Nginx site listens on HTTP port 80. Keep secure-only cookies
+# disabled until HTTPS is enabled, otherwise login redirects loop.
+VOD_SECURE_COOKIES=false
 VOD_USE_X_ACCEL=true
 # Optional dedicated key for cloud credentials (falls back to VOD_SECRET_KEY).
 # STORAGE_ENCRYPTION_KEY=
