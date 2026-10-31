@@ -62,6 +62,7 @@ from recorder import clip_engine
 from core import config
 from core import database
 from core import twitch_api
+from core.health import parse_supervisor_status
 from core import twitch_eventsub
 from core import twitch_templates
 from core import user_traffic
@@ -1955,7 +1956,7 @@ def collect_health_status():
             status_ok = False
             checks[name] = {"ok": False, "error": str(exc)}
 
-    expected = {"webui", "recorder", "worker", "livebot"}
+    expected = {"webui", "recorder", "worker"}
     services = {name: {"state": "unknown"} for name in sorted(expected)}
     try:
         result = subprocess.run(
@@ -1967,18 +1968,15 @@ def collect_health_status():
             check=False,
         )
         if result.returncode == 0:
-            for line in result.stdout.splitlines():
-                parts = line.split()
-                if len(parts) < 2:
-                    continue
-                program = parts[0].split(":", 1)[-1]
-                if program in services:
-                    state = parts[1]
-                    services[program] = {"state": state, "ok": state == "RUNNING"}
-                    if state != "RUNNING":
-                        status_ok = False
-            checks["services"] = {"ok": all(s.get("ok") for s in services.values()), "programs": services}
-            if not checks["services"]["ok"]:
+            services, missing, services_ok = parse_supervisor_status(
+                result.stdout, expected
+            )
+            checks["services"] = {"ok": services_ok, "programs": services}
+            if missing:
+                checks["services"]["error"] = (
+                    "missing supervisor programs: " + ", ".join(missing)
+                )
+            if not services_ok:
                 status_ok = False
         else:
             checks["services"] = {"ok": None, "error": result.stderr.strip()[:300], "programs": services}
@@ -12852,17 +12850,25 @@ def delete_folder_route(streamer):
         msg = "Ordner nicht gefunden oder ungültig."
         return redirect(url_for('index', channels_msg=msg))
 
-# Ensure baseline users exist (runs on import for Gunicorn)
-try:
-    ensure_admin_user()
-except Exception:
-    pass
+# Ensure baseline users exist (runs on import for Gunicorn). The standalone
+# transcription helper imports this module in a child process and must not
+# mutate users or start background sync threads.
+_IMPORT_ONLY = os.environ.get("STREAMVAULT_IMPORT_ONLY", "").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+if not _IMPORT_ONLY:
+    try:
+        ensure_admin_user()
+    except Exception:
+        logging.exception("Bootstrap: Admin-Benutzer konnte nicht sichergestellt werden")
 
-# Keep a full local Twitch badge library (~a few MB) for 1:1 chat icons.
-try:
-    maybe_start_twitch_badge_library_sync()
-except Exception:
-    logging.exception("Could not start Twitch badge library sync")
+    # Keep a full local Twitch badge library (~a few MB) for 1:1 chat icons.
+    try:
+        maybe_start_twitch_badge_library_sync()
+    except Exception:
+        logging.exception("Could not start Twitch badge library sync")
 
 
 
