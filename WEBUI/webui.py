@@ -10459,6 +10459,16 @@ def _pwa_icon_entries():
 
 def mobile_app_head_tags():
     sw_url = url_for("service_worker_js")
+    # Built outside the f-string: a backslash inside an f-string expression is
+    # only valid from Python 3.12 (PEP 701); Debian 12 / Ubuntu 22.04 ship 3.11/3.10.
+    tizen_tags = ""
+    if is_tizen_tv():
+        tizen_css = url_for("static", filename="css/tizen_tv.css", v=ASSET_VERSION)
+        tizen_js = url_for("static", filename="tizen_tv_nav.js", v=ASSET_VERSION)
+        tizen_tags = (
+            f'<link id="ns-tizen-tv-css" rel="stylesheet" href="{tizen_css}">\n'
+            f'    <script src="{tizen_js}" defer></script>'
+        )
     return f"""{PWA_HEAD_MARKER}
     <meta name="theme-color" content="{PWA_THEME_COLOR}">
     <meta name="color-scheme" content="dark">
@@ -10471,7 +10481,7 @@ def mobile_app_head_tags():
     <link rel="icon" type="image/png" sizes="192x192" href="{url_for('app_icon_png', size=192)}">
     <link rel="icon" type="image/png" sizes="512x512" href="{url_for('app_icon_png', size=512)}">
     <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var isTv=/Tizen|SMART-TV|SmartTV|NetCast|Web0S/i.test(navigator.userAgent)||location.search.indexOf("tv=1")!==-1;if(isTv){{document.documentElement.classList.add("is-tizen-tv");}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{if(isTv)return;var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
-    {f'<link id="ns-tizen-tv-css" rel="stylesheet" href="{url_for("static", filename="css/tizen_tv.css", v=ASSET_VERSION)}">\n    <script src="{url_for("static", filename="tizen_tv_nav.js", v=ASSET_VERSION)}" defer></script>' if is_tizen_tv() else ''}
+    {tizen_tags}
     <script>
       (function() {{
         if ("serviceWorker" in navigator) {{

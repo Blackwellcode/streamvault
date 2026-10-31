@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# StreamVault - VPS Deployment & Validation (Debian/Ubuntu, Venv-Python >= 3.12)
+# StreamVault - VPS Deployment & Validation (Debian 12+ / Ubuntu 22.04+, Python >= 3.10)
 #
 #   streamvault_vps.sh validate [--run-tests] [--no-e2e] [--fix] [--strict]
 #   streamvault_vps.sh deploy   (--source DIR | --ref GITREF) [--force]
@@ -36,7 +36,7 @@ NGINX_USER="${SV_NGINX_USER:-www-data}"
 BACKUP_DIR="${SV_BACKUP_DIR:-/var/backups/streamvault}"
 PY="${VENV_DIR}/bin/python3"
 SERVICES=(webui recorder worker)
-MIN_PY_MINOR=12   # WEBUI/webui.py uses PEP 701 f-strings (Python >= 3.12)
+MIN_PY_MINOR=10   # Debian 12 (3.11) / Ubuntu 22.04 (3.10) floor
 
 RUN_TESTS=0; E2E=1; FIX=0; STRICT=0; FORCE=0; SKIP_TESTS=0; PRUNE=0
 SOURCE_DIR=""; GIT_REF=""
@@ -203,7 +203,7 @@ check_system() {
     if "$PY" -c "import sys; sys.exit(0 if sys.version_info >= (3, ${MIN_PY_MINOR}) else 1)"; then
         pass "Venv-Python $ver (>= 3.${MIN_PY_MINOR})"
     else
-        fail "Venv-Python $ver < 3.${MIN_PY_MINOR}: WEBUI/webui.py nutzt PEP-701-f-Strings und laesst sich nicht kompilieren (Ubuntu 24.04+/Debian 13 oder Python 3.12 via deadsnakes/pyenv verwenden)"
+        fail "Venv-Python $ver < 3.${MIN_PY_MINOR} wird nicht unterstuetzt"
     fi
 
     # Compile gate without writing __pycache__ into the deployed tree.

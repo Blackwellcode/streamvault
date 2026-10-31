@@ -2,7 +2,7 @@
 
 ## Project Overview
 StreamVault is an automated 24/7 multi-platform live stream recording, HLS live restreaming, VOD transcoding, and cloud archival system.
-- **Languages & Frameworks:** Python 3.12+ (`WEBUI/webui.py` uses PEP 701 f-strings) (Flask, SQLite WAL, Streamlink, yt-dlp, FFmpeg, Whisper ASR, Boto3, PyCryptodome).
+- **Languages & Frameworks:** Python 3.10+ (Ubuntu 22.04 / Debian 12 system Python) (Flask, SQLite WAL, Streamlink, yt-dlp, FFmpeg, Whisper ASR, Boto3, PyCryptodome).
 - **Core Services:**
   - `Streamrecorder.py`: Daemon managing per-channel recording processes (`flock`-isolated).
   - `worker.py`: Multi-threaded background job runner (IO, Remux, ASR, Cloud Storage).
@@ -115,6 +115,11 @@ nachtsilo-hub/
 - **STRICTLY FORBIDDEN:** `except Exception: pass`, `except: pass`, or returning empty values without logging.
 - Catch specific error classes (e.g., `sqlite3.OperationalError`, `subprocess.TimeoutExpired`, `OSError`).
 - Always log caught unexpected exceptions using `logger.error(...)` or `logger.warning(...)`.
+
+### 1a. Python 3.10 Compatibility
+- Production runs on the distro Python (3.10 on Ubuntu 22.04, 3.11 on Debian 12).
+- **No PEP 701 f-strings:** never put backslashes (`\n`), comments or the enclosing quote character inside an f-string `{...}` expression. Build the value in a variable first. Python 3.12+ accepts this silently, so the Windows audit host (3.12) will not catch it; `scripts/streamvault_vps.sh validate` compiles with the target interpreter.
+- No 3.11+ stdlib APIs (`tomllib`, `datetime.UTC`, `typing.Self`, `ExceptionGroup`, `except*`).
 
 ### 2. Immutable Tests Rule
 - **NEVER** weaken, comment out, or delete assertions in `tests/` to make a test pass.
