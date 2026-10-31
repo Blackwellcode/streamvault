@@ -691,11 +691,13 @@ def list_tasks(limit=30):
 
 
 @db_retry(max_retries=5, delay=0.1, backoff=2.0)
-def claim_next_task(worker_id, stale_after=7200, allowed_types=None):
+def claim_next_task(worker_id, stale_after=7200, allowed_types=None, max_attempts_by_type=None):
     """Claim the oldest pending task, optionally restricted to allowed_types.
 
     When allowed_types is set (non-empty sequence), only those task types are
-    considered — used by the worker to avoid claiming work for saturated pools.
+    considered - used by the worker to avoid claiming work for saturated pools.
+    When max_attempts_by_type is provided, stale tasks that exhausted their
+    retry budget are failed instead of being requeued forever.
     """
     conn = get_db()
     now = time.time()
@@ -708,14 +710,43 @@ def claim_next_task(worker_id, stale_after=7200, allowed_types=None):
             return None
     try:
         conn.execute("BEGIN IMMEDIATE")
-        conn.execute(
+        stale_rows = conn.execute(
             """
-            UPDATE tasks
-            SET status='pending', worker_id=NULL, locked_at=NULL, updated_at=?, error='Worker timeout, neu eingereiht.'
+            SELECT id, type, attempts
+            FROM tasks
             WHERE status='running' AND locked_at IS NOT NULL AND locked_at < ?
             """,
-            (now, cutoff),
-        )
+            (cutoff,),
+        ).fetchall()
+        for stale in stale_rows:
+            attempts = int(stale["attempts"] or 0)
+            if max_attempts_by_type is None:
+                exhausted = False
+            else:
+                max_attempts = max(
+                    1, int(max_attempts_by_type.get(stale["type"], 1) or 1)
+                )
+                exhausted = attempts >= max_attempts
+            if exhausted:
+                conn.execute(
+                    """
+                    UPDATE tasks
+                    SET status='failed', worker_id=NULL, locked_at=NULL, updated_at=?,
+                        error='Worker timeout; max attempts reached.'
+                    WHERE id=? AND status='running'
+                    """,
+                    (now, stale["id"]),
+                )
+            else:
+                conn.execute(
+                    """
+                    UPDATE tasks
+                    SET status='pending', worker_id=NULL, locked_at=NULL, updated_at=?,
+                        error='Worker timeout, neu eingereiht.'
+                    WHERE id=? AND status='running'
+                    """,
+                    (now, stale["id"]),
+                )
         if type_filter:
             placeholders = ",".join("?" for _ in type_filter)
             row = conn.execute(

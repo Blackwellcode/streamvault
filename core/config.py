@@ -165,6 +165,13 @@ MAINTENANCE_MODE = _env_flag("MAINTENANCE_MODE", False)
 DISCORD_ERROR_WEBHOOK_URL = os.environ.get("DISCORD_ERROR_WEBHOOK_URL", "").strip()
 
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
+SENTRY_SEND_DEFAULT_PII = _env_flag("SENTRY_SEND_DEFAULT_PII", False)
+try:
+    SENTRY_TRACES_SAMPLE_RATE = max(
+        0.0, min(1.0, float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0") or 0))
+    )
+except (TypeError, ValueError):
+    SENTRY_TRACES_SAMPLE_RATE = 0.0
 if SENTRY_DSN:
     try:
         import sentry_sdk
@@ -174,8 +181,8 @@ if SENTRY_DSN:
         sentry_sdk.init(
             dsn=SENTRY_DSN,
             integrations=[FlaskIntegration(), ThreadingIntegration(propagate_hub=True)],
-            traces_sample_rate=1.0,
-            send_default_pii=True,
+            traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+            send_default_pii=SENTRY_SEND_DEFAULT_PII,
         )
     except ImportError:
         pass

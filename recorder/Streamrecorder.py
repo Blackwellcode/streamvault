@@ -60,6 +60,8 @@ RECORDINGS_BASE_DIR = (
 os.makedirs(RECORDINGS_BASE_DIR, exist_ok=True)
 RETRY_DELAY = 30
 HEARTBEAT_INTERVAL = 60
+# Poll interval for live-only monitors (no recording, notifications only).
+CHECK_INTERVAL = int(os.environ.get('STREAM_RECORDER_CHECK_INTERVAL', '30'))
 TEMP_OUTPUT_SUFFIX = ".part"
 MIN_RECORD_FILE_SIZE = 1024
 SALVAGE_MIN_BYTES = int(os.environ.get('STREAM_RECORDER_SALVAGE_MIN_BYTES', str(5 * 1024 * 1024)))
@@ -105,6 +107,8 @@ YTDLP_PROBE_TIMEOUT = int(os.environ.get('STREAM_RECORDER_YTDLP_PROBE_TIMEOUT', 
 YTDLP_STREAM_TIMEOUT = int(os.environ.get('STREAM_RECORDER_YTDLP_STREAM_TIMEOUT', '30'))
 YTDLP_CHAT_IDLE_TIMEOUT = int(os.environ.get('STREAM_RECORDER_YTDLP_CHAT_IDLE_TIMEOUT', '90'))
 FFMPEG_OUTPUT_TIMEOUT = int(os.environ.get('STREAM_RECORDER_FFMPEG_OUTPUT_TIMEOUT', '90'))
+# Bound the final wait after stdout EOF; a wedged FFmpeg must not hang the channel forever.
+FFMPEG_FINALIZE_TIMEOUT = int(os.environ.get('STREAM_RECORDER_FFMPEG_FINALIZE_TIMEOUT', '30'))
 # Cheap live-poll while the channel is actually offline. Do not exponential-backoff
 # this to minutes — that was the missing VOD-start gap (up to 10 min).
 STREAM_OFFLINE_RETRY_BASE = int(os.environ.get('STREAM_RECORDER_OFFLINE_RETRY_BASE', '5'))
@@ -416,8 +420,21 @@ def disk_blocks_recording(path):
     """True when free space is critically low — pause starting new recordings."""
     if _storage_pause_flag_active():
         return True
+    target = path or RECORDINGS_BASE_DIR
     try:
-        usage = shutil.disk_usage(path or RECORDINGS_BASE_DIR)
+        check_path = os.path.abspath(str(target))
+        while check_path and not os.path.exists(check_path):
+            parent = os.path.dirname(check_path)
+            if parent == check_path:
+                break
+            check_path = parent
+        if not check_path or not os.path.exists(check_path):
+            check_path = (
+                RECORDINGS_BASE_DIR
+                if os.path.exists(RECORDINGS_BASE_DIR)
+                else os.path.dirname(os.path.abspath(RECORDINGS_BASE_DIR))
+            )
+        usage = shutil.disk_usage(check_path)
         if usage.total <= 0:
             return False
         used_pct = (float(usage.used) / float(usage.total)) * 100.0
@@ -427,7 +444,10 @@ def disk_blocks_recording(path):
         if free_gb <= STORAGE_PAUSE_FREE_GB:
             return True
         return False
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            "Fehler bei der Speicherplatzprüfung für %s: %s", target, exc
+        )
         return False
 
 
@@ -1257,12 +1277,39 @@ def recording_platform_tag(filename):
     return None
 
 
+def archive_is_shared(archive_channel):
+    """True when more than one configured source writes into this archive.
+
+    Duplicate cleanup must fail closed here: a same-platform file may belong to
+    a sibling source that shares the archive directory.
+    """
+    archive = str(archive_channel or "").strip()
+    if not archive:
+        return True
+    try:
+        channels = database.channels_for_archive(archive)
+    except Exception as exc:
+        logger.warning(
+            "Archiv-Zuordnung für %s nicht prüfbar - Duplikat-Bereinigung übersprungen: %s",
+            archive,
+            exc,
+        )
+        return True
+    return len(channels) > 1
+
+
 def cleanup_duplicate_recordings(recordings_dir, recording_file, source_channel, archive_channel=None):
     try:
         if not os.path.exists(recording_file) or os.path.getsize(recording_file) < MIN_RECORD_FILE_SIZE:
             return
         recording_name = os.path.basename(recording_file)
         archive = archive_channel or source_channel
+        if archive_is_shared(archive):
+            logger.info(
+                "Duplikat-Bereinigung übersprungen: Archiv %s wird von mehreren Quellen genutzt.",
+                archive,
+            )
+            return
         recording_ts = parse_recording_timestamp(recording_name, source_channel, archive_channel=archive)
         if recording_ts is None:
             return
@@ -1343,6 +1390,38 @@ def stop_process(process):
             logger.debug("Process already exited during stop: %s", exc)
         except Exception as exc:
             logger.warning("Unexpected error stopping process: %s", exc)
+
+def wait_for_process_exit(process, timeout=FFMPEG_FINALIZE_TIMEOUT):
+    """Wait for a child with a hard deadline; kill and reap if it is wedged.
+
+    Returns True when the process exited before the deadline.
+    """
+    if process is None:
+        return True
+    try:
+        process.wait(timeout=max(1, int(timeout or 1)))
+        return True
+    except subprocess.TimeoutExpired:
+        logger.warning(
+            "Prozess %s reagiert nicht innerhalb von %ss - erzwinge Beendigung.",
+            getattr(process, "pid", "?"),
+            timeout,
+        )
+        try:
+            process.kill()
+        except OSError as exc:
+            # ProcessLookupError: child exited between the timeout and kill().
+            logger.warning(
+                "Kill fuer Prozess %s fehlgeschlagen: %s", getattr(process, "pid", "?"), exc
+            )
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            logger.error("Prozess %s konnte nicht beendet werden.", getattr(process, "pid", "?"))
+        return False
+    except Exception as exc:
+        logger.warning("Fehler beim Warten auf Prozess %s: %s", getattr(process, "pid", "?"), exc)
+        return False
 
 def cleanup_live_hls(except_channel=None):
     if not os.path.isdir(LIVE_HLS_ROOT):
@@ -3329,14 +3408,9 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     logger.error("FFmpeg-Prozess stdout ist None. Kann keine Ausgabe lesen.")
                     
                 if hang_detected and process.poll() is None:
-                    try:
-                        process.wait(timeout=10)
-                    except subprocess.TimeoutExpired:
-                        logger.warning("FFmpeg reagiert nicht, erzwinge Beendigung...")
-                        process.kill()
-                        process.wait()
+                    wait_for_process_exit(process, timeout=10)
                 else:
-                    process.wait()
+                    wait_for_process_exit(process, timeout=FFMPEG_FINALIZE_TIMEOUT)
                 stop_process(source_process)
                 
                 if process.returncode == 0:
@@ -3663,6 +3737,24 @@ def stop_channel_process(proc, channel, timeout=5):
         logger.error("Channel-Prozess %s konnte nicht gestoppt werden: %s", channel, exc)
 
 
+def stop_channel_and_release_lock(recordings_dir, channel, proc, timeout=5):
+    """Stop the channel worker *before* releasing its flock.
+
+    Releasing first lets a new recorder process acquire the same channel while
+    the old FFmpeg child is still writing, producing duplicate recordings.
+    """
+    try:
+        stop_channel_process(proc, channel, timeout=timeout)
+    finally:
+        try:
+            release_held_channel_lock(recordings_dir, channel)
+        except Exception as exc:
+            # Must not mask an exception raised by stop_channel_process().
+            logger.warning(
+                "Channel-Lock fuer %s konnte nicht freigegeben werden: %s", channel, exc
+            )
+
+
 def request_shutdown(signum=None, frame=None):
     global shutdown_requested
     shutdown_requested = True
@@ -3705,7 +3797,7 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
     is_live_now = False
     logger.info(f"Live-Only Monitor aktiv für {source_channel} (Discord-Alert + Live-Stream, keine Aufnahme).")
 
-    while True:
+    while not shutdown_requested:
         try:
             current_conf = get_source_config(source_channel)
             if not current_conf:
@@ -3754,12 +3846,12 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
                 except Exception:
                     pass
 
-            time.sleep(CHECK_INTERVAL)
+            interruptible_sleep(CHECK_INTERVAL)
         except (KeyboardInterrupt, SystemExit):
             break
         except Exception as exc:
             logger.error(f"Fehler im Live-Only Monitor für {source_channel}: {exc}")
-            time.sleep(CHECK_INTERVAL)
+            interruptible_sleep(CHECK_INTERVAL)
 
 def run_channel(source_channel):
     """Startet Aufnahme und Chat-Prozess für einen Channel."""
@@ -3867,28 +3959,7 @@ if __name__ == "__main__":
                     old_mode = channel_modes.get(channel)
                     if proc.is_alive() and old_mode == mode:
                         continue
-                    try:
-                        release_held_channel_lock(recordings_dir, channel)
-                    except Exception:
-                        pass
-                    if proc.is_alive():
-                        stop_channel_process(proc, channel)
-                    channel_procs.pop(channel, None)
-                    channel_modes.pop(channel, None)
-
-                # Reap / restart existing process before lock checks so our own
-                # held flock does not permanently block restart.
-                if channel in channel_procs:
-                    proc = channel_procs[channel]
-                    old_mode = channel_modes.get(channel)
-                    if proc.is_alive() and old_mode == mode:
-                        continue
-                    try:
-                        release_held_channel_lock(recordings_dir, channel)
-                    except Exception:
-                        pass
-                    if proc.is_alive():
-                        stop_channel_process(proc, channel)
+                    stop_channel_and_release_lock(recordings_dir, channel, proc)
                     channel_procs.pop(channel, None)
                     channel_modes.pop(channel, None)
 
@@ -3932,11 +4003,7 @@ if __name__ == "__main__":
                     conf = get_source_config(channel)
                     archive_channel = conf.get("archive_name") or channel
                     recordings_dir = os.path.join(RECORDINGS_BASE_DIR, archive_channel)
-                    try:
-                        release_held_channel_lock(recordings_dir, channel)
-                    except Exception:
-                        pass
-                    stop_channel_process(proc, channel)
+                    stop_channel_and_release_lock(recordings_dir, channel, proc)
                     logger.info(f"Channel-Prozess beendet: {channel}")
             time.sleep(5)
     except KeyboardInterrupt:
@@ -3946,12 +4013,7 @@ if __name__ == "__main__":
             conf = get_source_config(channel) or {}
             archive_channel = conf.get("archive_name") or channel
             recordings_dir = os.path.join(RECORDINGS_BASE_DIR, archive_channel)
-            try:
-                release_held_channel_lock(recordings_dir, channel)
-            except Exception:
-                pass
-            if proc and proc.is_alive():
-                proc.terminate()
+            stop_channel_and_release_lock(recordings_dir, channel, proc)
         
         for proc in channel_procs.values():
             if proc and proc.is_alive():
