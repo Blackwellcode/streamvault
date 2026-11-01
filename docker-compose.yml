@@ -16,7 +16,9 @@ services:
         WORKDIR /app
         CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
     restart: unless-stopped
-    stop_grace_period: 30s
+    # Must exceed the recorder's supervisord stopwaitsecs (60 s), otherwise
+    # Docker SIGKILLs the container before FFmpeg finishes the MP4.
+    stop_grace_period: 75s
     volumes:
       # Application code and archive media (bind mount).
       - ./:/app
