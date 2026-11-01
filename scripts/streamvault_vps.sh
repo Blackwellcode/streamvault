@@ -656,8 +656,8 @@ HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()
 check_hls_ramdisk() {
     section "HLS RAM-Disk"
     if [[ -z "$LIVE_HLS_DIR" ]]; then
-        fail "LIVE_HLS_DIR fehlt in $ENV_FILE - WebUI (/dev/shm/streamvault_hls) und Recorder (/dev/shm/streamrecorder_hls) haben unterschiedliche Defaults"
-        return
+        warn "LIVE_HLS_DIR fehlt in $ENV_FILE - WebUI und Recorder nutzen den Default /dev/shm/streamvault_hls; Nginx-Alias muss dazu passen"
+        LIVE_HLS_DIR="/dev/shm/streamvault_hls"
     fi
     pass "LIVE_HLS_DIR=$LIVE_HLS_DIR"
     if [[ ! -d "$LIVE_HLS_DIR" ]]; then

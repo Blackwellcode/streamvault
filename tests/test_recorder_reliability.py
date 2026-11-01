@@ -438,6 +438,33 @@ class HealthStatusTests(unittest.TestCase):
         self.assertEqual(missing, [])
 
 
+class LiveHlsRootTests(unittest.TestCase):
+    def test_recorder_writes_where_webui_serves(self):
+        self.assertEqual(recorder.LIVE_HLS_ROOT, config.LIVE_HLS_ROOT)
+
+    def test_chat_clip_playlist_uses_config_root(self):
+        from recorder import chat_clip
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("LIVE_HLS_DIR", None)
+            playlist = chat_clip.live_hls_playlist("SomeChannel")
+        self.assertEqual(
+            playlist,
+            os.path.join(config.LIVE_HLS_ROOT, "somechannel", "index.m3u8"),
+        )
+
+    def test_diag_finds_ffmpeg_writing_to_config_root(self):
+        from core import live_watch_diag
+        root = "/dev/shm/streamvault_hls"
+        ps_output = (
+            "USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\n"
+            f"vault 4242 1.0 0.5 1 1 ? S 00:00 0:01 ffmpeg -i pipe: {root}/alice/index.m3u8\n"
+            "vault 4343 1.0 0.5 1 1 ? S 00:00 0:01 ffmpeg -i pipe: /dev/shm/other/bob/index.m3u8\n"
+        )
+        with mock.patch.object(live_watch_diag.config, "LIVE_HLS_ROOT", root), \
+                mock.patch.object(live_watch_diag.subprocess, "check_output", return_value=ps_output):
+            self.assertEqual(live_watch_diag.ffmpeg_hls_pids(), {"alice": 4242})
+
+
 class DiskSpaceGuardTests(IsolatedBaseTest):
     def test_disk_blocks_recording_on_nonexistent_dir_when_disk_full(self):
         from collections import namedtuple

@@ -135,11 +135,8 @@ ENC_PRESET = os.environ.get('STREAM_RECORDER_PRESET', 'veryfast')
 ENC_CRF = os.environ.get('STREAM_RECORDER_CRF', '26')
 
 # Live HLS-Konfiguration
-if os.path.isdir("/dev/shm"):
-    DEFAULT_LIVE_HLS_ROOT = os.path.join("/dev/shm", "streamrecorder_hls")
-else:
-    DEFAULT_LIVE_HLS_ROOT = os.path.join(RECORDINGS_BASE_DIR, ".hls_live")
-LIVE_HLS_ROOT = os.environ.get('LIVE_HLS_DIR', DEFAULT_LIVE_HLS_ROOT)
+# Single source of truth shared with the WebUI, which serves these segments.
+LIVE_HLS_ROOT = config.LIVE_HLS_ROOT
 LIVE_HLS_TIME = int(os.environ.get('LIVE_HLS_TIME', '4'))
 LIVE_HLS_LIST_SIZE = int(os.environ.get('LIVE_HLS_LIST_SIZE', '40'))
 LIVE_HLS_TTL_SEC = int(os.environ.get('LIVE_HLS_TTL_SEC', '900'))
