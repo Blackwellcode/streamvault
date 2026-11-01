@@ -62,7 +62,12 @@ from recorder import clip_engine
 from core import config
 from core import database
 from core import twitch_api
-from core.health import parse_supervisor_status
+from core.health import (
+    SYSTEMD_SHOW_PROPERTIES,
+    parse_supervisor_status,
+    parse_systemctl_show,
+    systemd_unit_name,
+)
 from core import twitch_eventsub
 from core import twitch_templates
 from core import user_traffic
@@ -1917,6 +1922,57 @@ def stalk_heartbeat_age_sec():
     return None
 
 
+def _run_status_command(cmd):
+    """Run a short status command; return (stdout, returncode, error)."""
+    try:
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=3,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return "", None, str(exc)[:300]
+    return result.stdout, result.returncode, result.stderr.strip()[:300]
+
+
+def collect_service_status(expected):
+    """Service health from supervisor, falling back to systemd units.
+
+    ``ok`` is None when neither supervisor nor the streamvault-* systemd
+    units can be queried, so an unknown state never reads as healthy.
+    """
+    services = {name: {"state": "unknown"} for name in sorted(expected)}
+    out, rc, sup_err = _run_status_command(["supervisorctl", "status"])
+    # supervisorctl exits 3 when some programs are not RUNNING.
+    if rc in (0, 3) and out.strip():
+        services, missing, services_ok = parse_supervisor_status(out, expected)
+        status = {"ok": services_ok, "manager": "supervisor", "programs": services}
+        if missing:
+            status["error"] = "missing supervisor programs: " + ", ".join(missing)
+        return status
+
+    units = [systemd_unit_name(name) for name in sorted(expected)]
+    out, rc, sysd_err = _run_status_command(
+        ["systemctl", "show", "-p", SYSTEMD_SHOW_PROPERTIES, *units]
+    )
+    if rc == 0:
+        services, missing, services_ok = parse_systemctl_show(out, expected)
+        if len(missing) < len(services):
+            status = {"ok": services_ok, "manager": "systemd", "programs": services}
+            if missing:
+                status["error"] = "missing systemd units: " + ", ".join(
+                    systemd_unit_name(name) for name in missing
+                )
+            return status
+        sysd_err = "no streamvault-* systemd units loaded"
+    error = "supervisorctl: " + (sup_err or "no output") + "; systemctl: " + (sysd_err or "no output")
+    logging.warning("Health check cannot determine service state: %s", error)
+    return {"ok": None, "error": error[:600], "programs": services}
+
+
 def collect_health_status():
     checks = {}
     status_ok = True
@@ -1956,32 +2012,9 @@ def collect_health_status():
             status_ok = False
             checks[name] = {"ok": False, "error": str(exc)}
 
-    expected = {"webui", "recorder", "worker"}
-    services = {name: {"state": "unknown"} for name in sorted(expected)}
-    try:
-        result = subprocess.run(
-            ["supervisorctl", "status"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            timeout=3,
-            check=False,
-        )
-        if result.returncode == 0:
-            services, missing, services_ok = parse_supervisor_status(
-                result.stdout, expected
-            )
-            checks["services"] = {"ok": services_ok, "programs": services}
-            if missing:
-                checks["services"]["error"] = (
-                    "missing supervisor programs: " + ", ".join(missing)
-                )
-            if not services_ok:
-                status_ok = False
-        else:
-            checks["services"] = {"ok": None, "error": result.stderr.strip()[:300], "programs": services}
-    except Exception as exc:
-        checks["services"] = {"ok": None, "error": str(exc), "programs": services}
+    checks["services"] = collect_service_status({"webui", "recorder", "worker"})
+    if checks["services"].get("ok") is False:
+        status_ok = False
 
     task_counts = task_status_counts()
     recording_locks = count_active_recording_locks()

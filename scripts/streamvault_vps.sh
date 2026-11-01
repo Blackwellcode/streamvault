@@ -448,7 +448,6 @@ print(json.dumps({"services": services, "missing": missing, "ok": ok}))
         done
         tstop="$(systemctl show -p TimeoutStopUSec --value streamvault-recorder.service 2>/dev/null || true)"
         info "streamvault-recorder TimeoutStopSec=${tstop:-?} (muss > FFMPEG_FINALIZE_TIMEOUT=30 s sein)"
-        warn "WebUI-/healthz fragt nur 'supervisorctl status' ab - auf systemd-Hosts ist checks.services.ok=null (Dienstausfall wird dort nicht gemeldet)"
         ;;
     *)
         fail "Weder supervisorctl noch streamvault-*.service gefunden"

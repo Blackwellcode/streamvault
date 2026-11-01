@@ -56,7 +56,7 @@ except ImportError:
 import WEBUI  # noqa: F401,E402  (parent package for the helper import test)
 import run_transcribe  # noqa: E402
 from core import config, database  # noqa: E402
-from core.health import parse_supervisor_status  # noqa: E402
+from core.health import parse_supervisor_status, parse_systemctl_show  # noqa: E402
 from recorder import Streamrecorder as recorder  # noqa: E402
 from recorder import worker  # noqa: E402
 
@@ -436,6 +436,116 @@ class HealthStatusTests(unittest.TestCase):
         _services, missing, ok = parse_supervisor_status(output, self.EXPECTED)
         self.assertFalse(ok)
         self.assertEqual(missing, [])
+
+
+def _systemctl_block(program, load="loaded", active="active", sub="running"):
+    return (
+        f"Id=streamvault-{program}.service\n"
+        f"LoadState={load}\nActiveState={active}\nSubState={sub}\n"
+    )
+
+
+class SystemdHealthTests(unittest.TestCase):
+    EXPECTED = {"webui", "recorder", "worker"}
+
+    def test_all_units_active(self):
+        output = "\n".join(_systemctl_block(p) for p in ("worker", "webui", "recorder"))
+        services, missing, ok = parse_systemctl_show(output, self.EXPECTED)
+        self.assertTrue(ok)
+        self.assertEqual(missing, [])
+        self.assertEqual(services["recorder"]["state"], "active/running")
+
+    def test_failed_unit_is_degraded(self):
+        output = "\n".join([
+            _systemctl_block("webui"),
+            _systemctl_block("recorder", active="failed", sub="failed"),
+            _systemctl_block("worker"),
+        ])
+        services, missing, ok = parse_systemctl_show(output, self.EXPECTED)
+        self.assertFalse(ok)
+        self.assertEqual(missing, [])
+        self.assertIs(services["recorder"]["ok"], False)
+
+    def test_not_found_unit_is_missing(self):
+        output = "\n".join([
+            _systemctl_block("webui"),
+            _systemctl_block("recorder"),
+            _systemctl_block("worker", load="not-found", active="inactive", sub="dead"),
+        ])
+        _services, missing, ok = parse_systemctl_show(output, self.EXPECTED)
+        self.assertFalse(ok)
+        self.assertEqual(missing, ["worker"])
+
+    def test_state_mapping(self):
+        from core.health import systemd_state_ok
+        self.assertIs(systemd_state_ok("activating", "auto-restart"), False)
+        self.assertIsNone(systemd_state_ok("activating", "start"))
+        self.assertIsNone(systemd_state_ok("deactivating", "stop-sigterm"))
+        self.assertIs(systemd_state_ok("inactive", "dead"), False)
+        self.assertIs(systemd_state_ok("active", "exited"), False)
+
+    def test_crlf_output_is_parsed(self):
+        output = "\n".join(_systemctl_block(p) for p in sorted(self.EXPECTED)).replace("\n", "\r\n")
+        _services, missing, ok = parse_systemctl_show(output, self.EXPECTED)
+        self.assertTrue(ok)
+        self.assertEqual(missing, [])
+
+
+class ServiceStatusFallbackTests(unittest.TestCase):
+    EXPECTED = {"webui", "recorder", "worker"}
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import webui
+        cls.webui = webui
+
+    def _run(self, responses):
+        calls = []
+
+        def fake(cmd):
+            calls.append(cmd[0])
+            return responses[cmd[0]]
+
+        with mock.patch.object(self.webui, "_run_status_command", side_effect=fake):
+            return self.webui.collect_service_status(self.EXPECTED), calls
+
+    def test_supervisor_exit_3_reports_degraded(self):
+        out = (
+            "webui RUNNING pid 1, uptime 1:00:00\n"
+            "recorder FATAL Exited too quickly\n"
+            "worker RUNNING pid 3, uptime 1:00:00\n"
+        )
+        status, calls = self._run({"supervisorctl": (out, 3, "")})
+        self.assertIs(status["ok"], False)
+        self.assertEqual(status["manager"], "supervisor")
+        self.assertEqual(calls, ["supervisorctl"])
+
+    def test_falls_back_to_systemd_without_supervisor(self):
+        out = "\n".join([
+            _systemctl_block("webui"),
+            _systemctl_block("recorder", active="failed", sub="failed"),
+            _systemctl_block("worker"),
+        ])
+        status, calls = self._run({
+            "supervisorctl": ("", None, "No such file or directory"),
+            "systemctl": (out, 0, ""),
+        })
+        self.assertIs(status["ok"], False)
+        self.assertEqual(status["manager"], "systemd")
+        self.assertEqual(calls, ["supervisorctl", "systemctl"])
+
+    def test_unknown_when_no_manager_has_units(self):
+        out = "\n".join(
+            _systemctl_block(p, load="not-found", active="inactive", sub="dead")
+            for p in sorted(self.EXPECTED)
+        )
+        with self.assertLogs(level="WARNING"):
+            status, _calls = self._run({
+                "supervisorctl": ("", None, "No such file or directory"),
+                "systemctl": (out, 0, ""),
+            })
+        self.assertIsNone(status["ok"])
+        self.assertIn("no streamvault-* systemd units loaded", status["error"])
 
 
 class LiveHlsRootTests(unittest.TestCase):
