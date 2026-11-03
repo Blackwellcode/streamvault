@@ -2,6 +2,7 @@
 
 import bisect
 import glob
+import ipaddress
 import json
 import logging
 import math
@@ -201,11 +202,21 @@ RATELIMIT_STORAGE_URI = _resolve_ratelimit_storage_uri(
     os.environ.get("VOD_RATELIMIT_STORAGE_URI", "memory://")
 )
 # Default credentials removed for security - only environment variables are allowed
-TRUSTED_PROXIES = {
-    ip.strip()
-    for ip in os.environ.get("VOD_TRUSTED_PROXIES", "127.0.0.1,::1").split(",")
-    if ip.strip()
-}
+def _parse_trusted_proxies(raw):
+    """Comma-separated IPs or CIDR networks, e.g. ``127.0.0.1,::1,172.16.0.0/12``."""
+    networks = []
+    for item in str(raw or "").split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            networks.append(ipaddress.ip_network(item, strict=False))
+        except ValueError:
+            logging.error("Ignoring invalid VOD_TRUSTED_PROXIES entry: %r", item)
+    return tuple(networks)
+
+
+TRUSTED_PROXY_NETWORKS = _parse_trusted_proxies(os.environ.get("VOD_TRUSTED_PROXIES", "127.0.0.1,::1"))
 CHAT_INDEX_MIN_SIZE = int(os.environ.get("VOD_CHAT_INDEX_MIN_SIZE", "5000000"))  # 5 MB
 CHAT_INDEX_STEP = int(os.environ.get("VOD_CHAT_INDEX_STEP", "200"))
 MAX_CHAT_SEARCH_RESULTS = int(os.environ.get("VOD_CHAT_SEARCH_LIMIT", "500"))
@@ -409,21 +420,41 @@ def get_sys_stats():
     disk = storage_info()
     return {"cpu": cpu_usage, "ram": ram_pct, "disk": int(disk['pct']) if disk else 0}
 
+def _is_trusted_proxy(addr):
+    try:
+        ip = ipaddress.ip_address(str(addr or ""))
+    except ValueError:
+        return False
+    return any(ip in net for net in TRUSTED_PROXY_NETWORKS)
+
+
+def _valid_ip(value):
+    try:
+        return str(ipaddress.ip_address(str(value or "").strip()))
+    except ValueError:
+        return ""
+
+
 def get_client_ip():
-    """Extract client IP with secure proxy handling."""
+    """Client IP for rate limits and bans.
+
+    Proxy headers are honoured only when the direct peer is a trusted proxy, and
+    only the values that proxy itself wrote: X-Real-IP, else the right-most
+    X-Forwarded-For hop. The left-most hop is client-controlled and must never be
+    used, otherwise rotating it bypasses login rate limits.
+    """
     remote = request.remote_addr
-    
-    # Only trust X-Forwarded-For from trusted proxies
-    if remote in TRUSTED_PROXIES:
-        xff = request.headers.get("X-Forwarded-For")
-        if xff:
-            # Take first IP in chain (client IP) and validate
-            client_ip = xff.split(",")[0].strip()
-            # Basic validation to prevent header injection
-            if client_ip and len(client_ip) < 45:  # Max IPv6 length
-                return client_ip
-    
-    return request.remote_addr
+    if not _is_trusted_proxy(remote):
+        return remote
+    real_ip = _valid_ip(request.headers.get("X-Real-IP"))
+    if real_ip:
+        return real_ip
+    hops = [h.strip() for h in (request.headers.get("X-Forwarded-For") or "").split(",") if h.strip()]
+    if hops:
+        last_hop = _valid_ip(hops[-1])
+        if last_hop:
+            return last_hop
+    return remote
 
 def check_rate_limit(ip):
     """Return True if IP is under the failed-login threshold (shared via SQLite)."""

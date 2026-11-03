@@ -601,6 +601,41 @@ class SmartTvModeRemovedTests(unittest.TestCase):
         self.assertEqual(site_maintenance._default_state()["bypass_users"], [])
 
 
+class ClientIpTests(unittest.TestCase):
+    """Rate limits and bans key on get_client_ip(); it must not be spoofable."""
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import webui
+        cls.webui = webui
+
+    def _ip(self, remote, headers=None):
+        with self.webui.app.test_request_context(
+            "/", headers=headers or {}, environ_base={"REMOTE_ADDR": remote}
+        ):
+            return self.webui.get_client_ip()
+
+    def test_untrusted_peer_ignores_proxy_headers(self):
+        ip = self._ip("203.0.113.9", {"X-Forwarded-For": "1.2.3.4", "X-Real-IP": "1.2.3.4"})
+        self.assertEqual(ip, "203.0.113.9")
+
+    def test_trusted_proxy_uses_x_real_ip(self):
+        ip = self._ip("127.0.0.1", {"X-Real-IP": "198.51.100.7", "X-Forwarded-For": "6.6.6.6, 198.51.100.7"})
+        self.assertEqual(ip, "198.51.100.7")
+
+    def test_spoofed_left_most_forwarded_hop_is_ignored(self):
+        ip = self._ip("127.0.0.1", {"X-Forwarded-For": "6.6.6.6, 198.51.100.7"})
+        self.assertEqual(ip, "198.51.100.7")
+
+    def test_garbage_headers_fall_back_to_peer(self):
+        ip = self._ip("127.0.0.1", {"X-Real-IP": "not-an-ip", "X-Forwarded-For": "also bad"})
+        self.assertEqual(ip, "127.0.0.1")
+
+    def test_trusted_proxies_accept_cidr(self):
+        nets = self.webui._parse_trusted_proxies("10.0.0.0/8, ::1, bogus")
+        self.assertEqual([str(n) for n in nets], ["10.0.0.0/8", "::1/128"])
+
+
 class CastingRemovedTests(unittest.TestCase):
     """Media is session-only: no ?cast= bearer tokens, no wildcard CORS."""
 

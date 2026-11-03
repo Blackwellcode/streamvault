@@ -29,6 +29,9 @@ services:
       - PYTHONPATH=/app
       - VOD_HOST=0.0.0.0
       - VOD_PORT=8080
+      # The app port is not published; only the nginx container on the compose
+      # network reaches it, so trust that network's private ranges for X-Real-IP.
+      - VOD_TRUSTED_PROXIES=127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
       - VOD_BASE_DIR=/app
       - RECORDINGS_BASE_DIR=/app
       - VOD_USER=${VOD_USER:?set VOD_USER in .env}
