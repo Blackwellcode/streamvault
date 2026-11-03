@@ -601,6 +601,47 @@ class SmartTvModeRemovedTests(unittest.TestCase):
         self.assertEqual(site_maintenance._default_state()["bypass_users"], [])
 
 
+class CurrentRecordingFailClosedTests(IsolatedBaseTest):
+    """_is_current_recording must never report a live file as finished."""
+
+    def _channel(self):
+        channel = self.base / "alice"
+        channel.mkdir()
+        return channel
+
+    def test_pointer_claims_file(self):
+        channel = self._channel()
+        (channel / ".current_recording.json").write_text('{"filename": "a.mp4"}', encoding="utf-8")
+        self.assertTrue(worker._is_current_recording(str(channel), "a.mp4"))
+        self.assertFalse(worker._is_current_recording(str(channel), "b.mp4"))
+
+    def test_half_written_pointer_counts_as_active(self):
+        channel = self._channel()
+        (channel / ".current_recording.json").write_text('{"filename": "a.mp', encoding="utf-8")
+        with self.assertLogs(level="WARNING"):
+            self.assertTrue(worker._is_current_recording(str(channel), "a.mp4"))
+
+    def test_lock_owned_by_other_user_counts_as_active(self):
+        channel = self._channel()
+        (channel / "a.mp4.part").write_bytes(b"x")
+        (channel / ".recording.lock").write_text("4242", encoding="utf-8")
+        with mock.patch.object(worker.os, "kill", side_effect=PermissionError):
+            self.assertTrue(worker._is_current_recording(str(channel), "a.mp4"))
+
+    def test_dead_lock_pid_is_not_active(self):
+        channel = self._channel()
+        (channel / "a.mp4.part").write_bytes(b"x")
+        (channel / ".recording.lock").write_text("4242", encoding="utf-8")
+        with mock.patch.object(worker.os, "kill", side_effect=ProcessLookupError):
+            self.assertFalse(worker._is_current_recording(str(channel), "a.mp4"))
+
+    def test_listing_error_counts_as_active(self):
+        channel = self._channel()
+        with mock.patch.object(worker.os, "listdir", side_effect=OSError("EIO")), \
+                self.assertLogs(level="ERROR"):
+            self.assertTrue(worker._is_current_recording(str(channel), "a.mp4"))
+
+
 class LegalPagesTests(unittest.TestCase):
     """The shipped content/*.md must parse; /agb and /datenschutz returned 500 before."""
 

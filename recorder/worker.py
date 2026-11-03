@@ -1003,7 +1003,11 @@ def _is_recent(path, seconds=120):
         return False
 
 def _is_current_recording(channel_dir, filename):
-    """True if any current-recording pointer claims filename, or .part + active lock."""
+    """True if any current-recording pointer claims filename, or .part + active lock.
+
+    Fails closed: callers skip remux/cleanup on True, so an unreadable pointer or
+    an unexpected error must count as "still recording", never as "finished".
+    """
     filename = os.path.basename(str(filename or ""))
     if not filename or not channel_dir or not os.path.isdir(channel_dir):
         return False
@@ -1016,10 +1020,17 @@ def _is_current_recording(channel_dir, filename):
                 try:
                     with open(cur_path, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                    if isinstance(data, dict) and data.get("filename") == filename:
-                        return True
-                except Exception:
-                    continue
+                except FileNotFoundError:
+                    continue  # pointer removed between listdir and open
+                except (OSError, ValueError) as exc:
+                    # Half-written pointer while a recording starts or rotates.
+                    logging.warning(
+                        "Unreadable recording pointer %s, treating %s as active: %s",
+                        cur_path, filename, exc,
+                    )
+                    return True
+                if isinstance(data, dict) and data.get("filename") == filename:
+                    return True
 
         part_path = os.path.join(channel_dir, f"{filename}.part")
         if not os.path.exists(part_path):
@@ -1038,11 +1049,17 @@ def _is_current_recording(channel_dir, filename):
                     pid = int(content)
                     os.kill(pid, 0)
                     return True
+                except PermissionError:
+                    return True  # process exists but belongs to another user
                 except (OSError, ValueError, TypeError):
                     continue
         return False
-    except Exception:
-        return False
+    except OSError as exc:
+        logging.error(
+            "Could not check active recording for %s in %s, treating as active: %s",
+            filename, channel_dir, exc,
+        )
+        return True
 
 def _is_remuxable_vod_filename(filename):
     name = os.path.basename(str(filename or ""))
