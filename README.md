@@ -7,6 +7,7 @@
 [![CI](https://github.com/Blackwellcode/streamvault/actions/workflows/ci.yml/badge.svg)](https://github.com/Blackwellcode/streamvault/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-blackwellcode-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/blackwellcode)
 
 </div>
 
@@ -163,6 +164,13 @@ platforms' terms of service. You are responsible for how you use it.
 Bug reports, fixes and improvements are welcome. Read
 [CONTRIBUTING.md](CONTRIBUTING.md) first; security issues go through
 [SECURITY.md](SECURITY.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## Support the project
+
+StreamVault is free and developed in spare time. If it is useful to you, you
+can support further development:
+
+<a href="https://buymeacoffee.com/blackwellcode"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-blackwellcode-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" height="40"></a>
 
 ## License
 
