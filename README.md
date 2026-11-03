@@ -139,8 +139,8 @@ Access the service at `http://localhost:8090`.
 
 The Compose stack runs the WebUI, recorder and background worker under
 supervisord and shares the `hls_live` volume with the Nginx container. The
-application directory is bind-mounted at `/app`; recordings therefore live in
-the project directory. Set `VOD_PUBLIC_BASE` in `.env` to the public URL used
+application directory is bind-mounted at `/app`; recordings, the database and
+caches live in `./data` (`VOD_BASE_DIR=/app/data`). Set `VOD_PUBLIC_BASE` in `.env` to the public URL used
 by browsers (for example `https://recorder.example.com`) so OAuth callbacks and
 share links are generated correctly.
 

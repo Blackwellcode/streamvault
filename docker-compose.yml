@@ -20,7 +20,7 @@ services:
     # Docker SIGKILLs the container before FFmpeg finishes the MP4.
     stop_grace_period: 75s
     volumes:
-      # Application code and archive media (bind mount).
+      # Application code; archive media and the database live in ./data.
       - ./:/app
       # Keep the live HLS segments shared with the Nginx container.
       - hls_live:/app/.hls_live
@@ -32,8 +32,9 @@ services:
       # The app port is not published; only the nginx container on the compose
       # network reaches it, so trust that network's private ranges for X-Real-IP.
       - VOD_TRUSTED_PROXIES=127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
-      - VOD_BASE_DIR=/app
-      - RECORDINGS_BASE_DIR=/app
+      # Archives, database and caches live in ./data, never in the code tree.
+      - VOD_BASE_DIR=/app/data
+      - RECORDINGS_BASE_DIR=/app/data
       - VOD_USER=${VOD_USER:?set VOD_USER in .env}
       - VOD_PASS=${VOD_PASS:?set VOD_PASS in .env}
       - VOD_SECRET_KEY=${VOD_SECRET_KEY:?set VOD_SECRET_KEY in .env}

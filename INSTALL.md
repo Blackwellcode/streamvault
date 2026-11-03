@@ -264,7 +264,6 @@ server {
         output_buffers 2 1m;
         gzip off;
         add_header Accept-Ranges bytes always;
-        add_header Access-Control-Allow-Origin "*" always;
     }
 
     # Legacy archives below VOD_FILES_DIR (default VOD_BASE_DIR/files).
@@ -276,7 +275,6 @@ server {
         output_buffers 2 1m;
         gzip off;
         add_header Accept-Ranges bytes always;
-        add_header Access-Control-Allow-Origin "*" always;
     }
 
     location /_protected_vodcache/ {
@@ -319,7 +317,6 @@ server {
         }
         default_type application/octet-stream;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
-        add_header Access-Control-Allow-Origin "*" always;
     }
 }
 ```

@@ -274,7 +274,6 @@ server {
         }
         default_type application/octet-stream;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
-        add_header Access-Control-Allow-Origin *;
     }
 }
 EOF
