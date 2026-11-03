@@ -11,6 +11,6 @@ redis>=5.0.0
 limits>=3.10.0
 markupsafe>=2.1.0
 gunicorn>=21.2.0; sys_platform != "win32"
-pycryptodome>=3.20.0
+pycryptodome>=4.2.0
 numpy>=1.26.0,<3.0.0
 boto3>=1.34.0
