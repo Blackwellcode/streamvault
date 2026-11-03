@@ -351,7 +351,7 @@
     </div>
     {% endif %}
     {% if hls_ready %}<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>{% endif %}
-    <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+    <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
 <script src="{{ url_for('static', filename='chat_bottom_sync.js', v=ASSET_VERSION) }}"></script>
     <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
     <script src="{{ url_for('static', filename='vod_debug.js', v=ASSET_VERSION) }}"></script>
@@ -605,12 +605,7 @@
           localStorage.removeItem(key);
         });
 
-        window.StreamVaultCast?.bindVideo(vPlayer, {
-          url: directMediaUrl,
-          live: false,
-          contentType: 'video/mp4'
-        });
-        if (useVodHls && window.StreamVaultCast && StreamVaultCast.preferNativeHls(vPlayer)) {
+        if (useVodHls && window.StreamVaultHls && StreamVaultHls.preferNativeHls(vPlayer)) {
           vPlayer.src = vodHlsUrl;
         } else if (useVodHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
           const hlsStartPosition = Number.isFinite(requestedStart) && requestedStart > 1

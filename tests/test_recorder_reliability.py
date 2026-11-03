@@ -601,6 +601,38 @@ class SmartTvModeRemovedTests(unittest.TestCase):
         self.assertEqual(site_maintenance._default_state()["bypass_users"], [])
 
 
+class CastingRemovedTests(unittest.TestCase):
+    """Media is session-only: no ?cast= bearer tokens, no wildcard CORS."""
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import webui
+        webui.app.config.update(TESTING=True)
+        cls.client = webui.app.test_client()
+
+    def test_cast_token_does_not_unlock_media(self):
+        for path in (
+            "/media/alice/video.mp4?cast=forged",
+            "/hls/playlist/alice/video.mp4?cast=forged",
+            "/live/playlist/alice?cast=forged",
+            "/chat/live/alice?cast=forged",
+        ):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 401)
+                self.assertNotIn("Access-Control-Allow-Origin", response.headers)
+
+    def test_cast_url_endpoint_is_gone(self):
+        self.assertEqual(self.client.get("/api/live/cast-url/alice").status_code, 404)
+
+    def test_obs_pages_require_login(self):
+        for path in ("/live/obs/alice", "/chat/obs/alice"):
+            with self.subTest(path=path):
+                response = self.client.get(path + "?cast=forged")
+                self.assertEqual(response.status_code, 302)
+                self.assertIn("/login", response.headers["Location"])
+
+
 class DiskSpaceGuardTests(IsolatedBaseTest):
     def test_disk_blocks_recording_on_nonexistent_dir_when_disk_full(self):
         from collections import namedtuple

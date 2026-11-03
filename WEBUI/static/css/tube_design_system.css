@@ -2054,8 +2054,7 @@ body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod
   flex-shrink: 0 !important;
 }
 
-body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool,
-body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .ns-cast-trigger {
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool {
   min-height: 26px !important;
   padding: 0 10px !important;
   font-size: 11px !important;

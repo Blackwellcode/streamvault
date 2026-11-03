@@ -52,7 +52,6 @@ from flask import (
     url_for,
 )
 from flask_limiter import Limiter
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import safe_join, secure_filename
@@ -172,11 +171,6 @@ def _env_int(name, default):
 # Browsers cap cookie lifetime near 400 days; SESSION_REFRESH_EACH_REQUEST extends it on use.
 SESSION_MAX_AGE_SEC = max(0, _env_int("VOD_SESSION_MAX_AGE_SEC", 0))
 SESSION_COOKIE_MAX_AGE_SEC = max(86400, _env_int("VOD_SESSION_COOKIE_MAX_AGE_SEC", 400 * 86400))
-CAST_TOKEN_TTL_SEC = int(os.environ.get("VOD_CAST_TTL_SEC", str(12 * 3600)))
-# OBS browser sources stay open for days; keep that bearer link shorter than a session cookie.
-# OBS browser sources stay open indefinitely in streaming setups; default to 10 years (or set OBS_CAST_TTL_SEC=0 for infinite)
-OBS_CAST_TTL_SEC = int(os.environ.get("OBS_CAST_TTL_SEC", str(3650 * 24 * 3600)))
-CAST_TOKEN_SALT = "streamvault-cast-v1"
 _MEDIA_HTTP_METHODS = ("GET", "HEAD", "OPTIONS")
 LOGIN_BAN_TTL_SEC = int(os.environ.get("VOD_LOGIN_BAN_TTL_SEC", "1800"))
 # OBS browser sources historically pass overlay tokens in the query string.
@@ -856,67 +850,8 @@ def login_required(func):
     return wrapper
 
 
-def _cast_serializer():
-    return URLSafeTimedSerializer(str(app.secret_key), salt=CAST_TOKEN_SALT)
-
-
-_CAST_TOKEN_CACHE = {}
-
-def issue_cast_token(kind, streamer, name="", *, obs=False):
-    cache_key = f"{kind}:{streamer}:{name}:{obs}"
-    import time
-    now = time.time()
-    if cache_key in _CAST_TOKEN_CACHE:
-        token, ts = _CAST_TOKEN_CACHE[cache_key]
-        if now - ts < 86400:
-            return token
-    payload = {"k": str(kind or ""), "s": str(streamer or ""), "n": str(name or "")}
-    if obs:
-        payload["o"] = 1
-    token = _cast_serializer().dumps(payload)
-    _CAST_TOKEN_CACHE[cache_key] = (token, now)
-    return token
-
-
-def verify_cast_token(token, kind, streamer, name=""):
-    token = (token or "").strip()
-    if not token:
-        return False
-    try:
-        loaded = _cast_serializer().loads(token, max_age=None, return_timestamp=True)
-    except (BadSignature, SignatureExpired, TypeError, ValueError):
-        return False
-    if not isinstance(loaded, tuple) or len(loaded) != 2:
-        return False
-    data, issued_at = loaded
-    if not isinstance(data, dict):
-        return False
-    try:
-        issued_ts = issued_at.timestamp() if isinstance(issued_at, datetime) else float(issued_at)
-        age = time.time() - issued_ts
-    except (TypeError, ValueError, OSError, AttributeError):
-        return False
-    limit = OBS_CAST_TTL_SEC if data.get("o") else CAST_TOKEN_TTL_SEC
-    if int(limit) > 0 and age > int(limit):
-        return False
-    return (
-        str(data.get("k") or "") == str(kind or "")
-        and str(data.get("s") or "") == str(streamer or "")
-        and str(data.get("n") or "") == str(name or "")
-    )
-
-
-def url_with_cast(endpoint, kind, streamer, name="", **kwargs):
-    params = dict(kwargs)
-    params["streamer"] = streamer
-    if name:
-        params.setdefault("filename", name)
-    params["cast"] = issue_cast_token(kind, streamer, name)
-    return url_for(endpoint, **params)
-
-
 def absolute_public_url(path):
-    """Absolute https URL for TVs. Chromecast/AirPlay do not resolve app-relative paths reliably."""
+    """Absolute URL for links that leave the browser session (share links, OAuth callbacks)."""
     path = str(path or "")
     if path.startswith("http://") or path.startswith("https://"):
         return path
@@ -937,24 +872,11 @@ def absolute_public_url(path):
     return f"{proto}://{host}{path}"
 
 
-def cast_media_url(endpoint, **kwargs):
-    return absolute_public_url(url_for(endpoint, **kwargs))
-
-
 def hls_playlist_response(body, *, live=False):
-    """Playlist MIME without charset — Chromecast rejects mpegurl; charset=utf-8."""
+    """Playlist MIME without charset; some HLS players reject mpegurl; charset=utf-8."""
     resp = Response(body, 200)
     resp.headers["Content-Type"] = "application/vnd.apple.mpegurl"
     return apply_hls_delivery_headers(resp, live=live)
-
-
-def apply_cast_cors(resp):
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, HEAD, OPTIONS"
-    resp.headers["Access-Control-Allow-Headers"] = "Range, Origin, Accept, Content-Type"
-    resp.headers["Access-Control-Expose-Headers"] = "Content-Length, Content-Range, Accept-Ranges, Content-Type"
-    resp.headers["Access-Control-Max-Age"] = "86400"
-    return resp
 
 
 def hls_segment_mimetype(filename: str) -> str:
@@ -1009,8 +931,7 @@ def rewrite_hls_playlist_for_client(lines, segment_url_for):
 
 
 def apply_hls_delivery_headers(resp, *, live: bool = False, immutable: bool = False):
-    """CORS + byte-range + cache headers for HLS playlist/segment responses."""
-    apply_cast_cors(resp)
+    """Byte-range + cache headers for HLS playlist/segment responses."""
     resp.headers["Accept-Ranges"] = "bytes"
     if live:
         resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -1025,40 +946,24 @@ def apply_hls_delivery_headers(resp, *, live: bool = False, immutable: bool = Fa
     return resp
 
 
-def _cast_query_kwargs():
-    token = (request.args.get("cast") or "").strip()
-    if token:
-        return {"cast": token}
-    return {}
-
-
-def wants_apple_airplay_player():
+def is_ios_client():
     ua = (request.headers.get("User-Agent") or "").lower()
     return "iphone" in ua or "ipad" in ua or "ipod" in ua
 
 
-def login_or_cast_required(kind, name_arg="filename"):
-    """Allow session cookies or a scoped ?cast= token (AirPlay/Chromecast have no cookies)."""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            if request.method == "OPTIONS":
-                return apply_cast_cors(Response(status=204))
-            streamer = str(kwargs.get("streamer") or "")
-            if kind == "live" or name_arg is None:
-                name = ""
-            else:
-                name = str(kwargs.get(name_arg) or "")
-            token = (request.args.get("cast") or "").strip()
-            if token and verify_cast_token(token, kind, streamer, name):
-                return func(*args, **kwargs)
-            if session.get("logged_in") and not session_is_expired():
-                return func(*args, **kwargs)
-            if session.get("logged_in"):
-                session.clear()
-            return apply_cast_cors(Response("Unauthorized", 401, mimetype="text/plain"))
-        return wrapper
-    return decorator
+def media_login_required(func):
+    """Session-only auth for media endpoints: 401 instead of a login redirect,
+    because players fetch these URLs directly and cannot follow an HTML login."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return Response(status=204)
+        if session.get("logged_in") and not session_is_expired():
+            return func(*args, **kwargs)
+        if session.get("logged_in"):
+            session.clear()
+        return Response("Unauthorized", 401, mimetype="text/plain")
+    return wrapper
 
 
 def admin_required(func):
@@ -3531,7 +3436,7 @@ def send_mp4_range_advertising_size(file_path, start, end, total_size):
         "X-Accel-Buffering": "no",
     }
     resp = Response(generate(), status=206, headers=headers, mimetype="video/mp4")
-    return apply_cast_cors(resp)
+    return resp
 
 
 def remux_media_file(file_path, reencode_audio=False):
@@ -4056,13 +3961,7 @@ def current_username():
 
 
 def vod_slot_holder():
-    name = str(session.get("username") or "").strip()
-    if name:
-        return name
-    token = (request.args.get("cast") or "").strip()
-    if token:
-        return f"cast:{token[:32]}"
-    return ""
+    return str(session.get("username") or "").strip()
 
 
 def vod_slot_exempt():
@@ -9773,13 +9672,7 @@ def vod_view(streamer, filename):
         except OSError:
             hls_ready = False
         else:
-            hls_playlist_url = url_with_cast(
-                "hls_playlist",
-                "hls",
-                streamer,
-                filename,
-                v=hls_version,
-            )
+            hls_playlist_url = url_for("hls_playlist", streamer=streamer, filename=filename, v=hls_version)
     transcript_text = load_transcript(file_path) if file_path else None
     transcript_status = None
     if file_path:
@@ -9814,7 +9707,7 @@ def vod_view(streamer, filename):
             MOBILE_PLAYER_TEMPLATE,
             streamer=streamer,
             filename=filename,
-            media_url=url_with_cast("media", "vod", streamer, filename),
+            media_url=url_for("media", streamer=streamer, filename=filename),
             chat_url=url_for("chat_vod", streamer=streamer, filename=filename) if chat_available else None,
             back_url=url_for("streamer_view", streamer=streamer),
             is_live=False,
@@ -9840,7 +9733,7 @@ def vod_view(streamer, filename):
         clip_error=clip_error,
         share_link=share_link,
         action_msg=action_msg,
-        media_url=url_with_cast("media", "vod", streamer, filename),
+        media_url=url_for("media", streamer=streamer, filename=filename),
         hls_playlist_url=hls_playlist_url,
         hls_ready=False,
         download_url=(
@@ -10031,7 +9924,7 @@ def clip_view(streamer, filename):
             MOBILE_PLAYER_TEMPLATE,
             streamer=streamer,
             filename=filename,
-            media_url=url_with_cast("clip_media", "clip", streamer, filename),
+            media_url=url_for("clip_media", streamer=streamer, filename=filename),
             chat_url=url_for("chat_vod", streamer=streamer, filename=filename), # Clips might not have synced chat easily, but we leave it
             back_url=url_for("streamer_view", streamer=streamer),
             is_live=False,
@@ -10056,7 +9949,7 @@ def clip_view(streamer, filename):
         clip_error=None,
         action_msg=None,
         share_link=share_link,
-        media_url=url_with_cast("clip_media", "clip", streamer, filename),
+        media_url=url_for("clip_media", streamer=streamer, filename=filename),
         hls_playlist_url=None,
         hls_ready=False,
         download_url=(
@@ -10127,13 +10020,10 @@ def thumb_view(streamer, filename):
 
 
 @app.route("/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("vod")
+@media_login_required
 def media(streamer, filename):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "vod", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     busy = enforce_vod_watch_slot(streamer, filename)
     if busy:
         logging.info(
@@ -10253,13 +10143,10 @@ def download(streamer, filename):
 
 
 @app.route("/clip/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("clip")
+@media_login_required
 def clip_media(streamer, filename):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "clip", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     file_path = resolve_media_path(streamer, filename, "clip")
     if not file_path:
         abort(404)
@@ -10654,31 +10541,15 @@ def set_security_headers(response):
         "frame-src 'self' https://player.twitch.tv https://www.twitch.tv; "
         "child-src 'self' blob: https://player.twitch.tv https://www.twitch.tv; "
         "worker-src 'self' blob:; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com data:; "
-        "img-src 'self' data: blob: https://static-cdn.jtvnw.net https://badges.twitch.tv https://cdn.discordapp.com https://www.gstatic.com; "
+        "img-src 'self' data: blob: https://static-cdn.jtvnw.net https://badges.twitch.tv https://cdn.discordapp.com; "
         "media-src 'self' blob:; "
-        "connect-src 'self' blob: https://www.gstatic.com https://*.googleapis.com https://clients3.google.com;"
+        "connect-src 'self' blob: https://*.googleapis.com https://clients3.google.com;"
     )
     header = "Content-Security-Policy" if os.environ.get("VOD_CSP_ENFORCE", "false").lower() in ("true", "1", "yes") else "Content-Security-Policy-Report-Only"
     response.headers.setdefault(header, csp)
-    return response
-
-
-@app.after_request
-def add_cast_cors_headers(response):
-    path = request.path or ""
-    if (
-        path.startswith("/media/")
-        or path.startswith("/clip/media/")
-        or path.startswith("/public/media/")
-        or path.startswith("/hls/playlist/")
-        or path.startswith("/hls/segment/")
-        or path.startswith("/live/playlist/")
-        or path.startswith("/live/segment/")
-    ):
-        apply_cast_cors(response)
     return response
 
 
@@ -11131,12 +11002,9 @@ def _live_chat_log_path(streamer):
 
 
 @app.route("/chat/live/<streamer>")
-@login_or_cast_required("live", name_arg=None)
+@media_login_required
 def chat_live(streamer):
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", streamer, ""))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     # Prefer the live chat jsonl (wall-clock `t`) so channel-point / mod events
     # from the IRC chat process show up immediately in Live/Watch views.
     log_path = _live_chat_log_path(streamer)
@@ -11196,7 +11064,7 @@ def editor_view(streamer, filename):
         CLIP_EDITOR_TEMPLATE,
         streamer=streamer,
         filename=filename,
-        media_url=url_with_cast("media", "vod", streamer, filename),
+        media_url=url_for("media", streamer=streamer, filename=filename),
         back_url=url_for("vod_view", streamer=streamer, filename=filename),
         clip_ok=request.args.get("clip_ok"),
         clip_error=request.args.get("clip_error"),
@@ -11211,7 +11079,7 @@ def editor_live_view(streamer):
         CLIP_EDITOR_TEMPLATE,
         streamer=streamer,
         filename=f"LIVE {streamer}",
-        media_url=url_with_cast("live_playlist", "live", streamer),
+        media_url=url_for("live_playlist", streamer=streamer),
         back_url=url_for("live_view", streamer=streamer),
         clip_ok=request.args.get("clip_ok"),
         clip_error=request.args.get("clip_error"),
@@ -11592,7 +11460,7 @@ def hls_view(streamer, filename):
         abort(404)
     _, playlist, _ = hls_paths(streamer, filename)
     ready = os.path.isfile(playlist)
-    playlist_url = url_with_cast("hls_playlist", "hls", streamer, filename) if ready else ""
+    playlist_url = url_for("hls_playlist", streamer=streamer, filename=filename) if ready else ""
     return render_template_string(
         HLS_TEMPLATE,
         streamer=streamer,
@@ -11614,13 +11482,10 @@ def hls_generate(streamer, filename):
 
 
 @app.route("/hls/playlist/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("hls")
+@media_login_required
 def hls_playlist(streamer, filename):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "hls", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     busy = enforce_vod_watch_slot(streamer, filename)
     if busy:
         return busy
@@ -11636,32 +11501,18 @@ def hls_playlist(streamer, filename):
     except OSError:
         abort(404)
 
-    cast_kwargs = _cast_query_kwargs()
-
     def segment_url_for(seg):
-        params = dict(
-            streamer=streamer,
-            filename=filename,
-            segment=seg,
-            v=hls_version,
-            **cast_kwargs,
-        )
-        if cast_kwargs:
-            return cast_media_url("hls_segment", **params)
-        return url_for("hls_segment", **params)
+        return url_for("hls_segment", streamer=streamer, filename=filename, segment=seg, v=hls_version)
 
     output = rewrite_hls_playlist_for_client(lines, segment_url_for)
     return hls_playlist_response("".join(output), live=False)
 
 
 @app.route("/hls/segment/<streamer>/<filename>/<segment>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("hls")
+@media_login_required
 def hls_segment(streamer, filename, segment):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "hls", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     busy = enforce_vod_watch_slot(streamer, filename)
     if busy:
         return busy
@@ -11767,31 +11618,6 @@ def api_live_client_debug():
     return jsonify({"ok": True})
 
 
-@app.route("/api/live/cast-url/<streamer>")
-@login_required
-def api_live_cast_url(streamer):
-    """Start live HLS if needed and return a cookie-free playlist URL for AirPlay/Chromecast."""
-    channel = normalize_channel_name(streamer) or twitch_api.normalize_login(streamer)
-    if not channel:
-        abort(404)
-    abort_hidden_streamer(channel)
-    try:
-        add_live_channel(channel)
-    except Exception:
-        app.logger.exception("Could not enable live proxy for cast %s", channel)
-        return jsonify({"ok": False, "ready": False, "url": ""}), 500
-    touch_live_heartbeat(channel)
-    ready = live_playlist_fresh(channel)
-    return jsonify({
-        "ok": True,
-        "ready": ready,
-        "channel": channel,
-        "url": url_with_cast("live_playlist", "live", channel),
-        "contentType": "application/vnd.apple.mpegurl",
-        "live": True,
-    })
-
-
 @app.route("/api/live/ready/<streamer>")
 @login_required
 def api_live_ready(streamer):
@@ -11821,7 +11647,7 @@ def api_live_ready(streamer):
         "title": (info.get("title") if isinstance(info, dict) else "") or "",
         "game_name": (info.get("game_name") if isinstance(info, dict) else "") or "",
         "viewer_count": (info.get("viewer_count") if isinstance(info, dict) else 0) or 0,
-        "playlist_url": url_with_cast("live_playlist", "live", channel) if ready else "",
+        "playlist_url": url_for("live_playlist", streamer=channel) if ready else "",
     })
 
 
@@ -11876,7 +11702,7 @@ def twitch_watch(channel):
         use_hls_proxy = True
     elif proxy_arg in ("0", "false", "no", "off") or embed_arg in ("1", "true", "yes", "on"):
         use_hls_proxy = False
-    elif is_mobile() or wants_apple_airplay_player():
+    elif is_mobile() or is_ios_client():
         use_hls_proxy = True
     elif config.LIVE_TWITCH_OAUTH_ENABLED:
         use_hls_proxy = True
@@ -11926,10 +11752,9 @@ def twitch_watch(channel):
         "use_hls_proxy": use_hls_proxy,
         "live_debug": live_debug,
         "proxy_key": proxy_key,
-        "hls_playlist_url": url_with_cast("live_playlist", "live", proxy_key) if use_hls_proxy else "",
+        "hls_playlist_url": url_for("live_playlist", streamer=proxy_key) if use_hls_proxy else "",
         "hls_ready_url": url_for("api_live_ready", streamer=proxy_key) if use_hls_proxy else "",
         "hls_client_debug_url": url_for("api_live_client_debug"),
-        "cast_ensure_url": url_for("api_live_cast_url", streamer=login),
         "watch_embed_url": watch_embed_url,
         "watch_proxy_url": watch_proxy_url,
         "live_oauth_enabled": bool(config.LIVE_TWITCH_OAUTH_ENABLED),
@@ -12032,7 +11857,7 @@ def live_view(streamer):
         app.logger.exception("Could not enable live channel for studio %s", channel)
     touch_live_heartbeat(channel)
     ready = live_playlist_exists(channel)
-    playlist_url = url_with_cast("live_playlist", "live", channel)
+    playlist_url = url_for("live_playlist", streamer=channel)
 
     if is_mobile():
         return render_template_string(
@@ -12066,25 +11891,19 @@ def live_view(streamer):
 
 
 @app.route("/live/obs/<streamer>")
-@login_or_cast_required("live", name_arg=None)
+@login_required
 def live_obs(streamer):
     """Fullscreen picture and sound for an OBS browser source."""
     channel = normalize_channel_name(streamer) or ""
     if not channel or channel != str(streamer or "").strip().lower():
         abort(404)
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", channel, ""))
-    if not cast_ok:
-        abort_hidden_streamer(channel)
+    abort_hidden_streamer(channel)
     try:
         add_live_channel(channel)
     except Exception:
         app.logger.exception("Could not enable live proxy for obs %s", channel)
     touch_live_heartbeat(channel)
-    if cast_ok:
-        playlist_url = url_for("live_playlist", streamer=channel, cast=token)
-    else:
-        playlist_url = url_with_cast("live_playlist", "live", channel)
+    playlist_url = url_for("live_playlist", streamer=channel)
     resp = make_response(render_template_string(
         LIVE_OBS_TEMPLATE,
         playlist_url=playlist_url,
@@ -12094,20 +11913,16 @@ def live_obs(streamer):
     return resp
 
 @app.route("/chat/obs/<streamer>")
-@login_or_cast_required("live", name_arg=None)
+@login_required
 def chat_obs(streamer):
     """Fullscreen transparent chat overlay for an OBS browser source."""
     channel = normalize_channel_name(streamer) or ""
     if not channel or channel != str(streamer or "").strip().lower():
         abort(404)
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", channel, ""))
-    if not cast_ok:
-        abort_hidden_streamer(channel)
+    abort_hidden_streamer(channel)
     resp = make_response(render_template_string(
         CHAT_OBS_TEMPLATE,
         streamer=channel,
-        cast_token=token if cast_ok else "",
     ))
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     resp.headers["Pragma"] = "no-cache"
@@ -12116,12 +11931,9 @@ def chat_obs(streamer):
 
 
 @app.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("live", name_arg=None)
+@media_login_required
 def live_playlist(streamer):
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", streamer, ""))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     touch_live_heartbeat(streamer)
     if not live_playlist_fresh(streamer):
         abort(404)
@@ -12136,11 +11948,7 @@ def live_playlist(streamer):
     except Exception:
         abort(404)
 
-    cast_kwargs = _cast_query_kwargs()
-
     def segment_url_for(seg):
-        if cast_kwargs:
-            return cast_media_url("live_segment", streamer=streamer, segment=seg, **cast_kwargs)
         return url_for("live_segment", streamer=streamer, segment=seg)
 
     output = rewrite_hls_playlist_for_client(lines, segment_url_for)
@@ -12148,12 +11956,9 @@ def live_playlist(streamer):
 
 
 @app.route("/live/segment/<streamer>/<segment>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("live", name_arg=None)
+@media_login_required
 def live_segment(streamer, segment):
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", streamer, ""))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     touch_live_heartbeat(streamer)
     if os.path.basename(segment) != segment:
         abort(404)

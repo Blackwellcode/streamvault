@@ -47,7 +47,6 @@
       preload="metadata"
       playsinline
       webkit-playsinline
-      x-webkit-airplay="allow"
       src="{{ media_url }}"
       data-media-title="{{ vod_display_title or filename }}"
       data-media-artist="{{ display_name or streamer }}"
@@ -120,19 +119,6 @@
       
 
 
-      <button
-        type="button"
-        class="vod-inline-tool mobile-action-btn ns-cast-trigger"
-        data-ns-cast-url="{{ media_url }}"
-        data-ns-cast-live="{{ '1' if is_live else '0' }}"
-        data-ns-cast-type="{{ 'application/vnd.apple.mpegurl' if (is_live or is_hls) else 'video/mp4' }}"
-      >
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
-          <line x1="2" y1="20" x2="2.01" y2="20"></line>
-        </svg>
-        <span class="btn-label">An TV senden</span>
-      </button>
     </div>
   </div>
 
@@ -151,7 +137,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1" defer></script>
-  <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}" defer></script>
+  <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}" defer></script>
   <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}" defer></script>
   <script src="{{ url_for('static', filename='mobile_landscape_chat.js', v=ASSET_VERSION) }}" defer></script>
   <script src="{{ url_for('static', filename='vod_debug.js', v=ASSET_VERSION) }}" defer></script>
@@ -210,12 +196,7 @@
     const isLive = {{ 'true' if is_live else 'false' }};
     const isHls = {{ 'true' if is_hls else 'false' }};
     const mediaUrl = {{ media_url|tojson }};
-    window.StreamVaultCast?.bindVideo(video, {
-      url: mediaUrl,
-      live: isLive,
-      contentType: (isLive || isHls) ? "application/vnd.apple.mpegurl" : "video/mp4"
-    });
-    if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(video)) {
+    if (window.StreamVaultHls && StreamVaultHls.preferNativeHls(video)) {
       video.src = mediaUrl;
     }
     const chatUrl = "{{ chat_url }}";
