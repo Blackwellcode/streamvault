@@ -713,6 +713,54 @@ class DeploymentNeutralDefaultsTests(IsolatedBaseTest):
         self.assertIn("VOD_BACKUP_SCRIPT", urllib.parse.unquote(response.headers["Location"]))
 
 
+class LanguageSelectionTests(unittest.TestCase):
+    """UI language: explicit choice (cookie) > browser Accept-Language > English."""
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import i18n, webui
+        cls.i18n, cls.webui = i18n, webui
+        webui.app.config.update(TESTING=True)
+
+    def _locale(self, accept=None, cookie=None):
+        headers = {"Accept-Language": accept} if accept else {}
+        if cookie:
+            headers["Cookie"] = f"{self.i18n.LANG_COOKIE}={cookie}"
+        with self.webui.app.test_request_context("/", headers=headers):
+            return self.i18n.select_locale()
+
+    def test_browser_language_is_used(self):
+        self.assertEqual(self._locale("fr-FR,fr;q=0.9,en;q=0.8"), "fr")
+        self.assertEqual(self._locale("pt-BR,pt;q=0.9"), "pt_BR")
+        self.assertEqual(self._locale("zh-CN,zh;q=0.9"), "zh_Hans")
+
+    def test_unsupported_region_falls_back_to_base_language(self):
+        self.assertEqual(self._locale("de-AT"), "de")
+
+    def test_quality_order_is_respected(self):
+        self.assertEqual(self._locale("sv-SE,ja;q=0.7,de;q=0.5"), "ja")
+
+    def test_unsupported_or_missing_language_falls_back_to_english(self):
+        self.assertEqual(self._locale("sv-SE,fi;q=0.8"), "en")
+        self.assertEqual(self._locale(), "en")
+
+    def test_cookie_overrides_browser(self):
+        self.assertEqual(self._locale("fr-FR", cookie="de"), "de")
+        self.assertEqual(self._locale("fr-FR", cookie="bogus"), "fr")
+
+    def test_language_route_sets_cookie_and_redirects_safely(self):
+        client = self.webui.app.test_client()
+        client.get("/login")
+        with client.session_transaction() as sess:
+            token = sess["_csrf_token"]
+        resp = client.post("/language", data={"lang": "ko", "next": "/login", "csrf_token": token})
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(resp.headers["Location"].endswith("/login"))
+        self.assertIn(f"{self.i18n.LANG_COOKIE}=ko", resp.headers.get("Set-Cookie", ""))
+        resp = client.post("/language", data={"lang": "ko", "next": "https://evil.example", "csrf_token": token})
+        self.assertFalse(resp.headers["Location"].startswith("https://evil"))
+
+
 class AssetVersionTests(IsolatedBaseTest):
     """?v= must change whenever a static file changes, without a manual bump."""
 
@@ -782,6 +830,23 @@ class LegalPagesTests(IsolatedBaseTest):
         self.assertTrue(tube_terms.load_document(force=True)["terms_version"])
         self.assertTrue(tube_terms.load_privacy_document(force=True)["privacy_version"])
         self.assertIn("privacy_url", tube_terms.terms_web_context(site_url=""))
+
+    def test_english_translations_match_binding_versions(self):
+        from core import tube_rules, tube_terms
+        content = Path(__file__).resolve().parents[1] / "content"
+        with mock.patch.object(tube_terms, "AGB_PATH", str(content / "agb.md")), \
+                mock.patch.object(tube_terms, "PRIVACY_PATH", str(content / "datenschutz.md")):
+            de_terms = tube_terms.load_document(force=True)
+            en_terms = tube_terms.load_document(lang="en")
+            self.assertEqual(en_terms["terms_version"], de_terms["terms_version"])
+            self.assertNotEqual(en_terms["body_md"], de_terms["body_md"])
+            de_priv = tube_terms.load_privacy_document(force=True)
+            fr_priv = tube_terms.load_privacy_document(lang="fr")  # non-German -> English
+            self.assertEqual(fr_priv["privacy_version"], de_priv["privacy_version"])
+            self.assertIn("Privacy", fr_priv["title"])
+        self.assertEqual(len(tube_rules.RULES_EN["items"]), len(tube_rules.RULES_ITEMS))
+        for phrase in ("AKZEPTIERE", "accept"):
+            tube_rules.validate_accept_input(phrase)  # both languages' phrases are valid
 
     def test_legal_pages_render(self):
         from WEBUI import webui

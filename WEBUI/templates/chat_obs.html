@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -99,6 +99,7 @@
     <div id="chat-list"></div>
   </div>
 
+  {% include 'components/js_i18n.html' %}
   <script src="{{ url_for('static', filename='chat_emotes.js') }}"></script>
   <script>
     (function() {
@@ -131,7 +132,7 @@
         // Author
         const author = document.createElement("span");
         author.className = "chat-author";
-        author.textContent = (item.user || "Anonym") + ":";
+        author.textContent = (item.user || {{ _('Anonymous')|tojson }}) + ":";
         if (window.StreamVaultChat && window.StreamVaultChat.userColor) {
           author.style.color = window.StreamVaultChat.userColor(item.user || "", item.color);
         } else if (item.color) {

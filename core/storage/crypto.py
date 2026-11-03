@@ -15,6 +15,8 @@ import os
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
+from flask_babel import gettext
+
 from core import config
 from .base import StorageConfigError
 
@@ -69,11 +71,11 @@ def _secret() -> str:
 def _key() -> bytes:
     raw = _secret()
     if is_weak_secret(raw):
-        raise StorageConfigError(
-            "Für die verschlüsselte Speicherung von Zugangsdaten muss "
-            "VOD_SECRET_KEY (oder STORAGE_ENCRYPTION_KEY) auf einen starken, "
-            "einmaligen Wert gesetzt sein (mindestens 16 Zeichen)."
-        )
+        raise StorageConfigError(gettext(
+            "For encrypted credential storage, "
+            "VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, "
+            "unique value (at least 16 characters)."
+        ))
     return hashlib.sha256(("streamvault-storage-v1:" + raw).encode("utf-8")).digest()
 
 
@@ -90,7 +92,7 @@ def signing_secret() -> str:
     raw = _secret()
     if is_weak_secret(raw):
         raise StorageConfigError(
-            "Für OAuth-Status-Token muss ein starker VOD_SECRET_KEY gesetzt sein."
+            gettext("OAuth state tokens require a strong VOD_SECRET_KEY.")
         )
     return raw
 

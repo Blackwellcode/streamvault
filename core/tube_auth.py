@@ -15,6 +15,7 @@ import string
 import time
 from typing import Any
 
+from flask_babel import gettext, lazy_gettext
 from werkzeug.security import generate_password_hash
 
 from core import database
@@ -30,11 +31,11 @@ LOGIN_URL = (os.environ.get("VOD_PUBLIC_BASE") or "http://localhost:5000").rstri
 
 # UI labels
 ROLE_LABELS = {
-    "member": "Member",
-    "live_only": "Live-only",
-    "viewer": "Viewer",
-    "user": "Viewer",
-    "admin": "Admin",
+    "member": lazy_gettext("Member"),
+    "live_only": lazy_gettext("Live-only"),
+    "viewer": lazy_gettext("Viewer"),
+    "user": lazy_gettext("Viewer"),
+    "admin": lazy_gettext("Admin"),
 }
 
 # Seeded vod access bases (empty by default; configured per installation)
@@ -43,7 +44,7 @@ _VOD_ACCESS_SEED_BASES = frozenset()
 
 def role_label(role: str | None) -> str:
     key = normalize_role(role, default="viewer")
-    return ROLE_LABELS.get(key, key)
+    return str(ROLE_LABELS.get(key, key))
 
 
 def is_member(role: str | None) -> bool:
@@ -295,12 +296,12 @@ def approve_username(username: str) -> dict[str, Any]:
 
     row = database.get_user(username)
     if not row:
-        raise ValueError("Benutzer nicht gefunden.")
+        raise ValueError(gettext("User not found."))
     if not tube_terms.user_has_accepted_current_consent(row):
         raise ValueError(
-            f"AGB (Version {tube_terms.current_version()}) inkl. Nutzungsregeln "
-            f"({tube_rules.current_version()}) noch nicht akzeptiert — "
-            "Freigabe erst nach Zustimmung auf der Website oder bei erneuter Registrierung."
+            gettext("Terms (version %(terms)s) including house rules "
+            "(%(rules)s) not yet accepted — "
+            "approval only after consent on the website or on re-registration.", terms=tube_terms.current_version(), rules=tube_rules.current_version())
         )
     database.set_user_active(row["username"], True)
     role = normalize_role(row.get("role"), default=DEFAULT_REGISTER_ROLE)
@@ -314,7 +315,7 @@ def approve_username(username: str) -> dict[str, Any]:
 def deny_username(username: str, *, delete: bool = True) -> dict[str, Any]:
     row = database.get_user(username)
     if not row:
-        raise ValueError("Benutzer nicht gefunden.")
+        raise ValueError(gettext("User not found."))
     if delete:
         database.delete_user(row["username"])
     else:

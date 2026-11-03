@@ -1,5 +1,6 @@
 (function () {
   "use strict";
+  var svT = window.svT || function (s) { return s; };
 
   var CLIP_DEFAULT_DURATION = 30;
   var CLIP_MAX_DURATION = 300;
@@ -106,7 +107,7 @@
     if (linkUrl) {
       link.hidden = false;
       link.href = linkUrl;
-      link.textContent = "Clip öffnen";
+      link.textContent = svT("Open clip");
     } else {
       link.hidden = true;
       link.removeAttribute("href");
@@ -183,7 +184,7 @@
       clipPreviewToggle.innerHTML = isPlaying
         ? '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>'
         : '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-      clipPreviewToggle.title = isPlaying ? "Vorschau pausieren" : "Vorschau starten";
+      clipPreviewToggle.title = isPlaying ? svT("Pause preview") : svT("Play preview");
       clipPreviewToggle.setAttribute("aria-label", clipPreviewToggle.title);
     }
 
@@ -437,7 +438,7 @@
         clipResult.hidden = true;
         clipResult.replaceChildren();
       }
-      setClipStatus(maxSeconds < 5 ? "Puffer noch kurz — das Clip-Fenster wächst mit." : "", "");
+      setClipStatus(maxSeconds < 5 ? svT("Buffer is still short — the clip window grows with it.") : "", "");
       setClipRange(nextStart, nextEnd, { dirty: false, seekPreview: false });
       clipOverlay.hidden = false;
       clipOverlay.setAttribute("aria-hidden", "false");
@@ -465,7 +466,7 @@
     function closeClipOverlay(force) {
       if (!clipOverlay || clipOverlay.hidden) return;
       if (!force && clipHasUnsavedChanges()) {
-        if (!window.confirm("Clip verwerfen? Nicht gespeicherte Änderungen gehen verloren.")) return;
+        if (!window.confirm(svT("Discard clip? Unsaved changes will be lost."))) return;
       }
       pauseClipPreview();
       clearSeekRetry();
@@ -508,21 +509,21 @@
           var data = result.data || {};
           var status = data.status || "";
           if (status === "done") {
-            showToast("success", "✓ CLIP GESPEICHERT", data.message || "Clip gespeichert.", data.clip_url || "");
+            showToast("success", svT("✓ CLIP SAVED"), data.message || svT("Clip saved."), data.clip_url || "");
             return;
           }
           if (status === "error" || !result.okHttp) {
-            showToast("error", "✕ CLIP FEHLGESCHLAGEN", data.message || data.error || "Clip fehlgeschlagen.");
+            showToast("error", svT("✕ CLIP FAILED"), data.message || data.error || svT("Clip failed."));
             return;
           }
           if (Date.now() - started > POLL_TIMEOUT_MS) {
-            showToast("error", "✕ CLIP FEHLGESCHLAGEN", "Clip dauert zu lange.");
+            showToast("error", svT("✕ CLIP FAILED"), svT("Clip is taking too long."));
             return;
           }
-          showToast("pending", "● CLIP", data.message || "Clip wird erstellt...");
+          showToast("pending", "● CLIP", data.message || svT("Creating clip…"));
           pollTimer = window.setTimeout(tick, POLL_MS);
         }).catch(function () {
-          showToast("error", "✕ CLIP FEHLGESCHLAGEN", "Status konnte nicht geladen werden.");
+          showToast("error", svT("✕ CLIP FAILED"), svT("Could not load status."));
         });
       };
       tick();
@@ -530,16 +531,16 @@
 
     function triggerInstantClip() {
       if (!instantUrl) {
-        showToast("error", "✕ CLIP FEHLGESCHLAGEN", "Clip-URL fehlt auf dieser Seite.");
+        showToast("error", svT("✕ CLIP FAILED"), svT("Clip URL is missing on this page."));
         return;
       }
       var now = Date.now();
       if (now - lastInstantAt < CLIENT_DEBOUNCE_MS) {
-        showToast("pending", "● CLIP", "Clip wird bereits gestartet…");
+        showToast("pending", "● CLIP", svT("Clip is already starting…"));
         return;
       }
       lastInstantAt = now;
-      showToast("pending", "● CLIP", "Clip wird erstellt...");
+      showToast("pending", "● CLIP", svT("Creating clip…"));
       var body = new FormData();
       body.set("csrf_token", csrfToken());
       body.set("source", source);
@@ -561,24 +562,24 @@
         }).catch(function () {
           return {
             okHttp: response.ok,
-            data: { ok: false, status: "error", message: "Ungültige Server-Antwort (" + response.status + ")." }
+            data: { ok: false, status: "error", message: svT("Invalid server response (%(status)s).").replace("%(status)s", response.status) }
           };
         });
       }).then(function (result) {
         var data = result.data || {};
         if (data.status === "error" || data.ok === false) {
-          showToast("error", "✕ CLIP FEHLGESCHLAGEN", data.message || data.error || "Clip fehlgeschlagen.");
+          showToast("error", svT("✕ CLIP FAILED"), data.message || data.error || svT("Clip failed."));
           return;
         }
         var jobId = data.job_id || data.id;
         if (!jobId) {
-          showToast("error", "✕ CLIP FEHLGESCHLAGEN", data.message || "Clip fehlgeschlagen.");
+          showToast("error", svT("✕ CLIP FAILED"), data.message || svT("Clip failed."));
           return;
         }
-        showToast("pending", "● CLIP", data.message || "Clip wird erstellt...");
+        showToast("pending", "● CLIP", data.message || svT("Creating clip…"));
         pollJob(jobId);
       }).catch(function () {
-        showToast("error", "✕ CLIP FEHLGESCHLAGEN", "Clip konnte nicht gestartet werden.");
+        showToast("error", svT("✕ CLIP FAILED"), svT("Could not start clip."));
       });
     }
 
@@ -660,7 +661,7 @@
         event.preventDefault();
         clipSubmitting = true;
         updateClipUi({});
-        setClipStatus("Clip wird erstellt...", "pending");
+        setClipStatus(svT("Creating clip…"), "pending");
         if (clipResult) {
           clipResult.hidden = true;
           clipResult.replaceChildren();
@@ -674,12 +675,12 @@
           clipInitialStart = clipStart;
           clipInitialEnd = clipEnd;
           clipInitialTitle = ((clipTitleInput && clipTitleInput.value) || "").trim();
-          setClipStatus(data.message || "Clip erstellt.", "success");
+          setClipStatus(data.message || svT("Clip created."), "success");
           if (clipResult) {
             var link = document.createElement("a");
             link.href = data.clip_url || "#";
-            link.textContent = "Clip öffnen";
-            clipResult.replaceChildren(document.createTextNode("Gespeichert. "), link);
+            link.textContent = svT("Open clip");
+            clipResult.replaceChildren(document.createTextNode(svT("Saved.") + " "), link);
             clipResult.hidden = false;
           }
         }
@@ -704,21 +705,21 @@
                 return;
               }
               if (status === "error" || !result.okHttp) {
-                setClipStatus(data.message || data.error || "Clip konnte nicht erstellt werden.", "error");
+                setClipStatus(data.message || data.error || svT("Could not create clip."), "error");
                 clipSubmitting = false;
                 updateClipUi({});
                 return;
               }
               if (Date.now() - started > POLL_TIMEOUT_MS) {
-                setClipStatus("Clip dauert zu lange.", "error");
+                setClipStatus(svT("Clip is taking too long."), "error");
                 clipSubmitting = false;
                 updateClipUi({});
                 return;
               }
-              setClipStatus(data.message || "Clip wird erstellt...", "pending");
+              setClipStatus(data.message || svT("Creating clip…"), "pending");
               pollTimer = window.setTimeout(tick, POLL_MS);
             }).catch(function () {
-              setClipStatus("Status konnte nicht geladen werden.", "error");
+              setClipStatus(svT("Could not load status."), "error");
               clipSubmitting = false;
               updateClipUi({});
             });
@@ -736,14 +737,14 @@
         }).then(function (response) {
           return response.json().then(function (data) {
             if (!response.ok || data.ok === false || data.status === "error") {
-              throw new Error(data.message || data.error || "Clip konnte nicht erstellt werden.");
+              throw new Error(data.message || data.error || svT("Could not create clip."));
             }
             return data;
           });
         }).then(function (data) {
           var jobId = data.job_id || data.id;
           if (jobId && data.status && data.status !== "done") {
-            setClipStatus(data.message || "Clip wird erstellt...", "pending");
+            setClipStatus(data.message || svT("Creating clip…"), "pending");
             pollOverlayJob(jobId);
             return;
           }
@@ -751,7 +752,7 @@
           clipSubmitting = false;
           updateClipUi({});
         }).catch(function (error) {
-          setClipStatus((error && error.message) || "Clip konnte nicht erstellt werden.", "error");
+          setClipStatus((error && error.message) || svT("Could not create clip."), "error");
           clipSubmitting = false;
           updateClipUi({});
         });

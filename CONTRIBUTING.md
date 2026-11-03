@@ -52,6 +52,28 @@ python -m unittest discover -s tests -v
 - **Paths from clients** are validated against `config.BASE_DIR`
   (`_is_direct_child`, `safe_join`) before touching the file system.
 
+## Translations
+
+The UI source language is English; catalogs live in `WEBUI/translations/<locale>/LC_MESSAGES/messages.po`.
+
+- In templates use `{{ _('Text') }}`, in Python `gettext("Text")` (or `lazy_gettext` for
+  module-level constants; `_` is a throwaway variable in `webui.py`), in static JS
+  `svT('Text')` and register the string in `JS_MESSAGES` in `WEBUI/i18n.py`.
+- Placeholders are named: `_('%(count)s VODs', count=n)`. A literal percent sign is `%%`.
+- After changing strings, refresh and compile the catalogs:
+
+```bash
+pybabel extract -F babel.cfg -k lazy_gettext -k N_ --no-location --sort-output -o WEBUI/translations/messages.pot .
+pybabel update -i WEBUI/translations/messages.pot -d WEBUI/translations --no-fuzzy-matching
+pybabel compile -d WEBUI/translations
+python scripts/check_translations.py
+```
+
+- Improving a translation: edit the `msgstr` in the locale's `messages.po`, then compile.
+  Commit both the `.po` and the `.mo` file; CI checks that they match.
+- Legal texts (`content/agb.md`, `content/datenschutz.md`) are German originals with English
+  translations (`*.en.md`); other languages show the English version.
+
 ## Pull requests
 
 - One topic per pull request; small, focused commits.

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
 <head>
   <meta charset="utf-8">
   <title>{{ display_name or streamer }} · StreamVault Mobile</title>
@@ -12,17 +12,17 @@
 <!-- Mobile Header -->
 <div class="mobile-header" style="background: rgba(7, 11, 20, 0.95); border-bottom: 1px solid var(--nebula-border, #26344F); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);">
   <div style="display: flex; align-items: center; gap: 12px;">
-    <a href="{{ url_for('index') }}" class="mobile-back" aria-label="Zurück zur Übersicht" style="color: #A2AEC8; display: flex; align-items: center;">
+    <a href="{{ url_for('index') }}" class="mobile-back" aria-label="{{ _('Back to overview') }}" style="color: #A2AEC8; display: flex; align-items: center;">
       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </a>
     <h1 style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">{{ display_name or streamer }}</h1>
   </div>
   {% if twitch_live %}
-  <span class="nebula-live-badge"><span class="nebula-live-dot"></span> LIVE</span>
+  <span class="nebula-live-badge"><span class="nebula-live-dot"></span> {{ _('LIVE') }}</span>
   {% elif online %}
-  <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; background:rgba(72,214,162,0.15); color:#48D6A2;">ONLINE</span>
+  <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; background:rgba(72,214,162,0.15); color:#48D6A2;">{{ _('ONLINE') }}</span>
   {% else %}
-  <span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:4px; background:#151F33; color:#75839D;">OFFLINE</span>
+  <span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:4px; background:#151F33; color:#75839D;">{{ _('OFFLINE') }}</span>
   {% endif %}
 </div>
 
@@ -31,7 +31,7 @@
   <div class="btn-row" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
     {% if mobile_live_enabled and twitch_login and (twitch_live or online) %}
     <a href="{{ url_for('twitch_watch', channel=twitch_login) }}" class="ns-btn ns-btn-primary" style="padding: 8px 14px; font-size: 13px; font-weight: 700;">
-      LIVE ZUSCHAUEN
+      {{ _('WATCH LIVE') }}
     </a>
     {% endif %}
     {% if twitch_login %}
@@ -43,19 +43,19 @@
       {% if live %}
       <form method="post" action="{{ url_for('live_control_stop', streamer=streamer) }}" style="margin:0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="ns-btn nebula-btn-danger" style="padding: 8px 12px; font-size: 13px;">Stop Rec</button>
+        <button class="ns-btn nebula-btn-danger" style="padding: 8px 12px; font-size: 13px;">{{ _('Stop recording') }}</button>
       </form>
       {% else %}
       <form method="post" action="{{ url_for('live_control_start', streamer=streamer) }}" style="margin:0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="ns-btn ns-btn-secondary" style="padding: 8px 12px; font-size: 13px;">Start HLS</button>
+        <button class="ns-btn ns-btn-secondary" style="padding: 8px 12px; font-size: 13px;">{{ _('Start HLS') }}</button>
       </form>
       {% endif %}
     {% endif %}
     {% if session.user_role == 'admin' %}
     <form method="post" action="{{ url_for('streamer_download_all', streamer=streamer) }}" style="margin:0;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="ns-btn ns-btn-secondary" style="padding: 8px 12px; font-size: 13px;" onclick="return confirm('Alle VODs laden?')">Alle laden</button>
+      <button class="ns-btn ns-btn-secondary" style="padding: 8px 12px; font-size: 13px;" onclick='return confirm({{ _("Download all VODs?")|tojson }})'>{{ _('Download all') }}</button>
     </form>
     {% endif %}
   </div>
@@ -63,18 +63,18 @@
   <!-- Search & Filter Row -->
   <form method="get" style="display: flex; gap: 8px; margin-bottom: 16px;">
     <input type="hidden" name="type" value="{{ current_type }}">
-    <input name="q" placeholder="Suche..." value="{{ q or '' }}" style="flex: 1; padding: 8px 12px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
+    <input name="q" placeholder="{{ _('Search...') }}" value="{{ q or '' }}" style="flex: 1; padding: 8px 12px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
     <select name="sort" onchange="this.form.submit()" style="padding: 8px 10px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
-      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Neu</option>
-      <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Alt</option>
-      <option value="size_desc" {% if sort == 'size_desc' %}selected{% endif %}>Groß</option>
+      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ _('Newest') }}</option>
+      <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>{{ _('Oldest') }}</option>
+      <option value="size_desc" {% if sort == 'size_desc' %}selected{% endif %}>{{ _('Largest') }}</option>
     </select>
   </form>
 
   <!-- Tabs -->
   <div style="display: inline-flex; background: #111A2B; padding: 4px; border-radius: 8px; border: 1px solid #26344F; gap: 4px; margin-bottom: 16px;">
     <a href="?type=vod&q={{ q or '' }}&sort={{ sort }}" class="ns-btn {% if current_type == 'vod' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
-      Aufnahmen ({{ cnt_vod }})
+      {{ _('Recordings (%(count)s)', count=cnt_vod) }}
     </a>
     <a href="?type=clip&q={{ q or '' }}&sort={{ sort }}" class="ns-btn {% if current_type == 'clip' %}ns-btn-primary{% else %}ns-btn-secondary{% endif %}" style="padding: 6px 14px; font-size: 12px; border: none;">
       Clips ({{ cnt_clip }})
@@ -82,16 +82,16 @@
   </div>
 
   {% if total_pages and total_pages > 1 %}
-  <nav class="ns-pagination ns-pagination-top" aria-label="Seiten-Navigation (Oben)" style="margin-bottom: 14px;">
+  <nav class="ns-pagination ns-pagination-top" aria-label="{{ _('Pagination (top)') }}" style="margin-bottom: 14px;">
     <div class="ns-pagination-info">
-      Seite <strong>{{ page }}</strong> / <strong>{{ total_pages }}</strong> {% if total_count is defined %}({{ total_count }}){% endif %}
+      {{ _('Page %(page)s / %(total)s', page='<strong>%s</strong>'|format(page)|safe, total='<strong>%s</strong>'|format(total_pages)|safe) }} {% if total_count is defined %}({{ total_count }}){% endif %}
     </div>
     <div class="ns-pagination-controls">
       {% if page > 1 %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="ns-page-btn">&lsaquo; Zur&uuml;ck</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="ns-page-btn">&lsaquo; {{ _('Previous') }}</a>
       {% endif %}
       {% if page < total_pages %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="ns-page-btn">Weiter &rsaquo;</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="ns-page-btn">{{ _('Next') }} &rsaquo;</a>
       {% endif %}
     </div>
   </nav>
@@ -117,42 +117,42 @@
           <span>{{ f.size_str }}</span>
           {% if f.category %}
           <span>•</span>
-          <span style="color: #BB78FF;">Spiel: {{ f.category }}</span>
+          <span style="color: #BB78FF;">{{ _('Game: %(name)s', name=f.category) }}</span>
           {% endif %}
           {% if f.viewer_count_str %}
           <span>•</span>
-          <span>{{ f.viewer_count_str }}{% if 'zuschauer' not in (f.viewer_count_str|lower) %} Zuschauer{% endif %}</span>
+          <span>{{ f.viewer_count_str }}{% if 'zuschauer' not in (f.viewer_count_str|lower) %} {{ _('viewers') }}{% endif %}</span>
           {% endif %}
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
           {% if downloads_enabled %}
-          <a href="{{ url_for('download' if f.route == 'vod' else 'clip_download', streamer=streamer, filename=f.name) }}" class="ns-btn ns-btn-secondary" style="padding: 6px 12px; font-size: 12px;">Download</a>
+          <a href="{{ url_for('download' if f.route == 'vod' else 'clip_download', streamer=streamer, filename=f.name) }}" class="ns-btn ns-btn-secondary" style="padding: 6px 12px; font-size: 12px;">{{ _('Download') }}</a>
           {% endif %}
           {% if session.user_role == 'admin' %}
-          <button onclick="deleteItem(this, '{{ url_for('vod_delete' if f.route == 'vod' else 'clip_delete', streamer=streamer, filename=f.name) }}')" class="ns-btn nebula-btn-danger" style="padding: 6px 12px; font-size: 12px;">Löschen</button>
+          <button onclick="deleteItem(this, '{{ url_for('vod_delete' if f.route == 'vod' else 'clip_delete', streamer=streamer, filename=f.name) }}')" class="ns-btn nebula-btn-danger" style="padding: 6px 12px; font-size: 12px;">{{ _('Delete') }}</button>
           {% endif %}
         </div>
       </div>
     </div>
     {% else %}
-    <div style="padding: 32px; text-align: center; color: var(--nebula-text-muted); background: var(--nebula-bg-surface); border-radius: 12px; border: 1px dashed var(--nebula-border);">Keine Videos gefunden.</div>
+    <div style="padding: 32px; text-align: center; color: var(--nebula-text-muted); background: var(--nebula-bg-surface); border-radius: 12px; border: 1px dashed var(--nebula-border);">{{ _('No videos found.') }}</div>
     {% endfor %}
   </div>
 
   {% if total_pages and total_pages > 1 %}
-  <nav class="pagination ns-pagination ns-pagination-bottom" aria-label="Seiten-Navigation" style="margin-top: 20px;">
+  <nav class="pagination ns-pagination ns-pagination-bottom" aria-label="{{ _('Pagination') }}" style="margin-top: 20px;">
     <div class="ns-pagination-info">
-      Seite <strong>{{ page }}</strong> von <strong>{{ total_pages }}</strong> {% if total_count is defined %}&bull; {{ total_count }} Eintr&auml;ge{% endif %}
+      {{ _('Page %(page)s of %(total)s', page='<strong>%s</strong>'|format(page)|safe, total='<strong>%s</strong>'|format(total_pages)|safe) }} {% if total_count is defined %}&bull; {{ ngettext('%(num)d entry', '%(num)d entries', total_count) }}{% endif %}
     </div>
     <div class="pagination-pages ns-pagination-controls">
       {% if page > 1 %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="pagination-page ns-page-btn">&lsaquo; Zur&uuml;ck</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page-1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="pagination-page ns-page-btn">&lsaquo; {{ _('Previous') }}</a>
       {% endif %}
       {% for p in page_numbers %}
       <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=p, q=q or None, sort=sort if sort != 'newest' else None) }}" class="pagination-page ns-page-btn {% if p == page %}is-current is-active{% endif %}">{{ p }}</a>
       {% endfor %}
       {% if page < total_pages %}
-      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="pagination-page ns-page-btn">Weiter &rsaquo;</a>
+      <a href="{{ url_for('streamer_view', streamer=streamer, type=current_type, page=page+1, q=q or None, sort=sort if sort != 'newest' else None) }}" class="pagination-page ns-page-btn">{{ _('Next') }} &rsaquo;</a>
       {% endif %}
     </div>
   </nav>
@@ -163,16 +163,16 @@
 <div class="mobile-global-nav" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
   <a href="{{ url_for('index') }}" style="color: #75839D;">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Home</span>
+    <span>{{ _('Home') }}</span>
   </a>
   <a href="{{ url_for('twitch_live_hub') }}" style="color: #75839D;">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
-    <span>Live</span>
+    <span>{{ _('Live') }}</span>
   </a>
   {% if session.user_role == 'admin' %}
   <a href="{{ url_for('channels_view') }}" class="active" style="color: #4D63FF;">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <span>Streamer</span>
+    <span>{{ _('Streamer') }}</span>
   </a>
   {% endif %}
 </div>

@@ -17,7 +17,11 @@ a web interface where you can replay a stream with its chat, cut clips and
 manage who may watch what. It runs on a single Linux server; video delivery is
 handed to Nginx so the Python process stays small.
 
-> The web interface is currently available in **German only**.
+**Languages:** English, Deutsch, Français, Español, Italiano, Português (Brasil),
+Nederlands, Polski, Türkçe, 日本語, 简体中文 and 한국어. The interface follows the
+browser language and can be switched on the login page and in the sidebar.
+Translations other than English and German were produced without native-speaker
+review; corrections are very welcome (see [CONTRIBUTING.md](CONTRIBUTING.md#translations)).
 
 ## Screenshots
 

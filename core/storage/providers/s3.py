@@ -6,6 +6,8 @@ import os
 import urllib.parse
 from typing import Iterable, Optional
 
+from flask_babel import gettext, lazy_gettext
+
 from core.storage.base import (
     ProgressCallback,
     ProviderField,
@@ -34,8 +36,8 @@ except Exception:  # pragma: no cover - exercised only when boto3 is missing
 
 class S3Provider(StorageProvider):
     type_id = "s3"
-    label = "S3-kompatibel"
-    description = "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner oder jeder S3-kompatible Endpunkt."
+    label = lazy_gettext("S3-compatible")
+    description = lazy_gettext("AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint.")
     docs_url = "https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html"
     config_fields = (
         ProviderField("bucket", "Bucket", required=True, placeholder="streamvault-archive"),
@@ -45,29 +47,29 @@ class S3Provider(StorageProvider):
             "region",
             "Region",
             placeholder="us-east-1 / eu-central-1 / auto",
-            help="Leer = us-east-1 für AWS. Cloudflare R2 verwendet 'auto'; "
-                 "andere S3-Anbieter ihre jeweilige Region.",
+            help=lazy_gettext("Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; "
+                 "other S3 providers use their own region."),
         ),
         ProviderField(
             "endpoint_url",
-            "Endpunkt-URL (optional)",
+            lazy_gettext("Endpoint URL (optional)"),
             placeholder="https://<account>.r2.cloudflarestorage.com",
-            help="Leer = AWS. Für R2, B2, Wasabi, MinIO etc. den S3-Endpunkt eintragen.",
+            help=lazy_gettext("Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."),
         ),
         ProviderField(
             "addressing_style",
-            "Adressierung",
+            lazy_gettext("Addressing"),
             type="select",
             default="auto",
-            choices=(("auto", "Automatisch"), ("path", "Path-Style"), ("virtual", "Virtual-Hosted")),
+            choices=(("auto", lazy_gettext("Automatic")), ("path", "Path-Style"), ("virtual", "Virtual-Hosted")),
         ),
-        ProviderField("base_path", "Präfix", default="StreamVault", placeholder="StreamVault"),
+        ProviderField("base_path", lazy_gettext("Prefix"), default="StreamVault", placeholder="StreamVault"),
         ProviderField(
             "server_side_encryption",
-            "Serverseitige Verschlüsselung",
+            lazy_gettext("Server-side encryption"),
             type="select",
             default="",
-            choices=(("", "Anbieter-Standard"), ("AES256", "S3 AES256"), ("aws:kms", "AWS KMS")),
+            choices=(("", lazy_gettext("Provider default")), ("AES256", "S3 AES256"), ("aws:kms", "AWS KMS")),
         ),
     )
 
@@ -82,17 +84,17 @@ class S3Provider(StorageProvider):
         if endpoint:
             parsed = urllib.parse.urlparse(endpoint)
             if parsed.scheme not in ("http", "https") or not parsed.netloc:
-                errors.append("Endpunkt-URL muss eine gültige http(s)-URL sein.")
+                errors.append(gettext("Endpoint URL must be a valid http(s) URL."))
             if parsed.username is not None or parsed.password is not None:
-                errors.append(
-                    "Endpunkt-URL darf keine Zugangsdaten enthalten; "
-                    "nutze Access Key und Secret Key."
-                )
+                errors.append(gettext(
+                    "Endpoint URL must not contain credentials; "
+                    "use Access Key and Secret Key."
+                ))
             if parsed.query or parsed.fragment:
-                errors.append("Endpunkt-URL darf keine Query oder Fragment enthalten.")
+                errors.append(gettext("Endpoint URL must not contain a query or fragment."))
         bucket = str((config or {}).get("bucket") or "").strip()
         if bucket and ("/" in bucket or " " in bucket):
-            errors.append("Bucket-Name enthält ungültige Zeichen.")
+            errors.append(gettext("Bucket name contains invalid characters."))
         return errors
 
     def _client(self):

@@ -1,5 +1,6 @@
 (function () {
   "use strict";
+  var svT = window.svT || function (s) { return s; };
 
   var MIN_ZOOM = 1;
   var MAX_ZOOM = 5;
@@ -42,20 +43,20 @@
     overlay.className = "ns-photo-viewer";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "Fotoviewer");
+    overlay.setAttribute("aria-label", svT("Photo viewer"));
     overlay.hidden = true;
     overlay.innerHTML =
       '<div class="ns-photo-viewer__backdrop" data-ns-photo-close="1"></div>' +
       '<div class="ns-photo-viewer__chrome">' +
-      '<div class="ns-photo-viewer__toolbar" role="toolbar" aria-label="Bildsteuerung">' +
-      '<button type="button" class="ns-photo-viewer__btn" data-ns-photo-zoom="-1" title="Herauszoomen" aria-label="Herauszoomen">' +
+      '<div class="ns-photo-viewer__toolbar" role="toolbar" aria-label="' + svT("Image controls") + '">' +
+      '<button type="button" class="ns-photo-viewer__btn" data-ns-photo-zoom="-1" title="' + svT("Zoom out") + '" aria-label="' + svT("Zoom out") + '">' +
       svgIcon(ICON_ZOOM_OUT) +
       "</button>" +
       '<span class="ns-photo-viewer__zoom-label" data-ns-photo-zoom-label>100%</span>' +
-      '<button type="button" class="ns-photo-viewer__btn" data-ns-photo-zoom="1" title="Hereanzoomen" aria-label="Hereanzoomen">' +
+      '<button type="button" class="ns-photo-viewer__btn" data-ns-photo-zoom="1" title="' + svT("Zoom in") + '" aria-label="' + svT("Zoom in") + '">' +
       svgIcon(ICON_ZOOM_IN) +
       "</button>" +
-      '<button type="button" class="ns-photo-viewer__btn ns-photo-viewer__btn--close" data-ns-photo-close="1" title="Schließen" aria-label="Schließen">' +
+      '<button type="button" class="ns-photo-viewer__btn ns-photo-viewer__btn--close" data-ns-photo-close="1" title="' + svT("Close") + '" aria-label="' + svT("Close") + '">' +
       svgIcon(ICON_CLOSE) +
       "</button>" +
       "</div>" +

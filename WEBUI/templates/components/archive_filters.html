@@ -2,13 +2,13 @@
   <!-- Search & Primary Filters Row -->
   <form method="get" class="ns-filter-row" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 240px; position: relative;">
-      <input type="text" name="q" value="{{ query or '' }}" placeholder="Aufnahmen durchsuchen (Titel, Datum, Spiel)..." class="ns-input-field" style="width: 100%; padding-left: 36px;">
+      <input type="text" name="q" value="{{ query or '' }}" placeholder="{{ _('Search recordings (title, date, game)...') }}" class="ns-input-field" style="width: 100%; padding-left: 36px;">
       <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--ns-text-muted);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
 
     {% if categories %}
     <select name="cat" class="ns-input-field" style="width: auto; cursor: pointer;">
-      <option value="">Alle Kategorien</option>
+      <option value="">{{ _('All categories') }}</option>
       {% for c in categories %}
       <option value="{{ c.name }}" {% if selected_cat == c.name %}selected{% endif %}>{{ c.name }} ({{ c.count }})</option>
       {% endfor %}
@@ -16,12 +16,12 @@
     {% endif %}
 
     <select name="sort" class="ns-input-field" style="width: auto; cursor: pointer;">
-      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Neueste zuerst</option>
-      <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Älteste zuerst</option>
-      <option value="duration" {% if sort == 'duration' %}selected{% endif %}>Dauer</option>
-      <option value="size" {% if sort == 'size' %}selected{% endif %}>Dateigröße</option>
+      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ _('Newest first') }}</option>
+      <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>{{ _('Oldest first') }}</option>
+      <option value="duration" {% if sort == 'duration' %}selected{% endif %}>{{ _('Duration') }}</option>
+      <option value="size" {% if sort == 'size' %}selected{% endif %}>{{ _('File size') }}</option>
     </select>
 
-    <button type="submit" class="ns-btn ns-btn-primary">Filtern</button>
+    <button type="submit" class="ns-btn ns-btn-primary">{{ _('Filter') }}</button>
   </form>
 </div>

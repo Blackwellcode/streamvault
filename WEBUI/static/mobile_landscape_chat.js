@@ -1,5 +1,6 @@
 (function (global) {
   "use strict";
+  var svT = window.svT || function (s) { return s; };
 
   const body = document.body;
   if (!body || !body.classList.contains("page-mobile-player")) return;
@@ -57,8 +58,8 @@
 
     if (fsBtn) {
       fsBtn.setAttribute("aria-pressed", forced ? "true" : "false");
-      fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
-      fsBtn.title = forced ? "Vollbild beenden" : "Vollbild";
+      fsBtn.setAttribute("aria-label", forced ? svT("Exit fullscreen") : svT("Fullscreen"));
+      fsBtn.title = forced ? svT("Exit fullscreen") : svT("Fullscreen");
       fsBtn.classList.toggle("is-active", forced);
       fsBtn.style.display = active ? "none" : "";
     }
@@ -76,9 +77,9 @@
       chatBtn.setAttribute("aria-pressed", chatOpen ? "true" : "false");
       chatBtn.setAttribute(
         "aria-label",
-        chatOpen ? "Chat einklappen" : "Chat ausklappen"
+        chatOpen ? svT("Collapse chat") : svT("Expand chat")
       );
-      chatBtn.title = chatOpen ? "Chat einklappen" : "Chat ausklappen";
+      chatBtn.title = chatOpen ? svT("Collapse chat") : svT("Expand chat");
     }
     try {
       localStorage.setItem(KEY, chatOpen ? "1" : "0");
@@ -237,8 +238,8 @@
     if (playPauseBtn) {
       const isPaused = vid.paused;
       playPauseBtn.classList.toggle("is-paused", isPaused);
-      playPauseBtn.setAttribute("aria-label", isPaused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren");
-      playPauseBtn.title = isPaused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren";
+      playPauseBtn.setAttribute("aria-label", isPaused ? svT("Resume playback") : svT("Pause playback"));
+      playPauseBtn.title = isPaused ? svT("Resume playback") : svT("Pause playback");
       const playIcon = playPauseBtn.querySelector(".icon-play");
       const pauseIcon = playPauseBtn.querySelector(".icon-pause");
       const label = playPauseBtn.querySelector(".btn-label");
@@ -247,15 +248,15 @@
         pauseIcon.style.display = isPaused ? "none" : "inline-block";
       }
       if (label) {
-        label.textContent = isPaused ? "Play" : "Pause";
+        label.textContent = isPaused ? svT("Play") : svT("Pause");
       }
     }
 
     if (muteBtn) {
       const isMuted = vid.muted || vid.volume === 0;
       muteBtn.classList.toggle("is-muted", isMuted);
-      muteBtn.setAttribute("aria-label", isMuted ? "Ton einschalten" : "Stummschalten");
-      muteBtn.title = isMuted ? "Ton einschalten" : "Stummschalten";
+      muteBtn.setAttribute("aria-label", isMuted ? svT("Unmute") : svT("Mute"));
+      muteBtn.title = isMuted ? svT("Unmute") : svT("Mute");
       const unmuteIcon = muteBtn.querySelector(".icon-unmute");
       const muteIcon = muteBtn.querySelector(".icon-mute");
       const label = muteBtn.querySelector(".btn-label");
@@ -264,7 +265,7 @@
         muteIcon.style.display = isMuted ? "inline-block" : "none";
       }
       if (label) {
-        label.textContent = isMuted ? "Stumm" : "Ton";
+        label.textContent = isMuted ? svT("Muted") : svT("Sound");
       }
     }
   }

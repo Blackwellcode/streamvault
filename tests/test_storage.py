@@ -1965,7 +1965,8 @@ class StoragePageTests(StorageTestBase):
         path.unlink()
         database.update_storage_object(obj["id"], local_deleted_at=time.time())
 
-        response = self._client().get("/admin/storage")
+        # The UI defaults to English since i18n; these assertions check the German UI.
+        response = self._client().get("/admin/storage", headers={"Accept-Language": "de"})
         self.assertEqual(response.status_code, 200)
         body = response.get_data(as_text=True)
         self.assertIn("Nur Cloud", body)

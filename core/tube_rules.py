@@ -37,12 +37,35 @@ RULES_ITEMS: list[str] = [
     "**Verstoß = sofortiger Entzug.** ACL weg, ggf. Kick/Ban.",
 ]
 
+# English translation for the web UI in every non-German language. The German
+# text above stays binding; keep both lists in the same order and length.
+RULES_EN = {
+    "title": "StreamVault access: binding rules",
+    "accept_phrase": "ACCEPT",
+    "footer": "Note: these rules are house rules for this group. They do not replace third-party rights.",
+    "items": [
+        "**Access for approved members only.** Do not share accounts, invites or login details. Anyone who wants to bring someone asks the approver first; no self-invites.",
+        "**No public traces.** No screenshots, clips, links or mentions on other Discord servers, Reddit, Twitter/X, Twitch chat, forums and so on.",
+        "**Links stay internal.** StreamVault links, share tokens and invites stay on this server and in approved channels. No forwarding to non-members.",
+        "**No sharing of files.** VODs, downloads, chat exports and screen recordings must not go to cloud services, other servers or third parties.",
+        "**No bulk downloads, no mirrors.** No mass downloading, no second archive, no re-hosting.",
+        "**No monetisation.** No donations, ads, paid access or giveaways with access as a prize.",
+        "**No \"official\" framing.** Do not claim the project is authorised or tolerated by the streamer.",
+        "**Do not share technical details.** No hosting, bot, admin or token details outside the admin group.",
+        "**Report problems.** Suspected leak or public post: tell the admins immediately.",
+        "**Violation = immediate removal.** Access revoked, possibly kick/ban.",
+    ],
+}
+
 
 def current_version() -> str:
     return RULES_VERSION
 
 
-def accept_phrase() -> str:
+def accept_phrase(lang: str | None = None) -> str:
+    """Phrase shown to the user; German in German, English in every other language."""
+    if lang and lang != "de":
+        return RULES_EN["accept_phrase"]
     return RULES_ACCEPT_PHRASE
 
 
@@ -58,8 +81,9 @@ def rules_plain_lines() -> list[str]:
     return lines
 
 
-def rules_web_context(*, site_url: str = "") -> dict[str, Any]:
+def rules_web_context(*, site_url: str = "", lang: str | None = None) -> dict[str, Any]:
     site = (site_url or "").rstrip("/")
+    english = bool(lang and lang != "de")
 
     def _md_bold_to_html(text: str) -> str:
         import html as _html
@@ -68,12 +92,13 @@ def rules_web_context(*, site_url: str = "") -> dict[str, Any]:
         escaped = _html.escape(text)
         return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
 
+    items = RULES_EN["items"] if english else RULES_ITEMS
     return {
-        "rules_title": RULES_TITLE,
-        "rules_items": [_md_bold_to_html(item) for item in RULES_ITEMS],
-        "rules_footer": RULES_FOOTER,
+        "rules_title": RULES_EN["title"] if english else RULES_TITLE,
+        "rules_items": [_md_bold_to_html(item) for item in items],
+        "rules_footer": RULES_EN["footer"] if english else RULES_FOOTER,
         "rules_version": RULES_VERSION,
-        "rules_accept_phrase": RULES_ACCEPT_PHRASE,
+        "rules_accept_phrase": accept_phrase(lang),
         "rules_url": f"{site}/agb" if site else "/agb",
     }
 
@@ -109,7 +134,8 @@ def normalize_accept_input(raw: str | None) -> str:
 
 
 def validate_accept_input(raw: str | None) -> None:
-    if normalize_accept_input(raw) != RULES_ACCEPT_PHRASE:
+    # Either language's phrase counts: the user may switch the UI language mid-way.
+    if normalize_accept_input(raw) not in (RULES_ACCEPT_PHRASE, RULES_EN["accept_phrase"]):
         raise ValueError(
             f"AGB inkl. Nutzungsregeln nicht akzeptiert. Bitte exakt `{RULES_ACCEPT_PHRASE}` eingeben "
             f"(siehe #regeln / #agb bzw. {LOGIN_RULES_HINT})."

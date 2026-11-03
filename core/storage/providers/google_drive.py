@@ -8,6 +8,8 @@ import time
 import urllib.parse
 from typing import Iterable, Optional
 
+from flask_babel import lazy_gettext
+
 from core.storage.base import (
     ProgressCallback,
     ProviderField,
@@ -36,9 +38,9 @@ UPLOAD_CHUNK = 16 * 1024 * 1024
 class GoogleDriveProvider(StorageProvider):
     type_id = "google_drive"
     label = "Google Drive"
-    description = "Google Drive / Workspace Drive mit OAuth 2.0 und resumierbaren Uploads."
+    description = lazy_gettext("Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads.")
     oauth_supported = True
-    oauth_label = "Mit Google verbinden"
+    oauth_label = lazy_gettext("Connect with Google")
     docs_url = "https://developers.google.com/drive/api/guides/about-sdk"
     config_fields = (
         ProviderField(
@@ -46,7 +48,7 @@ class GoogleDriveProvider(StorageProvider):
             "OAuth Client ID",
             required=True,
             placeholder="1234567890-xxxx.apps.googleusercontent.com",
-            help="Google Cloud Console → APIs & Dienste → Anmeldedaten → OAuth-Client (Webanwendung).",
+            help=lazy_gettext("Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."),
         ),
         ProviderField(
             "client_secret",
@@ -61,27 +63,27 @@ class GoogleDriveProvider(StorageProvider):
             type="password",
             required=True,
             secret=True,
-            help="Wird beim Verbinden automatisch gespeichert. Alternativ manuell einfügen.",
+            help=lazy_gettext("Saved automatically when connecting. Alternatively, paste it manually."),
         ),
         ProviderField(
             "folder_id",
-            "Zielordner-ID (optional)",
+            lazy_gettext("Target folder ID (optional)"),
             placeholder="1AbCdEfGh...",
-            help="Leer lassen, um automatisch einen Ordner 'StreamVault' anzulegen.",
+            help=lazy_gettext("Leave empty to create a 'StreamVault' folder automatically."),
         ),
         ProviderField(
             "base_path",
-            "Unterordner",
+            lazy_gettext("Subfolder"),
             default="StreamVault",
             placeholder="StreamVault",
-            help="Pfad unterhalb der Zielordner-ID. Leer = direkt in der Zielordner-ID.",
+            help=lazy_gettext("Path below the target folder ID. Empty = directly in the target folder ID."),
         ),
         ProviderField(
             "scope",
             "OAuth Scope",
             default=DEFAULT_SCOPE,
-            help="drive.file = nur von StreamVault angelegte Dateien (empfohlen). "
-                 "Für bestehende Ordner ggf. https://www.googleapis.com/auth/drive.",
+            help=lazy_gettext("drive.file = only files created by StreamVault (recommended). "
+                 "For existing folders, use https://www.googleapis.com/auth/drive if needed."),
         ),
     )
 

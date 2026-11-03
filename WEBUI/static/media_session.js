@@ -1,4 +1,5 @@
 (function () {
+  var svT = window.svT || function (s) { return s; };
   function text(value, fallback) {
     const raw = value == null ? "" : String(value).trim();
     return raw || fallback || "";
@@ -329,7 +330,7 @@
     const artwork = text(data.mediaArtwork || (options && options.artwork), "/app-icon-512.png");
     const title = text(data.mediaTitle || (options && options.title), document.title || "StreamVault");
     const artist = text(data.mediaArtist || (options && options.artist), "StreamVault");
-    const album = text(data.mediaAlbum || (options && options.album), isLive ? "Live" : "Archiv");
+    const album = text(data.mediaAlbum || (options && options.album), isLive ? "Live" : svT("Archive"));
 
     try {
       navigator.mediaSession.metadata = new MediaMetadata({

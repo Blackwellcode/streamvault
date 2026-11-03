@@ -163,7 +163,7 @@
   function scheduleReconnect(msg) {
     ready = false;
     destroyPlayers();
-    setWait(true, msg || 'Verbindung unterbrochen ? verbinde neu?');
+    setWait(true, msg || {{ _('Connection lost — reconnecting…')|tojson }});
     dbg('warn', 'reconnect_scheduled', { detail: msg || '' });
     if (reconnectTimer) clearTimeout(reconnectTimer);
     const delay = reconnectDelayMs();
@@ -211,7 +211,7 @@
         const end = video.buffered.end(video.buffered.length - 1);
         const buf = Math.max(0, end - video.currentTime);
         if (statusEl && waitEl && !waitEl.classList.contains('is-visible')) {
-          statusEl.textContent = modeName + ' • Puffer: ' + (buf ? buf.toFixed(1) : '0') + 's';
+          statusEl.textContent = modeName + ' • ' + {{ _('Buffer:')|tojson }} + ' ' + (buf ? buf.toFixed(1) : '0') + 's';
         }
       }
     }, 1000);
@@ -255,7 +255,7 @@
           hls.recoverMediaError();
           return;
         }
-        scheduleReconnect('HLS Verbindung unterbrochen — verbinde neu…');
+        scheduleReconnect({{ _('HLS connection lost — reconnecting…')|tojson }});
       });
 
       hls.loadSource(hlsUrl);
@@ -267,7 +267,7 @@
       targetVideo.src = hlsUrl;
       targetVideo.addEventListener('error', function() {
         dbg('error', 'native_hls_error', { code: targetVideo.error ? targetVideo.error.code : 'unknown' });
-        scheduleReconnect('HLS Verbindung unterbrochen — verbinde neu…');
+        scheduleReconnect({{ _('HLS connection lost — reconnecting…')|tojson }});
       }, { once: true });
       tryAutoplay();
       startTelemetry('NATIVE-HLS');
@@ -275,7 +275,7 @@
     }
 
     ready = false;
-    setWait(true, 'Browser unterstützt weder MPEG-TS noch Live-HLS.');
+    setWait(true, {{ _('Browser supports neither MPEG-TS nor live HLS.')|tojson }});
     dbg('error', 'playback_unsupported', {});
   }
 
@@ -331,7 +331,7 @@
             detail: String(detail),
             info: String(info || '')
           });
-          scheduleReconnect('Echtzeit-Stream Fehler — verbinde neu…');
+          scheduleReconnect({{ _('Real-time stream error — reconnecting…')|tojson }});
         });
 
         return;
@@ -344,7 +344,7 @@
       ready = false;
       destroyPlayers();
       dbg('error', 'player_start_failed', { detail: String(e && e.message || e) });
-      scheduleReconnect('Player-Fehler — verbinde neu…');
+      scheduleReconnect({{ _('Player error — reconnecting…')|tojson }});
     }
   }
 
@@ -367,7 +367,7 @@
           credentials: 'same-origin'
         });
         if (!resp.ok) {
-          setWait(true, 'Server lädt Stream… (' + resp.status + ')');
+          setWait(true, {{ _('Server is loading the stream…')|tojson }} + ' (' + resp.status + ')');
           dbg('warn', 'ready_http', { detail: String(resp.status) });
           return;
         }
@@ -378,16 +378,16 @@
         }
         const waitedSec = Math.round((Date.now() - waitStartedAt) / 1000);
         if (data && data.twitch_live === false && waitedSec >= 20) {
-          setWait(true, 'Streamer ist derzeit offline.');
+          setWait(true, {{ _('Streamer is currently offline.')|tojson }});
           dbg('warn', 'offline', { detail: 'twitch_live=false' });
           return;
         }
         if (waitedSec >= 90) {
-          setWait(true, 'Stream startet nicht — prüfe Live-Status oder lade die Seite neu.');
+          setWait(true, {{ _('Stream is not starting — check the live status or reload the page.')|tojson }});
           dbg('error', 'ready_timeout', { detail: 'waited>=90s' });
           return;
         }
-        setWait(true, 'Server lädt Stream…');
+        setWait(true, {{ _('Server is loading the stream…')|tojson }});
         return;
       }
 
@@ -402,9 +402,9 @@
         startPlayer();
         return;
       }
-      setWait(true, 'Server lädt Stream… (' + resp.status + ')');
+      setWait(true, {{ _('Server is loading the stream…')|tojson }} + ' (' + resp.status + ')');
     } catch (e) {
-      setWait(true, 'Warte auf Server-Stream…');
+      setWait(true, {{ _('Waiting for server stream…')|tojson }});
       dbg('warn', 'ready_fetch_error', { detail: String(e && e.message || e) });
     }
   }
@@ -420,19 +420,19 @@
   }
 
   setWait(true, liveOauth
-    ? 'Server l?dt Stream (Turbo, ohne Viewer-Liste)?'
-    : 'Server l?dt Stream (ohne Twitch-Account)?');
+    ? {{ _('Server is loading the stream (Turbo, without viewer list)…')|tojson }}
+    : {{ _('Server is loading the stream (without Twitch account)…')|tojson }});
   try { dbg('info', 'proxy_boot', {}); } catch (e) {}
   checkPlaylist();
   ensureReadyPoll(400);
   setInterval(touchHeartbeat, 15000);
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && !ready) {
-      scheduleReconnect('Verbinde erneut?');
+      scheduleReconnect({{ _('Reconnecting…')|tojson }});
     }
   });
   window.addEventListener('online', function() {
-    if (!ready) scheduleReconnect('Netzwerk wieder da ? verbinde neu?');
+    if (!ready) scheduleReconnect({{ _('Network is back — reconnecting…')|tojson }});
   });
 })();
 </script>

@@ -4,6 +4,7 @@
  */
 (function () {
   "use strict";
+  var svT = window.svT || function (s) { return s; };
 
   var pollTimer = null;
   var isFetching = false;
@@ -82,17 +83,24 @@
     // Desktop inline header
     var headerCount = document.querySelector(".ns-pagination-inline span");
     if (headerCount) {
-      headerCount.innerHTML = 'Seite <strong>' + data.page + '</strong> / <strong>' + data.total_pages + '</strong> (' + data.total_count + ' VODs)';
+      headerCount.innerHTML = svT('Page %(page)s / %(pages)s (%(count)s VODs)')
+        .replace('%(page)s', '<strong>' + data.page + '</strong>')
+        .replace('%(pages)s', '<strong>' + data.total_pages + '</strong>')
+        .replace('%(count)s', data.total_count);
     }
     // Desktop bottom nav
     var bottomNavInfo = document.querySelector(".ns-pagination-bottom .ns-pagination-info");
     if (bottomNavInfo) {
-      bottomNavInfo.innerHTML = 'Seite <strong>' + data.page + '</strong> von <strong>' + data.total_pages + '</strong> &bull; ' + data.total_count + ' VODs im Schnellzugriff';
+      bottomNavInfo.innerHTML = svT('Page %(page)s of %(pages)s')
+        .replace('%(page)s', '<strong>' + data.page + '</strong>')
+        .replace('%(pages)s', '<strong>' + data.total_pages + '</strong>')
+        + ' &bull; ' + svT('%(count)s VODs in quick access').replace('%(count)s', data.total_count);
     }
     // Mobile header counter
-    var mobileCounter = document.querySelector("section > div > span:nth-child(2)");
-    if (mobileCounter && mobileCounter.textContent.indexOf("Seite") !== -1) {
-      mobileCounter.textContent = 'Seite ' + data.page + ' / ' + data.total_pages;
+    var mobileCounter = document.querySelector("[data-vod-page-counter]");
+    if (mobileCounter) {
+      mobileCounter.textContent = svT('Page %(page)s / %(total)s')
+        .replace('%(page)s', data.page).replace('%(total)s', data.total_pages);
     }
   }
 
@@ -106,7 +114,7 @@
     var pill = document.createElement("div");
     pill.id = "ns-vod-update-pill";
     pill.style.cssText = "position: sticky; top: 12px; z-index: 100; margin: 0 auto 14px auto; max-width: 320px; background: linear-gradient(135deg, #4D63FF 0%, #754DFF 100%); color: #FFF; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; text-align: center; box-shadow: 0 4px 16px rgba(77,99,255,0.4); cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease;";
-    pill.innerHTML = '✨ ' + (newCount > 1 ? newCount + ' neue VODs' : '1 neues VOD') + ' verf&uuml;gbar &bull; Jetzt ansehen';
+    pill.innerHTML = '✨ ' + (newCount > 1 ? svT('%(n)s new VODs available').replace('%(n)s', newCount) : svT('1 new VOD available')) + ' &bull; ' + svT('Watch now');
 
     pill.addEventListener("click", function () {
       window.location.href = "/?page=1";

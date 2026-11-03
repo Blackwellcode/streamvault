@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Datei Manager — StreamVault Vault{% endblock %}
-{% block page_title %}Datei Manager{% endblock %}
-{% block page_subtitle %}Dokumente, Mediendateien und Archiv-Assets verwalten{% endblock %}
+{% block title %}{{ _('File manager') }} — StreamVault Vault{% endblock %}
+{% block page_title %}{{ _('File manager') }}{% endblock %}
+{% block page_subtitle %}{{ _('Manage documents, media files and archive assets') }}{% endblock %}
 
 {% block header_actions %}
   <a href="{{ url_for('index') }}" class="ns-btn ns-btn-secondary">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    Zurück zum Dashboard
+    {{ _('Back to dashboard') }}
   </a>
 {% endblock %}
 
@@ -26,8 +26,8 @@
   <!-- Upload Section -->
   <section class="ns-card-panel" style="margin-bottom: 28px;">
     <div class="ns-panel-head">
-      <h2>Neue Datei hochladen</h2>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">Direkt ins Vault-Archiv</span>
+      <h2>{{ _('Upload new file') }}</h2>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Directly into the vault archive') }}</span>
     </div>
 
     <form method="post" action="{{ url_for('files_upload') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
@@ -37,14 +37,14 @@
         <input type="file" name="file" id="file" required onchange="fileSelected(this)" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ns-brand-crimson); margin-bottom: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <div id="file-label" style="font-size: 13px; color: var(--ns-text-secondary); font-weight: 500;">
-          Datei hier ablegen oder klicken zum Auswählen
+          {{ _('Drop a file here or click to select') }}
         </div>
       </div>
 
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <input name="title" class="ns-input-field" placeholder="Titel (optional)" style="flex: 1; min-width: 200px;">
-        <input name="description" class="ns-input-field" placeholder="Beschreibung (optional)" style="flex: 2; min-width: min(260px, 100%);">
-        <button type="submit" class="ns-btn ns-btn-primary">Hochladen</button>
+        <input name="title" class="ns-input-field" placeholder="{{ _('Title (optional)') }}" style="flex: 1; min-width: 200px;">
+        <input name="description" class="ns-input-field" placeholder="{{ _('Description (optional)') }}" style="flex: 2; min-width: min(260px, 100%);">
+        <button type="submit" class="ns-btn ns-btn-primary">{{ _('Upload') }}</button>
       </div>
     </form>
   </section>
@@ -52,7 +52,7 @@
   <!-- Files Grid -->
   <section>
     <div class="ns-section-header">
-      <h2>Archivierte Dateien ({{ files|length }})</h2>
+      <h2>{{ _('Archived files (%(count)s)', count=files|length) }}</h2>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px;">
@@ -72,23 +72,23 @@
 
         <div style="display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--ns-border-subtle); padding-top: 12px;">
           {% if downloads_enabled %}
-          <a href="{{ url_for('files_download', filename=f.name) }}" class="ns-btn ns-btn-secondary" style="flex: 1; padding: 6px 12px; font-size: 12px; text-align: center;">Download</a>
+          <a href="{{ url_for('files_download', filename=f.name) }}" class="ns-btn ns-btn-secondary" style="flex: 1; padding: 6px 12px; font-size: 12px; text-align: center;">{{ _('Download') }}</a>
           {% endif %}
           
           {% if public_shares_enabled %}
-          <button class="ns-action-btn-mini" onclick="shareFile(this, '{{ url_for('files_share_create', filename=f.name) }}')" title="Teilen">
+          <button class="ns-action-btn-mini" onclick="shareFile(this, '{{ url_for('files_share_create', filename=f.name) }}')" title="{{ _('Share') }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
           {% endif %}
           
-          <button class="ns-action-btn-mini" style="color: #ef4444;" onclick="deleteFile(this, '{{ url_for('files_delete', filename=f.name) }}')" title="Löschen">
+          <button class="ns-action-btn-mini" style="color: #ef4444;" onclick="deleteFile(this, '{{ url_for('files_delete', filename=f.name) }}')" title="{{ _('Delete') }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>
         </div>
       </div>
       {% else %}
       <div class="ns-card-panel" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--ns-text-muted);">
-        Keine Dateien im Vault hinterlegt.
+        {{ _('No files stored in the vault.') }}
       </div>
       {% endfor %}
     </div>
@@ -112,14 +112,14 @@
         const data = await res.json();
         if (navigator.clipboard) {
           await navigator.clipboard.writeText(data.link);
-          alert("Link in die Zwischenablage kopiert:\n" + data.link);
+          alert({{ _('Link copied to clipboard:')|tojson }} + "\n" + data.link);
         }
       }
     } catch(e) { console.error(e); }
   }
 
   async function deleteFile(btn, url) {
-    if (!confirm('Datei wirklich löschen?')) return;
+    if (!confirm({{ _('Really delete file?')|tojson }})) return;
     const fd = new FormData();
     fd.append('csrf_token', '{{ csrf_token() }}');
     const res = await fetch(url, {method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}});

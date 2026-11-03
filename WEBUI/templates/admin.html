@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Optionen & Systemsteuerung — StreamVault</title>
+    <title>{{ _('Options & system control') }} — StreamVault</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
@@ -246,19 +246,19 @@
       <div class="ns-options-shell">
         <header class="ns-options-topbar">
           <div class="ns-options-title-group">
-            <h1 class="page-title">Optionen &amp; Systemsteuerung</h1>
-            <div class="ns-options-pills" aria-label="System Kurzstatus">
-              <span class="ns-options-pill">Load <strong>{{ sys_load[0] }}</strong></span>
-              <span class="ns-options-pill">Frei <strong>{{ storage.free_str }}</strong></span>
-              <span class="ns-options-pill">Queue <strong>{{ task_queue.total_active }}</strong></span>
+            <h1 class="page-title">{{ _('Options & system control') }}</h1>
+            <div class="ns-options-pills" aria-label="{{ _('System quick status') }}">
+              <span class="ns-options-pill">{{ _('Load') }} <strong>{{ sys_load[0] }}</strong></span>
+              <span class="ns-options-pill">{{ _('Free') }} <strong>{{ storage.free_str }}</strong></span>
+              <span class="ns-options-pill">{{ _('Queue') }} <strong>{{ task_queue.total_active }}</strong></span>
             </div>
           </div>
 
-          <div class="ns-options-modules" role="navigation" aria-label="Direktmodule">
-            <a href="{{ url_for('channels_view') }}" class="ns-module-link">Streamer verwalten</a>
-            <a href="{{ url_for('admin_users_view') }}" class="ns-module-link">Benutzer &amp; Gruppen</a>
-            <a href="{{ url_for('admin_traffic_view') }}" class="ns-module-link">Traffic-Übersicht</a>
-            <a href="{{ url_for('admin_storage_view') }}" class="ns-module-link">Cloud-Speicher</a>
+          <div class="ns-options-modules" role="navigation" aria-label="{{ _('Direct modules') }}">
+            <a href="{{ url_for('channels_view') }}" class="ns-module-link">{{ _('Manage streamers') }}</a>
+            <a href="{{ url_for('admin_users_view') }}" class="ns-module-link">{{ _('Users & groups') }}</a>
+            <a href="{{ url_for('admin_traffic_view') }}" class="ns-module-link">{{ _('Traffic overview') }}</a>
+            <a href="{{ url_for('admin_storage_view') }}" class="ns-module-link">{{ _('Cloud storage') }}</a>
           </div>
         </header>
 
@@ -266,58 +266,58 @@
         {% if error %}<div class="alert alert-error" style="margin:0;">{{ error }}</div>{% endif %}
         {% if storage_alert and storage_alert.critical %}
         <div class="alert alert-error" style="margin:0;">
-          Speicher kritisch: {{ storage_alert.used_pct }}% belegt, nur noch {{ storage_alert.free_str }} frei.
-          {% if storage_alert.webhook_configured %}Webhook aktiv.{% else %}Webhook nicht konfiguriert.{% endif %}
+          {{ _('Storage critical: %(pct)s%% used, only %(free)s free.', pct=storage_alert.used_pct, free=storage_alert.free_str) }}
+          {% if storage_alert.webhook_configured %}{{ _('Webhook active.') }}{% else %}{{ _('Webhook not configured.') }}{% endif %}
         </div>
         {% endif %}
 
-        <div class="admin-tabs" role="tablist" aria-label="Optionsbereiche">
-          <button type="button" class="admin-tab-btn active" role="tab" aria-selected="true" aria-controls="tab-system" onclick="switchAdminTab(event, 'tab-system')">System &amp; Recorder</button>
-          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-settings" onclick="switchAdminTab(event, 'tab-settings')">Einstellungen</button>
-          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-security" onclick="switchAdminTab(event, 'tab-security')">Sicherheit &amp; Freigaben</button>
-          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-backups" onclick="switchAdminTab(event, 'tab-backups')">System-Backups</button>
+        <div class="admin-tabs" role="tablist" aria-label="{{ _('Option sections') }}">
+          <button type="button" class="admin-tab-btn active" role="tab" aria-selected="true" aria-controls="tab-system" onclick="switchAdminTab(event, 'tab-system')">{{ _('System & recorder') }}</button>
+          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-settings" onclick="switchAdminTab(event, 'tab-settings')">{{ _('Settings') }}</button>
+          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-security" onclick="switchAdminTab(event, 'tab-security')">{{ _('Security & shares') }}</button>
+          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-backups" onclick="switchAdminTab(event, 'tab-backups')">{{ _('System backups') }}</button>
         </div>
 
         <div class="ns-options-stage">
           <!-- TAB 1: System & Recorder -->
           <div class="grid admin-tab-content active" id="tab-system" role="tabpanel">
             <div class="panel">
-              <h3>System Status</h3>
-              <div class="stat-row"><span>Load Average (1m / 5m):</span> <span class="stat-val">{{ sys_load[0] }} / {{ sys_load[1] }}</span></div>
-              <div class="stat-row"><span>Speicher (Total):</span> <span class="stat-val">{{ storage.total_str }}</span></div>
-              <div class="stat-row"><span>Speicher (Frei):</span> <span class="stat-val">{{ storage.free_str }}</span></div>
+              <h3>{{ _('System status') }}</h3>
+              <div class="stat-row"><span>{{ _('Load average (1m / 5m):') }}</span> <span class="stat-val">{{ sys_load[0] }} / {{ sys_load[1] }}</span></div>
+              <div class="stat-row"><span>{{ _('Storage (total):') }}</span> <span class="stat-val">{{ storage.total_str }}</span></div>
+              <div class="stat-row"><span>{{ _('Storage (free):') }}</span> <span class="stat-val">{{ storage.free_str }}</span></div>
               <div style="margin-top: 14px;">
                 <form method="post" action="{{ url_for('channels_restart') }}" style="margin:0;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn-primary" style="width:100%; background:#334155; color:#F3F6FF;">Dienste neu starten</button>
+                  <button type="submit" class="btn-primary" style="width:100%; background:#334155; color:#F3F6FF;">{{ _('Restart services') }}</button>
                 </form>
               </div>
             </div>
 
             <div class="panel task-queue-panel">
               <div class="task-queue-head">
-                <h3>Aufgaben-Queue</h3>
-                <span>{{ task_queue.total_active }} aktiv</span>
+                <h3>{{ _('Task queue') }}</h3>
+                <span>{{ _('%(count)s active', count=task_queue.total_active) }}</span>
               </div>
               {% if task_queue.error %}
               <div class="muted">{{ task_queue.error }}</div>
               {% else %}
               <div class="task-queue-stats">
-                <span>Wartend <strong>{{ task_queue.counts.pending or 0 }}</strong></span>
-                <span>Läuft <strong>{{ task_queue.counts.running or 0 }}</strong></span>
-                <span>Fertig <strong>{{ task_queue.counts.completed or 0 }}</strong></span>
-                <span>Fehler <strong>{{ task_queue.counts.failed or 0 }}</strong></span>
+                <span>{{ _('Pending') }} <strong>{{ task_queue.counts.pending or 0 }}</strong></span>
+                <span>{{ _('Running') }} <strong>{{ task_queue.counts.running or 0 }}</strong></span>
+                <span>{{ _('Done') }} <strong>{{ task_queue.counts.completed or 0 }}</strong></span>
+                <span>{{ _('Failed') }} <strong>{{ task_queue.counts.failed or 0 }}</strong></span>
               </div>
               <div class="task-queue-list" style="max-height: 150px; overflow-y: auto;">
                 {% for task in task_queue.tasks[:8] %}
                 <div class="task-queue-row {{ task.status }}">
                   <span class="task-status">{{ task.status }}</span>
                   <span class="task-type">{{ task.type }}</span>
-                  <span class="task-label">{{ task.label or '-' }}{% if task.error %}<small title="{{ task.error }}">Fehler: {{ task.error }}</small>{% elif task.attempts > 1 %}<small>{{ task.attempts }} Versuche</small>{% endif %}</span>
+                  <span class="task-label">{{ task.label or '-' }}{% if task.error %}<small title="{{ task.error }}">{{ _('Error: %(error)s', error=task.error) }}</small>{% elif task.attempts > 1 %}<small>{{ ngettext('%(num)d attempt', '%(num)d attempts', task.attempts) }}</small>{% endif %}</span>
                   <span class="task-age">{{ task.age }}</span>
                 </div>
                 {% else %}
-                <div class="muted">Keine Jobs in der Queue.</div>
+                <div class="muted">{{ _('No jobs in the queue.') }}</div>
                 {% endfor %}
               </div>
               {% endif %}
@@ -325,28 +325,28 @@
 
             <div class="panel full-width recording-health-panel">
               <div class="task-queue-head">
-                <h3>Recording Health</h3>
-                <span>{{ recording_health|length }} Kanäle</span>
+                <h3>{{ _('Recording health') }}</h3>
+                <span>{{ ngettext('%(num)d channel', '%(num)d channels', recording_health|length) }}</span>
               </div>
               <div class="recording-health-list">
                 {% for row in recording_health %}
                 <a class="recording-health-row {{ row.status }}" href="{{ row.url }}">
                   <span class="health-status">{{ row.status_label }}</span>
                   <span class="health-name">{{ row.name }}</span>
-                  <span class="health-file" title="{{ row.status_message or row.filename }}">{{ row.status_message or row.title or row.filename or 'Keine aktive Datei' }}</span>
+                  <span class="health-file" title="{{ row.status_message or row.filename }}">{{ row.status_message or row.title or row.filename or _('No active file') }}</span>
                   <span class="health-metric">{{ row.size_str }}</span>
-                  <span class="health-metric">Update {{ row.updated_age }}</span>
-                  <span class="health-metric">{% if row.viewer_fresh %}{{ row.viewers }} Viewer{% else %}Viewer -{% endif %}</span>
-                  <span class="health-chat {% if row.chat_ok %}ok{% endif %}">{% if row.chat_ok %}Chat {{ row.chat_age }}{% else %}Kein Chat{% endif %}</span>
+                  <span class="health-metric">{{ _('Updated %(age)s', age=row.updated_age) }}</span>
+                  <span class="health-metric">{% if row.viewer_fresh %}{{ _('%(count)s viewers', count=row.viewers) }}{% else %}{{ _('Viewers') }} -{% endif %}</span>
+                  <span class="health-chat {% if row.chat_ok %}ok{% endif %}">{% if row.chat_ok %}{{ _('Chat %(age)s', age=row.chat_age) }}{% else %}{{ _('No chat') }}{% endif %}</span>
                 </a>
                 {% else %}
-                <div class="muted">Keine Recorder-Daten gefunden.</div>
+                <div class="muted">{{ _('No recorder data found.') }}</div>
                 {% endfor %}
               </div>
               {% if recent_task_errors %}
               <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
                 <div class="task-queue-head" style="margin-bottom:6px;">
-                  <h3 style="font-size:14px;">Letzte Task-Fehler</h3>
+                  <h3 style="font-size:14px;">{{ _('Recent task errors') }}</h3>
                   <span>{{ recent_task_errors|length }}</span>
                 </div>
                 <div class="task-queue-list" style="max-height: 120px; overflow-y: auto;">
@@ -367,23 +367,23 @@
           <!-- TAB 2: Einstellungen & Cloud -->
           <div class="grid admin-tab-content" id="tab-settings" role="tabpanel">
             <div class="panel">
-              <h3>Wartungsmodus &amp; Bereichssteuerung</h3>
+              <h3>{{ _('Maintenance mode & area control') }}</h3>
               <p class="muted" style="margin:0 0 10px; font-size:12px;">
-                Steuere den globalen Wartungsmodus oder sperre gezielt einzelne Plattformbereiche.
+                {{ _('Control the global maintenance mode or lock individual platform areas.') }}
               </p>
 
               <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
                 <div class="stat-row" style="margin-bottom: 6px;">
-                  <span style="font-weight:700;">Globaler Wartungsmodus:</span>
+                  <span style="font-weight:700;">{{ _('Global maintenance mode:') }}</span>
                   {% if maintenance.enabled %}
-                  <span class="stat-val" style="font-size: 13px; font-weight: 800; color: #f87171;">AKTIV (Gesperrt)</span>
+                  <span class="stat-val" style="font-size: 13px; font-weight: 800; color: #f87171;">{{ _('ACTIVE (locked)') }}</span>
                   {% else %}
-                  <span class="stat-val" style="font-size: 13px; font-weight: 800; color: #4ade80;">AUS (Normalbetrieb)</span>
+                  <span class="stat-val" style="font-size: 13px; font-weight: 800; color: #4ade80;">{{ _('OFF (normal operation)') }}</span>
                   {% endif %}
                 </div>
                 {% if maintenance.updated_label %}
                 <div class="stat-row" style="margin-bottom: 10px; font-size: 11px; color: var(--text-muted);">
-                  <span>Zuletzt geändert:</span>
+                  <span>{{ _('Last changed:') }}</span>
                   <span>{{ maintenance.updated_label }}{% if maintenance.updated_by %} ({{ maintenance.updated_by }}){% endif %}</span>
                 </div>
                 {% endif %}
@@ -393,11 +393,11 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="action" value="disable">
                   <label class="stat-row" style="gap:8px; margin-bottom:8px; font-size: 12px;">
-                    <span>Discord-Mitteilung senden</span>
+                    <span>{{ _('Send Discord message') }}</span>
                     <input type="checkbox" name="notify_discord" value="1" checked>
                   </label>
                   <button type="submit" class="btn-primary" style="width:100%; background: rgba(34,197,94,0.2); color:#86efac; border:1px solid rgba(34,197,94,0.4);">
-                    Globalen Wartungsmodus beenden
+                    {{ _('End global maintenance mode') }}
                   </button>
                 </form>
                 {% else %}
@@ -405,11 +405,11 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="action" value="enable">
                   <label class="stat-row" style="gap:8px; margin-bottom:8px; font-size: 12px;">
-                    <span>Discord-Mitteilung senden</span>
+                    <span>{{ _('Send Discord message') }}</span>
                     <input type="checkbox" name="notify_discord" value="1" checked>
                   </label>
                   <button type="submit" class="btn-primary" style="width:100%; background: rgba(239,68,68,0.2); color:#fca5a5; border:1px solid rgba(239,68,68,0.4);">
-                    Wartungsmodus aktivieren
+                    {{ _('Enable maintenance mode') }}
                   </button>
                 </form>
                 {% endif %}
@@ -420,56 +420,56 @@
                 <input type="hidden" name="action" value="granular">
                 <div style="display:flex; flex-direction:column; gap:6px; margin-bottom: 12px;">
                   <label class="stat-row" style="padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer;">
-                    <span><strong>VOD-Player &amp; Archiv</strong> sperren</span>
+                    <span>{{ _('Lock <strong>VOD player &amp; archive</strong>') }}</span>
                     <input type="checkbox" name="scope_vod" value="1" {% if maintenance.scopes.vod %}checked{% endif %}>
                   </label>
                   <label class="stat-row" style="padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer;">
-                    <span><strong>Live-Stream &amp; Twitch-Watch</strong> sperren</span>
+                    <span>{{ _('Lock <strong>live stream &amp; Twitch watch</strong>') }}</span>
                     <input type="checkbox" name="scope_live" value="1" {% if maintenance.scopes.live %}checked{% endif %}>
                   </label>
                   <label class="stat-row" style="padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer;">
-                    <span><strong>Mobile Version</strong> sperren</span>
+                    <span>{{ _('Lock <strong>mobile version</strong>') }}</span>
                     <input type="checkbox" name="scope_mobile" value="1" {% if maintenance.scopes.mobile %}checked{% endif %}>
                   </label>
                 </div>
-                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">Whitelist (kommagetrennt):</label>
-                <input type="text" name="bypass_users" value="{{ maintenance.bypass_users_str }}" placeholder="z.B. alice, bob" style="width:100%; margin-bottom: 10px; box-sizing:border-box;">
+                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Allowlist (comma-separated):') }}</label>
+                <input type="text" name="bypass_users" value="{{ maintenance.bypass_users_str }}" placeholder="{{ _('e.g. alice, bob') }}" style="width:100%; margin-bottom: 10px; box-sizing:border-box;">
                 <button type="submit" class="btn-primary" style="width:100%; background: #4D63FF; color: white;">
-                  Bereichs-Wartung speichern
+                  {{ _('Save area maintenance') }}
                 </button>
               </form>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
               <div class="panel">
-                <h3>Clip-Einstellungen</h3>
-                <p class="muted" style="margin:0 0 10px; font-size:12px;">Instant-Clip Parameter und Hotkey im Web-Player.</p>
+                <h3>{{ _('Clip settings') }}</h3>
+                <p class="muted" style="margin:0 0 10px; font-size:12px;">{{ _('Instant clip parameters and hotkey in the web player.') }}</p>
                 <form method="post" action="{{ url_for('admin_clip_settings') }}" style="margin:0;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <div class="stat-row">
-                    <label for="clipPreroll">Sekunden vor Trigger</label>
+                    <label for="clipPreroll">{{ _('Seconds before trigger') }}</label>
                     <input id="clipPreroll" name="preroll_sec" type="number" min="5" max="120" value="{{ clip_settings.preroll_sec }}" style="width:84px;">
                   </div>
                   <div class="stat-row">
-                    <label for="clipPostroll">Sekunden nach Trigger</label>
+                    <label for="clipPostroll">{{ _('Seconds after trigger') }}</label>
                     <input id="clipPostroll" name="postroll_sec" type="number" min="0" max="30" value="{{ clip_settings.postroll_sec }}" style="width:84px;">
                   </div>
                   <div class="stat-row">
-                    <label for="clipHotkey">Hotkey</label>
+                    <label for="clipHotkey">{{ _('Hotkey') }}</label>
                     <input id="clipHotkey" name="hotkey" type="text" maxlength="16" value="{{ clip_settings.hotkey }}" style="width:84px;">
                   </div>
                   <div class="stat-row">
-                    <label for="clipQuality">Qualität</label>
+                    <label for="clipQuality">{{ _('Quality') }}</label>
                     <select id="clipQuality" name="quality">
-                      <option value="fast" {% if clip_settings.quality == 'fast' %}selected{% endif %}>Schnell</option>
-                      <option value="high" {% if clip_settings.quality == 'high' %}selected{% endif %}>Hoch</option>
+                      <option value="fast" {% if clip_settings.quality == 'fast' %}selected{% endif %}>{{ _('Fast') }}</option>
+                      <option value="high" {% if clip_settings.quality == 'high' %}selected{% endif %}>{{ _('High') }}</option>
                     </select>
                   </div>
                   <label class="stat-row" style="gap:8px;">
-                    <span>Audio einschließen</span>
+                    <span>{{ _('Include audio') }}</span>
                     <input type="checkbox" name="include_audio" value="1" {% if clip_settings.include_audio %}checked{% endif %}>
                   </label>
-                  <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">Clip-Settings speichern</button>
+                  <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">{{ _('Save clip settings') }}</button>
                 </form>
               </div>
             </div>
@@ -479,22 +479,22 @@
           <div class="grid admin-tab-content" id="tab-security" role="tabpanel">
             <div class="panel full-width">
               <div class="muted" style="font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <span>Rollenmodell: Vollzugriff (<code>admin</code>), Archiv-Viewer (<code>viewer</code>), Nur-Live (<code>live_only</code>) &amp; Discord-Member.</span>
+                <span>{{ _('Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member.') }}</span>
                 <span style="display:inline-flex; gap:12px;">
-                  <a href="{{ url_for('admin_users_view') }}">Benutzer &amp; Gruppen</a>
-                  <a href="{{ url_for('admin_traffic_view') }}">Traffic-Übersicht</a>
+                  <a href="{{ url_for('admin_users_view') }}">{{ _('Users & groups') }}</a>
+                  <a href="{{ url_for('admin_traffic_view') }}">{{ _('Traffic overview') }}</a>
                 </span>
               </div>
             </div>
 
             <div class="panel full-width share-admin-panel">
               <div class="task-queue-head">
-                <h3>Aktive Freigaben</h3>
-                <span>{{ share_rows|length }} Links</span>
+                <h3>{{ _('Active shares') }}</h3>
+                <span>{{ ngettext('%(num)d link', '%(num)d links', share_rows|length) }}</span>
               </div>
               <div class="ns-table-scroll">
                 <table>
-                  <thead><tr><th>Typ</th><th>Streamer</th><th>Datei</th><th>Erstellt</th><th>Ablauf</th><th>Link</th><th>Aktion</th></tr></thead>
+                  <thead><tr><th>{{ _('Type') }}</th><th>{{ _('Streamer') }}</th><th>{{ _('File') }}</th><th>{{ _('Created') }}</th><th>{{ _('Expires') }}</th><th>{{ _('Link') }}</th><th>{{ _('Action') }}</th></tr></thead>
                   <tbody>
                     {% for share in share_rows %}
                     <tr>
@@ -503,16 +503,16 @@
                       <td title="{{ share.filename }}">{{ share.filename }}</td>
                       <td>{{ share.created }}</td>
                       <td>{{ share.expires }}</td>
-                      <td><a href="{{ share.url }}" target="_blank" rel="noopener">Öffnen</a></td>
+                      <td><a href="{{ share.url }}" target="_blank" rel="noopener">{{ _('Open') }}</a></td>
                       <td>
-                        <form method="post" action="{{ url_for('admin_share_revoke', token=share.token) }}" onsubmit="return confirm('Freigabe wirklich widerrufen?');" style="margin:0;">
+                        <form method="post" action="{{ url_for('admin_share_revoke', token=share.token) }}" onsubmit='return confirm({{ _("Really revoke this share?")|tojson }});' style="margin:0;">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" class="btn-danger">Widerrufen</button>
+                          <button type="submit" class="btn-danger">{{ _('Revoke') }}</button>
                         </form>
                       </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="7" style="color:var(--muted);">Keine aktiven Freigaben.</td></tr>
+                    <tr><td colspan="7" style="color:var(--muted);">{{ _('No active shares.') }}</td></tr>
                     {% endfor %}
                   </tbody>
                 </table>
@@ -521,12 +521,12 @@
 
             <div class="panel">
               <div class="task-queue-head">
-                <h3>AGB &amp; Regeln</h3>
+                <h3>{{ _('Terms & rules') }}</h3>
                 <span><code>{{ terms_info.version }}</code> ({{ terms_acceptances|length }})</span>
               </div>
               <div class="ns-table-scroll">
                 <table>
-                  <thead><tr><th>Zeit (UTC)</th><th>User</th><th>AGB</th><th>Quelle</th></tr></thead>
+                  <thead><tr><th>{{ _('Time (UTC)') }}</th><th>{{ _('User') }}</th><th>{{ _('Terms') }}</th><th>{{ _('Source') }}</th></tr></thead>
                   <tbody>
                     {% for row in terms_acceptances %}
                     <tr>
@@ -536,7 +536,7 @@
                       <td>{{ row.source }}</td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="4" style="color:var(--muted);">Noch keine Zustimmungen.</td></tr>
+                    <tr><td colspan="4" style="color:var(--muted);">{{ _('No acceptances yet.') }}</td></tr>
                     {% endfor %}
                   </tbody>
                 </table>
@@ -545,27 +545,27 @@
 
             <div class="panel">
               <div class="task-queue-head">
-                <h3>Login Versuche</h3>
-                <span>{{ logs|length }} Einträge</span>
+                <h3>{{ _('Login attempts') }}</h3>
+                <span>{{ ngettext('%(num)d entry', '%(num)d entries', logs|length) }}</span>
               </div>
               <div class="ns-table-scroll">
                 <table>
-                  <thead><tr><th>Zeit</th><th>IP</th><th>User</th><th>Status</th><th>Aktion</th></tr></thead>
+                  <thead><tr><th>{{ _('Time') }}</th><th>{{ _('IP') }}</th><th>{{ _('User') }}</th><th>{{ _('Status') }}</th><th>{{ _('Action') }}</th></tr></thead>
                   <tbody>
                     {% for log in logs %}
                     <tr>
                       <td style="white-space:nowrap;">{{ log.date }}</td>
                       <td>{{ log.ip }}</td>
                       <td>{{ log.username }}</td>
-                      <td class="{{ 'success' if log.success else 'fail' }}">{{ 'Erfolg' if log.success else 'Fehler' }}</td>
+                      <td class="{{ 'success' if log.success else 'fail' }}">{{ _('Success') if log.success else _('Failed') }}</td>
                       <td>
                         {% if log.ip not in bans %}
                         <form method="post" action="{{ url_for('admin_ban_ip', ip=log.ip) }}" style="margin:0;">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <button type="submit" title="IP Bannen">Sperren</button>
+                          <button type="submit" title="{{ _('Ban IP') }}">{{ _('Ban') }}</button>
                         </form>
                         {% else %}
-                        <span style="color:var(--danger); font-size:11px;">Gebannt</span>
+                        <span style="color:var(--danger); font-size:11px;">{{ _('Banned') }}</span>
                         {% endif %}
                       </td>
                     </tr>
@@ -581,13 +581,13 @@
             <div class="panel full-width">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div>
-                  <h3 style="margin: 0 0 4px 0;">System-Backups</h3>
-                  <p class="muted" style="margin: 0; font-size: 12px;">Automatische und manuelle Sicherungen (SQLite-Datenbank, Konfiguration und Metadaten).</p>
+                  <h3 style="margin: 0 0 4px 0;">{{ _('System backups') }}</h3>
+                  <p class="muted" style="margin: 0; font-size: 12px;">{{ _('Automatic and manual backups (SQLite database, configuration and metadata).') }}</p>
                 </div>
                 <form method="post" action="{{ url_for('admin_backup_create') }}" style="margin: 0;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn-primary" style="background: #4D63FF; color: #FFF; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
-                    Jetzt Backup erstellen
+                    {{ _('Create backup now') }}
                   </button>
                 </form>
               </div>
@@ -596,11 +596,11 @@
                 <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                   <thead>
                     <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); text-align: left; color: var(--text-muted);">
-                      <th style="padding: 8px 10px;">Dateiname</th>
-                      <th style="padding: 8px 10px;">Erstellt am</th>
-                      <th style="padding: 8px 10px;">Größe</th>
-                      <th style="padding: 8px 10px;">Speicherort</th>
-                      <th style="padding: 8px 10px; text-align: right;">Aktionen</th>
+                      <th style="padding: 8px 10px;">{{ _('File name') }}</th>
+                      <th style="padding: 8px 10px;">{{ _('Created on') }}</th>
+                      <th style="padding: 8px 10px;">{{ _('Size') }}</th>
+                      <th style="padding: 8px 10px;">{{ _('Location') }}</th>
+                      <th style="padding: 8px 10px; text-align: right;">{{ _('Actions') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -610,21 +610,21 @@
                       <td style="padding: 10px; color: var(--text-muted);">{{ b.date_str }}</td>
                       <td style="padding: 10px;">{{ b.size_str }}</td>
                       <td style="padding: 10px;">
-                        {% if b.on_disk %}<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: rgba(72,214,162,0.15); color: #48D6A2; margin-right: 4px;">Lokal</span>{% endif %}
+                        {% if b.on_disk %}<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: rgba(72,214,162,0.15); color: #48D6A2; margin-right: 4px;">{{ _('Local') }}</span>{% endif %}
                       </td>
                       <td style="padding: 10px; text-align: right;">
                         <div style="display: inline-flex; gap: 6px;">
-                          <a href="{{ url_for('admin_backup_download', filename=b.filename) }}" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 12px; text-decoration: none;">Download</a>
+                          <a href="{{ url_for('admin_backup_download', filename=b.filename) }}" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 12px; text-decoration: none;">{{ _('Download') }}</a>
                           <form method="post" action="{{ url_for('admin_backup_delete', filename=b.filename) }}" style="display: inline; margin: 0;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn-danger" style="padding: 4px 10px; font-size: 12px;" onclick="return confirm('Backup {{ b.filename }} wirklich löschen?')">Löschen</button>
+                            <button type="submit" class="btn-danger" style="padding: 4px 10px; font-size: 12px;" onclick='return confirm({{ _("Really delete backup %(name)s?", name=b.filename|safe)|tojson }})'>{{ _('Delete') }}</button>
                           </form>
                         </div>
                       </td>
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Keine Backups vorhanden.</td>
+                      <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">{{ _('No backups available.') }}</td>
                     </tr>
                     {% endfor %}
                   </tbody>

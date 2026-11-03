@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
@@ -48,7 +48,7 @@
         <div style="position: absolute; inset: 0; background: linear-gradient(to top, #111A2B 0%, rgba(17, 26, 43, 0.4) 60%, transparent 100%);"></div>
         {% if hero_item.is_live %}
         <span style="position: absolute; top: 12px; left: 12px; background: #F04458; color: #FFF; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(240, 68, 88, 0.6); display: inline-flex; align-items: center; gap: 5px;">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: #FFF;"></span> LIVE
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #FFF;"></span> {{ _('LIVE') }}
         </span>
         {% endif %}
       </div>
@@ -59,7 +59,7 @@
         </div>
         <h2 style="font-size: 15px; font-weight: 600; line-height: 1.35; color: #F3F5FC; margin: 0 0 14px 0;">{{ hero_item.title }}</h2>
         <a href="{{ hero_item.watch_url }}" class="ns-btn ns-btn-primary" style="display: block; text-align: center; padding: 10px 0; font-size: 14px; font-weight: 700; box-sizing: border-box;">
-          {% if hero_item.is_live %}LIVE ZUSCHAUEN{% else %}Jetzt ansehen{% endif %}
+          {% if hero_item.is_live %}{{ _('WATCH LIVE') }}{% else %}{{ _('Watch now') }}{% endif %}
         </a>
       </div>
     </div>
@@ -69,8 +69,8 @@
   <!-- 3. Streamer List -->
   <section style="margin-bottom: 28px;">
     <div style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-      <span>{% if can_access_vods %}Meine Streamer{% else %}Jetzt live{% endif %}</span>
-      <span style="font-size: 12px; color: var(--nebula-text-muted, #75839D);">{{ streamers|length }} Kanäle</span>
+      <span>{% if can_access_vods %}{{ _('My streamers') }}{% else %}{{ _('Live now') }}{% endif %}</span>
+      <span style="font-size: 12px; color: var(--nebula-text-muted, #75839D);">{{ ngettext('%(num)d channel', '%(num)d channels', streamers|length) }}</span>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -95,11 +95,11 @@
               <div style="font-weight: 700; font-size: 15px; color: #FFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ s.display_name or s.name }}</div>
               <div style="font-size: 12px; color: var(--nebula-text-secondary, #A2AEC8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 {% if s.twitch_live %}
-                <span style="color: #F04458; font-weight: 600;">Live auf Twitch</span>
+                <span style="color: #F04458; font-weight: 600;">{{ _('Live on Twitch') }}</span>
                 {% elif can_access_vods %}
                 <span>{{ s.count }} VODs</span>
                 {% else %}
-                <span>Offline</span>
+                <span>{{ _('Offline') }}</span>
                 {% endif %}
               </div>
             </div>
@@ -107,7 +107,7 @@
 
           {% if s.twitch_live or s.online %}
           <a href="{{ url_for('twitch_watch', channel=(s.twitch_login or s.name)) }}" class="ns-btn ns-btn-primary" style="padding: 7px 12px; font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
-            LIVE ZUSCHAUEN
+            {{ _('WATCH LIVE') }}
           </a>
           {% elif can_access_vods %}
           <a href="{{ url_for('streamer_view', streamer=s.name) }}" style="color: #75839D; padding: 8px; flex-shrink: 0;">
@@ -125,9 +125,9 @@
   {% if can_access_vods and recent_vods %}
   <section style="margin-bottom: 24px;">
     <div style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-      <span>Neueste VODs</span>
+      <span>{{ _('Latest VODs') }}</span>
       {% if vod_total_pages is defined and vod_total_pages > 1 %}
-      <span style="font-size: 12px; font-weight: 500; color: #A2AEC8;">Seite {{ vod_page }} / {{ vod_total_pages }}</span>
+      <span data-vod-page-counter style="font-size: 12px; font-weight: 500; color: #A2AEC8;">{{ _('Page %(page)s / %(total)s', page=vod_page, total=vod_total_pages) }}</span>
       {% endif %}
     </div>
     <div id="mobileVodList" data-vod-page="{{ vod_page }}" data-top-vod="{{ recent_vods[0].name if recent_vods else '' }}" style="display: flex; flex-direction: column; gap: 14px;">
@@ -152,19 +152,19 @@
       {% endfor %}
     </div>
     {% if vod_total_pages is defined and vod_total_pages > 1 %}
-    <nav class="pagination ns-pagination ns-pagination-bottom" aria-label="VOD Seiten-Navigation" style="margin-top: 16px;">
+    <nav class="pagination ns-pagination ns-pagination-bottom" aria-label="{{ _('VOD pagination') }}" style="margin-top: 16px;">
       <div class="ns-pagination-info">
-        Seite <strong>{{ vod_page }}</strong> von <strong>{{ vod_total_pages }}</strong> ({{ vod_total_count }} VODs)
+        {{ _('Page %(page)s of %(total)s (%(count)s VODs)', page='<strong>%s</strong>'|format(vod_page)|safe, total='<strong>%s</strong>'|format(vod_total_pages)|safe, count=vod_total_count) }}
       </div>
       <div class="pagination-pages ns-pagination-controls">
         {% if vod_page > 1 %}
-        <a href="{{ url_for('index', page=vod_page-1) }}" class="pagination-page ns-page-btn">&lsaquo; Zur&uuml;ck</a>
+        <a href="{{ url_for('index', page=vod_page-1) }}" class="pagination-page ns-page-btn">&lsaquo; {{ _('Previous') }}</a>
         {% endif %}
         {% for p in vod_page_numbers %}
         <a href="{{ url_for('index', page=p) }}" class="pagination-page ns-page-btn {% if p == vod_page %}is-current is-active{% endif %}">{{ p }}</a>
         {% endfor %}
         {% if vod_page < vod_total_pages %}
-        <a href="{{ url_for('index', page=vod_page+1) }}" class="pagination-page ns-page-btn">Weiter &rsaquo;</a>
+        <a href="{{ url_for('index', page=vod_page+1) }}" class="pagination-page ns-page-btn">{{ _('Next') }} &rsaquo;</a>
         {% endif %}
       </div>
     </nav>
@@ -177,20 +177,21 @@
 <div class="mobile-global-nav" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
   <a href="{{ url_for('index') }}" class="active" style="color: #4D63FF;">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Home</span>
+    <span>{{ _('Home') }}</span>
   </a>
   <a href="{{ url_for('twitch_live_hub') }}" style="color: #75839D;">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
-    <span>Live</span>
+    <span>{{ _('Live') }}</span>
   </a>
   {% if session.user_role == 'admin' %}
   <a href="{{ url_for('channels_view') }}" style="color: #75839D;">
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <span>Streamer</span>
+    <span>{{ _('Streamer') }}</span>
   </a>
   {% endif %}
 </div>
 
+{% include 'components/js_i18n.html' %}
 <script src="{{ url_for('static', filename='dashboard_live.js', v=ASSET_VERSION) }}"></script>
 </body>
 </html>

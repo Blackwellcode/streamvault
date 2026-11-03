@@ -1,0 +1,3418 @@
+# German translations for StreamVault.
+# Copyright (C) 2026 StreamVault contributors
+# This file is distributed under the same license as the StreamVault
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamVault VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"PO-Revision-Date: 2026-11-03 19:25+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(channel)s added (%(mode)s)."
+msgstr "%(channel)s hinzugefügt (%(mode)s)."
+
+#, python-format
+msgid "%(channel)s added as a YouTube source (%(mode)s)."
+msgstr "%(channel)s als YouTube-Quelle hinzugefügt (%(mode)s)."
+
+#, python-format
+msgid "%(channel)s mode updated to: %(mode)s."
+msgstr "%(channel)s Modus aktualisiert auf: %(mode)s."
+
+#, python-format
+msgid "%(count)s VODs"
+msgstr "%(count)s VODs"
+
+#, python-format
+msgid "%(count)s VODs in quick access"
+msgstr "%(count)s VODs im Schnellzugriff"
+
+#, python-format
+msgid "%(count)s active"
+msgstr "%(count)s aktiv"
+
+#, python-format
+msgid "%(count)s clips"
+msgstr "%(count)s Clips"
+
+#, python-format
+msgid "%(count)s clips archived"
+msgstr "%(count)s Clips archiviert"
+
+#, python-format
+msgid "%(count)s clips in total"
+msgstr "Insgesamt %(count)s Clips"
+
+#, python-format
+msgid "%(count)s in the cloud"
+msgstr "%(count)s in der Cloud"
+
+#, python-format
+msgid "%(count)s live"
+msgstr "%(count)s live"
+
+#, python-format
+msgid "%(count)s recordings"
+msgstr "%(count)s Aufnahmen"
+
+#, python-format
+msgid "%(count)s recordings in total"
+msgstr "Insgesamt %(count)s Aufnahmen"
+
+#, python-format
+msgid "%(count)s viewers"
+msgstr "%(count)s Zuschauer"
+
+#, python-format
+msgid "%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)"
+msgstr "%(day)s: %(total)s (Login %(logins)s, Seiten %(pages)s, Video %(media)s, Chat %(chats)s)"
+
+#, python-format
+msgid "%(day)s: no activity"
+msgstr "%(day)s: keine Nutzung"
+
+#, python-format
+msgid "%(days)s days ago"
+msgstr "vor %(days)s Tagen"
+
+#, python-format
+msgid "%(field)s is missing."
+msgstr "%(field)s fehlt."
+
+#, python-format
+msgid "%(minutes)s min ago"
+msgstr "vor %(minutes)s Min."
+
+#, python-format
+msgid "%(month)s %(day)s, %(time)s"
+msgstr "%(month)s. %(day)s, %(time)s"
+
+#, python-format
+msgid "%(n)s new VODs available"
+msgstr "%(n)s neue VODs verfügbar"
+
+#, python-format
+msgid "%(name)s removed."
+msgstr "%(name)s entfernt."
+
+#, python-format
+msgid "%(num)d attempt"
+msgid_plural "%(num)d attempts"
+msgstr[0] "%(num)d Versuch"
+msgstr[1] "%(num)d Versuche"
+
+#, python-format
+msgid "%(num)d channel"
+msgid_plural "%(num)d channels"
+msgstr[0] "%(num)d Kanal"
+msgstr[1] "%(num)d Kanäle"
+
+#, python-format
+msgid "%(num)d entry"
+msgid_plural "%(num)d entries"
+msgstr[0] "%(num)d Eintrag"
+msgstr[1] "%(num)d Einträge"
+
+#, python-format
+msgid "%(num)d folder allowed"
+msgid_plural "%(num)d folders allowed"
+msgstr[0] "%(num)d Ordner erlaubt"
+msgstr[1] "%(num)d Ordner erlaubt"
+
+#, python-format
+msgid "%(num)d link"
+msgid_plural "%(num)d links"
+msgstr[0] "%(num)d Link"
+msgstr[1] "%(num)d Links"
+
+#, python-format
+msgid "%(num)d source"
+msgid_plural "%(num)d sources"
+msgstr[0] "%(num)d Quelle"
+msgstr[1] "%(num)d Quellen"
+
+#, python-format
+msgid "%(num)s days"
+msgstr "%(num)s Tage"
+
+#, python-format
+msgid "%(provider)s does not support OAuth."
+msgstr "%(provider)s unterstützt OAuth nicht."
+
+msgid "0 = delete immediately once the cloud copy is verified."
+msgstr "0 = sofort löschen, sobald die Cloud-Kopie verifiziert ist."
+
+msgid "0 = no automatic sync. Only used when auto-upload is enabled."
+msgstr "0 = kein automatischer Sync. Wird nur bei aktivem Auto-Upload genutzt."
+
+msgid "1 new VOD available"
+msgstr "1 neues VOD verfügbar"
+
+#, python-format
+msgid "<strong>%(free)s</strong> free"
+msgstr "<strong>%(free)s</strong> frei"
+
+msgid "A cleanup is already running."
+msgstr "Es läuft bereits eine Aufräumung."
+
+msgid "A cloud deletion is already running."
+msgstr "Es läuft bereits eine Cloud-Löschung."
+
+msgid "A cloud sync is already running."
+msgstr "Es läuft bereits ein Cloud-Sync."
+
+#, python-format
+msgid "A group named '%(name)s' already exists."
+msgstr "Eine Gruppe mit dem Namen '%(name)s' existiert bereits."
+
+#, python-format
+msgid "A provider named '%(name)s' already exists."
+msgstr "Ein Anbieter mit dem Namen '%(name)s' existiert bereits."
+
+msgid "A restore is already running."
+msgstr "Es läuft bereits eine Wiederherstellung."
+
+msgid "A saved value is kept if the field is left empty."
+msgstr "Ein gespeicherter Wert bleibt erhalten, wenn das Feld leer bleibt."
+
+msgid "ACTIVE (locked)"
+msgstr "AKTIV (Gesperrt)"
+
+msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
+msgstr "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner oder jeder S3-kompatible Endpunkt."
+
+msgid "Accept rules"
+msgstr "Regeln akzeptieren"
+
+msgid "Accept terms"
+msgstr "AGB akzeptieren"
+
+msgid "Account active (access allowed)"
+msgstr "Konto aktiv (Zugriff erlaubt)"
+
+msgid "Action"
+msgstr "Aktion"
+
+msgid "Actions"
+msgstr "Aktionen"
+
+msgid "Activate account immediately"
+msgstr "Konto sofort aktivieren"
+
+msgid "Active"
+msgstr "Aktiv"
+
+msgid "Active shares"
+msgstr "Aktive Freigaben"
+
+msgid "Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them)."
+msgstr "Aktiv: Neue Streams & Ordner werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten (Haken entfernen)."
+
+msgid "Active: new streams are unlocked automatically. Below you can disable / block individual folders."
+msgstr "Aktiv: Neue Streams werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten / sperren."
+
+msgid "Actively monitored by the recorder core"
+msgstr "Aktive Überwachung durch den Recorder-Core"
+
+msgid "Add channel"
+msgstr "Kanal hinzufügen"
+
+msgid "Add new channel"
+msgstr "Neuen Kanal hinzufügen"
+
+msgid "Add provider"
+msgstr "Anbieter hinzufügen"
+
+msgid "Addressing"
+msgstr "Adressierung"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Admin controls"
+msgstr "Admin Steuerung"
+
+msgid "Admins only"
+msgstr "Nur Admins"
+
+msgid "All"
+msgstr "Alle"
+
+#, python-format
+msgid "All (%(count)s)"
+msgstr "Alle (%(count)s)"
+
+msgid "All VOD slots are in use"
+msgstr "VOD gerade voll"
+
+msgid "All VODs"
+msgstr "Alle VODs"
+
+msgid "All categories"
+msgstr "Alle Kategorien"
+
+msgid "All off"
+msgstr "Alle aus"
+
+msgid "All on"
+msgstr "Alle an"
+
+msgid "All saved settings of this account will be deleted completely."
+msgstr "Alle gespeicherten Einstellungen dieses Kontos werden vollständig gelöscht."
+
+msgid "All streamers are currently offline. Past broadcasts can be watched in the archive."
+msgstr "Alle Streamer sind aktuell offline. Über das Archiv können frühere Übertragungen angesehen werden."
+
+msgid "All streams (+ auto-new)"
+msgstr "Alle Streams (+ Auto-Neu)"
+
+msgid "All users"
+msgstr "Alle Nutzer"
+
+msgid "Allowlist (comma-separated):"
+msgstr "Whitelist (kommagetrennt):"
+
+#, python-format
+msgid "Also transfers %(path)s."
+msgstr "Überträgt zusätzlich %(path)s."
+
+#, python-format
+msgid "Also transfers preview images from %(path)s."
+msgstr "Überträgt zusätzlich Vorschaubilder aus %(path)s."
+
+msgid "An upload for this file is already running."
+msgstr "Es läuft bereits ein Upload für diese Datei."
+
+msgid "Anonymous"
+msgstr "Anonym"
+
+msgid "Appendix A house rules"
+msgstr "Anlage A Hausordnung"
+
+#, python-format
+msgid "Appendix A — %(title)s"
+msgstr "Anlage A — %(title)s"
+
+msgid "Apply"
+msgstr "Übernehmen"
+
+msgid "April"
+msgstr "April"
+
+msgid "Archive"
+msgstr "Archiv"
+
+msgid "Archive / media folder"
+msgstr "Archiv- / Medien-Ordner"
+
+msgid "Archive download"
+msgstr "Archiv-Download"
+
+msgid "Archive object not found."
+msgstr "Archiv-Objekt nicht gefunden."
+
+msgid "Archive objects"
+msgstr "Archiv-Objekte"
+
+msgid "Archive overview"
+msgstr "Archiv-Übersicht"
+
+msgid "Archive recording (latest VOD)"
+msgstr "Archiv-Aufnahme (Neuestes VOD)"
+
+#, python-format
+msgid "Archive: %(name)s"
+msgstr "Archiv: %(name)s"
+
+#, python-format
+msgid "Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs"
+msgstr "Archiv: <strong>%(channels)s</strong> Kanäle • <strong>%(vods)s</strong> VODs"
+
+msgid "Archived airtime"
+msgstr "Archivierte Sendezeit"
+
+#, python-format
+msgid "Archived files (%(count)s)"
+msgstr "Archivierte Dateien (%(count)s)"
+
+msgid "Area maintenance and exempt users saved successfully."
+msgstr "Bereichs-Wartung und Ausnahme-Nutzer erfolgreich gespeichert."
+
+msgid "At least 8 characters"
+msgstr "Mindestens 8 Zeichen"
+
+msgid "Audio extraction error"
+msgstr "Fehler bei der Audio-Extraktion"
+
+msgid "Audio extraction failed"
+msgstr "Audio-Extraktion fehlgeschlagen"
+
+msgid "August"
+msgstr "August"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Auto-sync interval (minutes)"
+msgstr "Auto-Sync-Intervall (Minuten)"
+
+msgid "Auto: off"
+msgstr "Auto: Aus"
+
+msgid "Auto: on"
+msgstr "Auto: An"
+
+msgid "Automatic"
+msgstr "Automatisch"
+
+msgid "Automatic (browser)"
+msgstr "Automatisch (Browser)"
+
+msgid "Automatic (first active)"
+msgstr "Automatisch (erster aktiver)"
+
+msgid "Automatic and manual backups (SQLite database, configuration and metadata)."
+msgstr "Automatische und manuelle Sicherungen (SQLite-Datenbank, Konfiguration und Metadaten)."
+
+msgid "Automatically unlock future streams & folders"
+msgstr "Zukünftig neue Streams & Ordner automatisch freischalten"
+
+msgid "Automation & retention"
+msgstr "Automatisierung & Aufbewahrung"
+
+msgid "Avg. active"
+msgstr "Ø aktiv"
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Back shortly"
+msgstr "Gleich wieder da"
+
+msgid "Back to dashboard"
+msgstr "Zurück zum Dashboard"
+
+msgid "Back to overview"
+msgstr "Zurück zur Übersicht"
+
+msgid "Back to user management"
+msgstr "Zurück zur Benutzerverwaltung"
+
+msgid "Back up chat logs too"
+msgstr "Chat-Logs mitsichern"
+
+msgid "Back up thumbnails too"
+msgstr "Thumbnails mitsichern"
+
+#, python-format
+msgid "Backup %(name)s could not be deleted."
+msgstr "Backup %(name)s konnte nicht gelöscht werden."
+
+#, python-format
+msgid "Backup %(name)s deleted."
+msgstr "Backup %(name)s erfolgreich gelöscht."
+
+#, python-format
+msgid "Backup error: %(error)s"
+msgstr "Backup-Fehler: %(error)s"
+
+msgid "Badge library is up to date."
+msgstr "Badge-Bibliothek ist aktuell."
+
+msgid "Badge sync is already running."
+msgstr "Badge-Sync läuft bereits."
+
+msgid "Badge sync started."
+msgstr "Badge-Sync gestartet."
+
+msgid "Ban"
+msgstr "Sperren"
+
+msgid "Ban IP"
+msgstr "IP Bannen"
+
+msgid "Banned"
+msgstr "Gebannt"
+
+#, python-format
+msgid "Banner URL for %(streamer)s saved."
+msgstr "Banner-URL für %(streamer)s gespeichert."
+
+#, python-format
+msgid "Banner for %(streamer)s reset to default."
+msgstr "Banner für %(streamer)s auf Standard zurückgesetzt."
+
+#, python-format
+msgid "Banner image for %(streamer)s uploaded successfully."
+msgstr "Banner-Grafik für %(streamer)s erfolgreich hochgeladen."
+
+msgid "Banner image uploaded successfully."
+msgstr "Banner-Grafik erfolgreich hochgeladen."
+
+msgid "Banner reset to default."
+msgstr "Banner auf Standard zurückgesetzt."
+
+msgid "Base:"
+msgstr "Basis:"
+
+msgid "Blocked"
+msgstr "Gesperrt"
+
+#, python-format
+msgid "Blocked (%(count)s): %(list)s"
+msgstr "Gesperrt (%(count)s): %(list)s"
+
+msgid "Browser supports neither MPEG-TS nor live HLS."
+msgstr "Browser unterstützt weder MPEG-TS noch Live-HLS."
+
+msgid "Bucket name contains invalid characters."
+msgstr "Bucket-Name enthält ungültige Zeichen."
+
+msgid "Buffer is still short — the clip window grows with it."
+msgstr "Puffer noch kurz — das Clip-Fenster wächst mit."
+
+msgid "Buffer:"
+msgstr "Puffer:"
+
+msgid "Buffering..."
+msgstr "Puffern..."
+
+msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
+msgstr "Standardmäßig wird nichts automatisch hochgeladen oder gelöscht. Aktiviere die Funktionen bewusst."
+
+msgid "CHANGE"
+msgstr "ÄNDERN"
+
+msgid "CHANNEL MANAGEMENT (ADMIN)"
+msgstr "KANAL-VERWALTUNG (ADMIN)"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "Category search failed."
+msgstr "Kategoriesuche fehlgeschlagen."
+
+msgid "Category search is currently unavailable."
+msgstr "Kategoriesuche derzeit nicht verfügbar."
+
+msgid "Change banner"
+msgstr "Banner ändern"
+
+msgid "Change password"
+msgstr "Passwort ändern"
+
+msgid "Channel"
+msgstr "Kanal"
+
+msgid "Channel actions"
+msgstr "Kanal-Aktionen"
+
+msgid "Channel archive & recording metrics"
+msgstr "Kanalarchiv & Aufzeichnungs-Metriken"
+
+msgid "Channel not found."
+msgstr "Channel nicht gefunden."
+
+msgid "Channels"
+msgstr "Kanäle"
+
+msgid "Chat"
+msgstr "Chat"
+
+#, python-format
+msgid "Chat %(age)s"
+msgstr "Chat %(age)s"
+
+msgid "Chat density & event timeline (click to jump)"
+msgstr "Chat-Dichte & Event-Timeline (Klicken zum Springen)"
+
+#, python-format
+msgid "Chat export - %(user)s"
+msgstr "Chat-Export - %(user)s"
+
+msgid "Chat filter"
+msgstr "Chatfilter"
+
+#, python-format
+msgid "Chat history: %(user)s"
+msgstr "Chatverlauf: %(user)s"
+
+msgid "Chat messages"
+msgstr "Chat-Nachrichten"
+
+msgid "Chat replay"
+msgstr "Chat Replay"
+
+msgid "Chat replay ready"
+msgstr "Chat-Replay bereit"
+
+#, python-format
+msgid "Chat replay ready · first message at %(time)s"
+msgstr "Chat-Replay bereit · Erste Nachricht bei %(time)s"
+
+msgid "Chat tracker & global search"
+msgstr "Chat-Tracker & Globale Suche"
+
+msgid "Check"
+msgstr "Prüfen"
+
+msgid "Cleanup interval (minutes)"
+msgstr "Aufräum-Intervall (Minuten)"
+
+#, python-format
+msgid "Cleanup queued (task #%(task)s)."
+msgstr "Aufräumung eingeordnet (Task #%(task)s)."
+
+msgid "Clear filters"
+msgstr "Filter löschen"
+
+msgid "Click to change password"
+msgstr "Klick für Passwortänderung"
+
+msgid "Clip"
+msgstr "Clip"
+
+msgid "Clip URL is missing on this page."
+msgstr "Clip-URL fehlt auf dieser Seite."
+
+msgid "Clip could not be deleted."
+msgstr "Clip konnte nicht gelöscht werden."
+
+msgid "Clip created."
+msgstr "Clip erstellt."
+
+msgid "Clip deleted."
+msgstr "Clip gelöscht."
+
+msgid "Clip end"
+msgstr "Clip-Ende"
+
+msgid "Clip failed."
+msgstr "Clip fehlgeschlagen."
+
+msgid "Clip is already starting…"
+msgstr "Clip wird bereits gestartet…"
+
+msgid "Clip is taking too long."
+msgstr "Clip dauert zu lange."
+
+msgid "Clip job not found."
+msgstr "Clip-Auftrag nicht gefunden."
+
+msgid "Clip saved."
+msgstr "Clip gespeichert."
+
+msgid "Clip settings"
+msgstr "Clip-Einstellungen"
+
+msgid "Clip settings saved."
+msgstr "Clip-Einstellungen gespeichert."
+
+msgid "Clip start"
+msgstr "Clip-Start"
+
+msgid "Clip title"
+msgstr "Clip-Titel"
+
+msgid "Clip title (optional)"
+msgstr "Titel des Clips (optional)"
+
+#, python-format
+msgid "Clips (%(count)s)"
+msgstr "Clips (%(count)s)"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "Close transcript"
+msgstr "Transkript schließen"
+
+#, python-format
+msgid "Cloud deletion queued (task #%(task)s)."
+msgstr "Cloud-Löschung eingeordnet (Task #%(task)s)."
+
+msgid "Cloud only"
+msgstr "Nur Cloud"
+
+msgid "Cloud storage"
+msgstr "Cloud-Speicher"
+
+#, python-format
+msgid "Cloud sync queued (task #%(task)s)."
+msgstr "Cloud-Sync eingeordnet (Task #%(task)s)."
+
+msgid "Cloud volume"
+msgstr "Cloud-Volumen"
+
+msgid "Collapse chat"
+msgstr "Chat einklappen"
+
+msgid "Configure dynamic permissions for streams, the video archive and channel access."
+msgstr "Konfigurieren Sie dynamische Berechtigungen für Streams, Videoarchiv und Kanal-Zugriff."
+
+msgid "Configure recording channels and manage archive assignments"
+msgstr "Aufnahmekanäle konfigurieren und Archiv-Zuordnungen verwalten"
+
+msgid "Configured streamers & sources"
+msgstr "Konfigurierte Streamer & Quellen"
+
+msgid "Connect account"
+msgstr "Konto verbinden"
+
+msgid "Connect with Dropbox"
+msgstr "Mit Dropbox verbinden"
+
+msgid "Connect with Google"
+msgstr "Mit Google verbinden"
+
+msgid "Connect with Microsoft"
+msgstr "Mit Microsoft verbinden"
+
+msgid "Connecting…"
+msgstr "Verbinden…"
+
+msgid "Connection OK"
+msgstr "Verbindung OK"
+
+msgid "Connection failed"
+msgstr "Verbindung fehlerhaft"
+
+msgid "Connection lost — reconnecting…"
+msgstr "Verbindung unterbrochen — verbinde neu…"
+
+#, python-format
+msgid "Connection test queued (task #%(task)s)."
+msgstr "Verbindungstest eingeordnet (Task #%(task)s)."
+
+msgid "Consent required."
+msgstr "Zustimmung erforderlich."
+
+msgid "Control panel"
+msgstr "Systemsteuerung"
+
+msgid "Control the global maintenance mode or lock individual platform areas."
+msgstr "Steuere den globalen Wartungsmodus oder sperre gezielt einzelne Plattformbereiche."
+
+msgid "Copy"
+msgstr "Kopieren"
+
+msgid "Copy link"
+msgstr "Link kopieren"
+
+msgid "Could not create clip."
+msgstr "Clip konnte nicht erstellt werden."
+
+msgid "Could not load status."
+msgstr "Status konnte nicht geladen werden."
+
+msgid "Could not start clip."
+msgstr "Clip konnte nicht gestartet werden."
+
+msgid "Create"
+msgstr "Anlegen"
+
+msgid "Create backup now"
+msgstr "Jetzt Backup erstellen"
+
+msgid "Create clip"
+msgstr "Clip erstellen"
+
+msgid "Create group"
+msgstr "Gruppe anlegen"
+
+msgid "Create new user"
+msgstr "Neuen Benutzer erstellen"
+
+msgid "Create new user group"
+msgstr "Neue Benutzergruppe erstellen"
+
+msgid "Create transcript"
+msgstr "Transkript erstellen"
+
+msgid "Create user"
+msgstr "Benutzer anlegen"
+
+msgid "Created"
+msgstr "Erstellt"
+
+msgid "Created on"
+msgstr "Erstellt am"
+
+msgid "Creating clip…"
+msgstr "Clip wird erstellt…"
+
+msgid "Critical"
+msgstr "Kritisch"
+
+msgid "Current password"
+msgstr "Aktuelles Passwort"
+
+msgid "Current preview"
+msgstr "Aktuelle Vorschau"
+
+msgid "Current profile picture"
+msgstr "Aktuelles Profilbild"
+
+msgid "Custom"
+msgstr "Benutzerdefiniert"
+
+msgid "Custom banner URL saved successfully."
+msgstr "Custom Banner-URL erfolgreich gespeichert."
+
+msgid "Custom banner active"
+msgstr "Individuelles Banner aktiv"
+
+#, python-format
+msgid "Custom banner for %(streamer)s removed."
+msgstr "Custom Banner für %(streamer)s entfernt."
+
+msgid "Custom banner removed."
+msgstr "Custom Banner entfernt."
+
+msgid "Custom file"
+msgstr "Custom Datei"
+
+msgid "Custom profile picture URL saved successfully."
+msgstr "Custom Profilbild-URL erfolgreich gespeichert."
+
+msgid "Custom profile picture active"
+msgstr "Individuelles Profilbild aktiv"
+
+msgid "Custom profile picture removed."
+msgstr "Custom Profilbild entfernt."
+
+msgid "Customize channel banner"
+msgstr "Kanal-Banner anpassen"
+
+msgid "Customize profile picture"
+msgstr "Profilbild anpassen"
+
+#, python-format
+msgid "Daily activity %(user)s"
+msgstr "Tagesaktivität %(user)s"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "December"
+msgstr "Dezember"
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "Default provider"
+msgstr "Standard-Anbieter"
+
+msgid "Default target"
+msgstr "Standard-Ziel"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "Delete folder"
+msgstr "Ordner löschen"
+
+msgid "Delete from cloud"
+msgstr "Cloud löschen"
+
+msgid "Delete group"
+msgstr "Gruppe löschen"
+
+msgid "Delete local copies after retention"
+msgstr "Lokale Kopien nach Aufbewahrung löschen"
+
+msgid "Delete locally"
+msgstr "Lokal löschen"
+
+msgid "Delete permanently"
+msgstr "Endgültig löschen"
+
+msgid "Delete user"
+msgstr "Benutzer löschen"
+
+msgid "Delete user group"
+msgstr "Benutzergruppe löschen"
+
+msgid "Delete videos"
+msgstr "Videos löschen"
+
+msgid "Delete videos & recordings"
+msgstr "Videos & Aufnahmen löschen"
+
+msgid "Deleted!"
+msgstr "Gelöscht!"
+
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Description (optional)"
+msgstr "Beschreibung (optional)"
+
+msgid "Direct modules"
+msgstr "Direktmodule"
+
+msgid "Directly into the vault archive"
+msgstr "Direkt ins Vault-Archiv"
+
+msgid "Disable / block individual folders:"
+msgstr "Einzelne Ordner abschalten / sperren:"
+
+msgid "Disable / enable individual folders:"
+msgstr "Einzelne Ordner abschalten / freischalten:"
+
+msgid "Disable recording (live & Discord only)"
+msgstr "Aufnahme deaktivieren (nur noch Live & Discord)"
+
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+msgid "Discard clip? Unsaved changes will be lost."
+msgstr "Clip verwerfen? Nicht gespeicherte Änderungen gehen verloren."
+
+msgid "Discord integration not active"
+msgstr "Discord-Integration nicht aktiv"
+
+msgid "Discover"
+msgstr "Entdecken"
+
+msgid "Discover and watch Twitch streams in StreamVault"
+msgstr "Twitch-Streams in StreamVault entdecken und ansehen"
+
+msgid "Display name"
+msgstr "Anzeigename"
+
+msgid "Display title"
+msgstr "Anzeigetitel"
+
+#, python-format
+msgid "Do you really want to delete the group %(name)s?"
+msgstr "Möchten Sie die Gruppe %(name)s wirklich löschen?"
+
+#, python-format
+msgid "Do you really want to permanently delete the user %(name)s?"
+msgstr "Möchten Sie den Benutzer %(name)s wirklich unwiderruflich löschen?"
+
+msgid "Do you want to empty the entire recording folder?"
+msgstr "Möchtest du den gesamten Aufnahme-Ordner leeren?"
+
+msgid "Done"
+msgstr "Fertig"
+
+msgid "Download"
+msgstr "Download"
+
+msgid "Download TXT"
+msgstr "TXT herunterladen"
+
+msgid "Download all"
+msgstr "Alle laden"
+
+msgid "Download all VODs?"
+msgstr "Alle VODs laden?"
+
+msgid "Download archive & VODs"
+msgstr "Archiv & VODs herunterladen"
+
+msgid "Download complete."
+msgstr "Download abgeschlossen."
+
+msgid "Download file"
+msgstr "Datei herunterladen"
+
+msgid "Download is disabled. Please watch in the player (if available)."
+msgstr "Download ist deaktiviert. Bitte im Player ansehen (falls verfügbar)."
+
+msgid "Download of all VODs started in the background."
+msgstr "Download aller VODs im Hintergrund gestartet."
+
+#, python-format
+msgid "Downloading... %(percent)s"
+msgstr "Lade... %(percent)s"
+
+#, python-format
+msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
+msgstr "Drive-Quota aktiv — nicht erneut Play drücken (verlängert die Sperre). Zurückspulen in den schon geladenen Teil, oder ca. %(minutes)s Min. warten."
+
+msgid "Drop a file here or click to select"
+msgstr "Datei hier ablegen oder klicken zum Auswählen"
+
+msgid "Dropbox with OAuth 2.0, refresh token and large upload sessions."
+msgstr "Dropbox mit OAuth 2.0, Refresh Token und großen Upload-Sessions."
+
+msgid "Duration"
+msgstr "Dauer"
+
+msgid "Duration must be > 0."
+msgstr "Dauer muss > 0 sein."
+
+msgid "Duration:"
+msgstr "Dauer:"
+
+msgid "Dynamic user account and group management with granular stream and permission control"
+msgstr "Dynamische Benutzerkonten- und Gruppenverwaltung mit granularer Stream- & Rechte-Steuerung"
+
+msgid "END"
+msgstr "ENDE"
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "Edit group"
+msgstr "Gruppe bearbeiten"
+
+msgid "Edit group & permissions"
+msgstr "Gruppe & Berechtigungen bearbeiten"
+
+msgid "Edit provider"
+msgstr "Anbieter bearbeiten"
+
+msgid "Edit user"
+msgstr "Benutzer bearbeiten"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+msgid "Email address (optional)"
+msgstr "E-Mail-Adresse (Optional)"
+
+msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
+msgstr "Leer = AWS. Für R2, B2, Wasabi, MinIO etc. den S3-Endpunkt eintragen."
+
+msgid "Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers use their own region."
+msgstr "Leer = us-east-1 für AWS. Cloudflare R2 verwendet 'auto'; andere S3-Anbieter ihre jeweilige Region."
+
+msgid "Empty folder"
+msgstr "Ordner leeren"
+
+msgid "Enable immediately"
+msgstr "Sofort aktivieren"
+
+msgid "Enable maintenance mode"
+msgstr "Wartungsmodus aktivieren"
+
+msgid "Enable recording"
+msgstr "Aufnahme aktivieren"
+
+msgid "Enable recording for this channel"
+msgstr "Aufnahme für diesen Kanal aktivieren"
+
+msgid "Enabled"
+msgstr "Aktiviert"
+
+msgid "Encryption not ready."
+msgstr "Verschlüsselung nicht bereit."
+
+msgid "End"
+msgstr "Ende"
+
+msgid "End global maintenance mode"
+msgstr "Globalen Wartungsmodus beenden"
+
+msgid "Endpoint URL (optional)"
+msgstr "Endpunkt-URL (optional)"
+
+msgid "Endpoint URL must be a valid http(s) URL."
+msgstr "Endpunkt-URL muss eine gültige http(s)-URL sein."
+
+msgid "Endpoint URL must not contain a query or fragment."
+msgstr "Endpunkt-URL darf keine Query oder Fragment enthalten."
+
+msgid "Endpoint URL must not contain credentials; use Access Key and Secret Key."
+msgstr "Endpunkt-URL darf keine Zugangsdaten enthalten; nutze Access Key und Secret Key."
+
+msgid "Endpoint:"
+msgstr "Endpunkt:"
+
+msgid "Enter current password"
+msgstr "Aktuelles Passwort eingeben"
+
+msgid "Error"
+msgstr "Fehler"
+
+msgid "Error cancelling the transcription"
+msgstr "Fehler beim Abbrechen der Transkription"
+
+msgid "Error changing the password."
+msgstr "Fehler beim Ändern des Passworts."
+
+msgid "Error creating group"
+msgstr "Fehler beim Anlegen der Gruppe"
+
+msgid "Error creating the audio segment"
+msgstr "Fehler beim Erzeugen des Audiosegments"
+
+msgid "Error creating the user."
+msgstr "Fehler beim Erstellen des Benutzers."
+
+msgid "Error creating user"
+msgstr "Fehler beim Erstellen des Benutzers"
+
+msgid "Error deleting group"
+msgstr "Fehler beim Löschen der Gruppe"
+
+msgid "Error deleting user"
+msgstr "Fehler beim Löschen des Benutzers"
+
+msgid "Error loading cloud storage management."
+msgstr "Fehler beim Laden der Cloud-Speicher-Verwaltung."
+
+msgid "Error loading the admin panel. Please try again later."
+msgstr "Fehler beim Laden des Admin-Panels. Bitte versuchen Sie es später erneut."
+
+msgid "Error loading the traffic overview."
+msgstr "Fehler beim Laden der Traffic-Übersicht."
+
+msgid "Error queuing the transcription"
+msgstr "Fehler beim Einreihen der Transkription"
+
+msgid "Error saving group"
+msgstr "Fehler beim Speichern der Gruppe"
+
+msgid "Error updating user"
+msgstr "Fehler beim Aktualisieren des Benutzers"
+
+msgid "Error while deleting"
+msgstr "Fehler beim Löschen"
+
+msgid "Error while loading."
+msgstr "Fehler beim Laden."
+
+msgid "Error while saving"
+msgstr "Fehler beim Speichern"
+
+msgid "Error:"
+msgstr "Fehler:"
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr "Fehler: %(error)s"
+
+msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
+msgstr "Bestehende Mitglieder dieser Gruppe werden automatisch der Standardgruppe <strong>Viewer</strong> zugewiesen."
+
+msgid "Exit fullscreen"
+msgstr "Vollbild beenden"
+
+msgid "Expand chat"
+msgstr "Chat ausklappen"
+
+msgid "Expires"
+msgstr "Ablauf"
+
+msgid "Exported by StreamVault"
+msgstr "Exportiert von StreamVault"
+
+msgid "Extracting audio..."
+msgstr "Audio extrahieren..."
+
+msgid "FEATURED VOD"
+msgstr "EMPFOHLENES VOD"
+
+msgid "Failed"
+msgstr "Fehler"
+
+msgid "Fast"
+msgstr "Schnell"
+
+msgid "Feature permissions"
+msgstr "Funktionsrechte"
+
+msgid "Featured highlight"
+msgstr "Empfohlenes Highlight"
+
+msgid "February"
+msgstr "Februar"
+
+msgid "File"
+msgstr "Datei"
+
+msgid "File manager"
+msgstr "Datei Manager"
+
+msgid "File name"
+msgstr "Dateiname"
+
+msgid "File not found"
+msgstr "Datei nicht gefunden"
+
+msgid "File not found locally."
+msgstr "Datei lokal nicht gefunden."
+
+msgid "File size"
+msgstr "Dateigröße"
+
+msgid "File was uploaded."
+msgstr "Datei wurde hochgeladen."
+
+msgid "Filter"
+msgstr "Filtern"
+
+msgid "Filter chat..."
+msgstr "Chat filtern..."
+
+msgid "First"
+msgstr "Erste"
+
+msgid "First page"
+msgstr "Erste Seite"
+
+msgid "Folder ID:"
+msgstr "Ordner-ID:"
+
+msgid "Folder is being emptied in the background."
+msgstr "Ordner wird im Hintergrund geleert."
+
+msgid "Folder not found or invalid."
+msgstr "Ordner nicht gefunden oder ungültig."
+
+msgid "For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:"
+msgstr "Für Google Drive, Dropbox und OneDrive muss diese Callback-URL beim Anbieter registriert sein:"
+
+msgid "For encrypted credential storage, VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least 16 characters)."
+msgstr "Für die verschlüsselte Speicherung von Zugangsdaten muss VOD_SECRET_KEY (oder STORAGE_ENCRYPTION_KEY) auf einen starken, einmaligen Wert gesetzt sein (mindestens 16 Zeichen)."
+
+msgid "Forget"
+msgstr "Vergessen"
+
+msgid "Free"
+msgstr "Frei"
+
+msgid "Full mode:"
+msgstr "Vollmodus:"
+
+msgid "Full mode: recording + live + Discord"
+msgstr "Vollmodus: Aufnahme + Live + Discord"
+
+msgid "Full terms text"
+msgstr "AGB-Volltext"
+
+msgid "Full-text search across chat logs, metadata and VOD archives"
+msgstr "Volltextsuche in Chat-Logs, Metadaten und VOD-Archiven"
+
+msgid "Full-text search query"
+msgstr "Volltext-Suchabfrage"
+
+msgid "Fullscreen"
+msgstr "Vollbild"
+
+msgid "Game"
+msgstr "Spiel"
+
+#, python-format
+msgid "Game: %(category)s"
+msgstr "Spiel: %(category)s"
+
+#, python-format
+msgid "Game: %(name)s"
+msgstr "Spiel: %(name)s"
+
+msgid "Generate HLS now"
+msgstr "HLS jetzt erzeugen"
+
+msgid "Global maintenance mode:"
+msgstr "Globaler Wartungsmodus:"
+
+msgid "Go"
+msgstr "Los"
+
+msgid "Go to dashboard"
+msgstr "Zum Dashboard"
+
+msgid "Go to login"
+msgstr "Zum Login"
+
+msgid "Go to sign in"
+msgstr "Zum Login"
+
+msgid "Go to sign-in"
+msgstr "Zum Login"
+
+msgid "Go to terms"
+msgstr "Zu den AGB"
+
+msgid "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+msgstr "Google Cloud Console → APIs & Dienste → Anmeldedaten → OAuth-Client (Webanwendung)."
+
+msgid "Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads."
+msgstr "Google Drive / Workspace Drive mit OAuth 2.0 und resumierbaren Uploads."
+
+msgid "Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption."
+msgstr "Google Drive, S3-kompatible Dienste, Dropbox, OneDrive und WebDAV. Zugangsdaten werden AES-GCM-verschlüsselt gespeichert."
+
+msgid "Group"
+msgstr "Gruppe"
+
+#, python-format
+msgid "Group '%(name)s' created successfully."
+msgstr "Gruppe '%(name)s' erfolgreich angelegt."
+
+#, python-format
+msgid "Group '%(name)s' updated successfully."
+msgstr "Gruppe '%(name)s' erfolgreich aktualisiert."
+
+msgid "Group created"
+msgstr "Gruppe erfolgreich angelegt"
+
+msgid "Group deleted"
+msgstr "Gruppe erfolgreich gelöscht"
+
+msgid "Group deleted successfully. Existing members were moved to the 'Viewer' group."
+msgstr "Gruppe erfolgreich gelöscht. Bestehende Mitglieder wurden in die Gruppe 'Viewer' verschoben."
+
+msgid "Group name"
+msgstr "Gruppenname"
+
+msgid "Group name must be between 2 and 50 characters long."
+msgstr "Gruppenname muss zwischen 2 und 50 Zeichen lang sein."
+
+msgid "Group not found."
+msgstr "Gruppe nicht gefunden."
+
+msgid "Group saved"
+msgstr "Gruppe erfolgreich gespeichert"
+
+msgid "HLS connection lost — reconnecting…"
+msgstr "HLS-Verbindung unterbrochen — verbinde neu…"
+
+msgid "HLS could not be recovered."
+msgstr "HLS konnte nicht wiederhergestellt werden."
+
+msgid "HLS is being created. Please reload the page in a few minutes."
+msgstr "HLS wird erstellt. Bitte Seite in ein paar Minuten neu laden."
+
+msgid "HLS is not supported by this browser."
+msgstr "HLS wird von diesem Browser nicht unterstützt."
+
+msgid "HLS starts faster for very large files."
+msgstr "HLS startet schneller bei sehr großen Dateien."
+
+msgid "High"
+msgstr "Hoch"
+
+msgid "Home"
+msgstr "Start"
+
+msgid "Hotkey"
+msgstr "Hotkey"
+
+msgid "House rules for the invite-only circle. No “official” framing — just binding terms of use."
+msgstr "Hausordnung für den Invite-only-Kreis. Kein „offiziell“-Framing — nur verbindliche Nutzungsregeln."
+
+msgid "I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access."
+msgstr "Ich habe die StreamVault-Regeln gelesen und akzeptiere sie. Ich weiß, dass Verstöße zum sofortigen Entzug des Zugangs führen."
+
+#, python-format
+msgid "I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access."
+msgstr "Ich habe die AGB (Version %(version)s) gelesen und akzeptiere sie. Verstöße können zum sofortigen Entzug des Zugangs führen."
+
+msgid "IP"
+msgstr "IP"
+
+#, python-format
+msgid "If needed, set %(var)s to your public HTTPS address so the URL matches exactly."
+msgstr "Setze bei Bedarf %(var)s auf deine öffentliche HTTPS-Adresse, damit die URL exakt passt."
+
+msgid "Image controls"
+msgstr "Bildsteuerung"
+
+#, python-format
+msgid "Inactive (%(count)s)"
+msgstr "Inaktiv (%(count)s)"
+
+msgid "Inactive: new streams stay blocked. Only folders checked below are unlocked."
+msgstr "Inaktiv: Neue Streams bleiben gesperrt. Nur unten aktivierte Ordner (Haken gesetzt) sind freigeschaltet."
+
+msgid "Include audio"
+msgstr "Audio einschließen"
+
+msgid "Info about the VOD…"
+msgstr "Infos zum VOD…"
+
+msgid "Information on data processing within the invite-only circle. No legal notice."
+msgstr "Hinweise zur Datenverarbeitung im Invite-only-Kreis. Kein Impressum."
+
+msgid "Initial password"
+msgstr "Initiales Passwort"
+
+msgid "Instant clip parameters and hotkey in the web player."
+msgstr "Instant-Clip Parameter und Hotkey im Web-Player."
+
+msgid "Intensity"
+msgstr "Intensität"
+
+msgid "Internal server error while creating the group."
+msgstr "Interner Serverfehler beim Anlegen der Gruppe."
+
+msgid "Internal server error while deleting the group."
+msgstr "Interner Serverfehler beim Löschen der Gruppe."
+
+msgid "Internal server error while updating the group."
+msgstr "Interner Serverfehler beim Aktualisieren der Gruppe."
+
+msgid "Invalid OAuth state."
+msgstr "Ungültiger OAuth-Status."
+
+msgid "Invalid Twitch channel."
+msgstr "Ungültiger Twitch-Kanal."
+
+msgid "Invalid channel name."
+msgstr "Ungültiger Channel-Name."
+
+msgid "Invalid channel."
+msgstr "Ungültiger Channel."
+
+msgid "Invalid clip path."
+msgstr "Clip-Pfad ungültig."
+
+msgid "Invalid file name."
+msgstr "Ungültiger Dateiname."
+
+msgid "Invalid file."
+msgstr "Ungültige Datei."
+
+msgid "Invalid folder slug."
+msgstr "Ungültiger Ordner-Slug."
+
+msgid "Invalid group ID."
+msgstr "Ungültige Gruppen-ID."
+
+msgid "Invalid image format (allowed: JPG, PNG, WEBP, GIF)."
+msgstr "Ungültiges Bildformat (erlaubt: JPG, PNG, WEBP, GIF)."
+
+msgid "Invalid maintenance action."
+msgstr "Ungültige Wartungs-Aktion."
+
+msgid "Invalid new username."
+msgstr "Ungültiger neuer Benutzername."
+
+msgid "Invalid path (control characters)."
+msgstr "Ungültiger Pfad (Steuerzeichen)."
+
+msgid "Invalid path (null byte)."
+msgstr "Ungültiger Pfad (Nullbyte)."
+
+msgid "Invalid path (path traversal)."
+msgstr "Ungültiger Pfad (Pfad-Traversal)."
+
+#, python-format
+msgid "Invalid server response (%(status)s)."
+msgstr "Ungültige Server-Antwort (%(status)s)."
+
+msgid "Invalid source."
+msgstr "Ungültige Quelle."
+
+msgid "Invalid streamer name."
+msgstr "Ungültiger Streamer-Name."
+
+#, python-format
+msgid "Invalid subfolder: %(error)s"
+msgstr "Ungültiger Unterordner: %(error)s"
+
+msgid "Invalid time value."
+msgstr "Ungültige Zeitangabe."
+
+msgid "Invalid username (3-32 characters: letters, numbers, _ and -)."
+msgstr "Ungültiger Benutzername (3-32 Zeichen, Buchstaben, Zahlen, _ und -)."
+
+msgid "Invite-only. Full terms text after sign-in."
+msgstr "Invite-only. AGB-Volltext nach Login."
+
+msgid "January"
+msgstr "Januar"
+
+msgid "July"
+msgstr "Juli"
+
+msgid "June"
+msgstr "Juni"
+
+msgid "LIVE"
+msgstr "LIVE"
+
+#, python-format
+msgid "LIVE %(name)s (without Twitch login)"
+msgstr "LIVE %(name)s (ohne Twitch-Login)"
+
+msgid "LIVE & DISCORD ONLY"
+msgstr "NUR LIVE & DISCORD"
+
+msgid "LIVE NOW"
+msgstr "LIVE JETZT"
+
+msgid "Language"
+msgstr "Sprache"
+
+msgid "Largest"
+msgstr "Groß"
+
+msgid "Last"
+msgstr "Letzte"
+
+msgid "Last active"
+msgstr "Zuletzt aktiv"
+
+msgid "Last broadcast"
+msgstr "Letzter Broadcast"
+
+msgid "Last changed:"
+msgstr "Zuletzt geändert:"
+
+msgid "Last page"
+msgstr "Letzte Seite"
+
+msgid "Last test:"
+msgstr "Letzter Test:"
+
+msgid "Latest VODs"
+msgstr "Neueste VODs"
+
+msgid "Leave empty to create a 'StreamVault' folder automatically."
+msgstr "Leer lassen, um automatisch einen Ordner 'StreamVault' anzulegen."
+
+msgid "Legend"
+msgstr "Legende"
+
+msgid "Link"
+msgstr "Link"
+
+msgid "Link copied"
+msgstr "Link kopiert"
+
+msgid "Link copied to clipboard:"
+msgstr "Link in die Zwischenablage kopiert:"
+
+msgid "Link copied:"
+msgstr "Link kopiert:"
+
+msgid "Live"
+msgstr "Live"
+
+msgid "Live & Discord only:"
+msgstr "Nur Live & Discord:"
+
+msgid "Live (recovering...)"
+msgstr "Live (Wiederherstellung...)"
+
+msgid "Live channels"
+msgstr "Live-Kanäle"
+
+msgid "Live chat"
+msgstr "Live-Chat"
+
+msgid "Live clip created."
+msgstr "Live-Clip erstellt."
+
+msgid "Live now"
+msgstr "Jetzt live"
+
+msgid "Live on Twitch"
+msgstr "Live auf Twitch"
+
+msgid "Live only: live stream + Discord (no recording)"
+msgstr "Live-Only: Live-Stream + Discord (Keine Aufnahme)"
+
+msgid "Live recording"
+msgstr "Live-Aufnahme"
+
+msgid "Live start failed."
+msgstr "Live-Start fehlgeschlagen."
+
+msgid "Live stopped."
+msgstr "Live gestoppt."
+
+msgid "Live stream and Discord alerts only, no disk recording"
+msgstr "Nur Live-Stream und Discord-Alerts, keine Festplattenaufnahme"
+
+msgid "Live stream highlight"
+msgstr "Live-Stream-Highlight"
+
+msgid "Live stream is currently unavailable. Searching for stream..."
+msgstr "Live-Stream ist aktuell nicht verfügbar. Suche Stream..."
+
+msgid "Live stream not available."
+msgstr "Live-Stream nicht verfügbar."
+
+msgid "Live via server"
+msgstr "Live über Server"
+
+msgid "Live view"
+msgstr "Live-Ansicht"
+
+msgid "Live watch"
+msgstr "Live-Watch"
+
+msgid "Live-only"
+msgstr "Live-only"
+
+msgid "Load"
+msgstr "Load"
+
+msgid "Load average (1m / 5m):"
+msgstr "Load Average (1m / 5m):"
+
+msgid "Loading chat…"
+msgstr "Chat wird geladen…"
+
+msgid "Loading model..."
+msgstr "Modell laden..."
+
+msgid "Loading streams…"
+msgstr "Lade Streams…"
+
+msgid "Local"
+msgstr "Lokal"
+
+#, python-format
+msgid "Local rename failed: %(error)s"
+msgstr "Lokales Umbenennen fehlgeschlagen: %(error)s"
+
+msgid "Local retention (days)"
+msgstr "Lokale Aufbewahrung (Tage)"
+
+msgid "Location"
+msgstr "Speicherort"
+
+msgid "Lock <strong>VOD player &amp; archive</strong>"
+msgstr "<strong>VOD-Player &amp; Archiv</strong> sperren"
+
+msgid "Lock <strong>live stream &amp; Twitch watch</strong>"
+msgstr "<strong>Live-Stream &amp; Twitch-Watch</strong> sperren"
+
+msgid "Lock <strong>mobile version</strong>"
+msgstr "<strong>Mobile Version</strong> sperren"
+
+msgid "Log out"
+msgstr "Abmelden"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Login attempts"
+msgstr "Login Versuche"
+
+msgid "Login failed."
+msgstr "Login fehlgeschlagen."
+
+msgid "MP4 check not possible"
+msgstr "MP4-Prüfung nicht möglich"
+
+msgid "Maintenance"
+msgstr "Wartungsarbeiten"
+
+msgid "Maintenance mode & area control"
+msgstr "Wartungsmodus & Bereichssteuerung"
+
+#, python-format
+msgid "Maintenance mode active, but the Discord notice failed: %(error)s"
+msgstr "Wartungsmodus aktiv, aber Discord-Hinweis fehlgeschlagen: %(error)s"
+
+msgid "Maintenance mode active."
+msgstr "Wartungsmodus aktiv."
+
+msgid "Maintenance mode active. Discord notice was sent."
+msgstr "Wartungsmodus aktiv. Discord-Hinweis wurde gesendet."
+
+#, python-format
+msgid "Maintenance mode ended, but the Discord notice failed: %(error)s"
+msgstr "Wartungsmodus beendet, aber Discord-Hinweis fehlgeschlagen: %(error)s"
+
+msgid "Maintenance mode ended. Discord notice (available again) was sent."
+msgstr "Wartungsmodus beendet. Discord-Hinweis (wieder verfügbar) wurde gesendet."
+
+msgid "Maintenance mode ended. The site is available to everyone again."
+msgstr "Wartungsmodus beendet. Die Seite ist wieder für alle freigegeben."
+
+msgid "Manage documents, media files and archive assets"
+msgstr "Dokumente, Mediendateien und Archiv-Assets verwalten"
+
+msgid "Manage streamers"
+msgstr "Streamer verwalten"
+
+msgid "Manage users & groups"
+msgstr "Benutzer & Gruppen verwalten"
+
+msgid "Manual sync"
+msgstr "Manueller Sync"
+
+msgid "March"
+msgstr "März"
+
+msgid "Matches found"
+msgstr "Gefundene Treffer"
+
+msgid "Max. files per sync"
+msgstr "Max. Dateien pro Sync"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "Member"
+msgstr "Member"
+
+msgid "Member VOD access saved."
+msgstr "Member VOD-Freigaben gespeichert."
+
+msgid "Members"
+msgstr "Mitglieder"
+
+msgid "Message"
+msgstr "Nachricht"
+
+msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
+msgstr "Mobile Live ist vorübergehend deaktiviert. Bitte Desktop oder die installierte App nutzen."
+
+msgid "Monitored"
+msgstr "Überwacht"
+
+msgid "Must point to a writable folder and end with / (added automatically)."
+msgstr "Muss auf einen beschreibbaren Ordner zeigen und mit / enden (wird automatisch ergänzt)."
+
+msgid "Mute"
+msgstr "Stummschalten"
+
+msgid "Muted"
+msgstr "Stumm"
+
+msgid "My streamers"
+msgstr "Meine Streamer"
+
+msgid "Network error"
+msgstr "Netzwerkfehler"
+
+msgid "Network error while loading streams."
+msgstr "Netzwerkfehler beim Laden der Streams."
+
+msgid "Network error:"
+msgstr "Netzwerkfehler:"
+
+msgid "Network is back — reconnecting…"
+msgstr "Netzwerk wieder da — verbinde neu…"
+
+msgid "Never"
+msgstr "Nie"
+
+msgid "New clips"
+msgstr "Neue Clips"
+
+msgid "New group"
+msgstr "Neue Gruppe"
+
+msgid "New password (leave empty to keep unchanged)"
+msgstr "Neues Passwort (leer lassen für keine Änderung)"
+
+msgid "New password * (min. 8 characters)"
+msgstr "Neues Passwort * (min. 8 Zeichen)"
+
+msgid "New password..."
+msgstr "Neues Passwort..."
+
+msgid "New user"
+msgstr "Neuer Benutzer"
+
+msgid "Newest"
+msgstr "Neueste"
+
+msgid "Newest first"
+msgstr "Neueste zuerst"
+
+msgid "Next"
+msgstr "Weiter"
+
+msgid "Next page"
+msgstr "Nächste Seite"
+
+msgid "Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password."
+msgstr "Nextcloud, ownCloud, Hetzner Storage Box oder jeder WebDAV-Server mit App-Passwort."
+
+msgid "No (self-signed only)"
+msgstr "Nein (nur bei Self-Signed)"
+
+msgid "No VODs available in the archive"
+msgstr "Keine VODs im Archiv verfügbar"
+
+msgid "No acceptances yet."
+msgstr "Noch keine Zustimmungen."
+
+msgid "No account yet? Accounts are issued by the administrators of this instance."
+msgstr "Noch kein Account? Zugänge vergibt die Administration dieser Instanz."
+
+msgid "No accounts match this filter."
+msgstr "Keine Konten in diesem Filter."
+
+msgid "No active file"
+msgstr "Keine aktive Datei"
+
+msgid "No active provider"
+msgstr "Kein Anbieter aktiv"
+
+msgid "No active shares."
+msgstr "Keine aktiven Freigaben."
+
+msgid "No active streams"
+msgstr "Keine aktiven Streams"
+
+msgid "No archive objects yet. Start a sync or upload a recording."
+msgstr "Noch keine Archiv-Objekte. Starte einen Sync oder lade eine Aufnahme hoch."
+
+msgid "No backup script configured (VOD_BACKUP_SCRIPT)."
+msgstr "Kein Backup-Skript konfiguriert (VOD_BACKUP_SCRIPT)."
+
+msgid "No backups available."
+msgstr "Keine Backups vorhanden."
+
+msgid "No badges received from Twitch."
+msgstr "Keine Badges von Twitch erhalten."
+
+msgid "No chat"
+msgstr "Kein Chat"
+
+msgid "No cloud storage configured yet. Add a provider or use the console:"
+msgstr "Noch kein Cloud-Speicher eingerichtet. Lege einen Anbieter an oder nutze die Konsole:"
+
+msgid "No connection. As soon as the device is back online, the app continues loading the page normally."
+msgstr "Keine Verbindung. Sobald das Gerät wieder online ist, lädt die App die Seite normal weiter."
+
+msgid "No discovery streams right now."
+msgstr "Aktuell keine Discovery-Streams."
+
+msgid "No files stored in the vault."
+msgstr "Keine Dateien im Vault hinterlegt."
+
+msgid "No jobs in the queue."
+msgstr "Keine Jobs in der Queue."
+
+msgid "No live chat available. Chat appears when StreamVault records the stream."
+msgstr "Kein Live-Chat verfügbar. Chat erscheint, wenn StreamVault den Stream aufnimmt."
+
+msgid "No live stream active"
+msgstr "Kein Live-Stream aktiv"
+
+msgid "No live streams among the monitored channels. Use the search."
+msgstr "Keine Live-Streams unter den Überwachten. Nutze die Suche."
+
+msgid "No local entries found for this search term. Press [Enter] to search the server."
+msgstr "Keine lokalen Einträge für diesen Suchbegriff gefunden. [Enter] drücken für Server-Suche."
+
+#, python-format
+msgid "No matches found for \"%(query)s\"."
+msgstr "Keine Übereinstimmungen für \"%(query)s\" gefunden."
+
+msgid "No monitored Twitch channels."
+msgstr "Keine überwachten Twitch-Kanäle."
+
+msgid "No monitored Twitch channels. Add streamers under Streamers."
+msgstr "Keine überwachten Twitch-Kanäle. Füge Streamer unter Streamer hinzu."
+
+msgid "No monitored channels configured."
+msgstr "Keine aktiven Überwachungskanäle vorhanden."
+
+msgid "No recently watched streams yet."
+msgstr "Noch keine zuletzt angesehenen Streams."
+
+msgid "No recorded chat is available for this VOD."
+msgstr "Kein aufgezeichneter Chat für dieses VOD vorhanden."
+
+msgid "No recorder data found."
+msgstr "Keine Recorder-Daten gefunden."
+
+msgid "No recordings found."
+msgstr "Keine Aufnahmen gefunden."
+
+msgid "No results."
+msgstr "Keine Treffer."
+
+msgid "No running transcription found."
+msgstr "Keine laufende Transkription gefunden."
+
+msgid "No streams"
+msgstr "Keine Streams"
+
+msgid "No transcript output received"
+msgstr "Keine Transkript-Ausgabe erhalten"
+
+msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
+msgstr "Noch kein Transkript. Die Erstellung läuft lokal auf dem Server und kann bei langen VODs dauern."
+
+msgid "No transcription active"
+msgstr "Keine Transkription aktiv"
+
+msgid "No videos found."
+msgstr "Keine Videos gefunden."
+
+msgid "Not authenticated."
+msgstr "Nicht authentifiziert."
+
+msgid "Not live"
+msgstr "Nicht live"
+
+msgid "Notification + live stream (no recording)"
+msgstr "Benachrichtigung + Live-Stream (Keine Aufnahme)"
+
+msgid "November"
+msgstr "November"
+
+msgid "OAuth code is missing."
+msgstr "OAuth-Code fehlt."
+
+msgid "OAuth note"
+msgstr "OAuth-Hinweis"
+
+msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
+msgstr "Für OAuth-Status-Token muss ein starker VOD_SECRET_KEY gesetzt sein."
+
+msgid "OFF (normal operation)"
+msgstr "AUS (Normalbetrieb)"
+
+msgid "OFFLINE"
+msgstr "OFFLINE"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "ONLINE"
+msgstr "ONLINE"
+
+msgid "OPERATING MODE:"
+msgstr "BETRIEBSMODUS:"
+
+msgid "OPTION A: UPLOAD IMAGE FILE"
+msgstr "OPTION A: BILDDATEI HOCHLADEN"
+
+msgid "OPTION A: UPLOAD PROFILE PICTURE"
+msgstr "OPTION A: PROFILBILD HOCHLADEN"
+
+msgid "OPTION B: USE IMAGE URL"
+msgstr "OPTION B: BILD-URL VERWENDEN"
+
+msgid "OR"
+msgstr "ODER"
+
+#, python-format
+msgid "Object #%(id)s removed from the database. Files are kept."
+msgstr "Objekt #%(id)s aus der Datenbank entfernt. Dateien bleiben erhalten."
+
+msgid "October"
+msgstr "Oktober"
+
+msgid "Offline"
+msgstr "Offline"
+
+msgid "Offload the VOD archive to external storage automatically or manually"
+msgstr "VOD-Archiv automatisch oder manuell in externe Speicher auslagern"
+
+msgid "Oldest"
+msgstr "Älteste"
+
+msgid "Oldest first"
+msgstr "Älteste zuerst"
+
+msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
+msgstr "OneDrive / Microsoft 365 über Microsoft Graph mit OAuth 2.0."
+
+msgid "Only after a successful upload and optional cloud verification."
+msgstr "Erst nach erfolgreichem Upload und optionaler Cloud-Verifikation."
+
+msgid "Only needed if no refresh token is used."
+msgstr "Nur nötig, wenn kein Refresh Token verwendet wird."
+
+msgid "Open"
+msgstr "Öffnen"
+
+msgid "Open Twitch"
+msgstr "Twitch öffnen"
+
+msgid "Open channel"
+msgstr "Kanal öffnen"
+
+msgid "Open clip"
+msgstr "Clip öffnen"
+
+msgid "Open editor"
+msgstr "Editor öffnen"
+
+msgid "Option sections"
+msgstr "Optionsbereiche"
+
+msgid "Options"
+msgstr "Optionen"
+
+msgid "Options & system control"
+msgstr "Optionen & Systemsteuerung"
+
+msgid "Other platform"
+msgstr "Andere Plattform"
+
+#, python-format
+msgid "Page %(page)s / %(pages)s (%(count)s VODs)"
+msgstr "Seite %(page)s / %(pages)s (%(count)s VODs)"
+
+#, python-format
+msgid "Page %(page)s / %(total)s"
+msgstr "Seite %(page)s / %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "Seite %(page)s von %(pages)s"
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr "Seite %(page)s von %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(total)s (%(count)s VODs)"
+msgstr "Seite %(page)s von %(total)s (%(count)s VODs)"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+msgstr "Seite <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; %(count)s VODs in quick access"
+msgstr "Seite <strong>%(page)s</strong> von <strong>%(pages)s</strong> &bull; %(count)s VODs im Schnellzugriff"
+
+msgid "Page navigation"
+msgstr "Seiten-Navigation"
+
+msgid "Page navigation (top)"
+msgstr "Seiten-Navigation (Oben)"
+
+msgid "Page:"
+msgstr "Seite:"
+
+msgid "Pages"
+msgstr "Seiten"
+
+msgid "Pagination"
+msgstr "Seiten-Navigation"
+
+msgid "Pagination (top)"
+msgstr "Seiten-Navigation (Oben)"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Password / app password"
+msgstr "Passwort / App-Passwort"
+
+msgid "Password changed successfully."
+msgstr "Passwort erfolgreich geändert."
+
+msgid "Password is required."
+msgstr "Passwort ist erforderlich."
+
+#, python-format
+msgid "Password must be at least %(min)s characters long."
+msgstr "Passwort muss mindestens %(min)s Zeichen lang sein."
+
+msgid "Path below the target folder ID. Empty = directly in the target folder ID."
+msgstr "Pfad unterhalb der Zielordner-ID. Leer = direkt in der Zielordner-ID."
+
+msgid "Pause"
+msgstr "Pause"
+
+msgid "Pause playback"
+msgstr "Wiedergabe pausieren"
+
+msgid "Pause preview"
+msgstr "Vorschau pausieren"
+
+msgid "Peak"
+msgstr "Peak"
+
+msgid "Pending"
+msgstr "Wartend"
+
+msgid "Photo viewer"
+msgstr "Fotoviewer"
+
+msgid "Play"
+msgstr "Play"
+
+msgid "Play / pause"
+msgstr "Wiedergabe / Pause"
+
+msgid "Play preview"
+msgstr "Vorschau starten"
+
+msgid "Playback unavailable"
+msgstr "Wiedergabe nicht verfügbar"
+
+msgid "Player error — reconnecting…"
+msgstr "Player-Fehler — verbinde neu…"
+
+msgid "Please enter a name for the storage provider."
+msgstr "Bitte einen Namen für den Speicher-Anbieter angeben."
+
+msgid "Please enter your current password."
+msgstr "Bitte aktuelles Passwort angeben."
+
+msgid "Please save the client ID and client secret first, then connect."
+msgstr "Bitte zuerst Client-ID und Client-Secret speichern, dann verbinden."
+
+msgid "Please scroll to the end of the text first."
+msgstr "Bitte zuerst den Text zu Ende scrollen."
+
+msgid "Points"
+msgstr "Punkte"
+
+msgid "Popular categories"
+msgstr "Beliebte Kategorien"
+
+msgid "Prefix"
+msgstr "Präfix"
+
+#, python-format
+msgid "Presence %(user)s"
+msgstr "Anwesenheit %(user)s"
+
+msgid "Present"
+msgstr "Vorhanden"
+
+msgid "Preview"
+msgstr "Vorschau"
+
+msgid "Previous"
+msgstr "Zurück"
+
+msgid "Previous page"
+msgstr "Vorherige Seite"
+
+msgid "Privacy"
+msgstr "Datenschutz"
+
+msgid "Privacy policy"
+msgstr "Datenschutzerklärung"
+
+msgid "Private"
+msgstr "Privat"
+
+msgid "Private video and stream archive console."
+msgstr "Private Video- und Stream-Archiv-Konsole."
+
+msgid "Processing video (this may take a while)..."
+msgstr "Verarbeite Video (kann dauern)..."
+
+msgid "Processing video..."
+msgstr "Verarbeite Video..."
+
+msgid "Profile picture reset to default."
+msgstr "Profilbild auf Standard zurückgesetzt."
+
+msgid "Profile picture uploaded successfully."
+msgstr "Profilbild erfolgreich hochgeladen."
+
+msgid "Progress"
+msgstr "Fortschritt"
+
+msgid "Provider"
+msgstr "Anbieter"
+
+#, python-format
+msgid "Provider #%(id)s created. Please test the connection."
+msgstr "Anbieter #%(id)s angelegt. Bitte Verbindung testen."
+
+#, python-format
+msgid "Provider #%(id)s removed. Cloud files are kept."
+msgstr "Anbieter #%(id)s entfernt. Cloud-Dateien bleiben erhalten."
+
+#, python-format
+msgid "Provider #%(id)s saved."
+msgstr "Anbieter #%(id)s gespeichert."
+
+msgid "Provider default"
+msgstr "Anbieter-Standard"
+
+msgid "Provider not found."
+msgstr "Anbieter nicht gefunden."
+
+#, python-format
+msgid "Provider reported: %(error)s"
+msgstr "Anbieter meldete: %(error)s"
+
+msgid "Provider type"
+msgstr "Anbieter-Typ"
+
+msgid "Providers"
+msgstr "Anbieter"
+
+msgid "Public link created:"
+msgstr "Öffentlicher Link erstellt:"
+
+msgid "Purpose of this user group..."
+msgstr "Zweck dieser Benutzergruppe..."
+
+msgid "Quality"
+msgstr "Qualität"
+
+msgid "Queue"
+msgstr "Queue"
+
+msgid "Queue not readable"
+msgstr "Queue nicht lesbar"
+
+msgid "Quiet"
+msgstr "Still"
+
+msgid "RECORDING"
+msgstr "AUFNAHME"
+
+msgid "RECORDING ACTIVE"
+msgstr "AUFNAHME AKTIV"
+
+msgid "Ready"
+msgstr "Bereit"
+
+msgid "Real-time stream error — reconnecting…"
+msgstr "Echtzeit-Stream-Fehler — verbinde neu…"
+
+#, python-format
+msgid "Really delete backup %(name)s?"
+msgstr "Backup %(name)s wirklich löschen?"
+
+msgid "Really delete file?"
+msgstr "Datei wirklich löschen?"
+
+msgid "Really delete the cloud file? A local copy is kept."
+msgstr "Cloud-Datei wirklich löschen? Eine lokale Kopie bleibt erhalten."
+
+msgid "Really delete the local file? The cloud copy is kept."
+msgstr "Lokale Datei wirklich löschen? Die Cloud-Kopie bleibt erhalten."
+
+msgid "Really delete?"
+msgstr "Wirklich löschen?"
+
+#, python-format
+msgid "Really remove channel %(name)s?"
+msgstr "Kanal %(name)s wirklich entfernen?"
+
+msgid "Really remove the provider? The cloud files are kept."
+msgstr "Anbieter wirklich entfernen? Die Cloud-Dateien bleiben erhalten."
+
+msgid "Really rename the file?"
+msgstr "Datei wirklich umbenennen?"
+
+msgid "Really reset the custom banner and switch to the default?"
+msgstr "Custom Banner wirklich zurücksetzen und auf Standard wechseln?"
+
+msgid "Really reset the custom profile picture and switch to the default?"
+msgstr "Custom Profilbild wirklich zurücksetzen und auf Standard wechseln?"
+
+msgid "Really revoke this share?"
+msgstr "Freigabe wirklich widerrufen?"
+
+msgid "Really stop the recording?"
+msgstr "Aufnahme wirklich stoppen?"
+
+msgid "Recent task errors"
+msgstr "Letzte Task-Fehler"
+
+msgid "Recently watched"
+msgstr "Zuletzt angesehen"
+
+msgid "Recommended. Prevents data loss from incomplete uploads."
+msgstr "Empfohlen. Verhindert Datenverlust bei unvollständigen Uploads."
+
+msgid "Reconnecting…"
+msgstr "Verbinde erneut…"
+
+msgid "Recorded"
+msgstr "Aufgenommen"
+
+msgid "Recorder & worker restarted."
+msgstr "Recorder & Worker neu gestartet."
+
+msgid "Recording"
+msgstr "Aufnahme"
+
+msgid "Recording + live stream & Discord notification"
+msgstr "Aufnahme + Live-Stream & Discord-Benachrichtigung"
+
+msgid "Recording disabled (live & Discord only)"
+msgstr "Aufnahme deaktiviert (Nur Live & Discord)"
+
+#, python-format
+msgid "Recording disabled for source %(name)s."
+msgstr "Aufnahme für Quelle %(name)s deaktiviert."
+
+msgid "Recording enabled (full mode)"
+msgstr "Aufnahme aktiviert (Vollmodus)"
+
+#, python-format
+msgid "Recording enabled for source %(name)s."
+msgstr "Aufnahme für Quelle %(name)s aktiviert."
+
+msgid "Recording health"
+msgstr "Recording Health"
+
+msgid "Recording in progress"
+msgstr "Aufnahme läuft"
+
+msgid "Recording not available."
+msgstr "Aufnahme nicht verfügbar."
+
+#, python-format
+msgid "Recording stopped: %(count)s source(s) for %(archive)s disabled. The process will be terminated at the next check."
+msgstr "Aufnahme gestoppt: %(count)s Quelle(n) für %(archive)s deaktiviert. Der Prozess wird beim nächsten Check beendet."
+
+#, python-format
+msgid "Recordings (%(count)s)"
+msgstr "Aufnahmen (%(count)s)"
+
+#, python-format
+msgid "Redeemed “%(title)s”"
+msgstr "„%(title)s“ eingelöst"
+
+#, python-format
+msgid "Registration via Discord · accept there with %(keyword)s."
+msgstr "Registrierung über Discord · Zustimmung dort mit %(keyword)s."
+
+msgid "Related recordings"
+msgstr "Verwandte Aufnahmen"
+
+msgid "Remove"
+msgstr "Entfernen"
+
+msgid "Remove channel"
+msgstr "Kanal entfernen"
+
+#, python-format
+msgid "Remove channel %(name)s?"
+msgstr "Kanal %(name)s entfernen?"
+
+msgid "Remove only the database entry?"
+msgstr "Nur den Datenbankeintrag entfernen?"
+
+#, python-format
+msgid "Remux job could not be started: %(error)s"
+msgstr "Remux-Job konnte nicht gestartet werden: %(error)s"
+
+msgid "Remux job started. Progress is shown in the admin panel."
+msgstr "Remux-Job gestartet. Fortschritt im Admin-Panel."
+
+msgid "Rename file"
+msgstr "Datei umbenennen"
+
+msgid "Renamed."
+msgstr "Umbenannt."
+
+msgid "Repair in progress"
+msgstr "Reparatur läuft"
+
+msgid "Repair seeking"
+msgstr "Seek reparieren"
+
+msgid "Repeat new password"
+msgstr "Neues Passwort wiederholen"
+
+msgid "Repeat password"
+msgstr "Passwort wiederholen"
+
+#, python-format
+msgid "Request '%(username)s' denied and deleted."
+msgstr "Antrag '%(username)s' abgelehnt und gelöscht."
+
+msgid "Restart failed."
+msgstr "Neustart fehlgeschlagen."
+
+msgid "Restart services"
+msgstr "Dienste neu starten"
+
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+msgid "Restore default"
+msgstr "Standard wiederherstellen"
+
+#, python-format
+msgid "Restore queued (task #%(task)s)."
+msgstr "Wiederherstellung eingeordnet (Task #%(task)s)."
+
+msgid "Resume playback"
+msgstr "Wiedergabe fortsetzen"
+
+msgid "Revoke"
+msgstr "Widerrufen"
+
+#, python-format
+msgid "Role access '%(slug)s' added."
+msgstr "Rollen-Freigabe '%(slug)s' hinzugefügt."
+
+#, python-format
+msgid "Role access '%(slug)s' removed."
+msgstr "Rollen-Freigabe '%(slug)s' entfernt."
+
+msgid "Role access grant not found."
+msgstr "Rollen-Freigabe nicht gefunden."
+
+msgid "Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member."
+msgstr "Rollenmodell: Vollzugriff (<code>admin</code>), Archiv-Viewer (<code>viewer</code>), Nur-Live (<code>live_only</code>) &amp; Discord-Member."
+
+msgid "Rules"
+msgstr "Regeln"
+
+msgid "Rules accepted. Continuing to the dashboard…"
+msgstr "Regeln akzeptiert. Weiter zum Dashboard…"
+
+msgid "Rules text"
+msgstr "Regeltext"
+
+msgid "Running"
+msgstr "Läuft"
+
+msgid "Running…"
+msgstr "Läuft…"
+
+msgid "S3-compatible"
+msgstr "S3-kompatibel"
+
+msgid "START"
+msgstr "START"
+
+msgid "Safety migration:"
+msgstr "Sicherheits-Migration:"
+
+msgid "Same session"
+msgstr "Gleiche Session"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Save area maintenance"
+msgstr "Bereichs-Wartung speichern"
+
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+msgid "Save clip"
+msgstr "Clip speichern"
+
+msgid "Save clip settings"
+msgstr "Clip-Settings speichern"
+
+msgid "Save group"
+msgstr "Gruppe speichern"
+
+msgid "Save password"
+msgstr "Passwort speichern"
+
+msgid "Save settings"
+msgstr "Einstellungen speichern"
+
+msgid "Saved"
+msgstr "Gespeichert"
+
+msgid "Saved automatically when connecting."
+msgstr "Wird beim Verbinden automatisch gespeichert."
+
+msgid "Saved automatically when connecting. Alternatively, paste it manually."
+msgstr "Wird beim Verbinden automatisch gespeichert. Alternativ manuell einfügen."
+
+msgid "Saved – leave empty to keep"
+msgstr "Gespeichert – leer lassen zum Behalten"
+
+msgid "Saved."
+msgstr "Gespeichert."
+
+msgid "Saving transcript failed"
+msgstr "Transkript speichern fehlgeschlagen"
+
+#, python-format
+msgid "Saving transcript failed: %(error)s"
+msgstr "Transkript speichern fehlgeschlagen: %(error)s"
+
+msgid "Saving transcript..."
+msgstr "Transkript speichern..."
+
+msgid "Saving..."
+msgstr "Wird gespeichert..."
+
+msgid "Saving…"
+msgstr "Speichern…"
+
+msgid "Search"
+msgstr "Suchen"
+
+msgid "Search VODs, streamers or games..."
+msgstr "VODs, Streamer oder Spiele suchen..."
+
+msgid "Search category"
+msgstr "Kategorie suchen"
+
+msgid "Search category / game…"
+msgstr "Kategorie / Game suchen…"
+
+msgid "Search failed."
+msgstr "Suche fehlgeschlagen."
+
+msgid "Search recordings (title, date, game)..."
+msgstr "Aufnahmen durchsuchen (Titel, Datum, Spiel)..."
+
+msgid "Search results"
+msgstr "Suchergebnisse"
+
+msgid "Search streamer or channel…"
+msgstr "Streamer oder Kanal suchen…"
+
+msgid "Search streamers"
+msgstr "Streamer suchen"
+
+msgid "Search term (e.g. player name, chat message, date)..."
+msgstr "Suchbegriff (z.B. Spielername, Chatnachricht, Datum)..."
+
+msgid "Search user, email or group..."
+msgstr "Benutzer, E-Mail oder Gruppe suchen..."
+
+msgid "Search..."
+msgstr "Suchen …"
+
+msgid "Searching for stream..."
+msgstr "Suche Stream..."
+
+msgid "Searching…"
+msgstr "Suche…"
+
+msgid "Seconds after trigger"
+msgstr "Sekunden nach Trigger"
+
+msgid "Seconds before trigger"
+msgstr "Sekunden vor Trigger"
+
+msgid "Security & shares"
+msgstr "Sicherheit & Freigaben"
+
+#, python-format
+msgid "Seek repair is already running (%(status)s)."
+msgstr "Seek-Reparatur läuft bereits (%(status)s)."
+
+msgid "Seek repair queued."
+msgstr "Seek-Reparatur in die Warteschlange gestellt."
+
+msgid "Segment creation failed"
+msgstr "Segment-Erstellung fehlgeschlagen"
+
+msgid "Select folders to unlock:"
+msgstr "Freizuschaltende Ordner auswählen:"
+
+msgid "Self-hosted"
+msgstr "Selbst gehostet"
+
+msgid "Send Discord message"
+msgstr "Discord-Mitteilung senden"
+
+msgid "September"
+msgstr "September"
+
+msgid "Server is loading the stream (Turbo, without viewer list)…"
+msgstr "Server lädt Stream (Turbo, ohne Viewer-Liste)…"
+
+msgid "Server is loading the stream (without Twitch account)…"
+msgstr "Server lädt Stream (ohne Twitch-Account)…"
+
+msgid "Server is loading the stream…"
+msgstr "Server lädt Stream…"
+
+msgid "Server-side encryption"
+msgstr "Serverseitige Verschlüsselung"
+
+msgid "Set"
+msgstr "Setzen"
+
+#, python-format
+msgid "Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved."
+msgstr "Setze %(key)s (mindestens 16 Zeichen) oder %(alt_key)s, bevor Zugangsdaten gespeichert werden."
+
+msgid "Set end to current position"
+msgstr "Setze Ende auf aktuelle Position"
+
+msgid "Set start to current position"
+msgstr "Setze Start auf aktuelle Position"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Settings saved."
+msgstr "Einstellungen gespeichert."
+
+msgid "Share"
+msgstr "Teilen"
+
+msgid "Share not found."
+msgstr "Freigabe nicht gefunden."
+
+msgid "Share of period"
+msgstr "Anteil am Zeitraum"
+
+msgid "Share revoked."
+msgstr "Freigabe widerrufen."
+
+msgid "Sharing failed"
+msgstr "Teilen fehlgeschlagen"
+
+msgid "Sharing failed:"
+msgstr "Fehler beim Teilen:"
+
+msgid "Short rules / Discord house rules. Part of the terms; accepted together with the consent below."
+msgstr "Kurzregeln / Discord-Hausordnung. Bestandteil der AGB; mit der Zustimmung unten mitakzeptiert."
+
+msgid "Shown in the navigation, sidebar and on streamer cards."
+msgstr "Wird in der Navigation, Seitenleiste und auf Streamer-Karten angezeigt."
+
+msgid "Sign in"
+msgstr "Anmelden"
+
+msgid "Size"
+msgstr "Größe"
+
+msgid "Sound"
+msgstr "Ton"
+
+msgid "Sound on"
+msgstr "Ton an"
+
+msgid "Source"
+msgstr "Quelle"
+
+#, python-format
+msgid "Source %(name)s not found."
+msgstr "Quelle %(name)s nicht gefunden."
+
+msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "Stale Lock entfernt, Transkription in die Worker-Warteschlange gestellt. Ergebnis erscheint nach Abschluss beim nächsten Laden."
+
+msgid "Start"
+msgstr "Start"
+
+msgid "Start HLS"
+msgstr "HLS starten"
+
+msgid "Start local cleanup"
+msgstr "Lokale Aufräumung starten"
+
+msgid "Start playback"
+msgstr "Wiedergabe"
+
+msgid "Start playback or move along the timeline to sync chat messages."
+msgstr "Starte die Wiedergabe oder navigiere in der Zeitleiste, um Chatnachrichten zu synchronisieren."
+
+msgid "Start sync"
+msgstr "Sync starten"
+
+msgid "Start time must be >= 0."
+msgstr "Startzeit muss >= 0 sein."
+
+msgid "Starting"
+msgstr "Startet"
+
+msgid "Starting download..."
+msgstr "Starte Download..."
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status, progress and actions of the most recently synced files. “Forget” only removes the database entry."
+msgstr "Status, Fortschritt und Aktionen der zuletzt synchronisierten Dateien. „Vergessen“ entfernt nur den Datenbankeintrag."
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "Stop"
+msgstr "Stoppen"
+
+msgid "Stop preview"
+msgstr "Stop Vorschau"
+
+msgid "Stop recording"
+msgstr "Aufnahme stoppen"
+
+msgid "Storage"
+msgstr "Speicherplatz"
+
+msgid "Storage (free):"
+msgstr "Speicher (Frei):"
+
+msgid "Storage (total):"
+msgstr "Speicher (Total):"
+
+#, python-format
+msgid "Storage critical: %(pct)s%% used, only %(free)s free."
+msgstr "Speicher kritisch: %(pct)s%% belegt, nur noch %(free)s frei."
+
+msgid "Storage provider not found."
+msgstr "Speicher-Anbieter nicht gefunden."
+
+msgid "Storage providers"
+msgstr "Speicher-Anbieter"
+
+#, python-format
+msgid "Storage: <strong>%(pct)s%%</strong>"
+msgstr "Speicher: <strong>%(pct)s%%</strong>"
+
+msgid "Stream & channel access"
+msgstr "Stream- & Kanal-Zugriff"
+
+msgid "Stream & folder access"
+msgstr "Stream- & Ordner-Zugriff"
+
+msgid "Stream and VOD archive"
+msgstr "Stream- und VOD-Archiv"
+
+msgid "Stream channel"
+msgstr "Stream-Kanal"
+
+msgid "Stream connection lost — reconnecting…"
+msgstr "Stream-Verbindung unterbrochen — verbinde neu…"
+
+msgid "Stream is not starting — check the live status or reload the page."
+msgstr "Stream startet nicht — prüfe Live-Status oder lade die Seite neu."
+
+msgid "Stream media error — reconnecting…"
+msgstr "Stream-Medienfehler — verbinde neu…"
+
+msgid "Stream stopped — reconnecting…"
+msgstr "Stream gestoppt — verbinde neu…"
+
+msgid "StreamVault is temporarily unavailable due to maintenance. Please be patient — the site will be back soon."
+msgstr "StreamVault ist wegen Wartungsarbeiten vorübergehend nicht verfügbar. Bitte hab etwas Geduld — die Seite ist bald wieder da."
+
+msgid "StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later."
+msgstr "StreamVault ist wegen aktueller Arbeiten vorübergehend nicht erreichbar. Bitte hab etwas Geduld — die Seite ist später wieder verfügbar."
+
+msgid "Streamer"
+msgstr "Streamer"
+
+msgid "Streamer & source management"
+msgstr "Streamer & Quellen Management"
+
+msgid "Streamer (optional)"
+msgstr "Streamer (optional)"
+
+msgid "Streamer / folder missing."
+msgstr "Streamer / Ordner fehlt."
+
+msgid "Streamer is currently offline."
+msgstr "Streamer ist derzeit offline."
+
+msgid "Streamer management"
+msgstr "Streamer Management"
+
+msgid "Streamer profile"
+msgstr "Streamer Profil"
+
+msgid "Streamers, VODs & chat histories"
+msgstr "Streamer, VODs & Chatverläufe"
+
+msgid "Subfolder"
+msgstr "Unterordner"
+
+msgid "Success"
+msgstr "Erfolg"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)"
+msgstr "Unterstützt: JPG, PNG, WEBP, GIF (Empfohlen: 1920x360 oder 1200x300)"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)"
+msgstr "Unterstützt: JPG, PNG, WEBP, GIF (Quadratisch empfohlen, z. B. 300x300)"
+
+msgid "Switch to live only"
+msgstr "Auf Live umschalten"
+
+msgid "Synced"
+msgstr "Synchronisiert"
+
+msgid "System & recorder"
+msgstr "System & Recorder"
+
+msgid "System backup created successfully."
+msgstr "System-Backup erfolgreich erstellt."
+
+msgid "System backups"
+msgstr "System-Backups"
+
+msgid "System group"
+msgstr "Systemgruppe"
+
+msgid "System group 'Viewer' was not found. Deletion cancelled."
+msgstr "Systemgruppe 'Viewer' wurde nicht gefunden. Löschung abgebrochen."
+
+#, python-format
+msgid "System groups (%(name)s) cannot be deleted."
+msgstr "Systemgruppen (%(name)s) dürfen nicht gelöscht werden."
+
+msgid "System quick status"
+msgstr "System Kurzstatus"
+
+msgid "System settings"
+msgstr "Systemeinstellungen"
+
+msgid "System status"
+msgstr "System Status"
+
+msgid "System telemetry"
+msgstr "System-Telemetrie"
+
+#, python-format
+msgid "Target already exists: %(path)s"
+msgstr "Ziel existiert bereits: %(path)s"
+
+msgid "Target archive folder (optional)"
+msgstr "Ziel-Archivordner (optional)"
+
+msgid "Target folder ID (optional)"
+msgstr "Zielordner-ID (optional)"
+
+msgid "Target name already exists locally."
+msgstr "Zielname existiert bereits lokal."
+
+msgid "Task queue"
+msgstr "Aufgaben-Queue"
+
+msgid "Terms"
+msgstr "AGB"
+
+msgid "Terms & rules"
+msgstr "AGB & Regeln"
+
+#, python-format
+msgid "Terms (version %(terms)s) including house rules (%(rules)s) not yet accepted — approval only after consent on the website or on re-registration."
+msgstr "AGB (Version %(terms)s) inkl. Nutzungsregeln (%(rules)s) noch nicht akzeptiert — Freigabe erst nach Zustimmung auf der Website oder bei erneuter Registrierung."
+
+msgid "Terms accepted. Continuing to the dashboard…"
+msgstr "AGB akzeptiert. Weiter zum Dashboard…"
+
+msgid "Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms."
+msgstr "Nutzungsvertrag und Hausordnung für den Invite-only-Kreis. Kein Nutzungsrecht gegenüber Rechteinhabern oder Plattformen."
+
+msgid "Terms version outdated or not accepted. Acceptance required at /agb."
+msgstr "AGB-Version veraltet oder nicht akzeptiert. Zustimmung unter /agb erforderlich."
+
+msgid "Terms version outdated — reload the page and accept again."
+msgstr "AGB-Version veraltet — Seite neu laden und erneut akzeptieren."
+
+msgid "Test"
+msgstr "Testen"
+
+msgid "Thanks for your understanding. Authorized users can sign in via the login page."
+msgstr "Danke fürs Verständnis. Berechtigte Benutzer können sich über den Login anmelden."
+
+msgid "The 'can_manage_users' permission cannot be removed from the Administrator group."
+msgstr "Das Recht 'can_manage_users' darf der Administrator-Gruppe nicht entzogen werden."
+
+msgid "The OAuth link has expired. Please start again."
+msgstr "Der OAuth-Link ist abgelaufen. Bitte erneut starten."
+
+msgid "The VOD player and archive are currently under maintenance."
+msgstr "Der VOD-Player und das Archiv werden aktuell gewartet."
+
+msgid "The current password is incorrect."
+msgstr "Das aktuelle Passwort ist nicht korrekt."
+
+msgid "The default system admin cannot be deleted."
+msgstr "Der Standard-System-Admin kann nicht gelöscht werden."
+
+msgid "The folder cannot be emptied while a recording is being written."
+msgstr "Ordner kann nicht geleert werden, solange eine Aufnahme aktiv geschrieben wird."
+
+msgid "The live stream area is currently under maintenance."
+msgstr "Der Live-Stream-Bereich wird aktuell gewartet."
+
+msgid "The local file has already been removed. Please restore it first."
+msgstr "Die lokale Datei wurde bereits entfernt. Bitte zuerst wiederherstellen."
+
+msgid "The mobile version of StreamVault is currently under maintenance. Please use the desktop version."
+msgstr "Die mobile Version von StreamVault wird aktuell gewartet. Bitte nutze die Desktop-Version."
+
+msgid "The name of system groups cannot be changed."
+msgstr "Der Name von Systemgruppen kann nicht geändert werden."
+
+msgid "The new password must be at least 8 characters long."
+msgstr "Das neue Passwort muss mindestens 8 Zeichen lang sein."
+
+msgid "The new password must differ from the current password."
+msgstr "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden."
+
+msgid "The passwords do not match."
+msgstr "Die Passwörter stimmen nicht überein."
+
+msgid "The provider did not return valid OAuth data."
+msgstr "Der Anbieter lieferte keine gültigen OAuth-Daten."
+
+msgid "The provider name must be at most 80 characters long."
+msgstr "Der Anbietername darf höchstens 80 Zeichen lang sein."
+
+msgid "The provider type cannot be changed while archive objects are assigned. Create a new provider instead."
+msgstr "Der Anbieter-Typ kann nicht geändert werden, solange Archiv-Objekte zugeordnet sind. Lege stattdessen einen neuen Anbieter an."
+
+msgid "The recorder worker performs the sync. Unchanged files that were already uploaded are skipped."
+msgstr "Der Recorder-Worker führt den Abgleich aus. Bereits hochgeladene unveränderte Dateien werden übersprungen."
+
+msgid "The remote path must not be empty."
+msgstr "Der Remote-Pfad darf nicht leer sein."
+
+msgid "The selected default provider does not exist."
+msgstr "Der ausgewählte Standard-Anbieter existiert nicht."
+
+msgid "The selected default provider is disabled. Enable it first or choose another provider."
+msgstr "Der ausgewählte Standard-Anbieter ist deaktiviert. Aktiviere ihn zuerst oder wähle einen anderen Anbieter."
+
+msgid "The selected group does not exist."
+msgstr "Ausgewählte Gruppe existiert nicht."
+
+msgid "The system administrator's password can only be changed via environment variables."
+msgstr "Das Passwort des System-Administrators kann nur über Umgebungsvariablen geändert werden."
+
+msgid "The video file could not be loaded or is still being transcoded."
+msgstr "Die Videodatei konnte nicht geladen werden oder wird aktuell noch transkodiert."
+
+msgid "This admin user is protected and cannot be deleted."
+msgstr "Dieser Admin-User ist geschützt und kann nicht gelöscht werden."
+
+msgid "This admin user is protected."
+msgstr "Dieser Admin-User ist geschützt."
+
+msgid "This channel is not live right now."
+msgstr "Dieser Kanal ist gerade nicht live."
+
+msgid "This file type is not allowed for security reasons."
+msgstr "Dieser Dateityp ist aus Sicherheitsgründen nicht erlaubt."
+
+msgid "Time"
+msgstr "Zeit"
+
+msgid "Time (UTC)"
+msgstr "Zeit (UTC)"
+
+msgid "Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer."
+msgstr "Tipp: Ein gemeinsamer Archivordner fasst Twitch- und YouTube-Streams desselben Streamers zusammen."
+
+msgid "Title & description"
+msgstr "Titel & Beschreibung"
+
+msgid "Title & info"
+msgstr "Titel & Info"
+
+msgid "Title (optional)"
+msgstr "Titel (optional)"
+
+msgid "Title as on YouTube"
+msgstr "Titel wie bei YouTube"
+
+#, python-format
+msgid "Today, %(time)s"
+msgstr "Heute, %(time)s"
+
+msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
+msgstr "Gerade laufen zu viele VODs. Live ist davon nicht betroffen. Versuch es in ein paar Minuten nochmal — der Platz wird frei, sobald jemand den Player schließt."
+
+msgid "Too many attempts. IP temporarily blocked. Please try again later."
+msgstr "Zu viele Versuche. IP vorübergehend gesperrt. Bitte später erneut versuchen."
+
+msgid "Top streams are currently unavailable. Use monitored channels or the search."
+msgstr "Top-Streams derzeit nicht verfügbar. Nutze überwachte Kanäle oder die Suche."
+
+msgid "Total in period"
+msgstr "Summe im Zeitraum"
+
+msgid "Total recordings"
+msgstr "Gesamtaufnahmen"
+
+msgid "Total runtime"
+msgstr "Gesamtlaufzeit"
+
+#, python-format
+msgid "Total: %(count)s registered accounts"
+msgstr "Insgesamt %(count)s registrierte Konten"
+
+#, python-format
+msgid "Total: %(count)s user groups"
+msgstr "Insgesamt %(count)s Benutzergruppen"
+
+msgid "Traffic"
+msgstr "Traffic"
+
+msgid "Traffic overview"
+msgstr "Traffic-Übersicht"
+
+#, python-format
+msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
+msgstr "Transkribiere Segment %(index)s/%(total)s (%(percent)s%%)"
+
+msgid "Transcript"
+msgstr "Transkript"
+
+msgid "Transcript already exists"
+msgstr "Transkript bereits vorhanden"
+
+msgid "Transcript already exists."
+msgstr "Transkript ist bereits vorhanden."
+
+msgid "Transcript available"
+msgstr "Transkript vorhanden"
+
+msgid "Transcript created"
+msgstr "Transkript erstellt"
+
+msgid "Transcript finished"
+msgstr "Transkript fertig"
+
+msgid "Transcript missing despite finished status"
+msgstr "Transkript fehlt trotz fertigem Status"
+
+msgid "Transcription cancelled"
+msgstr "Transkription abgebrochen"
+
+msgid "Transcription cancelled."
+msgstr "Transkription abgebrochen."
+
+msgid "Transcription failed"
+msgstr "Transkription fehlgeschlagen"
+
+#, python-format
+msgid "Transcription failed: %(error)s"
+msgstr "Transkription fehlgeschlagen: %(error)s"
+
+msgid "Transcription is already running"
+msgstr "Transkription läuft bereits"
+
+msgid "Transcription is already running. Please reload later."
+msgstr "Transkription läuft bereits. Bitte später erneut laden."
+
+msgid "Transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "Transkription zur Ausführung in die Worker-Warteschlange gestellt. Ergebnis erscheint nach Abschluss beim nächsten Laden."
+
+msgid "Transcription running..."
+msgstr "Transkription läuft..."
+
+msgid "Transcription timed out"
+msgstr "Transkription Timeout"
+
+msgid "Transfer new recordings and periodic archive syncs to the cloud."
+msgstr "Neue Aufnahmen und periodische Archiv-Syncs in die Cloud übertragen."
+
+msgid "Trim"
+msgstr "Zuschneiden"
+
+msgid "Twitch / default"
+msgstr "Twitch / Standard"
+
+msgid "Twitch badge library synchronized."
+msgstr "Twitch-Badge-Bibliothek synchronisiert."
+
+msgid "Twitch channel name..."
+msgstr "Twitch-Kanalname..."
+
+msgid "Twitch live chat"
+msgstr "Twitch-Live-Chat"
+
+msgid "Twitch live stream"
+msgstr "Twitch Live-Stream"
+
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
+msgstr "Twitch-Name (z.B. shroud) oder YouTube-URL / @Handle..."
+
+msgid "Twitch or YouTube supported"
+msgstr "Twitch oder YouTube Support"
+
+msgid "Twitch profile"
+msgstr "Twitch Profil"
+
+msgid "Twitch profile banner"
+msgstr "Twitch Profilbanner"
+
+msgid "Twitch search failed."
+msgstr "Twitch-Suche fehlgeschlagen."
+
+msgid "Twitch streams could not be loaded."
+msgstr "Twitch Streams konnten nicht geladen werden."
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Unchanged."
+msgstr "Unverändert."
+
+msgid "Unknown"
+msgstr "Unbekannt"
+
+msgid "Unknown error"
+msgstr "Unbekannter Fehler"
+
+#, python-format
+msgid "Unknown storage provider: %(type)s"
+msgstr "Unbekannter Speicher-Anbieter: %(type)s"
+
+msgid "Unmute"
+msgstr "Ton einschalten"
+
+msgid "Updated"
+msgstr "Aktualisiert"
+
+#, python-format
+msgid "Updated %(age)s"
+msgstr "Update %(age)s"
+
+msgid "Upload"
+msgstr "Hochladen"
+
+msgid "Upload automatically"
+msgstr "Automatisch hochladen"
+
+msgid "Upload new file"
+msgstr "Neue Datei hochladen"
+
+#, python-format
+msgid "Upload queued (task #%(task)s)."
+msgstr "Upload eingeordnet (Task #%(task)s)."
+
+msgid "Upload videos & media"
+msgstr "Videos & Medien hochladen"
+
+msgid "Usage rules"
+msgstr "Nutzungsregeln"
+
+msgid "Used vault volume"
+msgstr "Belegtes Vault-Volumen"
+
+msgid "User"
+msgstr "Benutzer"
+
+#, python-format
+msgid "User '%(username)s' already exists."
+msgstr "Benutzer '%(username)s' existiert bereits."
+
+#, python-format
+msgid "User '%(username)s' approved."
+msgstr "Benutzer '%(username)s' freigeschaltet."
+
+#, python-format
+msgid "User '%(username)s' created successfully."
+msgstr "Benutzer '%(username)s' erfolgreich erstellt."
+
+#, python-format
+msgid "User '%(username)s' has been deleted."
+msgstr "Benutzer '%(username)s' wurde gelöscht."
+
+#, python-format
+msgid "User '%(username)s' not found."
+msgstr "Benutzer '%(username)s' nicht gefunden."
+
+#, python-format
+msgid "User '%(username)s' updated successfully."
+msgstr "Benutzer '%(username)s' erfolgreich aktualisiert."
+
+msgid "User accounts"
+msgstr "Benutzerkonten"
+
+msgid "User created"
+msgstr "Benutzer erfolgreich angelegt"
+
+msgid "User deleted"
+msgstr "Benutzer erfolgreich gelöscht"
+
+msgid "User deleted."
+msgstr "Benutzer gelöscht."
+
+msgid "User group"
+msgstr "Benutzergruppe"
+
+msgid "User groups & permissions"
+msgstr "Benutzergruppen & Rechte"
+
+msgid "User management"
+msgstr "Benutzerverwaltung"
+
+msgid "User not found."
+msgstr "Benutzer nicht gefunden."
+
+msgid "User updated"
+msgstr "Benutzer erfolgreich aktualisiert"
+
+msgid "User updated."
+msgstr "Benutzer aktualisiert."
+
+msgid "Username"
+msgstr "Benutzername"
+
+#, python-format
+msgid "Username '%(username)s' is reserved."
+msgstr "Username '%(username)s' ist reserviert."
+
+msgid "Username is required."
+msgstr "Username ist erforderlich."
+
+msgid "Username must be 3-32 alphanumeric characters (hyphens and underscores allowed)."
+msgstr "Username muss 3-32 alphanumerische Zeichen sein (Bindestriche und Unterstriche erlaubt)."
+
+msgid "Users & groups"
+msgstr "Benutzer & Gruppen"
+
+#, python-format
+msgid "Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = presence, bars = login/pages/video/chat per day."
+msgstr "Nutzer A–Z · letzte %(days)s Tage (%(since)s – %(until)s). Heatmap = Anwesenheit, Balken = Login/Seiten/Video/Chat je Tag."
+
+msgid "VOD access grants are currently only available for members."
+msgstr "VOD-Freigaben derzeit nur für Member."
+
+msgid "VOD archive"
+msgstr "VOD-Archiv"
+
+msgid "VOD page navigation"
+msgstr "VOD-Seitennavigation"
+
+msgid "VOD pagination"
+msgstr "VOD Seiten-Navigation"
+
+#, python-format
+msgid "VOD recordings (%(count)s)"
+msgstr "VOD-Aufnahmen (%(count)s)"
+
+msgid "VOD_SECRET_KEY must be set to a strong value before credentials can be stored."
+msgstr "VOD_SECRET_KEY muss auf einen starken Wert gesetzt sein, bevor Zugangsdaten gespeichert werden können."
+
+msgid "VODs are recorded to disk"
+msgstr "VODs werden auf Festplatte aufgezeichnet"
+
+msgid "Verify TLS certificate"
+msgstr "TLS-Zertifikat prüfen"
+
+msgid "Verify cloud copy before deletion"
+msgstr "Cloud-Kopie vor Löschung verifizieren"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Video"
+msgstr "Video"
+
+msgid "Video actions"
+msgstr "Videoaktionen"
+
+msgid "Video could not be deleted."
+msgstr "Video konnte nicht gelöscht werden."
+
+msgid "Video deleted."
+msgstr "Video gelöscht."
+
+msgid "Video player controls"
+msgstr "Videoplayer-Steuerung"
+
+msgid "Video upload"
+msgstr "Video-Upload"
+
+msgid "View streams"
+msgstr "Streams ansehen"
+
+msgid "View streams & live chat"
+msgstr "Streams & Livechat ansehen"
+
+msgid "Viewer"
+msgstr "Viewer"
+
+msgid "Viewers"
+msgstr "Zuschauer"
+
+msgid "Visibility could not be saved."
+msgstr "Sichtbarkeit konnte nicht gespeichert werden."
+
+msgid "Visibility: admins only."
+msgstr "Sichtbarkeit: nur Admins."
+
+msgid "Visibility: all users."
+msgstr "Sichtbarkeit: alle Nutzer."
+
+msgid "Visible to:"
+msgstr "Sichtbar:"
+
+msgid "Volume"
+msgstr "Lautstärke"
+
+msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
+msgstr "ACHTUNG: Möchtest du diesen Streamer und alle Aufnahmen unwiderruflich löschen?"
+
+msgid "WATCH LIVE"
+msgstr "LIVE ZUSCHAUEN"
+
+msgid "Waiting for server stream…"
+msgstr "Warte auf Server-Stream…"
+
+msgid "Warning"
+msgstr "Warnung"
+
+msgid "Watch"
+msgstr "Ansehen"
+
+msgid "Watch latest video"
+msgstr "Neuestes Video ansehen"
+
+msgid "Watch now"
+msgstr "Jetzt ansehen"
+
+msgid "Watch stream directly"
+msgstr "Stream direkt ansehen"
+
+msgid "We are working on the vault right now. Back in a moment."
+msgstr "Wir bauen gerade am Vault. Gleich geht’s weiter."
+
+msgid "WebDAV base URL"
+msgstr "WebDAV-Basis-URL"
+
+msgid "WebDAV base URL must be a valid http(s) URL."
+msgstr "WebDAV-Basis-URL muss eine gültige http(s)-URL sein."
+
+msgid "WebDAV base URL must not contain a query or fragment."
+msgstr "WebDAV-Basis-URL darf keine Query oder Fragment enthalten."
+
+msgid "WebDAV base URL must not contain credentials; use the username and password fields."
+msgstr "WebDAV-Basis-URL darf keine Zugangsdaten enthalten; nutze die Felder Benutzername und Passwort."
+
+msgid "Webhook active."
+msgstr "Webhook aktiv."
+
+msgid "Webhook not configured."
+msgstr "Webhook nicht konfiguriert."
+
+msgid "Welcome back. Sign in with your credentials to access StreamVault."
+msgstr "Willkommen zurück · Melde dich mit deinen Zugangsdaten an, um auf StreamVault zuzugreifen."
+
+msgid "Work in progress"
+msgstr "Work in Progress"
+
+msgid "Yes (recommended)"
+msgstr "Ja (empfohlen)"
+
+#, python-format
+msgid "Yesterday, %(time)s"
+msgstr "Gestern, %(time)s"
+
+msgid "You can agree now."
+msgstr "Du kannst jetzt zustimmen."
+
+msgid "You cannot deactivate your own administrator account."
+msgstr "Sie können Ihr eigenes Administratorkonto nicht deaktivieren."
+
+msgid "You cannot delete your own account."
+msgstr "Sie können Ihr eigenes Konto nicht löschen."
+
+msgid "You cannot move yourself into a group without user management permissions."
+msgstr "Sie können sich nicht in eine Gruppe ohne Benutzerverwaltungs-Rechte verschieben."
+
+#, python-format
+msgid "You have accepted version %(version)s."
+msgstr "Du hast Version %(version)s akzeptiert."
+
+msgid "Your IP has been temporarily blocked. Please try again later."
+msgstr "Ihre IP wurde vorübergehend gesperrt. Bitte später erneut versuchen."
+
+msgid "Your browser does not support the video tag."
+msgstr "Dein Browser unterstützt das Video-Tag nicht."
+
+msgid "Zoom in"
+msgstr "Hineinzoomen"
+
+msgid "Zoom out"
+msgstr "Herauszoomen"
+
+msgid "according to the object database"
+msgstr "laut Objekt-Datenbank"
+
+msgid "active"
+msgstr "aktiv"
+
+msgid "available"
+msgstr "vorhanden"
+
+msgid "being created"
+msgstr "wird erstellt"
+
+msgid "cancelled"
+msgstr "abgebrochen"
+
+msgid "disabled"
+msgstr "deaktiviert"
+
+msgid "done – please reload the page"
+msgstr "fertig – bitte Seite neu laden"
+
+msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
+msgstr "drive.file = nur von StreamVault angelegte Dateien (empfohlen). Für bestehende Ordner ggf. https://www.googleapis.com/auth/drive."
+
+msgid "e.g. Google Drive archive"
+msgstr "z. B. Google Drive Archiv"
+
+msgid "e.g. VIP archive"
+msgstr "z.B. VIP-Archiv"
+
+msgid "e.g. alice, bob"
+msgstr "z.B. alice, bob"
+
+msgid "e.g. john_doe"
+msgstr "z.B. max_mustermann"
+
+msgid "e.g. montanablack88"
+msgstr "z. B. montanablack88"
+
+#, python-format
+msgid "effective from %(date)s"
+msgstr "wirksam ab %(date)s"
+
+msgid "just now"
+msgstr "gerade eben"
+
+#, python-format
+msgid "last seen %(when)s"
+msgstr "zuletzt %(when)s"
+
+msgid "logged in"
+msgstr "eingeloggt"
+
+msgid "max. 300s"
+msgstr "Max 300s"
+
+msgid "never"
+msgstr "nie"
+
+msgid "not created"
+msgstr "nicht erstellt"
+
+#, python-format
+msgid "today %(time)s"
+msgstr "heute %(time)s"
+
+msgid "unknown"
+msgstr "unbekannt"
+
+msgid "user@example.com"
+msgstr "benutzer@streamvault.de"
+
+msgid "users"
+msgstr "Benutzer"
+
+msgid "viewers"
+msgstr "Zuschauer"
+
+msgid "yesterday"
+msgstr "gestern"
+
+msgid "≥30 days quiet"
+msgstr "≥30 Tage still"
+
+msgid "✓ CLIP SAVED"
+msgstr "✓ CLIP GESPEICHERT"
+
+msgid "✕ CLIP FAILED"
+msgstr "✕ CLIP FEHLGESCHLAGEN"
+

@@ -7,6 +7,8 @@ import time
 import urllib.parse
 from typing import Iterable, Optional
 
+from flask_babel import lazy_gettext
+
 from core.storage.base import (
     ProgressCallback,
     ProviderField,
@@ -34,18 +36,18 @@ SESSION_CHUNK = 10 * 1024 * 1024  # multiple of 320 KiB
 class OneDriveProvider(StorageProvider):
     type_id = "onedrive"
     label = "Microsoft OneDrive"
-    description = "OneDrive / Microsoft 365 über Microsoft Graph mit OAuth 2.0."
+    description = lazy_gettext("OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0.")
     oauth_supported = True
-    oauth_label = "Mit Microsoft verbinden"
+    oauth_label = lazy_gettext("Connect with Microsoft")
     docs_url = "https://learn.microsoft.com/graph/api/resources/driveitem"
     config_fields = (
         ProviderField("client_id", "Application (Client) ID", required=True),
         ProviderField("client_secret", "Client Secret", type="password", required=True, secret=True),
         ProviderField("tenant_id", "Tenant ID", default="common", placeholder="common / contoso.onmicrosoft.com"),
         ProviderField("refresh_token", "Refresh Token", type="password", secret=True,
-                      help="Wird beim Verbinden automatisch gespeichert."),
+                      help=lazy_gettext("Saved automatically when connecting.")),
         ProviderField("scope", "OAuth Scope", default=DEFAULT_SCOPE),
-        ProviderField("base_path", "Unterordner", default="StreamVault", placeholder="StreamVault"),
+        ProviderField("base_path", lazy_gettext("Subfolder"), default="StreamVault", placeholder="StreamVault"),
     )
 
     def __init__(self, config: dict):

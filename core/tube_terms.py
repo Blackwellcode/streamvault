@@ -11,6 +11,7 @@ Maintenance: see docs/agb.md.
 from __future__ import annotations
 
 import html as html_lib
+import logging
 import os
 import re
 import time
@@ -21,6 +22,7 @@ from core import database
 from core import tube_rules
 from core.config import APP_DIR
 
+logger = logging.getLogger(__name__)
 # Canonical copies live in the repo content/ directory. Do not resolve them
 # next to this module: core/content only had a partial symlink after the split.
 AGB_PATH = os.path.join(APP_DIR, "content", "agb.md")
@@ -49,13 +51,37 @@ def _parse_frontmatter(raw: str, *, path: str) -> tuple[dict[str, str], str]:
     return meta, match.group(2).strip() + "\n"
 
 
-def _load_document() -> dict[str, Any]:
-    with open(AGB_PATH, encoding="utf-8") as fh:
+def display_lang() -> str:
+    """UI language of the current web request ("de", "en", ...); "de" outside a request.
+
+    The German files are the binding originals. Other UI languages show the
+    English translation (``<name>.en.md``) when it exists.
+    """
+    try:
+        from flask import has_request_context
+        from flask_babel import get_locale
+    except ImportError:
+        return "de"
+    if not has_request_context():
+        return "de"
+    locale = get_locale()
+    return str(locale).split("_", 1)[0] if locale else "en"
+
+
+def _localized_path(path: str, lang: str | None) -> str:
+    if not lang or lang == "de":
+        return path
+    translated = path[: -len(".md")] + ".en.md"
+    return translated if os.path.isfile(translated) else path
+
+
+def _load_document(path: str = AGB_PATH) -> dict[str, Any]:
+    with open(path, encoding="utf-8") as fh:
         raw = fh.read()
-    meta, body = _parse_frontmatter(raw, path=AGB_PATH)
+    meta, body = _parse_frontmatter(raw, path=path)
     version = str(meta.get("termsVersion") or "").strip()
     if not version:
-        raise ValueError("content/agb.md: termsVersion fehlt")
+        raise ValueError(f"{path}: termsVersion fehlt")
     lowered = raw.lower()
     for phrase in _FORBIDDEN_PHRASES:
         if phrase in lowered:
@@ -71,17 +97,29 @@ def _load_document() -> dict[str, Any]:
     }
 
 
-@lru_cache(maxsize=1)
-def _cached_document(mtime_ns: int) -> dict[str, Any]:
-    return _load_document()
+@lru_cache(maxsize=4)
+def _cached_document(path: str, mtime_ns: int) -> dict[str, Any]:
+    return _load_document(path)
 
 
-def load_document(*, force: bool = False) -> dict[str, Any]:
+def load_document(*, force: bool = False, lang: str | None = None) -> dict[str, Any]:
+    """Terms document; ``lang=None`` is the binding German original.
+
+    A translation is only shown if it carries the same termsVersion, so the
+    version users accept is always the one of the German original.
+    """
     if force:
         _cached_document.cache_clear()
     try:
-        mtime_ns = os.stat(AGB_PATH).st_mtime_ns
-        return _cached_document(mtime_ns)
+        original = _cached_document(AGB_PATH, os.stat(AGB_PATH).st_mtime_ns)
+        path = _localized_path(AGB_PATH, lang)
+        if path == AGB_PATH:
+            return original
+        translated = _cached_document(path, os.stat(path).st_mtime_ns)
+        if translated["terms_version"] != original["terms_version"]:
+            logger.warning("Ignoring %s: termsVersion differs from %s", path, AGB_PATH)
+            return original
+        return translated
     except OSError:
         return {
             "terms_version": "v1.0",
@@ -162,8 +200,8 @@ def markdown_to_html(body: str) -> str:
     return "\n".join(parts)
 
 
-def terms_html() -> str:
-    return markdown_to_html(load_document()["body_md"])
+def terms_html(lang: str | None = None) -> str:
+    return markdown_to_html(load_document(lang=lang)["body_md"])
 
 
 def terms_plain_text() -> str:
@@ -204,14 +242,14 @@ def terms_discord_messages(*, site_url: str = "") -> list[str]:
     return [body]
 
 
-@lru_cache(maxsize=1)
-def _cached_privacy(mtime_ns: int) -> dict[str, Any]:
-    with open(PRIVACY_PATH, encoding="utf-8") as fh:
+@lru_cache(maxsize=4)
+def _cached_privacy(path: str, mtime_ns: int) -> dict[str, Any]:
+    with open(path, encoding="utf-8") as fh:
         raw = fh.read()
-    meta, body = _parse_frontmatter(raw, path=PRIVACY_PATH)
+    meta, body = _parse_frontmatter(raw, path=path)
     version = str(meta.get("privacyVersion") or "").strip()
     if not version:
-        raise ValueError("content/datenschutz.md: privacyVersion fehlt")
+        raise ValueError(f"{path}: privacyVersion fehlt")
     return {
         "privacy_version": version,
         "effective_date": str(meta.get("effectiveDate") or "").strip(),
@@ -221,44 +259,58 @@ def _cached_privacy(mtime_ns: int) -> dict[str, Any]:
     }
 
 
-def load_privacy_document(*, force: bool = False) -> dict[str, Any]:
+def load_privacy_document(*, force: bool = False, lang: str | None = None) -> dict[str, Any]:
+    """Privacy policy; ``lang=None`` is the German original, see load_document()."""
     if force:
         _cached_privacy.cache_clear()
     try:
-        mtime_ns = os.stat(PRIVACY_PATH).st_mtime_ns
+        original = _cached_privacy(PRIVACY_PATH, os.stat(PRIVACY_PATH).st_mtime_ns)
     except OSError as exc:
         raise FileNotFoundError(f"Datenschutz-Datei fehlt: {PRIVACY_PATH}") from exc
-    return _cached_privacy(mtime_ns)
+    path = _localized_path(PRIVACY_PATH, lang)
+    if path == PRIVACY_PATH:
+        return original
+    try:
+        translated = _cached_privacy(path, os.stat(path).st_mtime_ns)
+    except OSError as exc:
+        logger.warning("Privacy translation %s unreadable, showing original: %s", path, exc)
+        return original
+    if translated["privacy_version"] != original["privacy_version"]:
+        logger.warning("Ignoring %s: privacyVersion differs from %s", path, PRIVACY_PATH)
+        return original
+    return translated
 
 
-def privacy_html() -> str:
-    return markdown_to_html(load_privacy_document()["body_md"])
+def privacy_html(lang: str | None = None) -> str:
+    return markdown_to_html(load_privacy_document(lang=lang)["body_md"])
 
 
 def privacy_web_context(*, site_url: str = "") -> dict[str, Any]:
     site = (site_url or "").rstrip("/")
-    doc = load_privacy_document()
+    lang = display_lang()
+    doc = load_privacy_document(lang=lang)
     return {
         "privacy_title": doc["title"],
         "privacy_version": doc["privacy_version"],
         "privacy_effective_date": doc["effective_date"],
-        "privacy_html": privacy_html(),
+        "privacy_html": privacy_html(lang),
         "privacy_url": f"{site}/datenschutz" if site else "/datenschutz",
     }
 
 
 def terms_web_context(*, site_url: str = "") -> dict[str, Any]:
     site = (site_url or "").rstrip("/")
-    doc = load_document()
-    rules_ctx = tube_rules.rules_web_context(site_url=site)
+    lang = display_lang()
+    doc = load_document(lang=lang)
+    rules_ctx = tube_rules.rules_web_context(site_url=site, lang=lang)
     privacy = privacy_web_context(site_url=site)
     return {
         "terms_title": doc["title"],
         "terms_version": doc["terms_version"],
         "terms_effective_date": doc["effective_date"],
-        "terms_html": terms_html(),
+        "terms_html": terms_html(lang),
         "terms_url": f"{site}/agb" if site else "/agb",
-        "terms_accept_phrase": tube_rules.accept_phrase(),
+        "terms_accept_phrase": rules_ctx["rules_accept_phrase"],
         "rules_title": rules_ctx["rules_title"],
         "rules_items": rules_ctx["rules_items"],
         "rules_footer": rules_ctx["rules_footer"],

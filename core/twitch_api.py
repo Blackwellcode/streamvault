@@ -20,6 +20,8 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+from flask_babel import gettext
+
 GQL_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 TWITCH_CLIENT_ID = os.environ.get("TWITCH_CLIENT_ID", GQL_CLIENT_ID).strip()
 TWITCH_CLIENT_SECRET = os.environ.get("TWITCH_CLIENT_SECRET", "").strip()
@@ -535,7 +537,7 @@ def list_streams(*, game_id: str = "", first: int = 24, language: str = "") -> d
         payload = {
             "ok": False,
             "error": "helix_unavailable",
-            "message": "Top-Streams derzeit nicht verfügbar. Nutze überwachte Kanäle oder die Suche.",
+            "message": gettext("Top streams are currently unavailable. Use monitored channels or the search."),
             "streams": [],
         }
         _cache_set(cache_key, payload, 30)
@@ -554,7 +556,7 @@ def list_streams(*, game_id: str = "", first: int = 24, language: str = "") -> d
         return {
             "ok": False,
             "error": "helix_request_failed",
-            "message": "Twitch Streams konnten nicht geladen werden.",
+            "message": gettext("Twitch streams could not be loaded."),
             "streams": [],
         }
 
@@ -611,7 +613,7 @@ def search_channels(query: str, first: int = 20) -> dict:
         return {
             "ok": False,
             "error": "helix_request_failed",
-            "message": "Twitch-Suche fehlgeschlagen.",
+            "message": gettext("Twitch search failed."),
             "channels": [],
             "streams": [],
         }
@@ -667,7 +669,7 @@ def search_categories(query: str, first: int = 20) -> dict:
         payload = {
             "ok": False,
             "error": "helix_unavailable",
-            "message": "Kategoriesuche derzeit nicht verfügbar.",
+            "message": gettext("Category search is currently unavailable."),
             "categories": [],
         }
         _cache_set(cache_key, payload, 30)
@@ -678,7 +680,7 @@ def search_categories(query: str, first: int = 20) -> dict:
         return {
             "ok": False,
             "error": "helix_request_failed",
-            "message": "Kategoriesuche fehlgeschlagen.",
+            "message": gettext("Category search failed."),
             "categories": [],
         }
 

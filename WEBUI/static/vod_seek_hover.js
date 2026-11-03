@@ -6,6 +6,7 @@
  */
 (function () {
   "use strict";
+  var svT = window.svT || function (s) { return s; };
 
   function isFiniteNumber(v) {
     return typeof v === "number" && Number.isFinite(v);
@@ -72,11 +73,11 @@
     var bar = document.createElement("div");
     bar.className = "vod-controlbar";
     bar.setAttribute("role", "toolbar");
-    bar.setAttribute("aria-label", "Videoplayer-Steuerung");
+    bar.setAttribute("aria-label", svT("Video player controls"));
 
     bar.innerHTML = [
       /* Play/Pause */
-      '<button class="vod-cb-btn vod-cb-play" aria-label="Wiedergabe / Pause" type="button">',
+      '<button class="vod-cb-btn vod-cb-play" aria-label="' + svT("Play / pause") + '" type="button">',
         ICON_PLAY,
       '</button>',
 
@@ -84,7 +85,7 @@
       '<span class="vod-cb-time"><span class="vod-cb-current">0:00</span><span class="vod-cb-sep"> / </span><span class="vod-cb-total">--:--</span></span>',
 
       /* Seekbar (flex-grows to fill available space) */
-      '<div class="vod-seekbar" tabindex="0" role="slider" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">',
+      '<div class="vod-seekbar" tabindex="0" role="slider" aria-label="' + svT("Progress") + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">',
         '<div class="vod-seekbar__track">',
           '<div class="vod-seekbar__buffered"></div>',
           '<div class="vod-seekbar__played"></div>',
@@ -94,13 +95,13 @@
       '</div>',
 
       /* Volume */
-      '<button class="vod-cb-btn vod-cb-mute" aria-label="Stumm schalten" type="button">',
+      '<button class="vod-cb-btn vod-cb-mute" aria-label="' + svT("Mute") + '" type="button">',
         ICON_VOL_ON,
       '</button>',
-      '<input class="vod-cb-vol" type="range" min="0" max="1" step="0.02" value="1" aria-label="Lautstärke">',
+      '<input class="vod-cb-vol" type="range" min="0" max="1" step="0.02" value="1" aria-label="' + svT("Volume") + '">',
 
       /* Fullscreen */
-      '<button class="vod-cb-btn vod-cb-fullscreen" aria-label="Vollbild" type="button">',
+      '<button class="vod-cb-btn vod-cb-fullscreen" aria-label="' + svT("Fullscreen") + '" type="button">',
         ICON_FULL,
       '</button>',
     ].join("");
@@ -205,7 +206,7 @@
 
     function updatePlayBtn() {
       playBtn.innerHTML = video.paused ? ICON_PLAY : ICON_PAUSE;
-      playBtn.setAttribute("aria-label", video.paused ? "Wiedergabe" : "Pause");
+      playBtn.setAttribute("aria-label", video.paused ? svT("Start playback") : svT("Pause"));
       if (video.paused) {
         showControls();
         clearTimeout(hideTimer);
@@ -240,7 +241,7 @@
         window.StreamVaultMobileLandscape.toggle();
         var forced = window.StreamVaultMobileLandscape.isForced();
         fsBtn.innerHTML = forced ? ICON_EXIT_FULL : ICON_FULL;
-        fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
+        fsBtn.setAttribute("aria-label", forced ? svT("Exit fullscreen") : svT("Fullscreen"));
         return;
       }
       if (!document.fullscreenElement) {
@@ -258,17 +259,17 @@
           && window.StreamVaultMobileLandscape) {
         var forced = window.StreamVaultMobileLandscape.isForced();
         fsBtn.innerHTML = forced ? ICON_EXIT_FULL : ICON_FULL;
-        fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
+        fsBtn.setAttribute("aria-label", forced ? svT("Exit fullscreen") : svT("Fullscreen"));
         return;
       }
       fsBtn.innerHTML = document.fullscreenElement ? ICON_EXIT_FULL : ICON_FULL;
-      fsBtn.setAttribute("aria-label", document.fullscreenElement ? "Vollbild beenden" : "Vollbild");
+      fsBtn.setAttribute("aria-label", document.fullscreenElement ? svT("Exit fullscreen") : svT("Fullscreen"));
     });
     function syncMobileFsIcon() {
       if (!window.StreamVaultMobileLandscape) return;
       var forced = window.StreamVaultMobileLandscape.isForced();
       fsBtn.innerHTML = forced ? ICON_EXIT_FULL : ICON_FULL;
-      fsBtn.setAttribute("aria-label", forced ? "Vollbild beenden" : "Vollbild");
+      fsBtn.setAttribute("aria-label", forced ? svT("Exit fullscreen") : svT("Fullscreen"));
     }
     if (document.body) {
       document.body.addEventListener("streamvault:landscape-chat", syncMobileFsIcon);

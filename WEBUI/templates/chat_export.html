@@ -1,15 +1,15 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chat Export - {{ user|e }}</title>
+<title>{{ _('Chat export - %(user)s', user=user) }}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
 </head>
 <body class="page-chat-export {{ theme_class }} ns-platform">
 <div class="container">
-  <h1>Chat History: {{ user|e }}</h1>
+  <h1>{{ _('Chat history: %(user)s', user=user) }}</h1>
   
   {% for group in grouped_results %}
   <div class="vod-group">
@@ -29,7 +29,7 @@
   </div>
   {% endfor %}
   
-  <div class="footer">Exported by StreamVault</div>
+  <div class="footer">{{ _('Exported by StreamVault') }}</div>
 </div>
 </body>
 </html>
