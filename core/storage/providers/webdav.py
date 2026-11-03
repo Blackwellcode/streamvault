@@ -18,7 +18,6 @@ from core.storage.base import (
     guess_mime_type,
     iter_response_range,
     normalize_remote_path,
-    remote_name,
     remote_parent,
 )
 from core.storage import http

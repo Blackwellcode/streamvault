@@ -2017,7 +2017,7 @@ def update_user_group(
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.")
+        raise ValueError("Ungültige Gruppen-ID.") from None
     group = get_user_group(gid)
     if not group:
         raise ValueError("Gruppe nicht gefunden.")
@@ -2070,7 +2070,7 @@ def delete_user_group(group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.")
+        raise ValueError("Ungültige Gruppen-ID.") from None
     group = get_user_group(gid)
     if not group:
         raise ValueError("Gruppe nicht gefunden.")
@@ -2104,7 +2104,7 @@ def set_user_group(username: str, group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.")
+        raise ValueError("Ungültige Gruppen-ID.") from None
     group = get_user_group(gid)
     if not group:
         raise ValueError("Gruppe nicht gefunden.")
@@ -2382,7 +2382,7 @@ def upsert_storage_object(
     try:
         pid = int(provider_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Provider-ID.")
+        raise ValueError("Ungültige Provider-ID.") from None
     now = time.time()
     conn = get_db()
     try:

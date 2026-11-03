@@ -1993,7 +1993,6 @@ def collect_health_status():
 
     task_counts = task_status_counts()
     recording_locks = count_active_recording_locks()
-    stalk_age = stalk_heartbeat_age_sec()
     try:
         channels_record = len(database.get_channels("record"))
     except Exception:
@@ -8425,8 +8424,8 @@ def admin_users_view():
         gid = u.get("group_id")
         if gid:
             group_counts[gid] = group_counts.get(gid, 0) + 1
-    for g in raw_groups:
-        g["member_count"] = group_counts.get(g["id"], 0)
+    for grp in raw_groups:
+        grp["member_count"] = group_counts.get(grp["id"], 0)
 
     users_list = []
     for u in raw_users:
@@ -8699,8 +8698,8 @@ def api_admin_groups_list():
         gid = u.get("group_id")
         if gid:
             counts[gid] = counts.get(gid, 0) + 1
-    for g in raw_groups:
-        g["member_count"] = counts.get(g["id"], 0)
+    for grp in raw_groups:
+        grp["member_count"] = counts.get(grp["id"], 0)
     return jsonify({"ok": True, "groups": raw_groups})
 
 
@@ -8723,7 +8722,7 @@ def api_admin_group_create():
         return jsonify({"ok": True, "msg": f"Gruppe '{name}' erfolgreich angelegt.", "group": group}), 201
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to create group")
         return jsonify({"ok": False, "error": "Interner Serverfehler beim Anlegen der Gruppe."}), 500
 
@@ -8745,7 +8744,7 @@ def api_admin_group_update(group_id):
         return jsonify({"ok": True, "msg": f"Gruppe '{name}' erfolgreich aktualisiert.", "group": group})
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to update group")
         return jsonify({"ok": False, "error": "Interner Serverfehler beim Aktualisieren der Gruppe."}), 500
 
@@ -8764,7 +8763,7 @@ def api_admin_group_delete(group_id):
         })
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to delete group")
         return jsonify({"ok": False, "error": "Interner Serverfehler beim Löschen der Gruppe."}), 500
 
@@ -9091,8 +9090,8 @@ def _save_shared_dashboard_media(data):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False)
         os.replace(tmp, _DASHBOARD_SHM_PATH)
-    except Exception as e:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logging.warning("Failed to save dashboard media to %s: %s", _DASHBOARD_SHM_PATH, exc)
 
 def invalidate_dashboard_media_cache():
     """Clear memory, Redis, and shm dashboard media cache."""
@@ -10387,7 +10386,6 @@ def _pwa_icon_entries():
 
 
 def mobile_app_head_tags():
-    sw_url = url_for("service_worker_js")
     return f"""{PWA_HEAD_MARKER}
     <meta name="theme-color" content="{PWA_THEME_COLOR}">
     <meta name="color-scheme" content="dark">

@@ -44,7 +44,6 @@ from core.storage import cli, http, service  # noqa: E402
 from core.storage.base import (  # noqa: E402
     StorageConfigError,
     StorageError,
-    guess_mime_type,
     iter_file_chunks,
     mask_error,
     mask_text,

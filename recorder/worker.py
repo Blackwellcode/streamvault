@@ -12,7 +12,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-from recorder import chat_clip
 from recorder import clip_engine
 from core import config
 from core import database
