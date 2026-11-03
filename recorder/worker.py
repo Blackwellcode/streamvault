@@ -674,6 +674,9 @@ def process_delete_folder(payload):
     if not _is_direct_child(config.BASE_DIR, folder_path):
         logging.error("Unsicherer delete_folder Pfad abgelehnt: %s", folder_path)
         return False
+    if config.is_reserved_archive_name(os.path.basename(os.path.normpath(folder_path))):
+        logging.error("delete_folder rejected for reserved directory: %s", folder_path)
+        return False
 
     if not streamer:
         streamer = os.path.basename(os.path.realpath(folder_path))
@@ -879,6 +882,9 @@ def process_empty_folder(payload):
         return False
     if not _is_direct_child(config.BASE_DIR, folder_path):
         logging.error("Unsicherer empty_folder Pfad abgelehnt: %s", folder_path)
+        return False
+    if config.is_reserved_archive_name(os.path.basename(os.path.normpath(folder_path))):
+        logging.error("empty_folder rejected for reserved directory: %s", folder_path)
         return False
     if _folder_has_active_recording(folder_path) or _folder_has_active_remux(folder_path):
         raise TaskDeferred(

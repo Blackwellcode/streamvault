@@ -104,6 +104,24 @@ MOBILE_LIVE_ENABLED = _env_flag("MOBILE_LIVE_ENABLED", True)
 
 _default_base = os.path.join(APP_DIR, "data") if os.path.isdir(os.path.join(APP_DIR, "data")) else APP_DIR
 BASE_DIR = os.environ.get("VOD_BASE_DIR", _default_base)
+
+# Archive folders are direct children of BASE_DIR. BASE_DIR may be the
+# application directory itself, so these names must never be treated (and
+# deleted) as a streamer archive.
+_RESERVED_ARCHIVE_NAMES = frozenset({
+    "__pycache__", "bin", "content", "core", "data", "docs", "files",
+    "recorder", "scripts", "tests", "webui",
+})
+
+
+def is_reserved_archive_name(name):
+    """True for names that are not a deletable archive folder below BASE_DIR."""
+    name = str(name or "").strip()
+    if not name or name.startswith("."):
+        return True
+    return name.lower() in _RESERVED_ARCHIVE_NAMES
+
+
 DB_FILE = os.path.join(BASE_DIR, "streamrecorder.db")
 
 FILES_DIR = os.environ.get("VOD_FILES_DIR", os.path.join(BASE_DIR, "files"))

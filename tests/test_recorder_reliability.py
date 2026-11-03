@@ -642,6 +642,40 @@ class CurrentRecordingFailClosedTests(IsolatedBaseTest):
             self.assertTrue(worker._is_current_recording(str(channel), "a.mp4"))
 
 
+class ReservedArchiveDirTests(IsolatedBaseTest):
+    """BASE_DIR may be the app directory: code and dot-dirs are never archives."""
+
+    def test_reserved_names(self):
+        for name in ("core", "WEBUI", "recorder", "data", "files", ".meta", ".hls", "", ".."):
+            with self.subTest(name=name):
+                self.assertTrue(config.is_reserved_archive_name(name))
+        for name in ("alice", "core_gaming", "webui2"):
+            with self.subTest(name=name):
+                self.assertFalse(config.is_reserved_archive_name(name))
+
+    def test_worker_refuses_to_delete_code_directory(self):
+        code_dir = self.base / "core"
+        code_dir.mkdir()
+        (code_dir / "config.py").write_text("x", encoding="utf-8")
+        with self.assertLogs(level="ERROR"):
+            self.assertFalse(worker.process_delete_folder({"path": str(code_dir), "streamer": "core"}))
+        with self.assertLogs(level="ERROR"):
+            self.assertFalse(worker.process_empty_folder({"path": str(code_dir)}))
+        self.assertTrue((code_dir / "config.py").exists())
+
+    def test_delete_route_rejects_reserved_name(self):
+        from WEBUI import webui
+        webui.app.config.update(TESTING=True)
+        client = webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        with self.assertLogs(level="ERROR"):
+            response = client.post("/delete_folder/core", data={"csrf_token": "t"})
+        self.assertEqual(response.status_code, 400)
+
+
 class LoadJsonTests(IsolatedBaseTest):
     """A corrupt state file must survive instead of being overwritten by the default."""
 

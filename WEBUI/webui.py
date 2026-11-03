@@ -12600,6 +12600,9 @@ def empty_folder_route(streamer):
 @admin_required
 def delete_folder_route(streamer):
     archive = archive_name_for(streamer) or normalize_channel_name(streamer) or streamer
+    if config.is_reserved_archive_name(archive):
+        logging.error("Refusing to delete reserved directory %r (requested for %r)", archive, streamer)
+        abort(400)
     # Sicherheitscheck: Pfad muss im Basis-Verzeichnis liegen
     folder_path = safe_join(config.BASE_DIR, archive)
     # Strenge Prüfung: Muss ein Verzeichnis sein und direkt unter BASE_DIR liegen
