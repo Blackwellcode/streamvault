@@ -156,7 +156,6 @@ TWITCH_CLIENT_SECRET = os.environ.get("TWITCH_CLIENT_SECRET", "").strip()
 TWITCH_APP_ACCESS_TOKEN = (
     os.environ.get("TWITCH_APP_ACCESS_TOKEN", "").strip()
 )
-DISCORD_LOGS_DIR = os.environ.get("VOD_DISCORD_LOGS_DIR", "/root/Discord Bots/logs")
 MAIL_ADMIN_ENABLED = os.environ.get("VOD_MAIL_ADMIN_ENABLED", "false").lower() in ("true", "1", "yes")
 STALK_ENABLED = False
 
@@ -2361,9 +2360,14 @@ def list_all_streamer_folders():
     return rows
 
 
+def system_backups_dir():
+    """Where streamrecorder_*.tar.gz backups are listed; a dot-dir so it is never an archive."""
+    return os.environ.get("BACKUP_DIR") or os.path.join(config.META_DIR, "backups")
+
+
 def list_system_backups():
     """Lists local system backups."""
-    backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
+    backups_dir = system_backups_dir()
     items = {}
 
     if os.path.isdir(backups_dir):
@@ -12868,7 +12872,7 @@ def admin_backup_download(filename):
     clean = secure_filename(filename)
     if not clean.startswith("streamrecorder_") or not clean.endswith(".tar.gz"):
         abort(400)
-    backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
+    backups_dir = system_backups_dir()
     local_path = os.path.join(backups_dir, clean)
     if os.path.isfile(local_path):
         return send_from_directory(backups_dir, clean, as_attachment=True)
@@ -12878,9 +12882,13 @@ def admin_backup_download(filename):
 @app.route("/admin/backups/create", methods=["POST"])
 @admin_required
 def admin_backup_create():
-    script_path = "/root/Streamrecorder/scripts/backup_streamrecorder.sh"
-    if not os.path.isfile(script_path):
-        return redirect(url_for("admin_view", tab="backups", error="Backup-Skript nicht gefunden."))
+    # Operator-provided script that writes streamrecorder_*.tar.gz into BACKUP_DIR.
+    script_path = os.environ.get("VOD_BACKUP_SCRIPT", "").strip()
+    if not script_path or not os.path.isfile(script_path):
+        return redirect(url_for(
+            "admin_view", tab="backups",
+            error="Kein Backup-Skript konfiguriert (VOD_BACKUP_SCRIPT).",
+        ))
     try:
         res = subprocess.run(["bash", script_path], capture_output=True, text=True, timeout=120)
         if res.returncode == 0:
@@ -12900,15 +12908,14 @@ def admin_backup_delete(filename):
     clean = secure_filename(filename)
     if not clean.startswith("streamrecorder_") or not clean.endswith(".tar.gz"):
         abort(400)
-    backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
-    local_path = os.path.join(backups_dir, clean)
+    local_path = os.path.join(system_backups_dir(), clean)
     deleted = False
     if os.path.isfile(local_path):
         try:
             os.remove(local_path)
             deleted = True
-        except Exception:
-            pass
+        except OSError as exc:
+            logging.error("Could not delete backup %s: %s", local_path, exc)
     if deleted:
         bust_media_cache()
         return redirect(url_for("admin_view", tab="backups", msg=f"Backup {clean} erfolgreich gelöscht."))

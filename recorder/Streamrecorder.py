@@ -1454,19 +1454,22 @@ def get_vaapi_device():
             return path
     return None
 
-def streamlink_twitch_auth_args():
-    """Bann-Schutz: Keine Übermittlung persönlicher OAuth-Tokens an Twitch."""
-    return []
-
-
 def streamlink_proxy_args():
-    plugin_dir = os.environ.get("STREAMLINK_PLUGIN_DIR", "/etc/streamrecorder/plugins")
-    proxy_list = os.environ.get(
-        "TWITCH_PROXY_PLAYLIST",
-        "https://eu.luminous.dev,https://eu2.luminous.dev,https://as.luminous.dev,https://lb-eu.cdn-perfprod.com,https://lb-eu2.cdn-perfprod.com",
-    )
-    return [
-        "--plugin-dirs", plugin_dir,
+    """Opt-in playlist proxy (STREAM_RECORDER_USE_PROXY=true).
+
+    No third-party proxy is built in: the operator must name one in
+    TWITCH_PROXY_PLAYLIST (and a plugin directory in STREAMLINK_PLUGIN_DIR if the
+    proxy needs a patched Twitch plugin). Without a proxy list nothing is added.
+    """
+    proxy_list = os.environ.get("TWITCH_PROXY_PLAYLIST", "").strip()
+    if not proxy_list:
+        logger.warning("STREAM_RECORDER_USE_PROXY is set but TWITCH_PROXY_PLAYLIST is empty; recording without proxy")
+        return []
+    args = []
+    plugin_dir = os.environ.get("STREAMLINK_PLUGIN_DIR", "").strip()
+    if plugin_dir:
+        args += ["--plugin-dirs", plugin_dir]
+    return args + [
         "--twitch-proxy-playlist", proxy_list,
         "--twitch-proxy-playlist-fallback",
         "--twitch-disable-ads",

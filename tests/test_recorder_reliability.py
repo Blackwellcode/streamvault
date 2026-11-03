@@ -18,6 +18,7 @@ import tempfile
 import time
 import types
 import unittest
+import urllib.parse
 from pathlib import Path
 from unittest import mock
 
@@ -676,6 +677,42 @@ class ReservedArchiveDirTests(IsolatedBaseTest):
         self.assertEqual(response.status_code, 400)
 
 
+class DeploymentNeutralDefaultsTests(IsolatedBaseTest):
+    """No built-in third-party proxies or host-specific /root paths."""
+
+    def test_proxy_args_empty_without_configured_proxy(self):
+        with mock.patch.dict(os.environ, {"TWITCH_PROXY_PLAYLIST": "", "STREAMLINK_PLUGIN_DIR": ""}), \
+                self.assertLogs(level="WARNING"):
+            self.assertEqual(recorder.streamlink_proxy_args(), [])
+
+    def test_proxy_args_use_only_configured_proxy(self):
+        with mock.patch.dict(os.environ, {"TWITCH_PROXY_PLAYLIST": "https://proxy.example.com",
+                                          "STREAMLINK_PLUGIN_DIR": ""}):
+            args = recorder.streamlink_proxy_args()
+        self.assertIn("https://proxy.example.com", args)
+        self.assertNotIn("--plugin-dirs", args)
+
+    def test_backups_default_to_meta_dir(self):
+        from WEBUI import webui
+        with mock.patch.dict(os.environ, {"BACKUP_DIR": ""}):
+            self.assertEqual(webui.system_backups_dir(), os.path.join(config.META_DIR, "backups"))
+
+    def test_backup_create_without_script_reports_missing_config(self):
+        from WEBUI import webui
+        webui.app.config.update(TESTING=True)
+        client = webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        with mock.patch.dict(os.environ, {"VOD_BACKUP_SCRIPT": ""}), \
+                mock.patch.object(webui.subprocess, "run") as run:
+            response = client.post("/admin/backups/create", data={"csrf_token": "t"})
+        run.assert_not_called()
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("VOD_BACKUP_SCRIPT", urllib.parse.unquote(response.headers["Location"]))
+
+
 class LoadJsonTests(IsolatedBaseTest):
     """A corrupt state file must survive instead of being overwritten by the default."""
 
@@ -711,6 +748,18 @@ class LoadJsonTests(IsolatedBaseTest):
 
 class LegalPagesTests(unittest.TestCase):
     """The shipped content/*.md must parse; /agb and /datenschutz returned 500 before."""
+
+    def setUp(self):
+        # tube_terms resolves its paths from config.APP_DIR at import time; another
+        # test may have imported it while APP_DIR pointed at a temp dir.
+        from core import tube_terms
+        content = Path(__file__).resolve().parents[1] / "content"
+        for name, path in (("AGB_PATH", content / "agb.md"), ("PRIVACY_PATH", content / "datenschutz.md")):
+            patcher = mock.patch.object(tube_terms, name, str(path))
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        tube_terms._cached_document.cache_clear()
+        tube_terms._cached_privacy.cache_clear()
 
     def test_shipped_documents_parse(self):
         from core import tube_terms
