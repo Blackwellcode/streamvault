@@ -58,8 +58,12 @@ from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import safe_join, secure_filename
 
+# `_` is used as a throwaway name throughout this module, so translations use the
+# full names (both are extracted by pybabel by default).
+from flask_babel import gettext, lazy_gettext
 from recorder import chat_events
 from recorder import clip_engine
+from WEBUI import i18n as ui_i18n
 from core import config
 from core import database
 from core import twitch_api
@@ -367,6 +371,7 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(seconds=SESSION_COOKIE_MAX_AGE_SEC),
     SESSION_REFRESH_EACH_REQUEST=True,
 )
+ui_i18n.init_app(app)
 
 # ============ SECURITY: Flask-Limiter Setup ============
 # Rate limiting to prevent brute force and DoS attacks
@@ -7478,6 +7483,24 @@ def logout():
     logging.info(f"Logout: {username} from {ip}")
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/language", methods=["POST"])
+@limiter.limit("60 per hour")
+def language_update():
+    """Remember the chosen UI language; also reachable from the login page."""
+    nxt = request.form.get("next") or ""
+    target = nxt if is_safe_next(nxt) else url_for("index")
+    resp = redirect(target)
+    locale = ui_i18n.normalize_locale(request.form.get("lang"))
+    if locale:
+        resp.set_cookie(
+            ui_i18n.LANG_COOKIE, locale, max_age=365 * 86400, samesite="Lax",
+            secure=app.config["SESSION_COOKIE_SECURE"], httponly=True,
+        )
+    else:
+        resp.delete_cookie(ui_i18n.LANG_COOKIE)  # "automatic": follow the browser again
+    return resp
 
 
 @app.route("/settings/theme", methods=["POST"])

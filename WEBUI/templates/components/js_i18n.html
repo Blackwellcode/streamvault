@@ -1,0 +1,7 @@
+<script>
+  window.SV_I18N = {{ js_i18n()|tojson }};
+  window.svT = function (text) {
+    var t = window.SV_I18N && window.SV_I18N[text];
+    return t || text;
+  };
+</script>

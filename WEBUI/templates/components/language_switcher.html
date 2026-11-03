@@ -1,0 +1,12 @@
+<form method="post" action="{{ url_for('language_update') }}" class="ns-lang-switch">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') if request.method == 'GET' else request.path }}">
+  <label for="ns-lang-select" class="sr-only">{{ _('Language') }}</label>
+  <select id="ns-lang-select" name="lang" onchange="this.form.submit()">
+    <option value="">{{ _('Automatic (browser)') }}</option>
+    {% for code, name in available_locales %}
+    <option value="{{ code }}" lang="{{ code|replace('_', '-') }}"{% if request.cookies.get('sv_lang') == code %} selected{% endif %}>{{ name }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit">{{ _('Apply') }}</button></noscript>
+</form>

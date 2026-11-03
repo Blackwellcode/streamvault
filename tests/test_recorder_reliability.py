@@ -713,6 +713,54 @@ class DeploymentNeutralDefaultsTests(IsolatedBaseTest):
         self.assertIn("VOD_BACKUP_SCRIPT", urllib.parse.unquote(response.headers["Location"]))
 
 
+class LanguageSelectionTests(unittest.TestCase):
+    """UI language: explicit choice (cookie) > browser Accept-Language > English."""
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import i18n, webui
+        cls.i18n, cls.webui = i18n, webui
+        webui.app.config.update(TESTING=True)
+
+    def _locale(self, accept=None, cookie=None):
+        headers = {"Accept-Language": accept} if accept else {}
+        if cookie:
+            headers["Cookie"] = f"{self.i18n.LANG_COOKIE}={cookie}"
+        with self.webui.app.test_request_context("/", headers=headers):
+            return self.i18n.select_locale()
+
+    def test_browser_language_is_used(self):
+        self.assertEqual(self._locale("fr-FR,fr;q=0.9,en;q=0.8"), "fr")
+        self.assertEqual(self._locale("pt-BR,pt;q=0.9"), "pt_BR")
+        self.assertEqual(self._locale("zh-CN,zh;q=0.9"), "zh_Hans")
+
+    def test_unsupported_region_falls_back_to_base_language(self):
+        self.assertEqual(self._locale("de-AT"), "de")
+
+    def test_quality_order_is_respected(self):
+        self.assertEqual(self._locale("sv-SE,ja;q=0.7,de;q=0.5"), "ja")
+
+    def test_unsupported_or_missing_language_falls_back_to_english(self):
+        self.assertEqual(self._locale("sv-SE,fi;q=0.8"), "en")
+        self.assertEqual(self._locale(), "en")
+
+    def test_cookie_overrides_browser(self):
+        self.assertEqual(self._locale("fr-FR", cookie="de"), "de")
+        self.assertEqual(self._locale("fr-FR", cookie="bogus"), "fr")
+
+    def test_language_route_sets_cookie_and_redirects_safely(self):
+        client = self.webui.app.test_client()
+        client.get("/login")
+        with client.session_transaction() as sess:
+            token = sess["_csrf_token"]
+        resp = client.post("/language", data={"lang": "ko", "next": "/login", "csrf_token": token})
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(resp.headers["Location"].endswith("/login"))
+        self.assertIn(f"{self.i18n.LANG_COOKIE}=ko", resp.headers.get("Set-Cookie", ""))
+        resp = client.post("/language", data={"lang": "ko", "next": "https://evil.example", "csrf_token": token})
+        self.assertFalse(resp.headers["Location"].startswith("https://evil"))
+
+
 class AssetVersionTests(IsolatedBaseTest):
     """?v= must change whenever a static file changes, without a manual bump."""
 
