@@ -51,37 +51,10 @@
           </div>
 
           <section class="vod-details" aria-labelledby="watchTitle">
-            {% if is_tv %}
-            <div class="vod-details-meta-row">
-              <div class="vod-kicker">
-                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>LIVE</span>
-                {% if monitored and not is_tv and not is_mobile %}<span class="twitch-monitored-pill">Überwacht</span>{% endif %}
-                <span class="platform-badge platform-twitch">TW</span>
-                <a class="vod-channel-link" id="watchDisplayName" href="{{ url_for('streamer_view', streamer=archive_name or channel) }}">{{ display_name }}</a>
-                <span class="vod-meta-sep">•</span>
-                <span class="vod-meta-game" id="watchGame">{{ game_name or 'Live Stream' }}</span>
-                <span class="vod-meta-sep">•</span>
-                <span class="vod-meta-viewers" id="watchViewers">{% if is_live %}{{ viewer_count }} Zuschauer{% else %}Offline{% endif %}</span>
-              </div>
-              <div class="vod-file-actions" aria-label="Aktionen">
-                <button
-                  type="button"
-                  id="btnInstantClip"
-                  class="vod-inline-tool"
-                  data-clip-source="live"
-                  data-instant-url="{{ url_for('clip_instant', streamer=proxy_key or channel) }}"
-                >Clip</button>
-                {% if archive_name %}
-                <a class="vod-inline-tool" href="{{ url_for('streamer_view', streamer=archive_name) }}">Archiv</a>
-                {% endif %}
-              </div>
-            </div>
-            <h1 id="watchTitle" class="vod-display-title">{{ title or display_name }}</h1>
-            {% else %}
             <div class="vod-details-main">
               <div class="vod-kicker">
                 <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>LIVE</span>
-                {% if monitored and not is_tv and not is_mobile %}<span class="twitch-monitored-pill">Überwacht</span>{% endif %}
+                {% if monitored and not is_mobile %}<span class="twitch-monitored-pill">Überwacht</span>{% endif %}
                 <span class="platform-badge platform-twitch">TW</span>
               </div>
               <h1 id="watchTitle" class="vod-display-title">{{ title or display_name }}</h1>
@@ -127,7 +100,6 @@
               </div>
             </nav>
             {% endif %}
-            {% endif %}
           </section>
 
           <div class="twitch-offline-banner" id="offlineBanner" {% if is_live %}hidden{% endif %}>
@@ -145,6 +117,6 @@
         </aside>
       </div>
     </div>
-<script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+<script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
 <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
 

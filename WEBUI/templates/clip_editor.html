@@ -108,17 +108,12 @@ async function shareClip(filename) {
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     {% if is_live %}<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>{% endif %}
-    <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+    <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
     <script>
       const vPlayer = document.getElementById('vodPlayer');
       const slider = document.getElementById('rangeSlider');
       const isLive = {{ 'true' if is_live else 'false' }};
       const mediaUrl = {{ media_url|tojson }};
-      window.StreamVaultCast && window.StreamVaultCast.bindVideo(vPlayer, {
-        url: mediaUrl,
-        live: isLive,
-        contentType: isLive ? 'application/vnd.apple.mpegurl' : 'video/mp4'
-      });
       
       let duration = 0;
       let clipStart = parseFloat("{{ initial_time|default(0) }}");
@@ -129,7 +124,7 @@ async function shareClip(filename) {
 
       // Init Player
       if (isLive) {
-          if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(vPlayer)) {
+          if (window.StreamVaultHls && StreamVaultHls.preferNativeHls(vPlayer)) {
               vPlayer.src = mediaUrl;
           } else if (window.Hls && Hls.isSupported()) {
               const hls = new Hls();

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>StreamVault &middot; Cosmic Login</title>
+    <title>Anmelden &middot; StreamVault</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
@@ -13,10 +13,10 @@
       <div class="nebula-login-modal">
         <!-- Logo Glyph -->
         <div class="nebula-login-logo">
-          <span>N</span>
+          <span>SV</span>
         </div>
         
-        <h1 class="nebula-login-h1">STREAMVAULT</h1>
+        <h1 class="nebula-login-h1">StreamVault</h1>
         <p class="nebula-login-sub">Willkommen zurück · Melde dich mit deinen Zugangsdaten an, um auf StreamVault zuzugreifen.</p>
 
         <!-- Direct Operator Credentials Form -->
@@ -30,7 +30,7 @@
             <label for="password" style="display:block; font-size:12px; font-weight:600; color:#A2AEC8; margin-bottom:4px;">Passwort</label>
             <input id="password" name="password" type="password" placeholder="Passwort" autocomplete="current-password" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid #26344F; border-radius:8px; color:#FFF; font-size:14px;">
           </div>
-          <button type="submit" id="login-submit" style="width:100%; padding:12px; margin-top:6px; font-size:14px; font-weight:700;">Enter Control</button>
+          <button type="submit" id="login-submit" style="width:100%; padding:12px; margin-top:6px; font-size:14px; font-weight:700;">Anmelden</button>
         </form>
 
         {% if error %}
@@ -40,10 +40,10 @@
         {% endif %}
 
         <div class="login-register-hint registrierung-info" style="font-size:12px; color:#A2AEC8; margin-top:16px; margin-bottom:12px; text-align:center;">
-          Noch kein Account? Die Registrierung erfolgt &uuml;ber unseren Discord-Server. <a href="https://discord.gg/streamvault" target="_blank" rel="noopener" style="color:#4D63FF; text-decoration:none; font-weight:600;">Registrieren</a>
+          Noch kein Account? Zug&auml;nge vergibt die Administration dieser Instanz.
         </div>
         <div class="nebula-login-footer-tag">
-          <span>Sicher &bull; Privat &bull; Nur f&uuml;r unsere Community</span>
+          <span>Selbst gehostet &bull; Privat</span>
         </div>
       </div>
     </main>

@@ -1,17 +1,15 @@
 {% if not is_mobile %}
 <aside class="ns-command-rail">
   <div class="ns-rail-brand" style="margin-bottom: 14px;">
-    <a href="{{ url_for('index') }}" class="ns-brand-glyph" title="StreamVault" aria-label="StreamVault" style="{% if is_tv %}width: 68px; height: 68px; border-radius: 50%; font-size: 28px; background: linear-gradient(135deg, #4D63FF, #9365FF); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(77, 99, 255, 0.4);{% else %}width: 40px; height: 40px; border-radius: 12px; font-size: 18px; background: linear-gradient(135deg, #4D63FF, #9365FF); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(77, 99, 255, 0.3);{% endif %}">
+    <a href="{{ url_for('index') }}" class="ns-brand-glyph" title="StreamVault" aria-label="StreamVault" style="width: 40px; height: 40px; border-radius: 12px; font-size: 18px; background: linear-gradient(135deg, #4D63FF, #9365FF); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(77, 99, 255, 0.3);">
       <span>SV</span>
     </a>
   </div>
-  
   <nav class="ns-rail-nav">
-    <a href="{{ url_for('index') }}" class="ns-rail-item {% if request.endpoint == 'index' %}is-active{% endif %}" title="Dashboard" aria-label="Dashboard" style="{% if is_tv %}width: 68px; height: 68px; border-radius: 50%; background: transparent; border: none; box-shadow: none; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;{% else %}width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;{% endif %}">
-      <svg xmlns="http://www.w3.org/2000/svg" width="{% if is_tv %}42{% else %}20{% endif %}" height="{% if is_tv %}42{% else %}20{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{% if is_tv %}1.8{% else %}2{% endif %}" stroke-linecap="round" stroke-linejoin="round" style="{% if is_tv %}color: #f1f5f9;{% endif %}"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+    <a href="{{ url_for('index') }}" class="ns-rail-item {% if request.endpoint == 'index' %}is-active{% endif %}" title="Dashboard" aria-label="Dashboard" style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
     </a>
-    
-    {% if not is_tv and not is_mobile %}
+    {% if not is_mobile %}
     {% if session.user_role == 'admin' or can_manage_users %}
     <a href="{{ url_for('admin_view') }}" class="ns-rail-item {% if request.endpoint in ('admin_view', 'channels_view', 'admin_users_view', 'admin_traffic_view', 'admin_stalk_view', 'admin_stalk_detail') %}is-active{% endif %}" title="Optionen" aria-label="Optionen" style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -20,13 +18,13 @@
     {% endif %}
 
     {% if streamers %}
-    <div class="ns-rail-divider" style="{% if is_tv %}width: 44px; height: 1px; background: rgba(255, 255, 255, 0.08); margin: 10px auto;{% else %}height: 1px; width: 32px; background: rgba(38, 52, 79, 0.6); margin: 6px auto;{% endif %}"></div>
-    {% for st in (streamers[:10] if is_tv else streamers) %}
+    <div class="ns-rail-divider" style="height: 1px; width: 32px; background: rgba(38, 52, 79, 0.6); margin: 6px auto;"></div>
+    {% for st in streamers %}
     {% set st_name = st.name if st is mapping else st %}
     {% set st_avatar = st.avatar_url if st is mapping else None %}
     {% set is_live = (st.twitch_live or st.online) if st is mapping else False %}
-    <a href="{{ url_for('streamer_view', streamer=st_name) }}" class="ns-rail-item {% if request.view_args and request.view_args.get('streamer') == st_name %}is-active{% endif %}" title="{{ st_name }}" aria-label="{{ st_name }}" style="position: relative; {% if is_tv %}width: 68px; height: 68px; border-radius: 50%; background: transparent; border: none; box-shadow: none; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;{% else %}width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;{% endif %}">
-      <div class="ns-rail-avatar" style="width: {% if is_tv %}58px{% else %}28px{% endif %}; height: {% if is_tv %}58px{% else %}28px{% endif %}; border-radius: 50%; background: {% if is_tv %}linear-gradient(135deg, #1e293b, #0f172a){% else %}#151F33{% endif %}; border: {% if is_tv %}none{% else %}1.5px solid #3B4E73{% endif %}; display: flex; align-items: center; justify-content: center; font-size: {% if is_tv %}20px{% else %}11px{% endif %}; font-weight: 800; color: #ffffff; text-transform: uppercase; overflow: hidden; box-shadow: none;">
+    <a href="{{ url_for('streamer_view', streamer=st_name) }}" class="ns-rail-item {% if request.view_args and request.view_args.get('streamer') == st_name %}is-active{% endif %}" title="{{ st_name }}" aria-label="{{ st_name }}" style="position: relative; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+      <div class="ns-rail-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #151F33; border: 1.5px solid #3B4E73; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #ffffff; text-transform: uppercase; overflow: hidden; box-shadow: none;">
         {% if st_avatar %}
         <img src="{{ st_avatar }}" alt="{{ st_name }}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;">
         {% else %}
@@ -34,14 +32,14 @@
         {% endif %}
       </div>
       {% if is_live %}
-      <span class="ns-rail-live-dot" style="position: absolute; bottom: {% if is_tv %}2px{% else %}5px{% endif %}; right: {% if is_tv %}2px{% else %}5px{% endif %}; width: {% if is_tv %}14px{% else %}8px{% endif %}; height: {% if is_tv %}14px{% else %}8px{% endif %}; border-radius: 50%; background: #ef4444; border: {% if is_tv %}2px solid #070b14{% else %}1.5px solid #070B14{% endif %}; box-shadow: 0 0 10px #ef4444;"></span>
+      <span class="ns-rail-live-dot" style="position: absolute; bottom: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; border: 1.5px solid #070B14; box-shadow: 0 0 10px #ef4444;"></span>
       {% endif %}
     </a>
     {% endfor %}
     {% endif %}
   </nav>
 
-  {% if not is_tv and not is_mobile %}
+  {% if not is_mobile %}
   <div class="ns-rail-footer" style="margin-top: auto; padding-top: 6px;">
     {% if session.username %}
     <div class="ns-user-badge-mini" title="{{ session.username }} &bull; Klick für Passwortänderung" style="display: flex; justify-content: center; margin-bottom: 4px; cursor: pointer;" onclick="openSelfPasswordModal()">

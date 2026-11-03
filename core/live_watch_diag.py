@@ -115,12 +115,14 @@ def ffmpeg_hls_pids() -> dict[str, int]:
         out = subprocess.check_output(["ps", "aux"], text=True, timeout=8)
     except Exception:
         return found
+    hls_root = str(config.LIVE_HLS_ROOT).rstrip("/")
+    pattern = re.compile(re.escape(hls_root) + r"/([^/\s]+)/index\.m3u8")
     for line in out.splitlines():
-        if "ffmpeg" not in line or "streamrecorder_hls" not in line:
+        if "ffmpeg" not in line or hls_root not in line:
             continue
         if "index.m3u8" not in line:
             continue
-        m = re.search(r"/streamrecorder_hls/([^/\s]+)/index\.m3u8", line)
+        m = pattern.search(line)
         if not m:
             continue
         parts = line.split()

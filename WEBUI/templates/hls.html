@@ -32,7 +32,6 @@
           controls
           playsinline
           webkit-playsinline
-          x-webkit-airplay="allow"
           data-media-title="{{ filename }}"
           data-media-artist="{{ streamer }}"
           data-media-album="StreamVault"
@@ -41,7 +40,7 @@
       </div>
       <div class="note">HLS startet schneller bei sehr grossen Dateien.</div>
       <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-      <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+      <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
       <script>
         const video = document.getElementById('player');
@@ -63,12 +62,7 @@
           playFromCurrentPosition();
         }
         video.addEventListener('loadedmetadata', attemptAutoplay, {once: true});
-        window.StreamVaultCast && window.StreamVaultCast.bindVideo(video, {
-          url: src,
-          live: false,
-          contentType: 'application/vnd.apple.mpegurl'
-        });
-        if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(video)) {
+        if (window.StreamVaultHls && StreamVaultHls.preferNativeHls(video)) {
           video.src = src;
         } else if (window.Hls && Hls.isSupported()) {
           let hlsNetworkRecoveries = 0;

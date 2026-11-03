@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import bisect
+import glob
+import hashlib
+import ipaddress
 import json
 import logging
 import math
@@ -51,7 +54,6 @@ from flask import (
     url_for,
 )
 from flask_limiter import Limiter
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import safe_join, secure_filename
@@ -61,6 +63,12 @@ from recorder import clip_engine
 from core import config
 from core import database
 from core import twitch_api
+from core.health import (
+    SYSTEMD_SHOW_PROPERTIES,
+    parse_supervisor_status,
+    parse_systemctl_show,
+    systemd_unit_name,
+)
 from core import twitch_eventsub
 from core import twitch_templates
 from core import user_traffic
@@ -103,19 +111,30 @@ except ValueError:
 def detect_x_accel():
     if os.environ.get("VOD_USE_X_ACCEL", "false").lower() in ("true", "1", "yes"):
         return True
-    nginx_conf = "/etc/nginx/conf.d/streamrecorder.conf"
-    if os.path.isfile(nginx_conf):
+    candidates = [
+        "/etc/nginx/conf.d/streamrecorder.conf",
+        "/etc/nginx/conf.d/default.conf",
+        "/etc/nginx/sites-enabled/streamvault.conf",
+    ]
+    try:
+        candidates.extend(glob.glob("/etc/nginx/sites-enabled/*"))
+    except OSError:
+        pass
+    for nginx_conf in dict.fromkeys(candidates):
+        if not os.path.isfile(nginx_conf):
+            continue
         try:
             with open(nginx_conf, "r", encoding="utf-8") as f:
                 content = f.read()
-            if "/_protected/" in content and "proxy_pass http://127.0.0.1:8081" in content:
-                return True
-        except Exception:
-            pass
+        except OSError:
+            continue
+        if "/_protected/" in content and "proxy_pass" in content:
+            return True
     return False
 
 USE_X_ACCEL = detect_x_accel()
 X_ACCEL_PREFIX = os.environ.get("VOD_X_ACCEL_PREFIX", "/_protected")
+FILES_ACCEL_PREFIX = os.environ.get("VOD_FILES_ACCEL_PREFIX", "/_protected_files")
 VOD_CACHE_ACCEL_PREFIX = os.environ.get("VOD_CACHE_ACCEL_PREFIX", "/_protected_vodcache")
 HLS_TIME = int(os.environ.get("VOD_HLS_TIME", "4"))
 HLS_GENERATE_TIMEOUT_SEC = int(os.environ.get("VOD_HLS_GENERATE_TIMEOUT_SEC", "7200"))
@@ -138,7 +157,6 @@ TWITCH_CLIENT_SECRET = os.environ.get("TWITCH_CLIENT_SECRET", "").strip()
 TWITCH_APP_ACCESS_TOKEN = (
     os.environ.get("TWITCH_APP_ACCESS_TOKEN", "").strip()
 )
-DISCORD_LOGS_DIR = os.environ.get("VOD_DISCORD_LOGS_DIR", "/root/Discord Bots/logs")
 MAIL_ADMIN_ENABLED = os.environ.get("VOD_MAIL_ADMIN_ENABLED", "false").lower() in ("true", "1", "yes")
 STALK_ENABLED = False
 
@@ -154,11 +172,6 @@ def _env_int(name, default):
 # Browsers cap cookie lifetime near 400 days; SESSION_REFRESH_EACH_REQUEST extends it on use.
 SESSION_MAX_AGE_SEC = max(0, _env_int("VOD_SESSION_MAX_AGE_SEC", 0))
 SESSION_COOKIE_MAX_AGE_SEC = max(86400, _env_int("VOD_SESSION_COOKIE_MAX_AGE_SEC", 400 * 86400))
-CAST_TOKEN_TTL_SEC = int(os.environ.get("VOD_CAST_TTL_SEC", str(12 * 3600)))
-# OBS browser sources stay open for days; keep that bearer link shorter than a session cookie.
-# OBS browser sources stay open indefinitely in streaming setups; default to 10 years (or set OBS_CAST_TTL_SEC=0 for infinite)
-OBS_CAST_TTL_SEC = int(os.environ.get("OBS_CAST_TTL_SEC", str(3650 * 24 * 3600)))
-CAST_TOKEN_SALT = "streamvault-cast-v1"
 _MEDIA_HTTP_METHODS = ("GET", "HEAD", "OPTIONS")
 LOGIN_BAN_TTL_SEC = int(os.environ.get("VOD_LOGIN_BAN_TTL_SEC", "1800"))
 # OBS browser sources historically pass overlay tokens in the query string.
@@ -189,11 +202,21 @@ RATELIMIT_STORAGE_URI = _resolve_ratelimit_storage_uri(
     os.environ.get("VOD_RATELIMIT_STORAGE_URI", "memory://")
 )
 # Default credentials removed for security - only environment variables are allowed
-TRUSTED_PROXIES = {
-    ip.strip()
-    for ip in os.environ.get("VOD_TRUSTED_PROXIES", "127.0.0.1,::1").split(",")
-    if ip.strip()
-}
+def _parse_trusted_proxies(raw):
+    """Comma-separated IPs or CIDR networks, e.g. ``127.0.0.1,::1,172.16.0.0/12``."""
+    networks = []
+    for item in str(raw or "").split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            networks.append(ipaddress.ip_network(item, strict=False))
+        except ValueError:
+            logging.error("Ignoring invalid VOD_TRUSTED_PROXIES entry: %r", item)
+    return tuple(networks)
+
+
+TRUSTED_PROXY_NETWORKS = _parse_trusted_proxies(os.environ.get("VOD_TRUSTED_PROXIES", "127.0.0.1,::1"))
 CHAT_INDEX_MIN_SIZE = int(os.environ.get("VOD_CHAT_INDEX_MIN_SIZE", "5000000"))  # 5 MB
 CHAT_INDEX_STEP = int(os.environ.get("VOD_CHAT_INDEX_STEP", "200"))
 MAX_CHAT_SEARCH_RESULTS = int(os.environ.get("VOD_CHAT_SEARCH_LIMIT", "500"))
@@ -223,7 +246,30 @@ THEME_OPTIONS = [
     {"key": "ocean", "name": "Ocean Blue"},
 ]
 VALID_THEME_KEYS = {theme["key"] for theme in THEME_OPTIONS}
-ASSET_VERSION = "20261024-instant-launch"
+def _compute_asset_version(static_dir):
+    """Cache-busting token for ?v= on static URLs, derived from the shipped files.
+
+    Any edited, added or removed file under WEBUI/static changes the token, so
+    browsers fetch new CSS/JS after an update without a manual version bump.
+    """
+    digest = hashlib.sha1()
+    for root, dirs, files in os.walk(static_dir):
+        dirs.sort()
+        for name in sorted(files):
+            path = os.path.join(root, name)
+            try:
+                st = os.stat(path)
+            except OSError as exc:
+                logging.warning("Asset version: cannot stat %s: %s", path, exc)
+                continue
+            rel = os.path.relpath(path, static_dir).replace(os.sep, "/")
+            digest.update(f"{rel}:{st.st_size}:{st.st_mtime_ns};".encode("utf-8"))
+    return digest.hexdigest()[:12]
+
+
+ASSET_VERSION = os.environ.get("VOD_ASSET_VERSION", "").strip() or _compute_asset_version(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+)
 UI_FONTS_HREF = (
     "https://fonts.googleapis.com/css2?"
     "family=IBM+Plex+Mono:wght@400;500;600&"
@@ -271,14 +317,17 @@ TWITCH_EVENTSUB_ENABLED = os.environ.get("TWITCH_EVENTSUB_ENABLED", "false").low
 METRICS_TOKEN = os.environ.get("METRICS_TOKEN", "").strip()
 
 def load_secret_key():
-    if config.SECRET_KEY != "change-me":
-        return config.SECRET_KEY
+    from core.storage.crypto import is_weak_secret
+
+    configured = str(config.SECRET_KEY or "").strip()
+    if configured and not is_weak_secret(configured):
+        return configured
     key_path = os.path.join(config.META_DIR, "secret_key.txt")
     try:
         if os.path.isfile(key_path):
             with open(key_path, "r", encoding="utf-8") as f:
                 key = f.read().strip()
-                if key:
+                if key and not is_weak_secret(key):
                     try:
                         os.chmod(key_path, 0o600)
                     except OSError:
@@ -289,8 +338,20 @@ def load_secret_key():
     os.makedirs(config.META_DIR, exist_ok=True)
     key = secrets.token_hex(32)
     try:
-        with open(key_path, "w", encoding="utf-8") as f:
-            f.write(key)
+        fd = os.open(
+            key_path,
+            os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+            0o600,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(key)
+        except Exception:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            raise
         os.chmod(key_path, 0o600)
     except Exception:
         pass
@@ -382,21 +443,41 @@ def get_sys_stats():
     disk = storage_info()
     return {"cpu": cpu_usage, "ram": ram_pct, "disk": int(disk['pct']) if disk else 0}
 
+def _is_trusted_proxy(addr):
+    try:
+        ip = ipaddress.ip_address(str(addr or ""))
+    except ValueError:
+        return False
+    return any(ip in net for net in TRUSTED_PROXY_NETWORKS)
+
+
+def _valid_ip(value):
+    try:
+        return str(ipaddress.ip_address(str(value or "").strip()))
+    except ValueError:
+        return ""
+
+
 def get_client_ip():
-    """Extract client IP with secure proxy handling."""
+    """Client IP for rate limits and bans.
+
+    Proxy headers are honoured only when the direct peer is a trusted proxy, and
+    only the values that proxy itself wrote: X-Real-IP, else the right-most
+    X-Forwarded-For hop. The left-most hop is client-controlled and must never be
+    used, otherwise rotating it bypasses login rate limits.
+    """
     remote = request.remote_addr
-    
-    # Only trust X-Forwarded-For from trusted proxies
-    if remote in TRUSTED_PROXIES:
-        xff = request.headers.get("X-Forwarded-For")
-        if xff:
-            # Take first IP in chain (client IP) and validate
-            client_ip = xff.split(",")[0].strip()
-            # Basic validation to prevent header injection
-            if client_ip and len(client_ip) < 45:  # Max IPv6 length
-                return client_ip
-    
-    return request.remote_addr
+    if not _is_trusted_proxy(remote):
+        return remote
+    real_ip = _valid_ip(request.headers.get("X-Real-IP"))
+    if real_ip:
+        return real_ip
+    hops = [h.strip() for h in (request.headers.get("X-Forwarded-For") or "").split(",") if h.strip()]
+    if hops:
+        last_hop = _valid_ip(hops[-1])
+        if last_hop:
+            return last_hop
+    return remote
 
 def check_rate_limit(ip):
     """Return True if IP is under the failed-login threshold (shared via SQLite)."""
@@ -668,6 +749,7 @@ DATENSCHUTZ_TEMPLATE = load_html_template("datenschutz.html")
 ADMIN_TEMPLATE = load_html_template("admin.html")
 ADMIN_TRAFFIC_TEMPLATE = load_html_template("admin_traffic.html")
 ADMIN_USERS_TEMPLATE = load_html_template("admin_users.html")
+STORAGE_TEMPLATE = load_html_template("storage.html")
 MAIL_ADMIN_TEMPLATE = None
 STALK_ADMIN_TEMPLATE = None
 STALK_DETAIL_TEMPLATE = None
@@ -822,67 +904,8 @@ def login_required(func):
     return wrapper
 
 
-def _cast_serializer():
-    return URLSafeTimedSerializer(str(app.secret_key), salt=CAST_TOKEN_SALT)
-
-
-_CAST_TOKEN_CACHE = {}
-
-def issue_cast_token(kind, streamer, name="", *, obs=False):
-    cache_key = f"{kind}:{streamer}:{name}:{obs}"
-    import time
-    now = time.time()
-    if cache_key in _CAST_TOKEN_CACHE:
-        token, ts = _CAST_TOKEN_CACHE[cache_key]
-        if now - ts < 86400:
-            return token
-    payload = {"k": str(kind or ""), "s": str(streamer or ""), "n": str(name or "")}
-    if obs:
-        payload["o"] = 1
-    token = _cast_serializer().dumps(payload)
-    _CAST_TOKEN_CACHE[cache_key] = (token, now)
-    return token
-
-
-def verify_cast_token(token, kind, streamer, name=""):
-    token = (token or "").strip()
-    if not token:
-        return False
-    try:
-        loaded = _cast_serializer().loads(token, max_age=None, return_timestamp=True)
-    except (BadSignature, SignatureExpired, TypeError, ValueError):
-        return False
-    if not isinstance(loaded, tuple) or len(loaded) != 2:
-        return False
-    data, issued_at = loaded
-    if not isinstance(data, dict):
-        return False
-    try:
-        issued_ts = issued_at.timestamp() if isinstance(issued_at, datetime) else float(issued_at)
-        age = time.time() - issued_ts
-    except (TypeError, ValueError, OSError, AttributeError):
-        return False
-    limit = OBS_CAST_TTL_SEC if data.get("o") else CAST_TOKEN_TTL_SEC
-    if int(limit) > 0 and age > int(limit):
-        return False
-    return (
-        str(data.get("k") or "") == str(kind or "")
-        and str(data.get("s") or "") == str(streamer or "")
-        and str(data.get("n") or "") == str(name or "")
-    )
-
-
-def url_with_cast(endpoint, kind, streamer, name="", **kwargs):
-    params = dict(kwargs)
-    params["streamer"] = streamer
-    if name:
-        params.setdefault("filename", name)
-    params["cast"] = issue_cast_token(kind, streamer, name)
-    return url_for(endpoint, **params)
-
-
 def absolute_public_url(path):
-    """Absolute https URL for TVs. Chromecast/AirPlay do not resolve app-relative paths reliably."""
+    """Absolute URL for links that leave the browser session (share links, OAuth callbacks)."""
     path = str(path or "")
     if path.startswith("http://") or path.startswith("https://"):
         return path
@@ -903,24 +926,11 @@ def absolute_public_url(path):
     return f"{proto}://{host}{path}"
 
 
-def cast_media_url(endpoint, **kwargs):
-    return absolute_public_url(url_for(endpoint, **kwargs))
-
-
 def hls_playlist_response(body, *, live=False):
-    """Playlist MIME without charset — Chromecast rejects mpegurl; charset=utf-8."""
+    """Playlist MIME without charset; some HLS players reject mpegurl; charset=utf-8."""
     resp = Response(body, 200)
     resp.headers["Content-Type"] = "application/vnd.apple.mpegurl"
     return apply_hls_delivery_headers(resp, live=live)
-
-
-def apply_cast_cors(resp):
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, HEAD, OPTIONS"
-    resp.headers["Access-Control-Allow-Headers"] = "Range, Origin, Accept, Content-Type"
-    resp.headers["Access-Control-Expose-Headers"] = "Content-Length, Content-Range, Accept-Ranges, Content-Type"
-    resp.headers["Access-Control-Max-Age"] = "86400"
-    return resp
 
 
 def hls_segment_mimetype(filename: str) -> str:
@@ -975,8 +985,7 @@ def rewrite_hls_playlist_for_client(lines, segment_url_for):
 
 
 def apply_hls_delivery_headers(resp, *, live: bool = False, immutable: bool = False):
-    """CORS + byte-range + cache headers for HLS playlist/segment responses."""
-    apply_cast_cors(resp)
+    """Byte-range + cache headers for HLS playlist/segment responses."""
     resp.headers["Accept-Ranges"] = "bytes"
     if live:
         resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -991,40 +1000,24 @@ def apply_hls_delivery_headers(resp, *, live: bool = False, immutable: bool = Fa
     return resp
 
 
-def _cast_query_kwargs():
-    token = (request.args.get("cast") or "").strip()
-    if token:
-        return {"cast": token}
-    return {}
-
-
-def wants_apple_airplay_player():
+def is_ios_client():
     ua = (request.headers.get("User-Agent") or "").lower()
     return "iphone" in ua or "ipad" in ua or "ipod" in ua
 
 
-def login_or_cast_required(kind, name_arg="filename"):
-    """Allow session cookies or a scoped ?cast= token (AirPlay/Chromecast have no cookies)."""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            if request.method == "OPTIONS":
-                return apply_cast_cors(Response(status=204))
-            streamer = str(kwargs.get("streamer") or "")
-            if kind == "live" or name_arg is None:
-                name = ""
-            else:
-                name = str(kwargs.get(name_arg) or "")
-            token = (request.args.get("cast") or "").strip()
-            if token and verify_cast_token(token, kind, streamer, name):
-                return func(*args, **kwargs)
-            if session.get("logged_in") and not session_is_expired():
-                return func(*args, **kwargs)
-            if session.get("logged_in"):
-                session.clear()
-            return apply_cast_cors(Response("Unauthorized", 401, mimetype="text/plain"))
-        return wrapper
-    return decorator
+def media_login_required(func):
+    """Session-only auth for media endpoints: 401 instead of a login redirect,
+    because players fetch these URLs directly and cannot follow an HTML login."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return Response(status=204)
+        if session.get("logged_in") and not session_is_expired():
+            return func(*args, **kwargs)
+        if session.get("logged_in"):
+            session.clear()
+        return Response("Unauthorized", 401, mimetype="text/plain")
+    return wrapper
 
 
 def admin_required(func):
@@ -1077,10 +1070,26 @@ def ensure_dir(path):
 
 
 def load_json(path, default):
+    """Read a JSON state file; a missing file yields ``default``.
+
+    A corrupt file is moved aside as ``<path>.corrupt-<ts>`` before returning
+    ``default``. Callers save the value back later, so returning the default while
+    leaving the file in place would silently overwrite the only copy of the data.
+    Read errors other than "missing" are raised for the same reason.
+    """
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except FileNotFoundError:
+        return default
+    except ValueError as exc:  # json.JSONDecodeError, UnicodeDecodeError
+        backup = f"{path}.corrupt-{int(time.time())}"
+        try:
+            os.replace(path, backup)
+        except OSError as move_exc:
+            logging.error("Corrupt JSON %s (%s); could not move it aside: %s", path, exc, move_exc)
+            raise
+        logging.error("Corrupt JSON %s (%s); moved to %s", path, exc, backup)
         return default
 
 
@@ -1573,13 +1582,31 @@ def streamer_dir(slug):
     return p
 
 
-def media_accel_path(streamer, filename, *, clip=False):
+def _path_is_under(path, root):
+    path_value = str(path or "").strip()
+    root_value = str(root or "").strip()
+    if not path_value or not root_value:
+        return False
+    try:
+        path_real = os.path.realpath(path_value)
+        root_real = os.path.realpath(root_value)
+        common = os.path.commonpath([path_real, root_real])
+        return os.path.normcase(common) == os.path.normcase(root_real)
+    except (OSError, ValueError):
+        return False
+
+
+def media_accel_path(streamer, filename, *, clip=False, file_path=None):
     """X-Accel path using the on-disk archive slug (aliases map correctly)."""
     archive = archive_name_for(streamer) or normalize_channel_name(streamer) or str(streamer or "").strip()
     name = os.path.basename(str(filename or ""))
     if not archive or not name:
         return None
+    if file_path is None:
+        file_path = resolve_media_path(streamer, filename, "clip" if clip else "vod")
     prefix = X_ACCEL_PREFIX.rstrip("/")
+    if file_path and _path_is_under(file_path, getattr(config, "FILES_DIR", "")):
+        prefix = FILES_ACCEL_PREFIX.rstrip("/")
     if clip:
         return f"{prefix}/{urllib.parse.quote(archive)}/{CLIP_SUBDIR}/{urllib.parse.quote(name)}"
     return f"{prefix}/{urllib.parse.quote(archive)}/{urllib.parse.quote(name)}"
@@ -1870,6 +1897,57 @@ def stalk_heartbeat_age_sec():
     return None
 
 
+def _run_status_command(cmd):
+    """Run a short status command; return (stdout, returncode, error)."""
+    try:
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=3,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return "", None, str(exc)[:300]
+    return result.stdout, result.returncode, result.stderr.strip()[:300]
+
+
+def collect_service_status(expected):
+    """Service health from supervisor, falling back to systemd units.
+
+    ``ok`` is None when neither supervisor nor the streamvault-* systemd
+    units can be queried, so an unknown state never reads as healthy.
+    """
+    services = {name: {"state": "unknown"} for name in sorted(expected)}
+    out, rc, sup_err = _run_status_command(["supervisorctl", "status"])
+    # supervisorctl exits 3 when some programs are not RUNNING.
+    if rc in (0, 3) and out.strip():
+        services, missing, services_ok = parse_supervisor_status(out, expected)
+        status = {"ok": services_ok, "manager": "supervisor", "programs": services}
+        if missing:
+            status["error"] = "missing supervisor programs: " + ", ".join(missing)
+        return status
+
+    units = [systemd_unit_name(name) for name in sorted(expected)]
+    out, rc, sysd_err = _run_status_command(
+        ["systemctl", "show", "-p", SYSTEMD_SHOW_PROPERTIES, *units]
+    )
+    if rc == 0:
+        services, missing, services_ok = parse_systemctl_show(out, expected)
+        if len(missing) < len(services):
+            status = {"ok": services_ok, "manager": "systemd", "programs": services}
+            if missing:
+                status["error"] = "missing systemd units: " + ", ".join(
+                    systemd_unit_name(name) for name in missing
+                )
+            return status
+        sysd_err = "no streamvault-* systemd units loaded"
+    error = "supervisorctl: " + (sup_err or "no output") + "; systemctl: " + (sysd_err or "no output")
+    logging.warning("Health check cannot determine service state: %s", error)
+    return {"ok": None, "error": error[:600], "programs": services}
+
+
 def collect_health_status():
     checks = {}
     status_ok = True
@@ -1909,39 +1987,12 @@ def collect_health_status():
             status_ok = False
             checks[name] = {"ok": False, "error": str(exc)}
 
-    expected = {"webui", "recorder", "worker", "livebot"}
-    services = {name: {"state": "unknown"} for name in sorted(expected)}
-    try:
-        result = subprocess.run(
-            ["supervisorctl", "status"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            timeout=3,
-            check=False,
-        )
-        if result.returncode == 0:
-            for line in result.stdout.splitlines():
-                parts = line.split()
-                if len(parts) < 2:
-                    continue
-                program = parts[0].split(":", 1)[-1]
-                if program in services:
-                    state = parts[1]
-                    services[program] = {"state": state, "ok": state == "RUNNING"}
-                    if state != "RUNNING":
-                        status_ok = False
-            checks["services"] = {"ok": all(s.get("ok") for s in services.values()), "programs": services}
-            if not checks["services"]["ok"]:
-                status_ok = False
-        else:
-            checks["services"] = {"ok": None, "error": result.stderr.strip()[:300], "programs": services}
-    except Exception as exc:
-        checks["services"] = {"ok": None, "error": str(exc), "programs": services}
+    checks["services"] = collect_service_status({"webui", "recorder", "worker"})
+    if checks["services"].get("ok") is False:
+        status_ok = False
 
     task_counts = task_status_counts()
     recording_locks = count_active_recording_locks()
-    stalk_age = stalk_heartbeat_age_sec()
     try:
         channels_record = len(database.get_channels("record"))
     except Exception:
@@ -2332,9 +2383,14 @@ def list_all_streamer_folders():
     return rows
 
 
+def system_backups_dir():
+    """Where streamrecorder_*.tar.gz backups are listed; a dot-dir so it is never an archive."""
+    return os.environ.get("BACKUP_DIR") or os.path.join(config.META_DIR, "backups")
+
+
 def list_system_backups():
     """Lists local system backups."""
-    backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
+    backups_dir = system_backups_dir()
     items = {}
 
     if os.path.isdir(backups_dir):
@@ -3454,7 +3510,7 @@ def send_mp4_range_advertising_size(file_path, start, end, total_size):
         "X-Accel-Buffering": "no",
     }
     resp = Response(generate(), status=206, headers=headers, mimetype="video/mp4")
-    return apply_cast_cors(resp)
+    return resp
 
 
 def remux_media_file(file_path, reencode_audio=False):
@@ -3979,13 +4035,7 @@ def current_username():
 
 
 def vod_slot_holder():
-    name = str(session.get("username") or "").strip()
-    if name:
-        return name
-    token = (request.args.get("cast") or "").strip()
-    if token:
-        return f"cast:{token[:32]}"
-    return ""
+    return str(session.get("username") or "").strip()
 
 
 def vod_slot_exempt():
@@ -7283,26 +7333,13 @@ def generate_csrf_token():
 app.jinja_env.globals["csrf_token"] = generate_csrf_token
 
 
-def is_tizen_tv():
-    try:
-        from flask import request
-        ua = request.headers.get("User-Agent", "")
-        if any(tok in ua for tok in ("Tizen", "SMART-TV", "SmartTV", "NetCast", "Web0S")):
-            return True
-        if request.args.get("tv") == "1":
-            return True
-    except (RuntimeError, Exception):
-        pass
-    return False
-
 @app.context_processor
 def inject_theme_context():
     from core import tube_auth
 
     theme = current_theme_key()
     role = current_user_role()
-    tv_flag = is_tizen_tv()
-    mobile_flag = False if tv_flag else is_mobile()
+    mobile_flag = is_mobile()
     rail_streamers = []
     if session.get("logged_in") and not mobile_flag:
         try:
@@ -7331,7 +7368,6 @@ def inject_theme_context():
         "can_access_vods": tube_auth.role_can_access_vods(role),
         "is_live_only": tube_auth.is_live_only(role),
         "role_label": tube_auth.role_label,
-        "is_tv": tv_flag,
         "is_mobile": mobile_flag,
         "mobile_live_enabled": mobile_live_enabled(),
         "streamers": rail_streamers,
@@ -7367,19 +7403,6 @@ def login():
         if maintenance_mode_enabled() and not current_user_is_admin():
             return redirect(url_for("maintenance"))
         return redirect(login_redirect_target())
-
-    # Smart TV Auto-Login Guard: Always silently re-authenticate Samsung TV as gatekeeper (anti-loop)
-    if request.method == "GET" and is_tizen_tv():
-        if "_tv_loop" not in request.args:
-            token_file = "/root/Streamrecorder/data/.tv_gatekeeper_token"
-            try:
-                with open(token_file, "r", encoding="utf-8") as tf:
-                    tv_token = tf.read().strip()
-            except Exception:
-                tv_token = ""
-            if tv_token:
-                nxt = request.args.get("next") or ""
-                return redirect(url_for("login_tv_auto", token=tv_token, next=nxt if is_safe_next(nxt) else None))
 
     if request.method == "POST":
         # SECURITY: Validate CSRF token on login (defense in depth; before_request also checks)
@@ -7444,45 +7467,6 @@ def login():
         log_login_attempt(ip, username, False)
         error = "Login fehlgeschlagen."
     return render_template_string(LOGIN_TEMPLATE, error=error)
-
-
-@app.route("/login/tv", methods=["GET"])
-@limiter.limit("20 per minute")
-def login_tv_auto():
-    token = (request.args.get("token") or "").strip()
-    token_file = "/root/Streamrecorder/data/.tv_gatekeeper_token"
-    try:
-        with open(token_file, "r", encoding="utf-8") as tf:
-            expected = tf.read().strip()
-    except Exception:
-        expected = ""
-    if not token or not expected or not secrets.compare_digest(token, expected):
-        logging.warning("Invalid TV token login attempt from %s", get_client_ip())
-        return redirect(url_for("login"))
-
-    users = load_users()
-    target_user = "gatekeeper_streamvault"
-    if target_user not in users or not users[target_user].get("active", True):
-        return redirect(url_for("login"))
-
-    role = users[target_user].get("role") or "admin"
-    session.clear()
-    now = time.time()
-    session.permanent = True
-    session["logged_in"] = True
-    session["user_role"] = role
-    session["username"] = target_user
-    session["login_time"] = now
-    session["last_active"] = now
-    session["_csrf_token"] = secrets.token_hex(16)
-    logging.info("TV auto-login succeeded for %s from %s", target_user, get_client_ip())
-    nxt = request.args.get("next")
-    if nxt and is_safe_next(nxt):
-        sep = "&" if "?" in nxt else "?"
-        if "_tv_loop=1" not in nxt:
-            nxt = nxt + sep + "_tv_loop=1"
-        return redirect(nxt)
-    return redirect(url_for("index"))
 
 
 @app.route("/logout", methods=["POST"])
@@ -7607,6 +7591,317 @@ def admin_traffic_view():
     except Exception as exc:
         logging.error("Admin traffic error: %s", exc, exc_info=True)
         return "Fehler beim Laden der Traffic-Übersicht.", 500
+
+
+# ============ CLOUD STORAGE (Google Drive, S3, Dropbox, OneDrive, WebDAV) ============
+
+def _storage_service():
+    from core.storage import service as storage_service
+
+    return storage_service
+
+
+def _storage_error(exc):
+    from core.storage.base import mask_error
+
+    return mask_error(exc)
+
+
+def _storage_redirect(msg=None, error=None):
+    from core.storage.base import mask_text
+
+    params = {}
+    if msg:
+        params["msg"] = mask_text(msg)
+    if error:
+        params["error"] = mask_text(error)
+    return redirect(url_for("admin_storage_view", **params))
+
+
+def _storage_redirect_uri():
+    return absolute_public_url(url_for("storage_oauth_callback"))
+
+
+@app.route("/admin/storage")
+@admin_required
+@limiter.limit("120 per hour")
+def admin_storage_view():
+    try:
+        svc = _storage_service()
+        context = svc.admin_context()
+        provider_names = {row["id"]: row.get("name") or "" for row in context["providers"]}
+        return render_template_string(
+            STORAGE_TEMPLATE,
+            msg=request.args.get("msg"),
+            error=request.args.get("error"),
+            provider_names=provider_names,
+            format_bytes=svc.format_bytes,
+            format_ts=svc.format_timestamp,
+            oauth_redirect_uri=_storage_redirect_uri(),
+            **context,
+        )
+    except Exception as exc:
+        logging.error("Admin storage error: %s", _storage_error(exc))
+        return "Fehler beim Laden der Cloud-Speicher-Verwaltung.", 500
+
+
+@app.route("/admin/storage/settings", methods=["POST"])
+@admin_required
+@limiter.limit("60 per hour")
+def admin_storage_settings():
+    svc = _storage_service()
+    values = {
+        "auto_upload": request.form.get("auto_upload") == "1",
+        "delete_local_after_upload": request.form.get("delete_local_after_upload") == "1",
+        "verify_before_local_delete": request.form.get("verify_before_local_delete") == "1",
+        "include_chat_logs": request.form.get("include_chat_logs") == "1",
+        "include_thumbnails": request.form.get("include_thumbnails") == "1",
+        "local_retention_days": request.form.get("local_retention_days", "14"),
+        "auto_sync_interval_minutes": request.form.get("auto_sync_interval_minutes", "10"),
+        "cleanup_interval_minutes": request.form.get("cleanup_interval_minutes", "360"),
+        "max_sync_files": request.form.get("max_sync_files", "500"),
+        "default_provider_id": request.form.get("default_provider_id") or None,
+    }
+    try:
+        svc.save_settings(values)
+        return _storage_redirect(msg="Einstellungen gespeichert.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/add", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_provider_add():
+    svc = _storage_service()
+    from core.storage.registry import get_provider_class
+
+    try:
+        type_id = str(request.form.get("provider_type") or "").strip()
+        cls = get_provider_class(type_id)
+        values = {}
+        for field in cls.config_fields:
+            raw = request.form.get(f"cfg_{field.key}", "")
+            if field.secret and not str(raw or "").strip():
+                continue
+            values[field.key] = raw
+        provider_id = svc.create_provider(
+            request.form.get("name", ""),
+            type_id,
+            values,
+            enabled=request.form.get("enabled") == "1",
+        )
+        return _storage_redirect(
+            msg=f"Anbieter #{provider_id} angelegt. Bitte Verbindung testen."
+        )
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/update", methods=["POST"])
+@admin_required
+@limiter.limit("60 per hour")
+def admin_storage_provider_update(provider_id):
+    svc = _storage_service()
+    from core.storage.registry import get_provider_class
+
+    try:
+        row = svc.get_provider_record(provider_id)
+        if not row:
+            raise ValueError("Anbieter nicht gefunden.")
+        cls = get_provider_class(row["provider_type"])
+        values = {}
+        for field in cls.config_fields:
+            values[field.key] = request.form.get(f"cfg_{field.key}", "")
+        svc.update_provider(
+            provider_id,
+            name=request.form.get("name", row["name"]),
+            values=values,
+            enabled=request.form.get("enabled") == "1",
+        )
+        return _storage_redirect(msg=f"Anbieter #{provider_id} gespeichert.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/delete", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_provider_delete(provider_id):
+    svc = _storage_service()
+    try:
+        svc.delete_provider(provider_id)
+        return _storage_redirect(
+            msg=f"Anbieter #{provider_id} entfernt. Cloud-Dateien bleiben erhalten."
+        )
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/test", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_provider_test(provider_id):
+    svc = _storage_service()
+    try:
+        result = svc.test_provider(provider_id)
+        if result.get("ok"):
+            return _storage_redirect(msg=result.get("message"))
+        return _storage_redirect(error=result.get("message"))
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/check", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_provider_check(provider_id):
+    svc = _storage_service()
+    try:
+        task_id = svc.enqueue_check(provider_id)
+        return _storage_redirect(msg=f"Verbindungstest eingeordnet (Task #{task_id}).")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/providers/<int:provider_id>/oauth/start")
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_oauth_start(provider_id):
+    svc = _storage_service()
+    try:
+        return redirect(svc.oauth_authorize_url(provider_id, _storage_redirect_uri()))
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/oauth/callback")
+@admin_required
+@limiter.limit("30 per hour")
+def storage_oauth_callback():
+    svc = _storage_service()
+    if request.args.get("error"):
+        return _storage_redirect(error=f"Anbieter meldete: {request.args.get('error')}")
+    try:
+        provider_id = svc.verify_oauth_state(request.args.get("state", ""))
+        code = str(request.args.get("code") or "").strip()
+        if not code:
+            raise ValueError("OAuth-Code fehlt.")
+        svc.oauth_complete(provider_id, code, _storage_redirect_uri())
+        result = svc.test_provider(provider_id)
+        if result.get("ok"):
+            return _storage_redirect(msg=result.get("message"))
+        return _storage_redirect(error=result.get("message"))
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/sync", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_sync():
+    svc = _storage_service()
+    try:
+        provider_id = request.form.get("provider_id") or None
+        streamer = str(request.form.get("streamer") or "").strip() or None
+        task_id = svc.enqueue_sync(provider_id, streamer)
+        if task_id:
+            return _storage_redirect(msg=f"Cloud-Sync eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits ein Cloud-Sync.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/cleanup", methods=["POST"])
+@admin_required
+@limiter.limit("20 per hour")
+def admin_storage_cleanup():
+    svc = _storage_service()
+    try:
+        provider_id = request.form.get("provider_id") or None
+        task_id = svc.enqueue_cleanup(provider_id)
+        if task_id:
+            return _storage_redirect(msg=f"Aufräumung eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits eine Aufräumung.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/upload", methods=["POST"])
+@admin_required
+@limiter.limit("60 per hour")
+def admin_storage_object_upload(object_id):
+    svc = _storage_service()
+    try:
+        obj = database.get_storage_object(object_id)
+        if not obj:
+            raise ValueError("Archiv-Objekt nicht gefunden.")
+        if obj.get("local_deleted_at"):
+            raise ValueError("Die lokale Datei wurde bereits entfernt. Bitte zuerst wiederherstellen.")
+        result = svc.enqueue_upload(
+            obj["local_path"], obj["provider_id"], force=True
+        )
+        if result.get("task_id"):
+            return _storage_redirect(msg=f"Upload eingeordnet (Task #{result['task_id']}).")
+        return _storage_redirect(msg="Es läuft bereits ein Upload für diese Datei.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/restore", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_restore(object_id):
+    svc = _storage_service()
+    try:
+        task_id = svc.enqueue_restore(object_id)
+        if task_id:
+            return _storage_redirect(msg=f"Wiederherstellung eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits eine Wiederherstellung.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/delete-remote", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_delete_remote(object_id):
+    svc = _storage_service()
+    try:
+        task_id = svc.enqueue_delete(object_id)
+        if task_id:
+            return _storage_redirect(msg=f"Cloud-Löschung eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg="Es läuft bereits eine Cloud-Löschung.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/delete-local", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_delete_local(object_id):
+    svc = _storage_service()
+    try:
+        ok, message = svc.delete_local_copy(object_id)
+        if ok:
+            return _storage_redirect(msg=message)
+        return _storage_redirect(error=message)
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
+
+
+@app.route("/admin/storage/objects/<int:object_id>/forget", methods=["POST"])
+@admin_required
+@limiter.limit("30 per hour")
+def admin_storage_object_forget(object_id):
+    try:
+        if database.delete_storage_object(object_id):
+            return _storage_redirect(
+                msg=f"Objekt #{object_id} aus der Datenbank entfernt. Dateien bleiben erhalten."
+            )
+        return _storage_redirect(error="Archiv-Objekt nicht gefunden.")
+    except Exception as exc:
+        return _storage_redirect(error=_storage_error(exc))
 
 
 @app.route("/admin/unban/<ip>", methods=["POST"])
@@ -8129,8 +8424,8 @@ def admin_users_view():
         gid = u.get("group_id")
         if gid:
             group_counts[gid] = group_counts.get(gid, 0) + 1
-    for g in raw_groups:
-        g["member_count"] = group_counts.get(g["id"], 0)
+    for grp in raw_groups:
+        grp["member_count"] = group_counts.get(grp["id"], 0)
 
     users_list = []
     for u in raw_users:
@@ -8403,8 +8698,8 @@ def api_admin_groups_list():
         gid = u.get("group_id")
         if gid:
             counts[gid] = counts.get(gid, 0) + 1
-    for g in raw_groups:
-        g["member_count"] = counts.get(g["id"], 0)
+    for grp in raw_groups:
+        grp["member_count"] = counts.get(grp["id"], 0)
     return jsonify({"ok": True, "groups": raw_groups})
 
 
@@ -8427,7 +8722,7 @@ def api_admin_group_create():
         return jsonify({"ok": True, "msg": f"Gruppe '{name}' erfolgreich angelegt.", "group": group}), 201
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to create group")
         return jsonify({"ok": False, "error": "Interner Serverfehler beim Anlegen der Gruppe."}), 500
 
@@ -8449,7 +8744,7 @@ def api_admin_group_update(group_id):
         return jsonify({"ok": True, "msg": f"Gruppe '{name}' erfolgreich aktualisiert.", "group": group})
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to update group")
         return jsonify({"ok": False, "error": "Interner Serverfehler beim Aktualisieren der Gruppe."}), 500
 
@@ -8468,7 +8763,7 @@ def api_admin_group_delete(group_id):
         })
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    except Exception as e:
+    except Exception:
         logging.exception("Failed to delete group")
         return jsonify({"ok": False, "error": "Interner Serverfehler beim Löschen der Gruppe."}), 500
 
@@ -8795,8 +9090,8 @@ def _save_shared_dashboard_media(data):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False)
         os.replace(tmp, _DASHBOARD_SHM_PATH)
-    except Exception as e:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logging.warning("Failed to save dashboard media to %s: %s", _DASHBOARD_SHM_PATH, exc)
 
 def invalidate_dashboard_media_cache():
     """Clear memory, Redis, and shm dashboard media cache."""
@@ -8901,7 +9196,7 @@ def get_nebula_dashboard_media(streamers, live_channels):
             raw_vods = list(cached.get("recent_vods") or [])
             raw_clips = list(cached.get("recent_clips") or [])
             recent_vods = [v for v in raw_vods if can_view_streamer(v.get("streamer_name"))]
-            if not recent_vods and (current_user_is_admin() or is_tizen_tv()):
+            if not recent_vods and current_user_is_admin():
                 recent_vods = raw_vods
             recent_clips = [c for c in raw_clips if can_view_streamer(c.get("streamer_name"))]
             category_counts = dict(cached.get("category_counts") or {})
@@ -8918,7 +9213,7 @@ def get_nebula_dashboard_media(streamers, live_channels):
                 raw_vods = list(data.get("recent_vods") or [])
                 raw_clips = list(data.get("recent_clips") or [])
                 recent_vods = [v for v in raw_vods if can_view_streamer(v.get("streamer_name"))]
-                if not recent_vods and (current_user_is_admin() or is_tizen_tv()):
+                if not recent_vods and current_user_is_admin():
                     recent_vods = raw_vods
                 recent_clips = [c for c in raw_clips if can_view_streamer(c.get("streamer_name"))]
                 category_counts = dict(data.get("category_counts") or {})
@@ -9451,13 +9746,7 @@ def vod_view(streamer, filename):
         except OSError:
             hls_ready = False
         else:
-            hls_playlist_url = url_with_cast(
-                "hls_playlist",
-                "hls",
-                streamer,
-                filename,
-                v=hls_version,
-            )
+            hls_playlist_url = url_for("hls_playlist", streamer=streamer, filename=filename, v=hls_version)
     transcript_text = load_transcript(file_path) if file_path else None
     transcript_status = None
     if file_path:
@@ -9492,7 +9781,7 @@ def vod_view(streamer, filename):
             MOBILE_PLAYER_TEMPLATE,
             streamer=streamer,
             filename=filename,
-            media_url=url_with_cast("media", "vod", streamer, filename),
+            media_url=url_for("media", streamer=streamer, filename=filename),
             chat_url=url_for("chat_vod", streamer=streamer, filename=filename) if chat_available else None,
             back_url=url_for("streamer_view", streamer=streamer),
             is_live=False,
@@ -9518,7 +9807,7 @@ def vod_view(streamer, filename):
         clip_error=clip_error,
         share_link=share_link,
         action_msg=action_msg,
-        media_url=url_with_cast("media", "vod", streamer, filename),
+        media_url=url_for("media", streamer=streamer, filename=filename),
         hls_playlist_url=hls_playlist_url,
         hls_ready=False,
         download_url=(
@@ -9709,7 +9998,7 @@ def clip_view(streamer, filename):
             MOBILE_PLAYER_TEMPLATE,
             streamer=streamer,
             filename=filename,
-            media_url=url_with_cast("clip_media", "clip", streamer, filename),
+            media_url=url_for("clip_media", streamer=streamer, filename=filename),
             chat_url=url_for("chat_vod", streamer=streamer, filename=filename), # Clips might not have synced chat easily, but we leave it
             back_url=url_for("streamer_view", streamer=streamer),
             is_live=False,
@@ -9734,7 +10023,7 @@ def clip_view(streamer, filename):
         clip_error=None,
         action_msg=None,
         share_link=share_link,
-        media_url=url_with_cast("clip_media", "clip", streamer, filename),
+        media_url=url_for("clip_media", streamer=streamer, filename=filename),
         hls_playlist_url=None,
         hls_ready=False,
         download_url=(
@@ -9805,13 +10094,10 @@ def thumb_view(streamer, filename):
 
 
 @app.route("/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("vod")
+@media_login_required
 def media(streamer, filename):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "vod", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     busy = enforce_vod_watch_slot(streamer, filename)
     if busy:
         logging.info(
@@ -9828,7 +10114,7 @@ def media(streamer, filename):
             pass
     file_path = resolve_media_path(streamer, filename, "vod")
     if file_path:
-        accel_path = media_accel_path(streamer, filename) if USE_X_ACCEL else None
+        accel_path = media_accel_path(streamer, filename, file_path=file_path) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path)
     abort(404)
 
@@ -9925,24 +10211,21 @@ def download(streamer, filename):
     abort_hidden_streamer(streamer)
     file_path = resolve_media_path(streamer, filename, "vod")
     if file_path:
-        accel_path = media_accel_path(streamer, filename) if USE_X_ACCEL else None
+        accel_path = media_accel_path(streamer, filename, file_path=file_path) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
     abort(404)
 
 
 @app.route("/clip/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("clip")
+@media_login_required
 def clip_media(streamer, filename):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "clip", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     file_path = resolve_media_path(streamer, filename, "clip")
     if not file_path:
         abort(404)
     if USE_X_ACCEL:
-        accel_path = media_accel_path(streamer, filename, clip=True)
+        accel_path = media_accel_path(streamer, filename, clip=True, file_path=file_path)
         return send_mp4_with_range(file_path, accel_path=accel_path)
     return send_mp4_with_range(file_path)
 
@@ -9957,7 +10240,7 @@ def clip_download(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "clip")
     if not file_path:
         abort(404)
-    accel_path = media_accel_path(streamer, filename, clip=True) if USE_X_ACCEL else None
+    accel_path = media_accel_path(streamer, filename, clip=True, file_path=file_path) if USE_X_ACCEL else None
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
@@ -10103,7 +10386,6 @@ def _pwa_icon_entries():
 
 
 def mobile_app_head_tags():
-    sw_url = url_for("service_worker_js")
     return f"""{PWA_HEAD_MARKER}
     <meta name="theme-color" content="{PWA_THEME_COLOR}">
     <meta name="color-scheme" content="dark">
@@ -10115,8 +10397,7 @@ def mobile_app_head_tags():
     <link rel="apple-touch-icon" sizes="180x180" href="{url_for('apple_touch_icon')}">
     <link rel="icon" type="image/png" sizes="192x192" href="{url_for('app_icon_png', size=192)}">
     <link rel="icon" type="image/png" sizes="512x512" href="{url_for('app_icon_png', size=512)}">
-    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var isTv=/Tizen|SMART-TV|SmartTV|NetCast|Web0S/i.test(navigator.userAgent)||location.search.indexOf("tv=1")!==-1;if(isTv){{document.documentElement.classList.add("is-tizen-tv");}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{if(isTv)return;var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
-    {f'<link id="ns-tizen-tv-css" rel="stylesheet" href="{url_for("static", filename="css/tizen_tv.css", v=ASSET_VERSION)}">\n    <script src="{url_for("static", filename="tizen_tv_nav.js", v=ASSET_VERSION)}" defer></script>' if is_tizen_tv() else ''}
+    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
     <script>
       (function() {{
         if ("serviceWorker" in navigator) {{
@@ -10333,31 +10614,15 @@ def set_security_headers(response):
         "frame-src 'self' https://player.twitch.tv https://www.twitch.tv; "
         "child-src 'self' blob: https://player.twitch.tv https://www.twitch.tv; "
         "worker-src 'self' blob:; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com data:; "
-        "img-src 'self' data: blob: https://static-cdn.jtvnw.net https://badges.twitch.tv https://cdn.discordapp.com https://www.gstatic.com; "
+        "img-src 'self' data: blob: https://static-cdn.jtvnw.net https://badges.twitch.tv https://cdn.discordapp.com; "
         "media-src 'self' blob:; "
-        "connect-src 'self' blob: https://www.gstatic.com https://*.googleapis.com https://clients3.google.com;"
+        "connect-src 'self' blob: https://*.googleapis.com https://clients3.google.com;"
     )
     header = "Content-Security-Policy" if os.environ.get("VOD_CSP_ENFORCE", "false").lower() in ("true", "1", "yes") else "Content-Security-Policy-Report-Only"
     response.headers.setdefault(header, csp)
-    return response
-
-
-@app.after_request
-def add_cast_cors_headers(response):
-    path = request.path or ""
-    if (
-        path.startswith("/media/")
-        or path.startswith("/clip/media/")
-        or path.startswith("/public/media/")
-        or path.startswith("/hls/playlist/")
-        or path.startswith("/hls/segment/")
-        or path.startswith("/live/playlist/")
-        or path.startswith("/live/segment/")
-    ):
-        apply_cast_cors(response)
     return response
 
 
@@ -10559,7 +10824,7 @@ def public_media(token):
         abort(404)
     accel_path = None
     if USE_X_ACCEL:
-        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"))
+        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"), file_path=file_path)
     return send_mp4_with_range(file_path, accel_path=accel_path)
 
 
@@ -10576,7 +10841,7 @@ def public_download(token):
         abort(404)
     accel_path = None
     if USE_X_ACCEL:
-        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"))
+        accel_path = media_accel_path(streamer, filename, clip=(route == "clip"), file_path=file_path)
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
@@ -10810,12 +11075,9 @@ def _live_chat_log_path(streamer):
 
 
 @app.route("/chat/live/<streamer>")
-@login_or_cast_required("live", name_arg=None)
+@media_login_required
 def chat_live(streamer):
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", streamer, ""))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     # Prefer the live chat jsonl (wall-clock `t`) so channel-point / mod events
     # from the IRC chat process show up immediately in Live/Watch views.
     log_path = _live_chat_log_path(streamer)
@@ -10875,7 +11137,7 @@ def editor_view(streamer, filename):
         CLIP_EDITOR_TEMPLATE,
         streamer=streamer,
         filename=filename,
-        media_url=url_with_cast("media", "vod", streamer, filename),
+        media_url=url_for("media", streamer=streamer, filename=filename),
         back_url=url_for("vod_view", streamer=streamer, filename=filename),
         clip_ok=request.args.get("clip_ok"),
         clip_error=request.args.get("clip_error"),
@@ -10890,7 +11152,7 @@ def editor_live_view(streamer):
         CLIP_EDITOR_TEMPLATE,
         streamer=streamer,
         filename=f"LIVE {streamer}",
-        media_url=url_with_cast("live_playlist", "live", streamer),
+        media_url=url_for("live_playlist", streamer=streamer),
         back_url=url_for("live_view", streamer=streamer),
         clip_ok=request.args.get("clip_ok"),
         clip_error=request.args.get("clip_error"),
@@ -11271,7 +11533,7 @@ def hls_view(streamer, filename):
         abort(404)
     _, playlist, _ = hls_paths(streamer, filename)
     ready = os.path.isfile(playlist)
-    playlist_url = url_with_cast("hls_playlist", "hls", streamer, filename) if ready else ""
+    playlist_url = url_for("hls_playlist", streamer=streamer, filename=filename) if ready else ""
     return render_template_string(
         HLS_TEMPLATE,
         streamer=streamer,
@@ -11293,13 +11555,10 @@ def hls_generate(streamer, filename):
 
 
 @app.route("/hls/playlist/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("hls")
+@media_login_required
 def hls_playlist(streamer, filename):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "hls", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     busy = enforce_vod_watch_slot(streamer, filename)
     if busy:
         return busy
@@ -11315,32 +11574,18 @@ def hls_playlist(streamer, filename):
     except OSError:
         abort(404)
 
-    cast_kwargs = _cast_query_kwargs()
-
     def segment_url_for(seg):
-        params = dict(
-            streamer=streamer,
-            filename=filename,
-            segment=seg,
-            v=hls_version,
-            **cast_kwargs,
-        )
-        if cast_kwargs:
-            return cast_media_url("hls_segment", **params)
-        return url_for("hls_segment", **params)
+        return url_for("hls_segment", streamer=streamer, filename=filename, segment=seg, v=hls_version)
 
     output = rewrite_hls_playlist_for_client(lines, segment_url_for)
     return hls_playlist_response("".join(output), live=False)
 
 
 @app.route("/hls/segment/<streamer>/<filename>/<segment>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("hls")
+@media_login_required
 def hls_segment(streamer, filename, segment):
     abort_vod_denied()
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "hls", streamer, filename))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     busy = enforce_vod_watch_slot(streamer, filename)
     if busy:
         return busy
@@ -11446,31 +11691,6 @@ def api_live_client_debug():
     return jsonify({"ok": True})
 
 
-@app.route("/api/live/cast-url/<streamer>")
-@login_required
-def api_live_cast_url(streamer):
-    """Start live HLS if needed and return a cookie-free playlist URL for AirPlay/Chromecast."""
-    channel = normalize_channel_name(streamer) or twitch_api.normalize_login(streamer)
-    if not channel:
-        abort(404)
-    abort_hidden_streamer(channel)
-    try:
-        add_live_channel(channel)
-    except Exception:
-        app.logger.exception("Could not enable live proxy for cast %s", channel)
-        return jsonify({"ok": False, "ready": False, "url": ""}), 500
-    touch_live_heartbeat(channel)
-    ready = live_playlist_fresh(channel)
-    return jsonify({
-        "ok": True,
-        "ready": ready,
-        "channel": channel,
-        "url": url_with_cast("live_playlist", "live", channel),
-        "contentType": "application/vnd.apple.mpegurl",
-        "live": True,
-    })
-
-
 @app.route("/api/live/ready/<streamer>")
 @login_required
 def api_live_ready(streamer):
@@ -11500,7 +11720,7 @@ def api_live_ready(streamer):
         "title": (info.get("title") if isinstance(info, dict) else "") or "",
         "game_name": (info.get("game_name") if isinstance(info, dict) else "") or "",
         "viewer_count": (info.get("viewer_count") if isinstance(info, dict) else 0) or 0,
-        "playlist_url": url_with_cast("live_playlist", "live", channel) if ready else "",
+        "playlist_url": url_for("live_playlist", streamer=channel) if ready else "",
     })
 
 
@@ -11555,7 +11775,7 @@ def twitch_watch(channel):
         use_hls_proxy = True
     elif proxy_arg in ("0", "false", "no", "off") or embed_arg in ("1", "true", "yes", "on"):
         use_hls_proxy = False
-    elif is_mobile() or wants_apple_airplay_player() or is_tizen_tv():
+    elif is_mobile() or is_ios_client():
         use_hls_proxy = True
     elif config.LIVE_TWITCH_OAUTH_ENABLED:
         use_hls_proxy = True
@@ -11605,10 +11825,9 @@ def twitch_watch(channel):
         "use_hls_proxy": use_hls_proxy,
         "live_debug": live_debug,
         "proxy_key": proxy_key,
-        "hls_playlist_url": url_with_cast("live_playlist", "live", proxy_key) if use_hls_proxy else "",
+        "hls_playlist_url": url_for("live_playlist", streamer=proxy_key) if use_hls_proxy else "",
         "hls_ready_url": url_for("api_live_ready", streamer=proxy_key) if use_hls_proxy else "",
         "hls_client_debug_url": url_for("api_live_client_debug"),
-        "cast_ensure_url": url_for("api_live_cast_url", streamer=login),
         "watch_embed_url": watch_embed_url,
         "watch_proxy_url": watch_proxy_url,
         "live_oauth_enabled": bool(config.LIVE_TWITCH_OAUTH_ENABLED),
@@ -11711,7 +11930,7 @@ def live_view(streamer):
         app.logger.exception("Could not enable live channel for studio %s", channel)
     touch_live_heartbeat(channel)
     ready = live_playlist_exists(channel)
-    playlist_url = url_with_cast("live_playlist", "live", channel)
+    playlist_url = url_for("live_playlist", streamer=channel)
 
     if is_mobile():
         return render_template_string(
@@ -11745,25 +11964,19 @@ def live_view(streamer):
 
 
 @app.route("/live/obs/<streamer>")
-@login_or_cast_required("live", name_arg=None)
+@login_required
 def live_obs(streamer):
     """Fullscreen picture and sound for an OBS browser source."""
     channel = normalize_channel_name(streamer) or ""
     if not channel or channel != str(streamer or "").strip().lower():
         abort(404)
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", channel, ""))
-    if not cast_ok:
-        abort_hidden_streamer(channel)
+    abort_hidden_streamer(channel)
     try:
         add_live_channel(channel)
     except Exception:
         app.logger.exception("Could not enable live proxy for obs %s", channel)
     touch_live_heartbeat(channel)
-    if cast_ok:
-        playlist_url = url_for("live_playlist", streamer=channel, cast=token)
-    else:
-        playlist_url = url_with_cast("live_playlist", "live", channel)
+    playlist_url = url_for("live_playlist", streamer=channel)
     resp = make_response(render_template_string(
         LIVE_OBS_TEMPLATE,
         playlist_url=playlist_url,
@@ -11773,20 +11986,16 @@ def live_obs(streamer):
     return resp
 
 @app.route("/chat/obs/<streamer>")
-@login_or_cast_required("live", name_arg=None)
+@login_required
 def chat_obs(streamer):
     """Fullscreen transparent chat overlay for an OBS browser source."""
     channel = normalize_channel_name(streamer) or ""
     if not channel or channel != str(streamer or "").strip().lower():
         abort(404)
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", channel, ""))
-    if not cast_ok:
-        abort_hidden_streamer(channel)
+    abort_hidden_streamer(channel)
     resp = make_response(render_template_string(
         CHAT_OBS_TEMPLATE,
         streamer=channel,
-        cast_token=token if cast_ok else "",
     ))
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     resp.headers["Pragma"] = "no-cache"
@@ -11795,12 +12004,9 @@ def chat_obs(streamer):
 
 
 @app.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("live", name_arg=None)
+@media_login_required
 def live_playlist(streamer):
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", streamer, ""))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     touch_live_heartbeat(streamer)
     if not live_playlist_fresh(streamer):
         abort(404)
@@ -11815,11 +12021,7 @@ def live_playlist(streamer):
     except Exception:
         abort(404)
 
-    cast_kwargs = _cast_query_kwargs()
-
     def segment_url_for(seg):
-        if cast_kwargs:
-            return cast_media_url("live_segment", streamer=streamer, segment=seg, **cast_kwargs)
         return url_for("live_segment", streamer=streamer, segment=seg)
 
     output = rewrite_hls_playlist_for_client(lines, segment_url_for)
@@ -11827,12 +12029,9 @@ def live_playlist(streamer):
 
 
 @app.route("/live/segment/<streamer>/<segment>", methods=_MEDIA_HTTP_METHODS)
-@login_or_cast_required("live", name_arg=None)
+@media_login_required
 def live_segment(streamer, segment):
-    token = (request.args.get("cast") or "").strip()
-    cast_ok = bool(token and verify_cast_token(token, "live", streamer, ""))
-    if not cast_ok:
-        abort_hidden_streamer(streamer)
+    abort_hidden_streamer(streamer)
     touch_live_heartbeat(streamer)
     if os.path.basename(segment) != segment:
         abort(404)
@@ -12427,6 +12626,9 @@ def empty_folder_route(streamer):
 @admin_required
 def delete_folder_route(streamer):
     archive = archive_name_for(streamer) or normalize_channel_name(streamer) or streamer
+    if config.is_reserved_archive_name(archive):
+        logging.error("Refusing to delete reserved directory %r (requested for %r)", archive, streamer)
+        abort(400)
     # Sicherheitscheck: Pfad muss im Basis-Verzeichnis liegen
     folder_path = safe_join(config.BASE_DIR, archive)
     # Strenge Prüfung: Muss ein Verzeichnis sein und direkt unter BASE_DIR liegen
@@ -12495,17 +12697,25 @@ def delete_folder_route(streamer):
         msg = "Ordner nicht gefunden oder ungültig."
         return redirect(url_for('index', channels_msg=msg))
 
-# Ensure baseline users exist (runs on import for Gunicorn)
-try:
-    ensure_admin_user()
-except Exception:
-    pass
+# Ensure baseline users exist (runs on import for Gunicorn). The standalone
+# transcription helper imports this module in a child process and must not
+# mutate users or start background sync threads.
+_IMPORT_ONLY = os.environ.get("STREAMVAULT_IMPORT_ONLY", "").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+if not _IMPORT_ONLY:
+    try:
+        ensure_admin_user()
+    except Exception:
+        logging.exception("Bootstrap: Admin-Benutzer konnte nicht sichergestellt werden")
 
-# Keep a full local Twitch badge library (~a few MB) for 1:1 chat icons.
-try:
-    maybe_start_twitch_badge_library_sync()
-except Exception:
-    logging.exception("Could not start Twitch badge library sync")
+    # Keep a full local Twitch badge library (~a few MB) for 1:1 chat icons.
+    try:
+        maybe_start_twitch_badge_library_sync()
+    except Exception:
+        logging.exception("Could not start Twitch badge library sync")
 
 
 
@@ -12684,7 +12894,7 @@ def admin_backup_download(filename):
     clean = secure_filename(filename)
     if not clean.startswith("streamrecorder_") or not clean.endswith(".tar.gz"):
         abort(400)
-    backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
+    backups_dir = system_backups_dir()
     local_path = os.path.join(backups_dir, clean)
     if os.path.isfile(local_path):
         return send_from_directory(backups_dir, clean, as_attachment=True)
@@ -12694,9 +12904,13 @@ def admin_backup_download(filename):
 @app.route("/admin/backups/create", methods=["POST"])
 @admin_required
 def admin_backup_create():
-    script_path = "/root/Streamrecorder/scripts/backup_streamrecorder.sh"
-    if not os.path.isfile(script_path):
-        return redirect(url_for("admin_view", tab="backups", error="Backup-Skript nicht gefunden."))
+    # Operator-provided script that writes streamrecorder_*.tar.gz into BACKUP_DIR.
+    script_path = os.environ.get("VOD_BACKUP_SCRIPT", "").strip()
+    if not script_path or not os.path.isfile(script_path):
+        return redirect(url_for(
+            "admin_view", tab="backups",
+            error="Kein Backup-Skript konfiguriert (VOD_BACKUP_SCRIPT).",
+        ))
     try:
         res = subprocess.run(["bash", script_path], capture_output=True, text=True, timeout=120)
         if res.returncode == 0:
@@ -12716,15 +12930,14 @@ def admin_backup_delete(filename):
     clean = secure_filename(filename)
     if not clean.startswith("streamrecorder_") or not clean.endswith(".tar.gz"):
         abort(400)
-    backups_dir = os.environ.get("BACKUP_DIR") or "/root/streamrecorder_backups"
-    local_path = os.path.join(backups_dir, clean)
+    local_path = os.path.join(system_backups_dir(), clean)
     deleted = False
     if os.path.isfile(local_path):
         try:
             os.remove(local_path)
             deleted = True
-        except Exception:
-            pass
+        except OSError as exc:
+            logging.error("Could not delete backup %s: %s", local_path, exc)
     if deleted:
         bust_media_cache()
         return redirect(url_for("admin_view", tab="backups", msg=f"Backup {clean} erfolgreich gelöscht."))

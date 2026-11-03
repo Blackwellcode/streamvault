@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Datei Manager — StreamVault Vault{% endblock %}
 {% block page_title %}Datei Manager{% endblock %}
@@ -43,7 +43,7 @@
 
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <input name="title" class="ns-input-field" placeholder="Titel (optional)" style="flex: 1; min-width: 200px;">
-        <input name="description" class="ns-input-field" placeholder="Beschreibung (optional)" style="flex: 2; min-width: 260px;">
+        <input name="description" class="ns-input-field" placeholder="Beschreibung (optional)" style="flex: 2; min-width: min(260px, 100%);">
         <button type="submit" class="ns-btn ns-btn-primary">Hochladen</button>
       </div>
     </form>

@@ -9,8 +9,6 @@ import re
 import subprocess
 import threading
 import time
-import urllib.error
-import urllib.parse
 
 from recorder import clip_engine
 from core import config
@@ -79,11 +77,7 @@ def parse_clip_command(message: str) -> str | None:
 
 
 def live_hls_playlist(source_channel: str) -> str:
-    root = os.environ.get("LIVE_HLS_DIR") or getattr(config, "LIVE_HLS_ROOT", "")
-    if not root and os.path.isdir("/dev/shm"):
-        root = os.path.join("/dev/shm", "streamrecorder_hls")
-    if not root:
-        root = os.path.join(config.BASE_DIR, ".hls_live")
+    root = os.environ.get("LIVE_HLS_DIR") or config.LIVE_HLS_ROOT
     login = re.sub(r"[^a-z0-9_]+", "", str(source_channel or "").strip().lower())
     if not login:
         return ""

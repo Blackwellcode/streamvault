@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Chat-Tracker & Globale Suche — StreamVault Vault{% endblock %}
 {% block page_title %}Chat-Tracker & Globale Suche{% endblock %}
@@ -19,7 +19,7 @@
       <span style="font-size: 11px; color: var(--ns-text-muted);">Streamer, VODs & Chatverläufe</span>
     </div>
     <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap;">
-      <div style="flex: 1; min-width: 260px;">
+      <div style="flex: 1; min-width: min(260px, 100%);">
         <input name="global" placeholder="Suchbegriff (z.B. Spielername, Chatnachricht, Datum)..." value="{{ global_query }}" class="ns-input-field" style="width: 100%;">
       </div>
       <button type="submit" class="ns-btn ns-btn-primary">

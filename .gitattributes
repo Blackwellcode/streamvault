@@ -1,0 +1,27 @@
+# Keep repository content LF-normalised regardless of core.autocrlf.
+* text=auto
+
+# Executed on Linux (VPS, Docker): CRLF breaks the shebang / bash parsing.
+*.sh text eol=lf
+bin/streamvault text eol=lf
+Dockerfile text eol=lf
+*.conf text eol=lf
+.env.example text eol=lf
+
+# Windows helpers keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.mp3 binary
+*.mp4 binary
+*.woff binary
+*.woff2 binary
+*.db binary

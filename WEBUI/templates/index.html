@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}StreamVault — Cosmic Stream & Media Vault{% endblock %}
-{% block page_title %}{% if not is_tv and not is_mobile %}StreamVault{% endif %}{% endblock %}
+{% block title %}Dashboard — StreamVault{% endblock %}
+{% block page_title %}{% if not is_mobile %}StreamVault{% endif %}{% endblock %}
 {% block page_subtitle %}{% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
   <div class="nebula-home-layout ns-ops-grid">
     <!-- Left / Center Main Content -->
     <div class="nebula-main-col">
-      <!-- 1. Cosmic Hero Section -->
+      <!-- 1. Hero Section -->
       {% if hero_item and hero_item.is_live %}
       <section class="nebula-hero" aria-label="Featured Highlight">
         {% if hero_item.thumbnail_url %}
@@ -66,7 +66,7 @@
             {% if hero_item.is_live %}
             <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> LIVE</span>
             {% endif %}
-            {% if not is_tv and not is_mobile %}
+            {% if not is_mobile %}
             <div class="nebula-hero-play-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
             </div>
@@ -75,7 +75,7 @@
         </div>
         {% endif %}
       </section>
-      {% elif not live_channels and not is_tv and not is_mobile %}
+      {% elif not live_channels and not is_mobile %}
       <div class="nebula-empty-live-banner" style="padding: 36px 24px; text-align: center; background: var(--nebula-bg-surface); border: 1px dashed var(--nebula-border); border-radius: 16px; margin-bottom: 24px;">
         <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.7;">📡</div>
         <h3 style="color: #FFF; font-size: 18px; margin-bottom: 6px;">Kein Live-Stream aktiv</h3>
@@ -113,7 +113,7 @@
               {% if vod.duration_str %}
               <span class="nebula-vod-duration">{{ vod.duration_str }}</span>
               {% endif %}
-              {% if not is_tv and not is_mobile %}
+              {% if not is_mobile %}
               <div class="nebula-vod-play-overlay">
                 <div class="nebula-vod-play-circle">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -155,9 +155,9 @@
       {% endif %}
     </div>
 
-    {% if not is_tv and not is_mobile %}
+    {% if not is_mobile %}
     <!-- Right Column: Community & Silo Widgets (Desktop only) -->
-    <aside class="nebula-side-rail" aria-label="Community & Vault Insights">
+    <aside class="nebula-side-rail" aria-label="Archiv-Übersicht">
       <!-- Widget 1: Kompakte Kanal-Schnellauswahl -->
       {% if streamers %}
       <div class="nebula-side-widget">

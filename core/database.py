@@ -363,6 +363,73 @@ def init_db():
             )
             """
         )
+        # External storage providers. Credentials are AES-GCM encrypted by
+        # core.storage.crypto before they reach this table.
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS storage_providers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                provider_type TEXT NOT NULL,
+                config TEXT NOT NULL DEFAULT '',
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL,
+                last_check_at REAL,
+                last_check_ok INTEGER,
+                last_check_message TEXT,
+                last_error TEXT
+            )
+            """
+        )
+        c.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_storage_providers_name "
+            "ON storage_providers(name COLLATE NOCASE)"
+        )
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS storage_objects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider_id INTEGER NOT NULL,
+                local_path TEXT NOT NULL,
+                remote_path TEXT NOT NULL,
+                streamer TEXT DEFAULT '',
+                filename TEXT DEFAULT '',
+                kind TEXT DEFAULT 'vod',
+                status TEXT NOT NULL DEFAULT 'pending',
+                local_size INTEGER DEFAULT 0,
+                local_mtime REAL DEFAULT 0,
+                remote_size INTEGER DEFAULT 0,
+                remote_modified TEXT DEFAULT '',
+                remote_checksum TEXT DEFAULT '',
+                progress REAL DEFAULT 0,
+                attempts INTEGER DEFAULT 0,
+                last_error TEXT DEFAULT '',
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL,
+                uploaded_at REAL,
+                local_deleted_at REAL,
+                remote_deleted_at REAL,
+                FOREIGN KEY(provider_id) REFERENCES storage_providers(id) ON DELETE CASCADE
+            )
+            """
+        )
+        c.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_storage_objects_provider_local "
+            "ON storage_objects(provider_id, local_path)"
+        )
+        c.execute(
+            "CREATE INDEX IF NOT EXISTS idx_storage_objects_status "
+            "ON storage_objects(status, updated_at)"
+        )
+        c.execute(
+            "CREATE INDEX IF NOT EXISTS idx_storage_objects_media "
+            "ON storage_objects(streamer COLLATE NOCASE, filename COLLATE NOCASE)"
+        )
+        c.execute(
+            "CREATE INDEX IF NOT EXISTS idx_storage_objects_provider "
+            "ON storage_objects(provider_id, status)"
+        )
         # Performance & Concurrency Indexes (users, logs, channels, traffic)
         c.execute("CREATE INDEX IF NOT EXISTS idx_users_group_id ON users(group_id)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_users_active ON users(active)")
@@ -624,11 +691,13 @@ def list_tasks(limit=30):
 
 
 @db_retry(max_retries=5, delay=0.1, backoff=2.0)
-def claim_next_task(worker_id, stale_after=7200, allowed_types=None):
+def claim_next_task(worker_id, stale_after=7200, allowed_types=None, max_attempts_by_type=None):
     """Claim the oldest pending task, optionally restricted to allowed_types.
 
     When allowed_types is set (non-empty sequence), only those task types are
-    considered — used by the worker to avoid claiming work for saturated pools.
+    considered - used by the worker to avoid claiming work for saturated pools.
+    When max_attempts_by_type is provided, stale tasks that exhausted their
+    retry budget are failed instead of being requeued forever.
     """
     conn = get_db()
     now = time.time()
@@ -641,14 +710,43 @@ def claim_next_task(worker_id, stale_after=7200, allowed_types=None):
             return None
     try:
         conn.execute("BEGIN IMMEDIATE")
-        conn.execute(
+        stale_rows = conn.execute(
             """
-            UPDATE tasks
-            SET status='pending', worker_id=NULL, locked_at=NULL, updated_at=?, error='Worker timeout, neu eingereiht.'
+            SELECT id, type, attempts
+            FROM tasks
             WHERE status='running' AND locked_at IS NOT NULL AND locked_at < ?
             """,
-            (now, cutoff),
-        )
+            (cutoff,),
+        ).fetchall()
+        for stale in stale_rows:
+            attempts = int(stale["attempts"] or 0)
+            if max_attempts_by_type is None:
+                exhausted = False
+            else:
+                max_attempts = max(
+                    1, int(max_attempts_by_type.get(stale["type"], 1) or 1)
+                )
+                exhausted = attempts >= max_attempts
+            if exhausted:
+                conn.execute(
+                    """
+                    UPDATE tasks
+                    SET status='failed', worker_id=NULL, locked_at=NULL, updated_at=?,
+                        error='Worker timeout; max attempts reached.'
+                    WHERE id=? AND status='running'
+                    """,
+                    (now, stale["id"]),
+                )
+            else:
+                conn.execute(
+                    """
+                    UPDATE tasks
+                    SET status='pending', worker_id=NULL, locked_at=NULL, updated_at=?,
+                        error='Worker timeout, neu eingereiht.'
+                    WHERE id=? AND status='running'
+                    """,
+                    (now, stale["id"]),
+                )
         if type_filter:
             placeholders = ",".join("?" for _ in type_filter)
             row = conn.execute(
@@ -910,7 +1008,7 @@ def set_channel_record(name, enabled: bool):
         conn.close()
 
 
-def has_active_task(task_type, streamer=None, filename=None):
+def has_active_task(task_type, streamer=None, filename=None, *, object_id=None, provider_id=None):
     conn = get_db()
     try:
         rows = conn.execute(
@@ -918,7 +1016,7 @@ def has_active_task(task_type, streamer=None, filename=None):
             SELECT payload FROM tasks
             WHERE type=? AND status IN ('pending', 'running')
             ORDER BY id DESC
-            LIMIT 200
+            LIMIT 1000
             """,
             (str(task_type or ""),),
         ).fetchall()
@@ -926,6 +1024,18 @@ def has_active_task(task_type, streamer=None, filename=None):
         conn.close()
     want_streamer = str(streamer or "").strip()
     want_filename = str(filename or "").strip()
+    want_object = None
+    if object_id is not None:
+        try:
+            want_object = int(object_id)
+        except (TypeError, ValueError):
+            want_object = None
+    want_provider = None
+    if provider_id is not None:
+        try:
+            want_provider = int(provider_id)
+        except (TypeError, ValueError):
+            want_provider = None
     for row in rows:
         try:
             payload = json.loads(row["payload"] or "{}")
@@ -933,6 +1043,19 @@ def has_active_task(task_type, streamer=None, filename=None):
             payload = {}
         if not isinstance(payload, dict):
             payload = {}
+        if want_provider is not None:
+            try:
+                if int(payload.get("provider_id")) != want_provider:
+                    continue
+            except (TypeError, ValueError):
+                continue
+        if want_object is not None:
+            try:
+                if int(payload.get("object_id")) == want_object:
+                    return True
+            except (TypeError, ValueError):
+                pass
+            continue
         if want_streamer and str(payload.get("streamer") or "").strip() != want_streamer:
             continue
         if want_filename and str(payload.get("filename") or "").strip() != want_filename:
@@ -1894,7 +2017,7 @@ def update_user_group(
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.")
+        raise ValueError("Ungültige Gruppen-ID.") from None
     group = get_user_group(gid)
     if not group:
         raise ValueError("Gruppe nicht gefunden.")
@@ -1947,7 +2070,7 @@ def delete_user_group(group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.")
+        raise ValueError("Ungültige Gruppen-ID.") from None
     group = get_user_group(gid)
     if not group:
         raise ValueError("Gruppe nicht gefunden.")
@@ -1981,7 +2104,7 @@ def set_user_group(username: str, group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.")
+        raise ValueError("Ungültige Gruppen-ID.") from None
     group = get_user_group(gid)
     if not group:
         raise ValueError("Gruppe nicht gefunden.")
@@ -2039,3 +2162,432 @@ def get_user_permissions(username: str) -> dict:
         "allowed_channels": [],
         "disabled_channels": [],
     }
+
+
+# ---------------------------------------------------------------------------
+# External storage providers and archive objects
+# ---------------------------------------------------------------------------
+
+def _storage_provider_row(row):
+    if not row:
+        return None
+    data = dict(row)
+    data["enabled"] = bool(data.get("enabled"))
+    data["last_check_ok"] = (
+        None if data.get("last_check_ok") is None else bool(data.get("last_check_ok"))
+    )
+    return data
+
+
+def list_storage_providers():
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM storage_providers ORDER BY name COLLATE NOCASE ASC"
+        ).fetchall()
+        return [_storage_provider_row(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def get_storage_provider(provider_id):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        return None
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT * FROM storage_providers WHERE id = ?",
+            (pid,),
+        ).fetchone()
+        return _storage_provider_row(row)
+    finally:
+        conn.close()
+
+
+def create_storage_provider(name, provider_type, config, enabled=True):
+    now = time.time()
+    conn = get_db()
+    try:
+        cur = conn.execute(
+            """
+            INSERT INTO storage_providers
+                (name, provider_type, config, enabled, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(name or "").strip(),
+                str(provider_type or "").strip(),
+                str(config or ""),
+                1 if enabled else 0,
+                now,
+                now,
+            ),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def update_storage_provider(
+    provider_id,
+    *,
+    name=None,
+    provider_type=None,
+    config=None,
+    enabled=None,
+):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        return False
+    fields = []
+    values = []
+    if name is not None:
+        fields.append("name = ?")
+        values.append(str(name or "").strip())
+    if provider_type is not None:
+        fields.append("provider_type = ?")
+        values.append(str(provider_type or "").strip())
+    if config is not None:
+        fields.append("config = ?")
+        values.append(str(config or ""))
+    if enabled is not None:
+        fields.append("enabled = ?")
+        values.append(1 if enabled else 0)
+    if not fields:
+        return False
+    fields.append("updated_at = ?")
+    values.append(time.time())
+    values.append(pid)
+    conn = get_db()
+    try:
+        cur = conn.execute(
+            f"UPDATE storage_providers SET {', '.join(fields)} WHERE id = ?",
+            tuple(values),
+        )
+        conn.commit()
+        return bool(cur.rowcount)
+    finally:
+        conn.close()
+
+
+def delete_storage_provider(provider_id):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        return False
+    conn = get_db()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute("DELETE FROM storage_objects WHERE provider_id = ?", (pid,))
+        cur = conn.execute("DELETE FROM storage_providers WHERE id = ?", (pid,))
+        conn.commit()
+        return bool(cur.rowcount)
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def set_storage_provider_check(provider_id, ok, message=""):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        return False
+    conn = get_db()
+    try:
+        conn.execute(
+            """
+            UPDATE storage_providers
+            SET last_check_at = ?, last_check_ok = ?, last_check_message = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (time.time(), 1 if ok else 0, str(message or "")[:500], time.time(), pid),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def set_storage_provider_error(provider_id, error=""):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        return False
+    conn = get_db()
+    try:
+        conn.execute(
+            "UPDATE storage_providers SET last_error = ?, updated_at = ? WHERE id = ?",
+            (str(error or "")[:500], time.time(), pid),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def _storage_object_row(row):
+    return dict(row) if row else None
+
+
+def get_storage_object(object_id):
+    try:
+        oid = int(object_id)
+    except (TypeError, ValueError):
+        return None
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT * FROM storage_objects WHERE id = ?",
+            (oid,),
+        ).fetchone()
+        return _storage_object_row(row)
+    finally:
+        conn.close()
+
+
+def find_storage_object(provider_id, local_path):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        return None
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT * FROM storage_objects WHERE provider_id = ? AND local_path = ?",
+            (pid, str(local_path or "")),
+        ).fetchone()
+        return _storage_object_row(row)
+    finally:
+        conn.close()
+
+
+def upsert_storage_object(
+    provider_id,
+    local_path,
+    remote_path,
+    *,
+    streamer="",
+    filename="",
+    kind="vod",
+    local_size=0,
+    local_mtime=0,
+    status="pending",
+):
+    try:
+        pid = int(provider_id)
+    except (TypeError, ValueError):
+        raise ValueError("Ungültige Provider-ID.") from None
+    now = time.time()
+    conn = get_db()
+    try:
+        conn.execute(
+            """
+            INSERT INTO storage_objects
+                (provider_id, local_path, remote_path, streamer, filename, kind,
+                 status, local_size, local_mtime, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(provider_id, local_path) DO UPDATE SET
+                remote_path = excluded.remote_path,
+                streamer = excluded.streamer,
+                filename = excluded.filename,
+                kind = excluded.kind,
+                updated_at = excluded.updated_at
+            """,
+            (
+                pid,
+                str(local_path or ""),
+                str(remote_path or ""),
+                str(streamer or ""),
+                str(filename or ""),
+                str(kind or "vod"),
+                str(status or "pending"),
+                max(0, int(local_size or 0)),
+                float(local_mtime or 0),
+                now,
+                now,
+            ),
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM storage_objects WHERE provider_id = ? AND local_path = ?",
+            (pid, str(local_path or "")),
+        ).fetchone()
+        return _storage_object_row(row)
+    finally:
+        conn.close()
+
+
+_STORAGE_OBJECT_WRITABLE = {
+    "remote_path",
+    "streamer",
+    "filename",
+    "kind",
+    "status",
+    "local_size",
+    "local_mtime",
+    "remote_size",
+    "remote_modified",
+    "remote_checksum",
+    "progress",
+    "attempts",
+    "last_error",
+    "uploaded_at",
+    "local_deleted_at",
+    "remote_deleted_at",
+}
+
+
+def update_storage_object(object_id, **fields):
+    try:
+        oid = int(object_id)
+    except (TypeError, ValueError):
+        return False
+    updates = {key: value for key, value in fields.items() if key in _STORAGE_OBJECT_WRITABLE}
+    if not updates:
+        return False
+    if "last_error" in updates:
+        updates["last_error"] = str(updates["last_error"] or "")[:500]
+    columns = ", ".join(f"{key} = ?" for key in updates)
+    values = list(updates.values())
+    values.extend([time.time(), oid])
+    conn = get_db()
+    try:
+        cur = conn.execute(
+            f"UPDATE storage_objects SET {columns}, updated_at = ? WHERE id = ?",
+            tuple(values),
+        )
+        conn.commit()
+        return bool(cur.rowcount)
+    finally:
+        conn.close()
+
+
+def list_storage_objects(
+    provider_id=None,
+    status=None,
+    streamer=None,
+    *,
+    limit=200,
+    offset=0,
+    uploaded_before=None,
+    local_deleted=None,
+    remote_deleted=False,
+):
+    clauses = []
+    values = []
+    if provider_id is not None:
+        try:
+            clauses.append("provider_id = ?")
+            values.append(int(provider_id))
+        except (TypeError, ValueError):
+            return []
+    if status:
+        statuses = [status] if isinstance(status, str) else list(status)
+        statuses = [str(item) for item in statuses if item]
+        if statuses:
+            clauses.append("status IN (" + ",".join("?" for _ in statuses) + ")")
+            values.extend(statuses)
+    if streamer:
+        clauses.append("streamer = ? COLLATE NOCASE")
+        values.append(str(streamer))
+    if uploaded_before is not None:
+        clauses.append("uploaded_at IS NOT NULL AND uploaded_at <= ?")
+        values.append(float(uploaded_before))
+    if local_deleted is True:
+        clauses.append("local_deleted_at IS NOT NULL")
+    elif local_deleted is False:
+        clauses.append("local_deleted_at IS NULL")
+    if remote_deleted:
+        clauses.append("remote_deleted_at IS NOT NULL")
+    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+    try:
+        limit_i = max(1, min(5000, int(limit)))
+        offset_i = max(0, int(offset))
+    except (TypeError, ValueError):
+        limit_i, offset_i = 200, 0
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            f"""
+            SELECT * FROM storage_objects
+            {where}
+            ORDER BY updated_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            (*values, limit_i, offset_i),
+        ).fetchall()
+        return [_storage_object_row(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def storage_object_summary(provider_id=None):
+    conn = get_db()
+    try:
+        clauses = ["remote_deleted_at IS NULL", "status != 'remote_deleted'"]
+        params = []
+        if provider_id is not None:
+            try:
+                clauses.append("provider_id = ?")
+                params.append(int(provider_id))
+            except (TypeError, ValueError):
+                return {"total": 0, "bytes": 0, "statuses": {}}
+        where = "WHERE " + " AND ".join(clauses)
+        rows = conn.execute(
+            f"""
+            SELECT status, COUNT(*) AS count, COALESCE(SUM(remote_size), 0) AS bytes
+            FROM storage_objects {where}
+            GROUP BY status
+            """,
+            tuple(params),
+        ).fetchall()
+        total = 0
+        total_bytes = 0
+        statuses = {}
+        for row in rows:
+            count = int(row["count"] or 0)
+            total += count
+            total_bytes += int(row["bytes"] or 0)
+            statuses[str(row["status"] or "")] = {
+                "count": count,
+                "bytes": int(row["bytes"] or 0),
+            }
+        return {"total": total, "bytes": total_bytes, "statuses": statuses}
+    finally:
+        conn.close()
+
+
+def delete_storage_object(object_id):
+    try:
+        oid = int(object_id)
+    except (TypeError, ValueError):
+        return False
+    conn = get_db()
+    try:
+        cur = conn.execute("DELETE FROM storage_objects WHERE id = ?", (oid,))
+        conn.commit()
+        return bool(cur.rowcount)
+    finally:
+        conn.close()
+
+
+def list_storage_objects_for_media(streamer, filename):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT * FROM storage_objects
+            WHERE streamer = ? COLLATE NOCASE AND filename = ? COLLATE NOCASE
+            ORDER BY updated_at DESC
+            """,
+            (str(streamer or ""), str(filename or "")),
+        ).fetchall()
+        return [_storage_object_row(row) for row in rows]
+    finally:
+        conn.close()

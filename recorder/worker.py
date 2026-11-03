@@ -12,7 +12,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-from recorder import chat_clip
 from recorder import clip_engine
 from core import config
 from core import database
@@ -60,19 +59,31 @@ THUMB_LOCK_STALE_SEC = int(os.environ.get("THUMB_LOCK_STALE_SEC", "3600"))
 THUMB_LOCK_CLEANUP_INTERVAL_SEC = int(os.environ.get("THUMB_LOCK_CLEANUP_INTERVAL_SEC", "1800"))
 THUMB_BACKFILL_INTERVAL_SEC = int(os.environ.get("THUMB_BACKFILL_INTERVAL_SEC", "300"))
 THUMB_BACKFILL_MAX_PER_RUN = int(os.environ.get("THUMB_BACKFILL_MAX_PER_RUN", "20"))
+# A current-recording pointer is considered live only while its media file is fresh.
+ACTIVE_RECORDING_FRESH_SEC = int(os.environ.get("WORKER_ACTIVE_RECORDING_FRESH_SEC", "60"))
 WORKER_ID = f"{os.uname().nodename}:{os.getpid()}" if hasattr(os, "uname") else f"local:{os.getpid()}"
 # Parallel pools (env):
 #   WORKER_THUMB_THREADS       — IO pool for thumbnail (+ delete/empty); default 2
 #   WORKER_REMUX_THREADS       — CPU/media pool for remux_vod / remux_all; default 1
 #   WORKER_TRANSCRIBE_THREADS  — ASR pool for Whisper; default 1 (keep low if RAM-heavy)
+#   WORKER_STORAGE_THREADS     — network pool for cloud uploads/downloads; default 1
 WORKER_THUMB_THREADS = max(1, int(os.environ.get("WORKER_THUMB_THREADS", "2")))
 WORKER_REMUX_THREADS = max(1, int(os.environ.get("WORKER_REMUX_THREADS", "1")))
 WORKER_TRANSCRIBE_THREADS = max(1, int(os.environ.get("WORKER_TRANSCRIBE_THREADS", "1")))
+WORKER_STORAGE_THREADS = max(1, int(os.environ.get("WORKER_STORAGE_THREADS", "1")))
 IO_TASK_TYPES = frozenset({
     "thumbnail", "delete_folder", "empty_folder",
 })
 REMUX_TASK_TYPES = frozenset({"remux_vod", "remux_all"})
 ASR_TASK_TYPES = frozenset({"transcribe"})
+STORAGE_TASK_TYPES = frozenset({
+    "storage_upload",
+    "storage_sync",
+    "storage_delete",
+    "storage_restore",
+    "storage_check",
+    "storage_cleanup",
+})
 TASK_MAX_ATTEMPTS = {
     "thumbnail": int(os.environ.get("TASK_MAX_ATTEMPTS_THUMBNAIL", "3")),
     "delete_folder": int(os.environ.get("TASK_MAX_ATTEMPTS_DELETE_FOLDER", "2")),
@@ -80,15 +91,22 @@ TASK_MAX_ATTEMPTS = {
     "transcribe": int(os.environ.get("TASK_MAX_ATTEMPTS_TRANSCRIBE", "1")),
     "remux_all": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_ALL", "1")),
     "remux_vod": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_VOD", "2")),
+    "storage_upload": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_UPLOAD", "3")),
+    "storage_sync": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_SYNC", "1")),
+    "storage_delete": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_DELETE", "3")),
+    "storage_restore": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_RESTORE", "3")),
+    "storage_check": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_CHECK", "1")),
+    "storage_cleanup": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_CLEANUP", "1")),
 }
 REMUX_FILE_TIMEOUT_SEC = int(os.environ.get("REMUX_FILE_TIMEOUT_SEC", "7200"))
 
-_INFLIGHT = {"io": 0, "remux": 0, "asr": 0}
+_INFLIGHT = {"io": 0, "remux": 0, "asr": 0, "storage": 0}
 _INFLIGHT_LOCK = threading.Lock()
 _POOL_LIMITS = {
     "io": WORKER_THUMB_THREADS,
     "remux": WORKER_REMUX_THREADS,
     "asr": WORKER_TRANSCRIBE_THREADS,
+    "storage": WORKER_STORAGE_THREADS,
 }
 _LAST_STORAGE_CHECK = 0.0
 _LAST_TASK_CLEANUP = 0.0
@@ -655,24 +673,21 @@ def process_delete_folder(payload):
     if not _is_direct_child(config.BASE_DIR, folder_path):
         logging.error("Unsicherer delete_folder Pfad abgelehnt: %s", folder_path)
         return False
+    if config.is_reserved_archive_name(os.path.basename(os.path.normpath(folder_path))):
+        logging.error("delete_folder rejected for reserved directory: %s", folder_path)
+        return False
 
     if not streamer:
         streamer = os.path.basename(os.path.realpath(folder_path))
 
+    if _folder_has_active_recording(folder_path) or _folder_has_active_remux(folder_path):
+        raise TaskDeferred(
+            f"Ordner wird noch beschrieben: {folder_path}", delay_sec=120
+        )
+
     logging.info("Löschauftrag für: %s", folder_path)
     # Wartezeit, damit der Recorder-Prozess Zeit hat, sauber zu stoppen
     time.sleep(8)
-
-    # Prozesse killen, die den Ordner blockieren könnten
-    if os.path.exists(folder_path):
-        try:
-            subprocess.run(
-                ["fuser", "-k", "-9", folder_path],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except Exception:
-            pass
 
     def _rm_tree(path):
         if not path or not os.path.exists(path):
@@ -704,14 +719,6 @@ def process_delete_folder(payload):
                     logging.warning("Löschversuch %s fehlgeschlagen: %s", i + 1, exc)
                     ok = False
                     time.sleep(2)
-                    try:
-                        subprocess.run(
-                            ["fuser", "-k", "-9", folder_path],
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL,
-                        )
-                    except Exception:
-                        pass
                     continue
             logging.info("Ordner erfolgreich gelöscht: %s", folder_path)
             ok = True
@@ -776,6 +783,98 @@ def _is_direct_child(parent, path):
         return False
 
 
+def _pid_is_alive(pid):
+    """Best-effort PID liveness check that is safe on Windows test hosts."""
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return False
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        # os.kill(pid, 0) can terminate the target on Windows; fail closed.
+        return True
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _folder_has_active_recording(folder_path):
+    """Execution-time guard before destructive folder cleanup.
+
+    The WebUI check only runs when the task is enqueued; a recording can start
+    while the task waits in the queue.
+    """
+    try:
+        names = os.listdir(folder_path)
+    except OSError:
+        return False
+    now = time.time()
+    for name in names:
+        if not name.endswith(".part"):
+            continue
+        try:
+            if now - os.path.getmtime(os.path.join(folder_path, name)) <= ACTIVE_RECORDING_FRESH_SEC:
+                return True
+        except OSError:
+            continue
+    for name in names:
+        if name != ".recording.lock" and not (
+            name.startswith(".recording.") and name.endswith(".lock")
+        ):
+            continue
+        try:
+            with open(os.path.join(folder_path, name), "r", encoding="utf-8") as handle:
+                content = handle.read().strip()
+        except OSError:
+            continue
+        if _pid_is_alive(content):
+            return True
+    for name in names:
+        if name != ".current_recording.json" and not (
+            name.startswith(".current_recording.") and name.endswith(".json")
+        ):
+            continue
+        try:
+            with open(os.path.join(folder_path, name), "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, ValueError):
+            continue
+        filename = os.path.basename(str((data or {}).get("filename") or ""))
+        if not filename:
+            continue
+        for candidate in (
+            os.path.join(folder_path, filename),
+            os.path.join(folder_path, f"{filename}.part"),
+        ):
+            try:
+                if time.time() - os.path.getmtime(candidate) <= ACTIVE_RECORDING_FRESH_SEC:
+                    return True
+            except OSError:
+                continue
+    return False
+
+
+def _folder_has_active_remux(folder_path):
+    """True while a remux lock in this archive is still fresh."""
+    try:
+        names = os.listdir(folder_path)
+    except OSError:
+        return False
+    now = time.time()
+    for name in names:
+        if not name.endswith(".remux.lock"):
+            continue
+        try:
+            if now - os.path.getmtime(os.path.join(folder_path, name)) <= REMUX_FILE_TIMEOUT_SEC + 300:
+                return True
+        except OSError:
+            continue
+    return False
+
+
 def process_empty_folder(payload):
     folder_path = payload.get("path")
     if not folder_path or not os.path.isdir(folder_path):
@@ -783,6 +882,13 @@ def process_empty_folder(payload):
     if not _is_direct_child(config.BASE_DIR, folder_path):
         logging.error("Unsicherer empty_folder Pfad abgelehnt: %s", folder_path)
         return False
+    if config.is_reserved_archive_name(os.path.basename(os.path.normpath(folder_path))):
+        logging.error("empty_folder rejected for reserved directory: %s", folder_path)
+        return False
+    if _folder_has_active_recording(folder_path) or _folder_has_active_remux(folder_path):
+        raise TaskDeferred(
+            f"Ordner wird noch beschrieben: {folder_path}", delay_sec=120
+        )
 
     logging.info("Leere Ordnerinhalt: %s", folder_path)
     deleted = 0
@@ -808,6 +914,9 @@ def process_empty_folder(payload):
     )
 
     def _keep_runtime_file(name):
+        # Preserve in-progress FFmpeg output even if the active check raced.
+        if name.endswith(".part"):
+            return True
         if name in keep_names:
             return True
         for prefix, suffix in keep_prefixes:
@@ -868,6 +977,9 @@ def process_transcribe(payload):
     try:
         # Run the helper script so transcription runs in a separate process
         run_py = os.path.join(config.APP_DIR, 'run_transcribe.py')
+        if not os.path.isfile(run_py):
+            logging.error("Transcribe-Helfer fehlt: %s", run_py)
+            return False
         cmd = [sys.executable, run_py, media]
         if transcript:
             cmd.append(transcript)
@@ -896,7 +1008,11 @@ def _is_recent(path, seconds=120):
         return False
 
 def _is_current_recording(channel_dir, filename):
-    """True if any current-recording pointer claims filename, or .part + active lock."""
+    """True if any current-recording pointer claims filename, or .part + active lock.
+
+    Fails closed: callers skip remux/cleanup on True, so an unreadable pointer or
+    an unexpected error must count as "still recording", never as "finished".
+    """
     filename = os.path.basename(str(filename or ""))
     if not filename or not channel_dir or not os.path.isdir(channel_dir):
         return False
@@ -909,10 +1025,17 @@ def _is_current_recording(channel_dir, filename):
                 try:
                     with open(cur_path, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                    if isinstance(data, dict) and data.get("filename") == filename:
-                        return True
-                except Exception:
-                    continue
+                except FileNotFoundError:
+                    continue  # pointer removed between listdir and open
+                except (OSError, ValueError) as exc:
+                    # Half-written pointer while a recording starts or rotates.
+                    logging.warning(
+                        "Unreadable recording pointer %s, treating %s as active: %s",
+                        cur_path, filename, exc,
+                    )
+                    return True
+                if isinstance(data, dict) and data.get("filename") == filename:
+                    return True
 
         part_path = os.path.join(channel_dir, f"{filename}.part")
         if not os.path.exists(part_path):
@@ -931,11 +1054,17 @@ def _is_current_recording(channel_dir, filename):
                     pid = int(content)
                     os.kill(pid, 0)
                     return True
+                except PermissionError:
+                    return True  # process exists but belongs to another user
                 except (OSError, ValueError, TypeError):
                     continue
         return False
-    except Exception:
-        return False
+    except OSError as exc:
+        logging.error(
+            "Could not check active recording for %s in %s, treating as active: %s",
+            filename, channel_dir, exc,
+        )
+        return True
 
 def _is_remuxable_vod_filename(filename):
     name = os.path.basename(str(filename or ""))
@@ -1045,6 +1174,26 @@ def _safe_vod_task_path(streamer, filename):
     return path
 
 
+def _maybe_enqueue_storage_upload(path):
+    """Queue the final remuxed archive when automatic cloud upload is enabled."""
+    try:
+        from core.storage import service as storage_service
+
+        obj = storage_service.enqueue_auto_upload(path)
+        if obj and obj.get("task_id"):
+            logging.info(
+                "Cloud-Upload nach Remux eingeordnet: %s (Task %s)",
+                path,
+                obj.get("task_id"),
+            )
+            return True
+    except Exception as exc:
+        from core.storage.base import mask_error
+
+        logging.warning("Cloud-Upload nach Remux fehlgeschlagen: %s", mask_error(exc))
+    return False
+
+
 def process_remux_vod(payload):
     path = _safe_vod_task_path(payload.get("streamer"), payload.get("filename"))
     if not path:
@@ -1086,6 +1235,7 @@ def process_remux_vod(payload):
             redis_client.invalidate_dashboard_cache()
         except Exception:
             pass
+    _maybe_enqueue_storage_upload(final_path)
     return True
 
 
@@ -1162,6 +1312,22 @@ def process_task(task_type, payload):
         if not ok:
             raise RuntimeError("remux_vod failed")
         return
+    if task_type in STORAGE_TASK_TYPES:
+        from core.storage import service as storage_service
+
+        if task_type == 'storage_upload':
+            storage_service.run_upload(payload)
+        elif task_type == 'storage_sync':
+            storage_service.run_sync(payload)
+        elif task_type == 'storage_delete':
+            storage_service.run_delete(payload)
+        elif task_type == 'storage_restore':
+            storage_service.run_restore(payload)
+        elif task_type == 'storage_check':
+            storage_service.run_check(payload)
+        elif task_type == 'storage_cleanup':
+            storage_service.run_cleanup(payload)
+        return
     raise RuntimeError(f"unknown task type: {task_type}")
 
 
@@ -1170,6 +1336,8 @@ def _pool_name_for_task(task_type):
         return "remux"
     if task_type in ASR_TASK_TYPES:
         return "asr"
+    if task_type in STORAGE_TASK_TYPES:
+        return "storage"
     # thumbnail, delete/empty, and unknown → IO pool
     return "io"
 
@@ -1184,7 +1352,41 @@ def _types_with_capacity():
             allowed.extend(REMUX_TASK_TYPES)
         if _INFLIGHT["asr"] < _POOL_LIMITS["asr"]:
             allowed.extend(ASR_TASK_TYPES)
+        if _INFLIGHT["storage"] < _POOL_LIMITS["storage"]:
+            allowed.extend(STORAGE_TASK_TYPES)
     return allowed
+
+
+def storage_tick():
+    """Enqueue due cloud sync/cleanup tasks from the maintenance loop."""
+    from core.storage import service as storage_service
+
+    return storage_service.tick()
+
+
+def _submit_claimed_task(pools, pool_name, task):
+    """Submit a claimed task, releasing its capacity slot if dispatch fails."""
+    with _INFLIGHT_LOCK:
+        _INFLIGHT[pool_name] += 1
+    try:
+        pools[pool_name].submit(_execute_claimed_task, task)
+    except Exception:
+        with _INFLIGHT_LOCK:
+            _INFLIGHT[pool_name] = max(0, _INFLIGHT[pool_name] - 1)
+        try:
+            database.defer_task(
+                task["id"],
+                "Worker dispatch failed",
+                delay_sec=30,
+                worker_id=WORKER_ID,
+            )
+        except Exception as exc:
+            logging.error(
+                "Konnte Task %s nach Dispatch-Fehler nicht zurückstellen: %s",
+                task.get("id"),
+                exc,
+            )
+        raise
 
 
 def _execute_claimed_task(task):
@@ -1208,10 +1410,16 @@ def _execute_claimed_task(task):
             status,
         )
     except Exception as e:
-        logging.error(f"Task {task_id} failed: {e}")
+        if task_type in STORAGE_TASK_TYPES:
+            from core.storage.base import mask_error
+
+            error_message = mask_error(e)
+        else:
+            error_message = str(e)
+        logging.error(f"Task {task_id} failed: {error_message}")
         max_attempts = TASK_MAX_ATTEMPTS.get(task_type, 1)
         status = database.fail_task(
-            task_id, str(e), max_attempts=max_attempts, worker_id=WORKER_ID
+            task_id, error_message, max_attempts=max_attempts, worker_id=WORKER_ID
         )
         if status == "pending":
             logging.info(
@@ -1228,16 +1436,18 @@ def _execute_claimed_task(task):
 def main():
     init_db()
     logging.info(
-        "Worker gestartet: %s (thumb=%s remux=%s asr=%s)",
+        "Worker gestartet: %s (thumb=%s remux=%s asr=%s storage=%s)",
         WORKER_ID,
         WORKER_THUMB_THREADS,
         WORKER_REMUX_THREADS,
         WORKER_TRANSCRIBE_THREADS,
+        WORKER_STORAGE_THREADS,
     )
     with ThreadPoolExecutor(max_workers=WORKER_THUMB_THREADS, thread_name_prefix="worker-io") as io_pool, \
          ThreadPoolExecutor(max_workers=WORKER_REMUX_THREADS, thread_name_prefix="worker-remux") as remux_pool, \
-         ThreadPoolExecutor(max_workers=WORKER_TRANSCRIBE_THREADS, thread_name_prefix="worker-asr") as asr_pool:
-        pools = {"io": io_pool, "remux": remux_pool, "asr": asr_pool}
+         ThreadPoolExecutor(max_workers=WORKER_TRANSCRIBE_THREADS, thread_name_prefix="worker-asr") as asr_pool, \
+         ThreadPoolExecutor(max_workers=WORKER_STORAGE_THREADS, thread_name_prefix="worker-storage") as storage_pool:
+        pools = {"io": io_pool, "remux": remux_pool, "asr": asr_pool, "storage": storage_pool}
         while True:
             try:
                 def _safe_run(func):
@@ -1250,6 +1460,7 @@ def main():
                 _safe_run(cleanup_old_tasks)
                 _safe_run(cleanup_stale_thumbnail_locks)
                 _safe_run(backfill_missing_thumbnails)
+                _safe_run(storage_tick)
 
                 allowed = _types_with_capacity()
                 if not allowed:
@@ -1277,18 +1488,18 @@ def main():
                         WORKER_ID,
                         stale_after=TASK_STALE_SEC,
                         allowed_types=["thumbnail"],
+                        max_attempts_by_type=TASK_MAX_ATTEMPTS,
                     )
                 if not task:
                     task = database.claim_next_task(
                         WORKER_ID,
                         stale_after=TASK_STALE_SEC,
                         allowed_types=allowed,
+                        max_attempts_by_type=TASK_MAX_ATTEMPTS,
                     )
                 if task:
                     pool_name = _pool_name_for_task(task["type"])
-                    with _INFLIGHT_LOCK:
-                        _INFLIGHT[pool_name] += 1
-                    pools[pool_name].submit(_execute_claimed_task, task)
+                    _submit_claimed_task(pools, pool_name, task)
                 else:
                     time.sleep(2)
             except Exception as e:

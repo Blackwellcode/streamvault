@@ -173,7 +173,7 @@
     </div>
     {% endif %}
       <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-      <script src="{{ url_for('static', filename='cast_playback.js', v=ASSET_VERSION) }}"></script>
+      <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='chat_emotes.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='live_clip_overlay.js', v=ASSET_VERSION) }}"></script>
@@ -192,11 +192,6 @@
         const statusBox = document.getElementById('hlsStatus');
         const liveNote = document.getElementById('liveNote');
         const src = {{ (playlist_url or url_for('live_playlist', streamer=streamer))|tojson }};
-        window.StreamVaultCast && window.StreamVaultCast.bindVideo(video, {
-          url: src,
-          live: true,
-          contentType: 'application/vnd.apple.mpegurl'
-        });
         let hls = null;
         let isPlayerReady = false;
 
@@ -209,16 +204,11 @@
         function initPlayer() {
             if (isPlayerReady) return;
 
-            if (window.StreamVaultCast && StreamVaultCast.preferNativeHls(video)) {
+            if (window.StreamVaultHls && StreamVaultHls.preferNativeHls(video)) {
                 video.src = src;
                 isPlayerReady = true;
                 setStatus('Live');
                 if(liveNote) liveNote.style.display = 'none';
-                window.StreamVaultCast.bindVideo(video, {
-                  url: src,
-                  live: true,
-                  contentType: 'application/vnd.apple.mpegurl'
-                });
                 
                 // Show unmute overlay on iOS Safari
                 const unmuteBtn = document.getElementById('unmuteOverlay');

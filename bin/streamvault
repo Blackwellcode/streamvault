@@ -8,6 +8,7 @@ set -euo pipefail
 APP_DIR="${STREAMVAULT_DIR:-/opt/streamvault/app}"
 VENV_DIR="${STREAMVAULT_VENV:-/opt/streamvault/venv}"
 ENV_FILE="${STREAMVAULT_ENV:-/etc/streamvault/env}"
+SERVICE_USER="${STREAMVAULT_USER:-streamvault}"
 
 # Visual helpers
 RED='\033[0;31m'
@@ -33,16 +34,20 @@ usage() {
     echo -e "${BOLD}Usage:${NC} streamvault [COMMAND] [OPTIONS]"
     echo ""
     echo -e "${BOLD}Service Management:${NC}"
-    echo -e "  ${GREEN}start${NC}             Start WebUI and Recorder daemons"
+    echo -e "  ${GREEN}start${NC}             Start WebUI, Recorder and Worker daemons"
     echo -e "  ${GREEN}stop${NC}              Stop all running daemons"
-    echo -e "  ${GREEN}restart${NC}           Restart WebUI and Recorder daemons"
+    echo -e "  ${GREEN}restart${NC}           Restart WebUI, Recorder and Worker daemons"
     echo -e "  ${GREEN}status${NC}            Display health, system load, and systemd status"
-    echo -e "  ${GREEN}logs${NC} [service]    Follow live logs (webui, recorder, or all)"
+    echo -e "  ${GREEN}logs${NC} [service]    Follow live logs (webui, recorder, worker, or all)"
     echo ""
     echo -e "${BOLD}Operations:${NC}"
     echo -e "  ${GREEN}update${NC}            Pull latest Git commit, upgrade deps, and restart"
     echo -e "  ${GREEN}config${NC}            Inspect or edit active environment (/etc/streamvault/env)"
     echo -e "  ${GREEN}check${NC}             Validate Python syntax, Nginx, and database schemas"
+    echo ""
+    echo -e "${BOLD}Cloud Storage:${NC}"
+    echo -e "  ${GREEN}storage${NC} [args]    Manage external storage (list, add, test, sync, ...)"
+    echo -e "                        Example: streamvault storage add --type google_drive --name 'Drive'"
     echo ""
     exit 1
 }
@@ -54,31 +59,40 @@ require_root() {
     fi
 }
 
+load_env() {
+    if [[ -f "${ENV_FILE}" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "${ENV_FILE}"
+        set +a
+    fi
+}
+
 cmd_start() {
     require_root
     echo -e "${BLUE}[*] Starting StreamVault daemons...${NC}"
-    systemctl start streamvault-webui.service streamvault-recorder.service
+    systemctl start streamvault-webui.service streamvault-recorder.service streamvault-worker.service
     echo -e "${GREEN}[OK] Services started successfully.${NC}"
 }
 
 cmd_stop() {
     require_root
     echo -e "${BLUE}[*] Stopping StreamVault daemons...${NC}"
-    systemctl stop streamvault-recorder.service streamvault-webui.service
+    systemctl stop streamvault-worker.service streamvault-recorder.service streamvault-webui.service
     echo -e "${GREEN}[OK] Services stopped.${NC}"
 }
 
 cmd_restart() {
     require_root
     echo -e "${BLUE}[*] Restarting StreamVault daemons...${NC}"
-    systemctl restart streamvault-webui.service streamvault-recorder.service
+    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
     echo -e "${GREEN}[OK] Restart complete.${NC}"
 }
 
 cmd_status() {
     header
     echo -e "${BOLD}Daemons Status:${NC}"
-    systemctl status streamvault-webui.service streamvault-recorder.service --no-pager -l || true
+    systemctl status streamvault-webui.service streamvault-recorder.service streamvault-worker.service --no-pager -l || true
     echo ""
     echo -e "${BOLD}Storage & RAM-Disk:${NC}"
     df -h /dev/shm | grep -v "udev" || true
@@ -94,11 +108,14 @@ cmd_logs() {
         recorder)
             journalctl -u streamvault-recorder.service -f -n 50
             ;;
+        worker)
+            journalctl -u streamvault-worker.service -f -n 50
+            ;;
         all)
-            journalctl -u streamvault-webui.service -u streamvault-recorder.service -f -n 50
+            journalctl -u streamvault-webui.service -u streamvault-recorder.service -u streamvault-worker.service -f -n 50
             ;;
         *)
-            echo -e "${RED}[ERROR] Unknown service: $target (use webui, recorder, or all)${NC}"
+            echo -e "${RED}[ERROR] Unknown service: $target (use webui, recorder, worker, or all)${NC}"
             exit 1
             ;;
     esac
@@ -110,7 +127,7 @@ cmd_update() {
     cd "${APP_DIR}"
     git pull --ff-only
     "${VENV_DIR}/bin/pip" install --upgrade -r requirements.txt
-    systemctl restart streamvault-webui.service streamvault-recorder.service
+    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
     echo -e "${GREEN}[OK] Update completed and daemons restarted.${NC}"
 }
 
@@ -124,13 +141,30 @@ cmd_config() {
 }
 
 cmd_check() {
+    load_env
     echo -e "${BLUE}[*] Validating StreamVault integrity...${NC}"
     cd "${APP_DIR}"
-    "${VENV_DIR}/bin/python3" -m py_compile core/*.py WEBUI/webui.py recorder/*.py
+    "${VENV_DIR}/bin/python3" -m compileall -q core recorder WEBUI
     echo -e "${GREEN}[OK] Python syntax: valid.${NC}"
     if command -v nginx >/dev/null 2>&1; then
         nginx -t
         echo -e "${GREEN}[OK] Nginx configuration: valid.${NC}"
+    fi
+}
+
+cmd_storage() {
+    load_env
+    cd "${APP_DIR}"
+    # The WebUI/worker own the SQLite database. Running storage commands as
+    # root can leave root-owned WAL files that the service user cannot write.
+    if [[ $EUID -eq 0 ]] && id "${SERVICE_USER}" >/dev/null 2>&1; then
+        if command -v runuser >/dev/null 2>&1; then
+            runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/python3" -m core.storage.cli "$@"
+        else
+            sudo -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/python3" -m core.storage.cli "$@"
+        fi
+    else
+        "${VENV_DIR}/bin/python3" -m core.storage.cli "$@"
     fi
 }
 
@@ -159,6 +193,10 @@ case "${1:-}" in
         ;;
     check)
         cmd_check
+        ;;
+    storage)
+        shift
+        cmd_storage "$@"
         ;;
     help|--help|-h|"")
         usage

@@ -1,169 +1,177 @@
 <div align="center">
 
 # StreamVault
-### High-Performance Self-Hosted Stream Archiver, Live Proxy & Interactive VOD Vault
 
-[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
-[![Framework](https://img.shields.io/badge/framework-Flask%203.x-green.svg)](https://flask.palletsprojects.com/)
-[![Offload](https://img.shields.io/badge/streaming-Nginx%20X--Accel%20%28HTTP%20206%29-orange.svg)](https://nginx.org/)
-[![Database](https://img.shields.io/badge/storage-SQLite%20WAL%20%2B%20Redis-red.svg)](https://www.sqlite.org/)
-[![Docker](https://img.shields.io/badge/docker-compose%20ready-blue.svg)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
+**Self-hosted recorder and archive for Twitch and YouTube live streams, with chat replay.**
 
-*A privacy-first, enterprise-grade streaming infrastructure for creator collectives, esports teams, and media archives.*
+[![CI](https://github.com/Blackwellcode/streamvault/actions/workflows/ci.yml/badge.svg)](https://github.com/Blackwellcode/streamvault/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-blackwellcode-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/blackwellcode)
 
 </div>
 
----
+StreamVault watches the channels you choose, records every broadcast with
+Streamlink and FFmpeg, archives the chat alongside it, and serves both through
+a web interface where you can replay a stream with its chat, cut clips and
+manage who may watch what. It runs on a single Linux server; video delivery is
+handed to Nginx so the Python process stays small.
 
-## 🌟 Overview
+> The web interface is currently available in **German only**.
 
-**StreamVault** is a modular, high-efficiency streaming platform engineered to capture, archive, and replay live streams alongside synchronized chat timelines. Designed to operate on low-cost VPS instances or dedicated bare-metal servers, it combines kernel-level Nginx offloading, SQLite concurrency in WAL mode, and sub-second live HLS transmuxing.
+## Screenshots
 
-This open-core edition is **100% sanitized**: free of private streamer configurations, tracking tools, hardcoded tokens, or proprietary credentials.
-
----
-
-## 📸 Interface Showcase
-
-| Live Dashboard & Telemetry | VOD Player with Chat Replay |
+| Dashboard | VOD player with chat replay |
 | :---: | :---: |
-| ![Live Hub](docs/screenshots/dashboard.png) | ![VOD Player](docs/screenshots/vod_player.png) |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![VOD player](docs/screenshots/vod_player.png) |
 
-| Streamer Channel Vault | RBAC User & Group Management |
+| Channel archive | Users and groups |
 | :---: | :---: |
-| ![Streamer Hub](docs/screenshots/streamer_hub.png) | ![User Management](docs/screenshots/admin_users.png) |
+| ![Channel archive](docs/screenshots/streamer_hub.png) | ![User management](docs/screenshots/admin_users.png) |
 
-| System Health & Metrics | Mobile Responsive PWA Layout |
+| System status | Phone layout |
 | :---: | :---: |
-| ![Admin Panel](docs/screenshots/admin_panel.png) | ![Mobile View](docs/screenshots/mobile_view.png) |
+| ![System status](docs/screenshots/admin_panel.png) | ![Phone layout](docs/screenshots/mobile_view.png) |
 
----
+## Features
 
-## ⚡ Core Capabilities
+- **Automatic recording** of Twitch and YouTube channels (Streamlink, yt-dlp,
+  FFmpeg), with reconnects, segment salvage and a disk-space guard that pauses
+  new recordings before the disk fills up.
+- **Chat archive and replay**: chat is stored next to each recording and
+  replayed in sync with the video, including badges and emotes.
+- **Live viewing** through a low-latency HLS restream from a RAM disk, so
+  viewers watch through your server instead of the platform.
+- **Clips**: cut lossless clips in the browser (keyframe-aligned `-c copy`).
+- **Transcripts** with Whisper, run in a separate process.
+- **Cloud archive**: offload recordings to S3-compatible storage (AWS, R2, B2,
+  Wasabi, MinIO, Hetzner), Google Drive, Dropbox, OneDrive or WebDAV.
+  Credentials are encrypted with AES-GCM; uploads and local deletion are off
+  until you enable them.
+- **Access control**: roles (Admin, Member, Viewer, Live-only), groups and
+  per-channel allowlists, login rate limits and temporary IP bans.
+- **OBS overlays** for chat, alert sounds and text-to-speech.
+- **Efficient delivery**: Nginx serves video files via `X-Accel-Redirect`
+  with byte ranges; SQLite in WAL mode, optional Redis cache.
 
-- **Automated 24/7 Stream Recording**: Background worker daemons monitor target channels (Twitch, Kick, YouTube) and capture broadcasts via `streamlink` and `ffmpeg` with automatic stream reconnect and segmented salvage.
-- **Synchronized Chat Replay**: Archives live chat messages in real time (`.chat.json`), aligning badges, emotes, and timestamps exactly with video scrubbing.
-- **Kernel-Level Media Offloading**: Integrates with Nginx via `X-Accel-Redirect` (HTTP 206 Partial Content / Range Requests). Python workers release memory immediately while the Linux kernel streams gigabyte-scale MP4 files directly to viewers.
-- **Live RAM-Disk Transmuxing**: Low-latency HLS restreaming (`/dev/shm`) allows authenticated viewers to watch private live streams without exposing individual client IPs.
-- **Lossless In-Browser Clip Cutter**: Web-based timeline selector exports shareable MP4 clips in seconds via keyframe-aligned FFmpeg slicing (`-c copy`).
-- **Granular RBAC Security**: Multi-tier permissions (`Admin`, `Viewer`, `Member`, `Live-only`) with channel-specific allowlists and brute-force protection.
-
----
-
-## 🏗️ Architecture & Pipeline
+## How it works
 
 ```mermaid
-flowchart TD
-    subgraph Ingestion ["1. Stream Ingestion"]
-        Twitch["Twitch / Kick / YouTube"] -->|Streamlink CLI| Recorder["Stream Recorder Daemon"]
-        Twitch -->|IRC / WebSocket| ChatWorker["Chat Archiver"]
-    end
-
-    subgraph Storage ["2. Storage Engine"]
-        Recorder -->|H.264 Faststart MP4| Disk[("NVMe Storage / VOD Vault")]
-        ChatWorker -->|JSONL / JSON| Disk
-        Recorder -->|Segmented HLS| RAMDisk[("Live RAM-Disk /dev/shm")]
-        Metadata["State & RBAC"] --> SQLite[("SQLite WAL Mode")]
-    end
-
-    subgraph WebEngine ["3. Application & Offload Layer"]
-        Flask["Flask WebUI Engine"] <--> SQLite
-        Nginx["Nginx Reverse Proxy"] <-->|Auth & Routing| Flask
-        Nginx -->|X-Accel-Redirect / Range HTTP 206| Disk
-        Nginx -->|Direct Static HLS| RAMDisk
-    end
-
-    subgraph Clients ["4. Client Experience"]
-        Nginx --> Desktop["Desktop Browser Player"]
-        Nginx --> Mobile["Mobile PWA (Dynamic Island Safe)"]
-        Nginx --> ClipEditor["In-Browser Clip Cutter"]
-    end
+flowchart LR
+    P["Twitch / YouTube"] -->|Streamlink, yt-dlp| R["Recorder"]
+    P -->|IRC| C["Chat archiver"]
+    R -->|MP4| D[("Archive")]
+    R -->|HLS| M[("RAM disk")]
+    C --> D
+    W["Worker: remux, thumbnails,<br/>transcripts, cloud sync"] <--> D
+    U["Web UI (Flask)"] <--> S[("SQLite")]
+    N["Nginx"] <-->|auth| U
+    N -->|X-Accel-Redirect| D
+    N --> M
+    B["Browser"] <--> N
 ```
 
----
+Three services run side by side: `recorder`, `worker` and `webui`.
 
-## ⚡ 1-Command Linux Installation & System Registration
+## Installation
 
-For production installations on Ubuntu 22.04+ or Debian 12+, run the automated installer:
+### Ubuntu 22.04+ / Debian 12+
 
 ```bash
-# Clone and run the turnkey installer:
 git clone https://github.com/Blackwellcode/streamvault.git /tmp/streamvault
 cd /tmp/streamvault && sudo ./install.sh
 ```
 
-The installer automatically:
-1. Installs all system dependencies (`ffmpeg`, `python3-venv`, `nginx`, `sqlite3`).
-2. Configures the isolated service user and directories (`/opt/streamvault`, `/var/lib/streamvault`).
-3. Registers systemd services (`streamvault-webui.service`, `streamvault-recorder.service`).
-4. Configures Nginx with `X-Accel-Redirect` kernel video offload.
-5. **Registers the global Linux management command** `/usr/local/bin/streamvault`:
+The installer sets up FFmpeg, Nginx and a Python environment, creates the
+`streamvault` service user, registers the systemd services and prints a
+generated admin password. Afterwards manage the installation with:
 
 ```bash
-# Manage your installation from anywhere:
-streamvault status       # Check daemons, health, and RAM-disk
-streamvault logs all     # Follow live daemon logs
-streamvault restart      # Restart services
-streamvault update       # Pull Git updates, upgrade deps, and restart
-streamvault config       # Edit /etc/streamvault/env
-streamvault check        # Validate Python syntax & Nginx integrity
+streamvault status         # services, health, RAM disk
+streamvault logs all       # follow all service logs
+streamvault restart        # restart services
+streamvault update         # pull updates, upgrade dependencies, restart
+streamvault config         # edit /etc/streamvault/env
 ```
 
----
+Step-by-step manual installation and TLS setup: [INSTALL.md](INSTALL.md).
 
-## 🐳 Docker Deployment
-
-To run StreamVault in production via Docker Compose:
+### Docker Compose
 
 ```bash
-# 1. Clone repository
 git clone https://github.com/Blackwellcode/streamvault.git
 cd streamvault
-
-# 2. Copy environment template
 cp .env.example .env
-
-# 3. Set your production secrets in .env
-nano .env
-
-# 4. Build and run
+python3 -c "import secrets; print('VOD_PASS=' + secrets.token_urlsafe(24))"
+python3 -c "import secrets; print('VOD_SECRET_KEY=' + secrets.token_hex(32))"
+# put both values and VOD_USER into .env, then:
 docker compose up -d --build
 ```
 
-Access the service at `http://localhost:8090`.
+The UI is served on `http://localhost:8090`. Recordings, the database and
+caches are stored in `./data`.
 
-For detailed step-by-step production instructions (including bare-metal Ubuntu/Debian deployment, systemd daemons, and SSL setup), see [INSTALL.md](INSTALL.md).
+**Put StreamVault behind HTTPS before exposing it to the internet** and set
+`VOD_SECURE_COOKIES=true` once it is.
 
----
+## Configuration
 
-## ⚙️ Configuration Reference
-
-Key variables configurable via `.env`:
+All settings are environment variables (`/etc/streamvault/env`, or `.env` for
+Docker). The most important ones:
 
 | Variable | Default | Purpose |
 | :--- | :--- | :--- |
-| `VOD_HOST` | `0.0.0.0` | Bind IP for the Python WebUI. |
-| `VOD_PORT` | `8080` | Bind port for the Python WebUI. |
-| `VOD_USER` | *required* | Initial administrator username (production). |
-| `VOD_PASS` | *required* | Initial administrator password (production). |
-| `VOD_SECRET_KEY` | *required* | Secret key for signed session cookies. |
-| `VOD_BASE_DIR` | `./data` | Root path for databases and video storage. |
-| `LIVE_HLS_DIR` | `/dev/shm/...` | High-speed RAM-disk path for live streaming. |
-| `VOD_USE_X_ACCEL` | `true` | Enables Nginx `X-Accel-Redirect` byte-range streaming. |
-| `REDIS_URL` | *none* | Optional Redis connection string for caching. |
+| `VOD_USER`, `VOD_PASS` | *required* | Initial administrator account. |
+| `VOD_SECRET_KEY` | *required* | Signs session cookies. Weak values are rejected. |
+| `VOD_BASE_DIR` | `./data` if present, else the app directory | Archives, database and caches. |
+| `VOD_PUBLIC_BASE` | *empty* | Public origin for share links and OAuth callbacks. |
+| `VOD_SECURE_COOKIES` | `false` | Set to `true` once HTTPS is in place. |
+| `VOD_TRUSTED_PROXIES` | `127.0.0.1,::1` | Proxies (IPs or CIDR) whose `X-Real-IP` is trusted for rate limits. |
+| `LIVE_HLS_DIR` | `/dev/shm/streamvault_hls` | RAM disk for live HLS segments. |
+| `VOD_USE_X_ACCEL` | `true` | Let Nginx serve video files. |
+| `STORAGE_ENCRYPTION_KEY` | `VOD_SECRET_KEY` | Key for stored cloud credentials. Keep it stable. |
+| `REDIS_URL` | *none* | Optional Redis cache. |
 
----
+The full list with explanations is in [.env.example](.env.example).
 
-## 🔒 Security & Privacy Invariants
+## Cloud storage
 
-1. **Zero Secret Leakage**: No API tokens, passwords, or OAuth tokens are ever logged, passed via CLI flags visible in `ps aux`, or stored in source control.
-2. **Subprocess Isolation**: All FFmpeg and Streamlink subroutines execute with `shell=False` and strict execution timeouts.
-3. **Process Safety**: Daemon termination utilizes process-group validation preventing self-kill or supervisor collisions.
-4. **Range Request Protection**: Offloading to Nginx ensures memory exhaustion attacks via concurrent scrubbing cannot starve web application threads.
+Add providers in the web UI (**Systemsteuerung → Cloud-Speicher**) or on the
+command line:
 
----
+```bash
+streamvault storage add --type s3 --name "R2" \
+  --set bucket=streamvault --set access_key=... --set secret_key=... \
+  --set endpoint_url=https://<account>.r2.cloudflarestorage.com
+streamvault storage test 1
+streamvault storage settings --set auto_upload=true
+```
 
-## 📄 License
+The local copy stays authoritative: files are only removed locally after a
+successful upload and an optional size check, and only if you enable it. OAuth
+providers (Google Drive, Dropbox, OneDrive) need the callback URL
+`https://<your-host>/admin/storage/oauth/callback`.
 
-This project is licensed under the [MIT License](LICENSE).
+## Legal notice
+
+StreamVault is a tool for archiving streams you are allowed to archive, such
+as your own channel or content whose rights holder agreed. Recording,
+storing or redistributing other people's streams can violate copyright and the
+platforms' terms of service. You are responsible for how you use it.
+
+## Contributing
+
+Bug reports, fixes and improvements are welcome. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) first; security issues go through
+[SECURITY.md](SECURITY.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## Support the project
+
+StreamVault is free and developed in spare time. If it is useful to you, you
+can support further development:
+
+<a href="https://buymeacoffee.com/blackwellcode"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-blackwellcode-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" height="40"></a>
+
+## License
+
+[MIT](LICENSE)

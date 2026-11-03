@@ -25,7 +25,7 @@
     <form method="post" action="{{ url_for('channels_add') }}" style="display: flex; flex-direction: column; gap: 14px;">
       <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <div style="flex: 2; min-width: 260px;">
+        <div style="flex: 2; min-width: min(260px, 100%);">
           <input name="channel" placeholder="Twitch-Name (z.B. shroud) oder YouTube-URL / @Handle..." required class="ns-input-field" style="width: 100%;">
         </div>
         <div style="flex: 1; min-width: 200px;">

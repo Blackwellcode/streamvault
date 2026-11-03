@@ -176,7 +176,7 @@
       <a href="{{ hero_stream.watch_url }}" class="nebula-hero-preview-frame" aria-label="Stream direkt ansehen" style="display:block;">
         <img src="{{ hero_stream.thumbnail_url }}" alt="{{ hero_stream.title }}" class="nebula-hero-preview-img">
         <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> LIVE</span>
-        {% if not is_tv and not is_mobile %}
+        {% if not is_mobile %}
         <div class="nebula-hero-play-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
         </div>

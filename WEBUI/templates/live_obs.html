@@ -88,7 +88,7 @@
       start();
       setInterval(function () {
         const probe = src + (src.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-        fetch(probe, {cache: "no-store", credentials: "omit"}).catch(function () {});
+        fetch(probe, {cache: "no-store", credentials: "same-origin"}).catch(function () {});
         if (!hls && video.readyState < 2) {
           starting = false;
           start();

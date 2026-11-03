@@ -182,12 +182,6 @@ body.page-mobile-streamer .thumb-area {
   }
 }
 
-/* Never show cast sender chrome on desktop VOD/live shells */
-body:is(.page-vod, .page-live, .page-twitch-watch, .page-clip-editor, .page-hls) .ns-cast-btn,
-body:is(.page-vod, .page-live, .page-twitch-watch, .page-clip-editor, .page-hls) .ns-cast-trigger {
-  display: none !important;
-}
-
 /* --- Mobile Player Info Box (similar to desktop .vod-details) ---
  * Canonical rules live in style.css (page-twitch-watch-mobile). Kept here as mirror. */
 body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details {
@@ -215,9 +209,4 @@ body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod
 body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts dt,
 body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-facts dd {
   margin: 0;
-}
-
-body:is(.page-twitch-watch-mobile, .page-mobile-player) .video-container > .ns-cast-btn,
-body:is(.page-twitch-watch-mobile, .page-mobile-player) .twitch-mobile-player-frame .ns-cast-btn {
-  display: none !important;
 }

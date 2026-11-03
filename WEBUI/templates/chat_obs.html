@@ -103,7 +103,6 @@
   <script>
     (function() {
       const streamer = {{ streamer|tojson }};
-      const castToken = {{ cast_token|tojson }};
       const listEl = document.getElementById("chat-list");
       
       const params = new URLSearchParams(window.location.search);
@@ -170,11 +169,8 @@
 
       async function fetchLiveChat() {
         try {
-          let url = "/chat/live/" + encodeURIComponent(streamer) + "?since=" + encodeURIComponent(lastSince);
-          if (castToken) {
-            url += "&cast=" + encodeURIComponent(castToken);
-          }
-          const res = await fetch(url, { cache: "no-store", credentials: "omit" });
+          const url = "/chat/live/" + encodeURIComponent(streamer) + "?since=" + encodeURIComponent(lastSince);
+          const res = await fetch(url, { cache: "no-store", credentials: "same-origin" });
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {

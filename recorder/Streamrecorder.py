@@ -60,6 +60,8 @@ RECORDINGS_BASE_DIR = (
 os.makedirs(RECORDINGS_BASE_DIR, exist_ok=True)
 RETRY_DELAY = 30
 HEARTBEAT_INTERVAL = 60
+# Poll interval for live-only monitors (no recording, notifications only).
+CHECK_INTERVAL = int(os.environ.get('STREAM_RECORDER_CHECK_INTERVAL', '30'))
 TEMP_OUTPUT_SUFFIX = ".part"
 MIN_RECORD_FILE_SIZE = 1024
 SALVAGE_MIN_BYTES = int(os.environ.get('STREAM_RECORDER_SALVAGE_MIN_BYTES', str(5 * 1024 * 1024)))
@@ -105,6 +107,8 @@ YTDLP_PROBE_TIMEOUT = int(os.environ.get('STREAM_RECORDER_YTDLP_PROBE_TIMEOUT', 
 YTDLP_STREAM_TIMEOUT = int(os.environ.get('STREAM_RECORDER_YTDLP_STREAM_TIMEOUT', '30'))
 YTDLP_CHAT_IDLE_TIMEOUT = int(os.environ.get('STREAM_RECORDER_YTDLP_CHAT_IDLE_TIMEOUT', '90'))
 FFMPEG_OUTPUT_TIMEOUT = int(os.environ.get('STREAM_RECORDER_FFMPEG_OUTPUT_TIMEOUT', '90'))
+# Bound the final wait after stdout EOF; a wedged FFmpeg must not hang the channel forever.
+FFMPEG_FINALIZE_TIMEOUT = int(os.environ.get('STREAM_RECORDER_FFMPEG_FINALIZE_TIMEOUT', '30'))
 # Cheap live-poll while the channel is actually offline. Do not exponential-backoff
 # this to minutes — that was the missing VOD-start gap (up to 10 min).
 STREAM_OFFLINE_RETRY_BASE = int(os.environ.get('STREAM_RECORDER_OFFLINE_RETRY_BASE', '5'))
@@ -131,11 +135,8 @@ ENC_PRESET = os.environ.get('STREAM_RECORDER_PRESET', 'veryfast')
 ENC_CRF = os.environ.get('STREAM_RECORDER_CRF', '26')
 
 # Live HLS-Konfiguration
-if os.path.isdir("/dev/shm"):
-    DEFAULT_LIVE_HLS_ROOT = os.path.join("/dev/shm", "streamrecorder_hls")
-else:
-    DEFAULT_LIVE_HLS_ROOT = os.path.join(RECORDINGS_BASE_DIR, ".hls_live")
-LIVE_HLS_ROOT = os.environ.get('LIVE_HLS_DIR', DEFAULT_LIVE_HLS_ROOT)
+# Single source of truth shared with the WebUI, which serves these segments.
+LIVE_HLS_ROOT = config.LIVE_HLS_ROOT
 LIVE_HLS_TIME = int(os.environ.get('LIVE_HLS_TIME', '4'))
 LIVE_HLS_LIST_SIZE = int(os.environ.get('LIVE_HLS_LIST_SIZE', '40'))
 LIVE_HLS_TTL_SEC = int(os.environ.get('LIVE_HLS_TTL_SEC', '900'))
@@ -416,8 +417,21 @@ def disk_blocks_recording(path):
     """True when free space is critically low — pause starting new recordings."""
     if _storage_pause_flag_active():
         return True
+    target = path or RECORDINGS_BASE_DIR
     try:
-        usage = shutil.disk_usage(path or RECORDINGS_BASE_DIR)
+        check_path = os.path.abspath(str(target))
+        while check_path and not os.path.exists(check_path):
+            parent = os.path.dirname(check_path)
+            if parent == check_path:
+                break
+            check_path = parent
+        if not check_path or not os.path.exists(check_path):
+            check_path = (
+                RECORDINGS_BASE_DIR
+                if os.path.exists(RECORDINGS_BASE_DIR)
+                else os.path.dirname(os.path.abspath(RECORDINGS_BASE_DIR))
+            )
+        usage = shutil.disk_usage(check_path)
         if usage.total <= 0:
             return False
         used_pct = (float(usage.used) / float(usage.total)) * 100.0
@@ -427,7 +441,10 @@ def disk_blocks_recording(path):
         if free_gb <= STORAGE_PAUSE_FREE_GB:
             return True
         return False
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            "Fehler bei der Speicherplatzprüfung für %s: %s", target, exc
+        )
         return False
 
 
@@ -665,6 +682,35 @@ def enqueue_thumbnail_task(media_path, channel, discord_notify_ready=False):
             os.remove(lock_path)
         except OSError:
             pass
+        return False
+
+
+def maybe_enqueue_storage_upload(media_path):
+    """Queue a cloud upload after recording finalisation when enabled."""
+    try:
+        from core.storage import service as storage_service
+
+        settings = storage_service.get_settings()
+        if not settings.get("auto_upload"):
+            return False
+        if not media_path or not os.path.isfile(media_path):
+            return False
+        obj = storage_service.enqueue_upload(media_path, settings=settings)
+        if obj.get("task_id"):
+            logger.info(
+                "Cloud-Upload eingereiht: %s -> %s (Task %s)",
+                obj.get("local_path"),
+                obj.get("remote_path"),
+                obj.get("task_id"),
+            )
+            return True
+        return False
+    except Exception as exc:
+        from core.storage.base import mask_error
+
+        logger.warning(
+            "Cloud-Upload konnte nicht eingeordnet werden: %s", mask_error(exc)
+        )
         return False
 
 
@@ -1228,12 +1274,39 @@ def recording_platform_tag(filename):
     return None
 
 
+def archive_is_shared(archive_channel):
+    """True when more than one configured source writes into this archive.
+
+    Duplicate cleanup must fail closed here: a same-platform file may belong to
+    a sibling source that shares the archive directory.
+    """
+    archive = str(archive_channel or "").strip()
+    if not archive:
+        return True
+    try:
+        channels = database.channels_for_archive(archive)
+    except Exception as exc:
+        logger.warning(
+            "Archiv-Zuordnung für %s nicht prüfbar - Duplikat-Bereinigung übersprungen: %s",
+            archive,
+            exc,
+        )
+        return True
+    return len(channels) > 1
+
+
 def cleanup_duplicate_recordings(recordings_dir, recording_file, source_channel, archive_channel=None):
     try:
         if not os.path.exists(recording_file) or os.path.getsize(recording_file) < MIN_RECORD_FILE_SIZE:
             return
         recording_name = os.path.basename(recording_file)
         archive = archive_channel or source_channel
+        if archive_is_shared(archive):
+            logger.info(
+                "Duplikat-Bereinigung übersprungen: Archiv %s wird von mehreren Quellen genutzt.",
+                archive,
+            )
+            return
         recording_ts = parse_recording_timestamp(recording_name, source_channel, archive_channel=archive)
         if recording_ts is None:
             return
@@ -1315,6 +1388,38 @@ def stop_process(process):
         except Exception as exc:
             logger.warning("Unexpected error stopping process: %s", exc)
 
+def wait_for_process_exit(process, timeout=FFMPEG_FINALIZE_TIMEOUT):
+    """Wait for a child with a hard deadline; kill and reap if it is wedged.
+
+    Returns True when the process exited before the deadline.
+    """
+    if process is None:
+        return True
+    try:
+        process.wait(timeout=max(1, int(timeout or 1)))
+        return True
+    except subprocess.TimeoutExpired:
+        logger.warning(
+            "Prozess %s reagiert nicht innerhalb von %ss - erzwinge Beendigung.",
+            getattr(process, "pid", "?"),
+            timeout,
+        )
+        try:
+            process.kill()
+        except OSError as exc:
+            # ProcessLookupError: child exited between the timeout and kill().
+            logger.warning(
+                "Kill fuer Prozess %s fehlgeschlagen: %s", getattr(process, "pid", "?"), exc
+            )
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            logger.error("Prozess %s konnte nicht beendet werden.", getattr(process, "pid", "?"))
+        return False
+    except Exception as exc:
+        logger.warning("Fehler beim Warten auf Prozess %s: %s", getattr(process, "pid", "?"), exc)
+        return False
+
 def cleanup_live_hls(except_channel=None):
     if not os.path.isdir(LIVE_HLS_ROOT):
         return
@@ -1349,19 +1454,22 @@ def get_vaapi_device():
             return path
     return None
 
-def streamlink_twitch_auth_args():
-    """Bann-Schutz: Keine Übermittlung persönlicher OAuth-Tokens an Twitch."""
-    return []
-
-
 def streamlink_proxy_args():
-    plugin_dir = os.environ.get("STREAMLINK_PLUGIN_DIR", "/etc/streamrecorder/plugins")
-    proxy_list = os.environ.get(
-        "TWITCH_PROXY_PLAYLIST",
-        "https://eu.luminous.dev,https://eu2.luminous.dev,https://as.luminous.dev,https://lb-eu.cdn-perfprod.com,https://lb-eu2.cdn-perfprod.com",
-    )
-    return [
-        "--plugin-dirs", plugin_dir,
+    """Opt-in playlist proxy (STREAM_RECORDER_USE_PROXY=true).
+
+    No third-party proxy is built in: the operator must name one in
+    TWITCH_PROXY_PLAYLIST (and a plugin directory in STREAMLINK_PLUGIN_DIR if the
+    proxy needs a patched Twitch plugin). Without a proxy list nothing is added.
+    """
+    proxy_list = os.environ.get("TWITCH_PROXY_PLAYLIST", "").strip()
+    if not proxy_list:
+        logger.warning("STREAM_RECORDER_USE_PROXY is set but TWITCH_PROXY_PLAYLIST is empty; recording without proxy")
+        return []
+    args = []
+    plugin_dir = os.environ.get("STREAMLINK_PLUGIN_DIR", "").strip()
+    if plugin_dir:
+        args += ["--plugin-dirs", plugin_dir]
+    return args + [
         "--twitch-proxy-playlist", proxy_list,
         "--twitch-proxy-playlist-fallback",
         "--twitch-disable-ads",
@@ -3300,14 +3408,9 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     logger.error("FFmpeg-Prozess stdout ist None. Kann keine Ausgabe lesen.")
                     
                 if hang_detected and process.poll() is None:
-                    try:
-                        process.wait(timeout=10)
-                    except subprocess.TimeoutExpired:
-                        logger.warning("FFmpeg reagiert nicht, erzwinge Beendigung...")
-                        process.kill()
-                        process.wait()
+                    wait_for_process_exit(process, timeout=10)
                 else:
-                    process.wait()
+                    wait_for_process_exit(process, timeout=FFMPEG_FINALIZE_TIMEOUT)
                 stop_process(source_process)
                 
                 if process.returncode == 0:
@@ -3359,22 +3462,29 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                                 archive_channel,
                                 discord_notify_ready=False,
                             )
+                        # Never offload a file that failed integrity validation.
                         if not test_video_file(finalized_path):
                             logger.warning("Video-Datei scheint beschädigt zu sein")
-                        elif (not short_recording) and AUTO_TRANSCRIBE and (
-                            finalized_path.lower().endswith(".mp4") or os.path.exists(output_file)
-                        ):
-                            media_for_tx = output_file if os.path.exists(output_file) else finalized_path
-                            if media_for_tx.lower().endswith(".mp4"):
-                                transcript_path = os.path.splitext(output_file)[0] + ".transcript.txt"
-                                try:
-                                    database.add_task(
-                                        'transcribe',
-                                        {'media': output_file, 'transcript': transcript_path},
-                                    )
-                                    logger.info(f"Automatische Transkription eingeordnet: {output_file}")
-                                except Exception as exc:
-                                    logger.error(f"Konnte automatische Transkription nicht einreihen: {exc}")
+                        else:
+                            # An asynchronous remux may replace the file later; in
+                            # that case the periodic storage sync uploads the final
+                            # version instead of this intermediate file.
+                            if not (AUTO_REMUX and not SYNC_REMUX and not short_recording):
+                                maybe_enqueue_storage_upload(finalized_path)
+                            if (not short_recording) and AUTO_TRANSCRIBE and (
+                                finalized_path.lower().endswith(".mp4") or os.path.exists(output_file)
+                            ):
+                                media_for_tx = output_file if os.path.exists(output_file) else finalized_path
+                                if media_for_tx.lower().endswith(".mp4"):
+                                    transcript_path = os.path.splitext(output_file)[0] + ".transcript.txt"
+                                    try:
+                                        database.add_task(
+                                            'transcribe',
+                                            {'media': output_file, 'transcript': transcript_path},
+                                        )
+                                        logger.info(f"Automatische Transkription eingeordnet: {output_file}")
+                                    except Exception as exc:
+                                        logger.error(f"Konnte automatische Transkription nicht einreihen: {exc}")
                         cleanup_duplicate_recordings(
                             recordings_dir,
                             output_file,
@@ -3627,6 +3737,24 @@ def stop_channel_process(proc, channel, timeout=5):
         logger.error("Channel-Prozess %s konnte nicht gestoppt werden: %s", channel, exc)
 
 
+def stop_channel_and_release_lock(recordings_dir, channel, proc, timeout=5):
+    """Stop the channel worker *before* releasing its flock.
+
+    Releasing first lets a new recorder process acquire the same channel while
+    the old FFmpeg child is still writing, producing duplicate recordings.
+    """
+    try:
+        stop_channel_process(proc, channel, timeout=timeout)
+    finally:
+        try:
+            release_held_channel_lock(recordings_dir, channel)
+        except Exception as exc:
+            # Must not mask an exception raised by stop_channel_process().
+            logger.warning(
+                "Channel-Lock fuer %s konnte nicht freigegeben werden: %s", channel, exc
+            )
+
+
 def request_shutdown(signum=None, frame=None):
     global shutdown_requested
     shutdown_requested = True
@@ -3669,7 +3797,7 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
     is_live_now = False
     logger.info(f"Live-Only Monitor aktiv für {source_channel} (Discord-Alert + Live-Stream, keine Aufnahme).")
 
-    while True:
+    while not shutdown_requested:
         try:
             current_conf = get_source_config(source_channel)
             if not current_conf:
@@ -3718,12 +3846,12 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
                 except Exception:
                     pass
 
-            time.sleep(CHECK_INTERVAL)
+            interruptible_sleep(CHECK_INTERVAL)
         except (KeyboardInterrupt, SystemExit):
             break
         except Exception as exc:
             logger.error(f"Fehler im Live-Only Monitor für {source_channel}: {exc}")
-            time.sleep(CHECK_INTERVAL)
+            interruptible_sleep(CHECK_INTERVAL)
 
 def run_channel(source_channel):
     """Startet Aufnahme und Chat-Prozess für einen Channel."""
@@ -3831,28 +3959,7 @@ if __name__ == "__main__":
                     old_mode = channel_modes.get(channel)
                     if proc.is_alive() and old_mode == mode:
                         continue
-                    try:
-                        release_held_channel_lock(recordings_dir, channel)
-                    except Exception:
-                        pass
-                    if proc.is_alive():
-                        stop_channel_process(proc, channel)
-                    channel_procs.pop(channel, None)
-                    channel_modes.pop(channel, None)
-
-                # Reap / restart existing process before lock checks so our own
-                # held flock does not permanently block restart.
-                if channel in channel_procs:
-                    proc = channel_procs[channel]
-                    old_mode = channel_modes.get(channel)
-                    if proc.is_alive() and old_mode == mode:
-                        continue
-                    try:
-                        release_held_channel_lock(recordings_dir, channel)
-                    except Exception:
-                        pass
-                    if proc.is_alive():
-                        stop_channel_process(proc, channel)
+                    stop_channel_and_release_lock(recordings_dir, channel, proc)
                     channel_procs.pop(channel, None)
                     channel_modes.pop(channel, None)
 
@@ -3896,11 +4003,7 @@ if __name__ == "__main__":
                     conf = get_source_config(channel)
                     archive_channel = conf.get("archive_name") or channel
                     recordings_dir = os.path.join(RECORDINGS_BASE_DIR, archive_channel)
-                    try:
-                        release_held_channel_lock(recordings_dir, channel)
-                    except Exception:
-                        pass
-                    stop_channel_process(proc, channel)
+                    stop_channel_and_release_lock(recordings_dir, channel, proc)
                     logger.info(f"Channel-Prozess beendet: {channel}")
             time.sleep(5)
     except KeyboardInterrupt:
@@ -3910,12 +4013,7 @@ if __name__ == "__main__":
             conf = get_source_config(channel) or {}
             archive_channel = conf.get("archive_name") or channel
             recordings_dir = os.path.join(RECORDINGS_BASE_DIR, archive_channel)
-            try:
-                release_held_channel_lock(recordings_dir, channel)
-            except Exception:
-                pass
-            if proc and proc.is_alive():
-                proc.terminate()
+            stop_channel_and_release_lock(recordings_dir, channel, proc)
         
         for proc in channel_procs.values():
             if proc and proc.is_alive():

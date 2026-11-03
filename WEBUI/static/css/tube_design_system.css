@@ -731,7 +731,7 @@ body.ns-platform .streamer-hero {
 /* 16:9 Video Cards Elevation */
 body.ns-platform .video-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
   gap: 20px 16px !important;
 }
 
@@ -2054,8 +2054,7 @@ body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod
   flex-shrink: 0 !important;
 }
 
-body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool,
-body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .ns-cast-trigger {
+body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod-inline-tool {
   min-height: 26px !important;
   padding: 0 10px !important;
   font-size: 11px !important;
@@ -3236,7 +3235,7 @@ select:focus {
 /* VOD Discovery Grid */
 .nebula-vod-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 20px;
   margin-bottom: 32px;
 }
@@ -3642,7 +3641,11 @@ video, #vodPlayer, .player-wrapper video, .twitch-embed-wrapper iframe {
   }
 
   .ns-header-actions {
-    flex: 0 0 auto !important;
+    flex: 1 1 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    min-width: 0 !important;
   }
 
   /* 5. Mobile Global Navigation Bar (Pixel-Perfect, Zero-Overlap) */
@@ -4281,12 +4284,21 @@ aside.ns-command-rail *::after,
   margin-bottom: 14px;
 }
 
-.nebula-login-h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #FFF;
+/* Legacy `body.page-login h1` rules in style.css force 42–78px with !important;
+   the card heading must stay inside the 440px login card. */
+body.page-login .nebula-login-h1 {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: #FFF !important;
   margin: 0 0 6px 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.01em !important;
+  text-shadow: none !important;
+  overflow-wrap: anywhere;
+}
+
+body.page-login .nebula-login-h1::after {
+  content: none !important;
 }
 
 .nebula-login-sub {
