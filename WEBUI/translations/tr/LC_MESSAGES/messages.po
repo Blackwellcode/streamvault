@@ -1,0 +1,3412 @@
+# Turkish translations for StreamVault.
+# Copyright (C) 2026 StreamVault contributors
+# This file is distributed under the same license as the StreamVault
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamVault VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"PO-Revision-Date: 2026-11-03 19:31+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: tr\n"
+"Language-Team: tr <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(channel)s added (%(mode)s)."
+msgstr "%(channel)s eklendi (%(mode)s)."
+
+#, python-format
+msgid "%(channel)s added as a YouTube source (%(mode)s)."
+msgstr "%(channel)s YouTube kaynağı olarak eklendi (%(mode)s)."
+
+#, python-format
+msgid "%(channel)s mode updated to: %(mode)s."
+msgstr "%(channel)s modu güncellendi: %(mode)s."
+
+#, python-format
+msgid "%(count)s VODs"
+msgstr "%(count)s VOD"
+
+#, python-format
+msgid "%(count)s VODs in quick access"
+msgstr "Hızlı erişimde %(count)s VOD"
+
+#, python-format
+msgid "%(count)s active"
+msgstr "%(count)s etkin"
+
+#, python-format
+msgid "%(count)s clips"
+msgstr "%(count)s klip"
+
+#, python-format
+msgid "%(count)s clips archived"
+msgstr "%(count)s klip arşivlendi"
+
+#, python-format
+msgid "%(count)s clips in total"
+msgstr "Toplam %(count)s klip"
+
+#, python-format
+msgid "%(count)s in the cloud"
+msgstr "Bulutta %(count)s"
+
+#, python-format
+msgid "%(count)s live"
+msgstr "%(count)s canlı"
+
+#, python-format
+msgid "%(count)s recordings"
+msgstr "%(count)s kayıt"
+
+#, python-format
+msgid "%(count)s recordings in total"
+msgstr "Toplam %(count)s kayıt"
+
+#, python-format
+msgid "%(count)s viewers"
+msgstr "%(count)s izleyici"
+
+#, python-format
+msgid "%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)"
+msgstr "%(day)s: %(total)s (giriş %(logins)s, sayfa %(pages)s, video %(media)s, sohbet %(chats)s)"
+
+#, python-format
+msgid "%(day)s: no activity"
+msgstr "%(day)s: etkinlik yok"
+
+#, python-format
+msgid "%(days)s days ago"
+msgstr "%(days)s gün önce"
+
+#, python-format
+msgid "%(field)s is missing."
+msgstr "%(field)s eksik."
+
+#, python-format
+msgid "%(minutes)s min ago"
+msgstr "%(minutes)s dk önce"
+
+#, python-format
+msgid "%(month)s %(day)s, %(time)s"
+msgstr "%(day)s %(month)s, %(time)s"
+
+#, python-format
+msgid "%(n)s new VODs available"
+msgstr "%(n)s yeni VOD mevcut"
+
+#, python-format
+msgid "%(name)s removed."
+msgstr "%(name)s kaldırıldı."
+
+#, python-format
+msgid "%(num)d attempt"
+msgid_plural "%(num)d attempts"
+msgstr[0] "%(num)d deneme"
+
+#, python-format
+msgid "%(num)d channel"
+msgid_plural "%(num)d channels"
+msgstr[0] "%(num)d kanal"
+
+#, python-format
+msgid "%(num)d entry"
+msgid_plural "%(num)d entries"
+msgstr[0] "%(num)d kayıt"
+
+#, python-format
+msgid "%(num)d folder allowed"
+msgid_plural "%(num)d folders allowed"
+msgstr[0] "%(num)d klasöre izin verildi"
+
+#, python-format
+msgid "%(num)d link"
+msgid_plural "%(num)d links"
+msgstr[0] "%(num)d bağlantı"
+
+#, python-format
+msgid "%(num)d source"
+msgid_plural "%(num)d sources"
+msgstr[0] "%(num)d kaynak"
+
+#, python-format
+msgid "%(num)s days"
+msgstr "%(num)s gün"
+
+#, python-format
+msgid "%(provider)s does not support OAuth."
+msgstr "%(provider)s OAuth desteklemiyor."
+
+msgid "0 = delete immediately once the cloud copy is verified."
+msgstr "0 = bulut kopyası doğrulanır doğrulanmaz hemen sil."
+
+msgid "0 = no automatic sync. Only used when auto-upload is enabled."
+msgstr "0 = otomatik senkronizasyon yok. Yalnızca otomatik yükleme etkinse kullanılır."
+
+msgid "1 new VOD available"
+msgstr "1 yeni VOD mevcut"
+
+#, python-format
+msgid "<strong>%(free)s</strong> free"
+msgstr "<strong>%(free)s</strong> boş"
+
+msgid "A cleanup is already running."
+msgstr "Zaten bir temizleme çalışıyor."
+
+msgid "A cloud deletion is already running."
+msgstr "Zaten bir bulut silme işlemi çalışıyor."
+
+msgid "A cloud sync is already running."
+msgstr "Zaten bir bulut senkronizasyonu çalışıyor."
+
+#, python-format
+msgid "A group named '%(name)s' already exists."
+msgstr "'%(name)s' adında bir grup zaten var."
+
+#, python-format
+msgid "A provider named '%(name)s' already exists."
+msgstr "'%(name)s' adında bir sağlayıcı zaten var."
+
+msgid "A restore is already running."
+msgstr "Zaten bir geri yükleme çalışıyor."
+
+msgid "A saved value is kept if the field is left empty."
+msgstr "Alan boş bırakılırsa kayıtlı değer korunur."
+
+msgid "ACTIVE (locked)"
+msgstr "ETKİN (kilitli)"
+
+msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
+msgstr "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner veya S3 uyumlu herhangi bir uç nokta."
+
+msgid "Accept rules"
+msgstr "Kuralları kabul et"
+
+msgid "Accept terms"
+msgstr "Koşulları kabul et"
+
+msgid "Account active (access allowed)"
+msgstr "Hesap etkin (erişim izinli)"
+
+msgid "Action"
+msgstr "İşlem"
+
+msgid "Actions"
+msgstr "İşlemler"
+
+msgid "Activate account immediately"
+msgstr "Hesabı hemen etkinleştir"
+
+msgid "Active"
+msgstr "Etkin"
+
+msgid "Active shares"
+msgstr "Etkin paylaşımlar"
+
+msgid "Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them)."
+msgstr "Etkin: yeni yayınlar ve klasörler otomatik olarak açılır. Aşağıdan tek tek klasörleri devre dışı bırakabilirsiniz (işareti kaldırın)."
+
+msgid "Active: new streams are unlocked automatically. Below you can disable / block individual folders."
+msgstr "Etkin: yeni yayınlar otomatik olarak açılır. Aşağıdan tek tek klasörleri devre dışı bırakabilir / engelleyebilirsiniz."
+
+msgid "Actively monitored by the recorder core"
+msgstr "Kayıt çekirdeği tarafından etkin olarak izleniyor"
+
+msgid "Add channel"
+msgstr "Kanal ekle"
+
+msgid "Add new channel"
+msgstr "Yeni kanal ekle"
+
+msgid "Add provider"
+msgstr "Sağlayıcı ekle"
+
+msgid "Addressing"
+msgstr "Adresleme"
+
+msgid "Admin"
+msgstr "Yönetici"
+
+msgid "Admin controls"
+msgstr "Yönetici kontrolleri"
+
+msgid "Admins only"
+msgstr "Yalnızca yöneticiler"
+
+msgid "All"
+msgstr "Tümü"
+
+#, python-format
+msgid "All (%(count)s)"
+msgstr "Tümü (%(count)s)"
+
+msgid "All VOD slots are in use"
+msgstr "Tüm VOD yuvaları kullanımda"
+
+msgid "All VODs"
+msgstr "Tüm VOD'lar"
+
+msgid "All categories"
+msgstr "Tüm kategoriler"
+
+msgid "All off"
+msgstr "Tümü kapalı"
+
+msgid "All on"
+msgstr "Tümü açık"
+
+msgid "All saved settings of this account will be deleted completely."
+msgstr "Bu hesabın tüm kayıtlı ayarları tamamen silinecek."
+
+msgid "All streamers are currently offline. Past broadcasts can be watched in the archive."
+msgstr "Tüm yayıncılar şu anda çevrimdışı. Geçmiş yayınlar arşivden izlenebilir."
+
+msgid "All streams (+ auto-new)"
+msgstr "Tüm yayınlar (+ yeniler otomatik)"
+
+msgid "All users"
+msgstr "Tüm kullanıcılar"
+
+msgid "Allowlist (comma-separated):"
+msgstr "İzin listesi (virgülle ayrılmış):"
+
+#, python-format
+msgid "Also transfers %(path)s."
+msgstr "%(path)s de aktarılır."
+
+#, python-format
+msgid "Also transfers preview images from %(path)s."
+msgstr "%(path)s içindeki önizleme görselleri de aktarılır."
+
+msgid "An upload for this file is already running."
+msgstr "Bu dosya için zaten bir yükleme çalışıyor."
+
+msgid "Anonymous"
+msgstr "Anonim"
+
+msgid "Appendix A house rules"
+msgstr "Ek A ev kuralları"
+
+#, python-format
+msgid "Appendix A — %(title)s"
+msgstr "Ek A — %(title)s"
+
+msgid "Apply"
+msgstr "Uygula"
+
+msgid "April"
+msgstr "Nisan"
+
+msgid "Archive"
+msgstr "Arşiv"
+
+msgid "Archive / media folder"
+msgstr "Arşiv / medya klasörü"
+
+msgid "Archive download"
+msgstr "Arşiv indirme"
+
+msgid "Archive object not found."
+msgstr "Arşiv nesnesi bulunamadı."
+
+msgid "Archive objects"
+msgstr "Arşiv nesneleri"
+
+msgid "Archive overview"
+msgstr "Arşiv özeti"
+
+msgid "Archive recording (latest VOD)"
+msgstr "Arşiv kaydı (en son VOD)"
+
+#, python-format
+msgid "Archive: %(name)s"
+msgstr "Arşiv: %(name)s"
+
+#, python-format
+msgid "Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs"
+msgstr "Arşiv: <strong>%(channels)s</strong> kanal • <strong>%(vods)s</strong> VOD"
+
+msgid "Archived airtime"
+msgstr "Arşivlenen yayın süresi"
+
+#, python-format
+msgid "Archived files (%(count)s)"
+msgstr "Arşivlenen dosyalar (%(count)s)"
+
+msgid "Area maintenance and exempt users saved successfully."
+msgstr "Alan bakımı ve muaf kullanıcılar başarıyla kaydedildi."
+
+msgid "At least 8 characters"
+msgstr "En az 8 karakter"
+
+msgid "Audio extraction error"
+msgstr "Ses çıkarma hatası"
+
+msgid "Audio extraction failed"
+msgstr "Ses çıkarma başarısız"
+
+msgid "August"
+msgstr "Ağustos"
+
+msgid "Auto"
+msgstr "Otomatik"
+
+msgid "Auto-sync interval (minutes)"
+msgstr "Otomatik senkronizasyon aralığı (dakika)"
+
+msgid "Auto: off"
+msgstr "Otomatik: kapalı"
+
+msgid "Auto: on"
+msgstr "Otomatik: açık"
+
+msgid "Automatic"
+msgstr "Otomatik"
+
+msgid "Automatic (browser)"
+msgstr "Otomatik (tarayıcı)"
+
+msgid "Automatic (first active)"
+msgstr "Otomatik (ilk etkin)"
+
+msgid "Automatic and manual backups (SQLite database, configuration and metadata)."
+msgstr "Otomatik ve manuel yedeklemeler (SQLite veritabanı, yapılandırma ve meta veriler)."
+
+msgid "Automatically unlock future streams & folders"
+msgstr "Gelecekteki yayınları ve klasörleri otomatik olarak aç"
+
+msgid "Automation & retention"
+msgstr "Otomasyon ve saklama"
+
+msgid "Avg. active"
+msgstr "Ort. etkin"
+
+msgid "Back"
+msgstr "Geri"
+
+msgid "Back shortly"
+msgstr "Birazdan döneceğiz"
+
+msgid "Back to dashboard"
+msgstr "Panele dön"
+
+msgid "Back to overview"
+msgstr "Genel bakışa dön"
+
+msgid "Back to user management"
+msgstr "Kullanıcı yönetimine dön"
+
+msgid "Back up chat logs too"
+msgstr "Sohbet kayıtlarını da yedekle"
+
+msgid "Back up thumbnails too"
+msgstr "Küçük resimleri de yedekle"
+
+#, python-format
+msgid "Backup %(name)s could not be deleted."
+msgstr "%(name)s yedeği silinemedi."
+
+#, python-format
+msgid "Backup %(name)s deleted."
+msgstr "%(name)s yedeği silindi."
+
+#, python-format
+msgid "Backup error: %(error)s"
+msgstr "Yedekleme hatası: %(error)s"
+
+msgid "Badge library is up to date."
+msgstr "Rozet kitaplığı güncel."
+
+msgid "Badge sync is already running."
+msgstr "Rozet senkronizasyonu zaten çalışıyor."
+
+msgid "Badge sync started."
+msgstr "Rozet senkronizasyonu başlatıldı."
+
+msgid "Ban"
+msgstr "Yasakla"
+
+msgid "Ban IP"
+msgstr "IP'yi yasakla"
+
+msgid "Banned"
+msgstr "Yasaklı"
+
+#, python-format
+msgid "Banner URL for %(streamer)s saved."
+msgstr "%(streamer)s için banner URL'si kaydedildi."
+
+#, python-format
+msgid "Banner for %(streamer)s reset to default."
+msgstr "%(streamer)s için banner varsayılana sıfırlandı."
+
+#, python-format
+msgid "Banner image for %(streamer)s uploaded successfully."
+msgstr "%(streamer)s için banner görseli başarıyla yüklendi."
+
+msgid "Banner image uploaded successfully."
+msgstr "Banner görseli başarıyla yüklendi."
+
+msgid "Banner reset to default."
+msgstr "Banner varsayılana sıfırlandı."
+
+msgid "Base:"
+msgstr "Temel:"
+
+msgid "Blocked"
+msgstr "Engellendi"
+
+#, python-format
+msgid "Blocked (%(count)s): %(list)s"
+msgstr "Engellenen (%(count)s): %(list)s"
+
+msgid "Browser supports neither MPEG-TS nor live HLS."
+msgstr "Tarayıcı ne MPEG-TS ne de canlı HLS destekliyor."
+
+msgid "Bucket name contains invalid characters."
+msgstr "Bucket adı geçersiz karakterler içeriyor."
+
+msgid "Buffer is still short — the clip window grows with it."
+msgstr "Arabellek henüz kısa — klip aralığı onunla birlikte büyür."
+
+msgid "Buffer:"
+msgstr "Arabellek:"
+
+msgid "Buffering..."
+msgstr "Arabelleğe alınıyor..."
+
+msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
+msgstr "Varsayılan olarak hiçbir şey otomatik yüklenmez veya silinmez. Bu özellikleri bilinçli olarak etkinleştirin."
+
+msgid "CHANGE"
+msgstr "DEĞİŞTİR"
+
+msgid "CHANNEL MANAGEMENT (ADMIN)"
+msgstr "KANAL YÖNETİMİ (YÖNETİCİ)"
+
+msgid "Cancel"
+msgstr "İptal"
+
+msgid "Category search failed."
+msgstr "Kategori araması başarısız."
+
+msgid "Category search is currently unavailable."
+msgstr "Kategori araması şu anda kullanılamıyor."
+
+msgid "Change banner"
+msgstr "Banner'ı değiştir"
+
+msgid "Change password"
+msgstr "Şifreyi değiştir"
+
+msgid "Channel"
+msgstr "Kanal"
+
+msgid "Channel actions"
+msgstr "Kanal işlemleri"
+
+msgid "Channel archive & recording metrics"
+msgstr "Kanal arşivi ve kayıt metrikleri"
+
+msgid "Channel not found."
+msgstr "Kanal bulunamadı."
+
+msgid "Channels"
+msgstr "Kanallar"
+
+msgid "Chat"
+msgstr "Sohbet"
+
+#, python-format
+msgid "Chat %(age)s"
+msgstr "Sohbet %(age)s"
+
+msgid "Chat density & event timeline (click to jump)"
+msgstr "Sohbet yoğunluğu ve olay zaman çizelgesi (atlamak için tıklayın)"
+
+#, python-format
+msgid "Chat export - %(user)s"
+msgstr "Sohbet dışa aktarımı - %(user)s"
+
+msgid "Chat filter"
+msgstr "Sohbet filtresi"
+
+#, python-format
+msgid "Chat history: %(user)s"
+msgstr "Sohbet geçmişi: %(user)s"
+
+msgid "Chat messages"
+msgstr "Sohbet mesajları"
+
+msgid "Chat replay"
+msgstr "Sohbet tekrarı"
+
+msgid "Chat replay ready"
+msgstr "Sohbet tekrarı hazır"
+
+#, python-format
+msgid "Chat replay ready · first message at %(time)s"
+msgstr "Sohbet tekrarı hazır · ilk mesaj %(time)s"
+
+msgid "Chat tracker & global search"
+msgstr "Sohbet izleyici ve genel arama"
+
+msgid "Check"
+msgstr "Kontrol et"
+
+msgid "Cleanup interval (minutes)"
+msgstr "Temizleme aralığı (dakika)"
+
+#, python-format
+msgid "Cleanup queued (task #%(task)s)."
+msgstr "Temizleme kuyruğa alındı (görev #%(task)s)."
+
+msgid "Clear filters"
+msgstr "Filtreleri temizle"
+
+msgid "Click to change password"
+msgstr "Şifreyi değiştirmek için tıklayın"
+
+msgid "Clip"
+msgstr "Klip"
+
+msgid "Clip URL is missing on this page."
+msgstr "Bu sayfada klip URL'si eksik."
+
+msgid "Clip could not be deleted."
+msgstr "Klip silinemedi."
+
+msgid "Clip created."
+msgstr "Klip oluşturuldu."
+
+msgid "Clip deleted."
+msgstr "Klip silindi."
+
+msgid "Clip end"
+msgstr "Klip sonu"
+
+msgid "Clip failed."
+msgstr "Klip başarısız."
+
+msgid "Clip is already starting…"
+msgstr "Klip zaten başlatılıyor…"
+
+msgid "Clip is taking too long."
+msgstr "Klip çok uzun sürüyor."
+
+msgid "Clip job not found."
+msgstr "Klip işi bulunamadı."
+
+msgid "Clip saved."
+msgstr "Klip kaydedildi."
+
+msgid "Clip settings"
+msgstr "Klip ayarları"
+
+msgid "Clip settings saved."
+msgstr "Klip ayarları kaydedildi."
+
+msgid "Clip start"
+msgstr "Klip başlangıcı"
+
+msgid "Clip title"
+msgstr "Klip başlığı"
+
+msgid "Clip title (optional)"
+msgstr "Klip başlığı (isteğe bağlı)"
+
+#, python-format
+msgid "Clips (%(count)s)"
+msgstr "Klipler (%(count)s)"
+
+msgid "Close"
+msgstr "Kapat"
+
+msgid "Close transcript"
+msgstr "Transkripti kapat"
+
+#, python-format
+msgid "Cloud deletion queued (task #%(task)s)."
+msgstr "Bulut silme işlemi kuyruğa alındı (görev #%(task)s)."
+
+msgid "Cloud only"
+msgstr "Yalnızca bulut"
+
+msgid "Cloud storage"
+msgstr "Bulut depolama"
+
+#, python-format
+msgid "Cloud sync queued (task #%(task)s)."
+msgstr "Bulut senkronizasyonu kuyruğa alındı (görev #%(task)s)."
+
+msgid "Cloud volume"
+msgstr "Bulut hacmi"
+
+msgid "Collapse chat"
+msgstr "Sohbeti daralt"
+
+msgid "Configure dynamic permissions for streams, the video archive and channel access."
+msgstr "Yayınlar, video arşivi ve kanal erişimi için dinamik izinleri yapılandırın."
+
+msgid "Configure recording channels and manage archive assignments"
+msgstr "Kayıt kanallarını yapılandırın ve arşiv atamalarını yönetin"
+
+msgid "Configured streamers & sources"
+msgstr "Yapılandırılmış yayıncılar ve kaynaklar"
+
+msgid "Connect account"
+msgstr "Hesap bağla"
+
+msgid "Connect with Dropbox"
+msgstr "Dropbox ile bağlan"
+
+msgid "Connect with Google"
+msgstr "Google ile bağlan"
+
+msgid "Connect with Microsoft"
+msgstr "Microsoft ile bağlan"
+
+msgid "Connecting…"
+msgstr "Bağlanıyor…"
+
+msgid "Connection OK"
+msgstr "Bağlantı tamam"
+
+msgid "Connection failed"
+msgstr "Bağlantı başarısız"
+
+msgid "Connection lost — reconnecting…"
+msgstr "Bağlantı koptu — yeniden bağlanılıyor…"
+
+#, python-format
+msgid "Connection test queued (task #%(task)s)."
+msgstr "Bağlantı testi kuyruğa alındı (görev #%(task)s)."
+
+msgid "Consent required."
+msgstr "Onay gerekli."
+
+msgid "Control panel"
+msgstr "Kontrol paneli"
+
+msgid "Control the global maintenance mode or lock individual platform areas."
+msgstr "Genel bakım modunu yönetin veya platformun belirli alanlarını kilitleyin."
+
+msgid "Copy"
+msgstr "Kopyala"
+
+msgid "Copy link"
+msgstr "Bağlantıyı kopyala"
+
+msgid "Could not create clip."
+msgstr "Klip oluşturulamadı."
+
+msgid "Could not load status."
+msgstr "Durum yüklenemedi."
+
+msgid "Could not start clip."
+msgstr "Klip başlatılamadı."
+
+msgid "Create"
+msgstr "Oluştur"
+
+msgid "Create backup now"
+msgstr "Şimdi yedek oluştur"
+
+msgid "Create clip"
+msgstr "Klip oluştur"
+
+msgid "Create group"
+msgstr "Grup oluştur"
+
+msgid "Create new user"
+msgstr "Yeni kullanıcı oluştur"
+
+msgid "Create new user group"
+msgstr "Yeni kullanıcı grubu oluştur"
+
+msgid "Create transcript"
+msgstr "Transkript oluştur"
+
+msgid "Create user"
+msgstr "Kullanıcı oluştur"
+
+msgid "Created"
+msgstr "Oluşturuldu"
+
+msgid "Created on"
+msgstr "Oluşturulma tarihi"
+
+msgid "Creating clip…"
+msgstr "Klip oluşturuluyor…"
+
+msgid "Critical"
+msgstr "Kritik"
+
+msgid "Current password"
+msgstr "Mevcut şifre"
+
+msgid "Current preview"
+msgstr "Mevcut önizleme"
+
+msgid "Current profile picture"
+msgstr "Mevcut profil resmi"
+
+msgid "Custom"
+msgstr "Özel"
+
+msgid "Custom banner URL saved successfully."
+msgstr "Özel banner URL'si başarıyla kaydedildi."
+
+msgid "Custom banner active"
+msgstr "Özel banner etkin"
+
+#, python-format
+msgid "Custom banner for %(streamer)s removed."
+msgstr "%(streamer)s için özel banner kaldırıldı."
+
+msgid "Custom banner removed."
+msgstr "Özel banner kaldırıldı."
+
+msgid "Custom file"
+msgstr "Özel dosya"
+
+msgid "Custom profile picture URL saved successfully."
+msgstr "Özel profil resmi URL'si başarıyla kaydedildi."
+
+msgid "Custom profile picture active"
+msgstr "Özel profil resmi etkin"
+
+msgid "Custom profile picture removed."
+msgstr "Özel profil resmi kaldırıldı."
+
+msgid "Customize channel banner"
+msgstr "Kanal banner'ını özelleştir"
+
+msgid "Customize profile picture"
+msgstr "Profil resmini özelleştir"
+
+#, python-format
+msgid "Daily activity %(user)s"
+msgstr "Günlük etkinlik %(user)s"
+
+msgid "Dashboard"
+msgstr "Panel"
+
+msgid "December"
+msgstr "Aralık"
+
+msgid "Default"
+msgstr "Varsayılan"
+
+msgid "Default provider"
+msgstr "Varsayılan sağlayıcı"
+
+msgid "Default target"
+msgstr "Varsayılan hedef"
+
+msgid "Delete"
+msgstr "Sil"
+
+msgid "Delete folder"
+msgstr "Klasörü sil"
+
+msgid "Delete from cloud"
+msgstr "Buluttan sil"
+
+msgid "Delete group"
+msgstr "Grubu sil"
+
+msgid "Delete local copies after retention"
+msgstr "Saklama süresinden sonra yerel kopyaları sil"
+
+msgid "Delete locally"
+msgstr "Yerel olarak sil"
+
+msgid "Delete permanently"
+msgstr "Kalıcı olarak sil"
+
+msgid "Delete user"
+msgstr "Kullanıcıyı sil"
+
+msgid "Delete user group"
+msgstr "Kullanıcı grubunu sil"
+
+msgid "Delete videos"
+msgstr "Videoları sil"
+
+msgid "Delete videos & recordings"
+msgstr "Videoları ve kayıtları sil"
+
+msgid "Deleted!"
+msgstr "Silindi!"
+
+msgid "Description"
+msgstr "Açıklama"
+
+msgid "Description (optional)"
+msgstr "Açıklama (isteğe bağlı)"
+
+msgid "Direct modules"
+msgstr "Doğrudan modüller"
+
+msgid "Directly into the vault archive"
+msgstr "Doğrudan vault arşivine"
+
+msgid "Disable / block individual folders:"
+msgstr "Tek tek klasörleri devre dışı bırak / engelle:"
+
+msgid "Disable / enable individual folders:"
+msgstr "Tek tek klasörleri devre dışı bırak / etkinleştir:"
+
+msgid "Disable recording (live & Discord only)"
+msgstr "Kaydı devre dışı bırak (yalnızca canlı ve Discord)"
+
+msgid "Disabled"
+msgstr "Devre dışı"
+
+msgid "Discard clip? Unsaved changes will be lost."
+msgstr "Klip atılsın mı? Kaydedilmemiş değişiklikler kaybolacak."
+
+msgid "Discord integration not active"
+msgstr "Discord entegrasyonu etkin değil"
+
+msgid "Discover"
+msgstr "Keşfet"
+
+msgid "Discover and watch Twitch streams in StreamVault"
+msgstr "StreamVault'ta Twitch yayınlarını keşfedin ve izleyin"
+
+msgid "Display name"
+msgstr "Görünen ad"
+
+msgid "Display title"
+msgstr "Görünen başlık"
+
+#, python-format
+msgid "Do you really want to delete the group %(name)s?"
+msgstr "%(name)s grubunu gerçekten silmek istiyor musunuz?"
+
+#, python-format
+msgid "Do you really want to permanently delete the user %(name)s?"
+msgstr "%(name)s kullanıcısını kalıcı olarak silmek istediğinizden emin misiniz?"
+
+msgid "Do you want to empty the entire recording folder?"
+msgstr "Tüm kayıt klasörünü boşaltmak istiyor musunuz?"
+
+msgid "Done"
+msgstr "Bitti"
+
+msgid "Download"
+msgstr "İndir"
+
+msgid "Download TXT"
+msgstr "TXT indir"
+
+msgid "Download all"
+msgstr "Tümünü indir"
+
+msgid "Download all VODs?"
+msgstr "Tüm VOD'lar indirilsin mi?"
+
+msgid "Download archive & VODs"
+msgstr "Arşivi ve VOD'ları indir"
+
+msgid "Download complete."
+msgstr "İndirme tamamlandı."
+
+msgid "Download file"
+msgstr "Dosyayı indir"
+
+msgid "Download is disabled. Please watch in the player (if available)."
+msgstr "İndirme devre dışı. Lütfen oynatıcıda izleyin (varsa)."
+
+msgid "Download of all VODs started in the background."
+msgstr "Tüm VOD'ların indirilmesi arka planda başlatıldı."
+
+#, python-format
+msgid "Downloading... %(percent)s"
+msgstr "İndiriliyor... %(percent)s"
+
+#, python-format
+msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
+msgstr "Drive kotası etkin — Oynat'a tekrar basmayın (engeli uzatır). Önceden yüklenmiş kısma geri sarın veya yaklaşık %(minutes)s dk bekleyin."
+
+msgid "Drop a file here or click to select"
+msgstr "Dosyayı buraya bırakın veya seçmek için tıklayın"
+
+msgid "Dropbox with OAuth 2.0, refresh token and large upload sessions."
+msgstr "OAuth 2.0, yenileme belirteci ve büyük yükleme oturumlarıyla Dropbox."
+
+msgid "Duration"
+msgstr "Süre"
+
+msgid "Duration must be > 0."
+msgstr "Süre 0'dan büyük olmalı."
+
+msgid "Duration:"
+msgstr "Süre:"
+
+msgid "Dynamic user account and group management with granular stream and permission control"
+msgstr "Ayrıntılı yayın ve izin denetimiyle dinamik kullanıcı hesabı ve grup yönetimi"
+
+msgid "END"
+msgstr "SON"
+
+msgid "Edit"
+msgstr "Düzenle"
+
+msgid "Edit group"
+msgstr "Grubu düzenle"
+
+msgid "Edit group & permissions"
+msgstr "Grubu ve izinleri düzenle"
+
+msgid "Edit provider"
+msgstr "Sağlayıcıyı düzenle"
+
+msgid "Edit user"
+msgstr "Kullanıcıyı düzenle"
+
+msgid "Email"
+msgstr "E-posta"
+
+msgid "Email address"
+msgstr "E-posta adresi"
+
+msgid "Email address (optional)"
+msgstr "E-posta adresi (isteğe bağlı)"
+
+msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
+msgstr "Boş = AWS. R2, B2, Wasabi, MinIO vb. için S3 uç noktasını girin."
+
+msgid "Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers use their own region."
+msgstr "Boş = AWS için us-east-1. Cloudflare R2 'auto' kullanır; diğer S3 sağlayıcıları kendi bölgelerini kullanır."
+
+msgid "Empty folder"
+msgstr "Klasörü boşalt"
+
+msgid "Enable immediately"
+msgstr "Hemen etkinleştir"
+
+msgid "Enable maintenance mode"
+msgstr "Bakım modunu etkinleştir"
+
+msgid "Enable recording"
+msgstr "Kaydı etkinleştir"
+
+msgid "Enable recording for this channel"
+msgstr "Bu kanal için kaydı etkinleştir"
+
+msgid "Enabled"
+msgstr "Etkin"
+
+msgid "Encryption not ready."
+msgstr "Şifreleme hazır değil."
+
+msgid "End"
+msgstr "Son"
+
+msgid "End global maintenance mode"
+msgstr "Genel bakım modunu sonlandır"
+
+msgid "Endpoint URL (optional)"
+msgstr "Uç nokta URL'si (isteğe bağlı)"
+
+msgid "Endpoint URL must be a valid http(s) URL."
+msgstr "Uç nokta URL'si geçerli bir http(s) URL'si olmalı."
+
+msgid "Endpoint URL must not contain a query or fragment."
+msgstr "Uç nokta URL'si sorgu veya parça içermemeli."
+
+msgid "Endpoint URL must not contain credentials; use Access Key and Secret Key."
+msgstr "Uç nokta URL'si kimlik bilgisi içermemeli; Access Key ve Secret Key kullanın."
+
+msgid "Endpoint:"
+msgstr "Uç nokta:"
+
+msgid "Enter current password"
+msgstr "Mevcut şifreyi girin"
+
+msgid "Error"
+msgstr "Hata"
+
+msgid "Error cancelling the transcription"
+msgstr "Transkripsiyon iptal edilirken hata oluştu"
+
+msgid "Error changing the password."
+msgstr "Şifre değiştirilirken hata oluştu."
+
+msgid "Error creating group"
+msgstr "Grup oluşturulurken hata oluştu"
+
+msgid "Error creating the audio segment"
+msgstr "Ses parçası oluşturulurken hata oluştu"
+
+msgid "Error creating the user."
+msgstr "Kullanıcı oluşturulurken hata oluştu."
+
+msgid "Error creating user"
+msgstr "Kullanıcı oluşturulurken hata oluştu"
+
+msgid "Error deleting group"
+msgstr "Grup silinirken hata oluştu"
+
+msgid "Error deleting user"
+msgstr "Kullanıcı silinirken hata oluştu"
+
+msgid "Error loading cloud storage management."
+msgstr "Bulut depolama yönetimi yüklenirken hata oluştu."
+
+msgid "Error loading the admin panel. Please try again later."
+msgstr "Yönetim paneli yüklenirken hata oluştu. Lütfen daha sonra tekrar deneyin."
+
+msgid "Error loading the traffic overview."
+msgstr "Trafik özeti yüklenirken hata oluştu."
+
+msgid "Error queuing the transcription"
+msgstr "Transkripsiyon kuyruğa alınırken hata oluştu"
+
+msgid "Error saving group"
+msgstr "Grup kaydedilirken hata oluştu"
+
+msgid "Error updating user"
+msgstr "Kullanıcı güncellenirken hata oluştu"
+
+msgid "Error while deleting"
+msgstr "Silme sırasında hata oluştu"
+
+msgid "Error while loading."
+msgstr "Yükleme sırasında hata oluştu."
+
+msgid "Error while saving"
+msgstr "Kaydetme sırasında hata oluştu"
+
+msgid "Error:"
+msgstr "Hata:"
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr "Hata: %(error)s"
+
+msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
+msgstr "Bu grubun mevcut üyeleri otomatik olarak varsayılan <strong>İzleyici</strong> grubuna atanır."
+
+msgid "Exit fullscreen"
+msgstr "Tam ekrandan çık"
+
+msgid "Expand chat"
+msgstr "Sohbeti genişlet"
+
+msgid "Expires"
+msgstr "Bitiş"
+
+msgid "Exported by StreamVault"
+msgstr "StreamVault tarafından dışa aktarıldı"
+
+msgid "Extracting audio..."
+msgstr "Ses çıkarılıyor..."
+
+msgid "FEATURED VOD"
+msgstr "ÖNE ÇIKAN VOD"
+
+msgid "Failed"
+msgstr "Başarısız"
+
+msgid "Fast"
+msgstr "Hızlı"
+
+msgid "Feature permissions"
+msgstr "Özellik izinleri"
+
+msgid "Featured highlight"
+msgstr "Öne çıkan"
+
+msgid "February"
+msgstr "Şubat"
+
+msgid "File"
+msgstr "Dosya"
+
+msgid "File manager"
+msgstr "Dosya yöneticisi"
+
+msgid "File name"
+msgstr "Dosya adı"
+
+msgid "File not found"
+msgstr "Dosya bulunamadı"
+
+msgid "File not found locally."
+msgstr "Dosya yerel olarak bulunamadı."
+
+msgid "File size"
+msgstr "Dosya boyutu"
+
+msgid "File was uploaded."
+msgstr "Dosya yüklendi."
+
+msgid "Filter"
+msgstr "Filtre"
+
+msgid "Filter chat..."
+msgstr "Sohbeti filtrele..."
+
+msgid "First"
+msgstr "İlk"
+
+msgid "First page"
+msgstr "İlk sayfa"
+
+msgid "Folder ID:"
+msgstr "Klasör kimliği:"
+
+msgid "Folder is being emptied in the background."
+msgstr "Klasör arka planda boşaltılıyor."
+
+msgid "Folder not found or invalid."
+msgstr "Klasör bulunamadı veya geçersiz."
+
+msgid "For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:"
+msgstr "Google Drive, Dropbox ve OneDrive için bu geri çağırma URL'si sağlayıcıda kayıtlı olmalıdır:"
+
+msgid "For encrypted credential storage, VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least 16 characters)."
+msgstr "Kimlik bilgilerinin şifreli saklanması için VOD_SECRET_KEY (veya STORAGE_ENCRYPTION_KEY) güçlü ve benzersiz bir değere (en az 16 karakter) ayarlanmalıdır."
+
+msgid "Forget"
+msgstr "Unut"
+
+msgid "Free"
+msgstr "Boş"
+
+msgid "Full mode:"
+msgstr "Tam mod:"
+
+msgid "Full mode: recording + live + Discord"
+msgstr "Tam mod: kayıt + canlı + Discord"
+
+msgid "Full terms text"
+msgstr "Koşulların tam metni"
+
+msgid "Full-text search across chat logs, metadata and VOD archives"
+msgstr "Sohbet kayıtları, meta veriler ve VOD arşivlerinde tam metin arama"
+
+msgid "Full-text search query"
+msgstr "Tam metin arama sorgusu"
+
+msgid "Fullscreen"
+msgstr "Tam ekran"
+
+msgid "Game"
+msgstr "Oyun"
+
+#, python-format
+msgid "Game: %(category)s"
+msgstr "Oyun: %(category)s"
+
+#, python-format
+msgid "Game: %(name)s"
+msgstr "Oyun: %(name)s"
+
+msgid "Generate HLS now"
+msgstr "Şimdi HLS oluştur"
+
+msgid "Global maintenance mode:"
+msgstr "Genel bakım modu:"
+
+msgid "Go"
+msgstr "Git"
+
+msgid "Go to dashboard"
+msgstr "Panele git"
+
+msgid "Go to login"
+msgstr "Girişe git"
+
+msgid "Go to sign in"
+msgstr "Oturum açmaya git"
+
+msgid "Go to sign-in"
+msgstr "Oturum açmaya git"
+
+msgid "Go to terms"
+msgstr "Koşullara git"
+
+msgid "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+msgstr "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+
+msgid "Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads."
+msgstr "OAuth 2.0 ve sürdürülebilir yüklemelerle Google Drive / Workspace Drive."
+
+msgid "Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption."
+msgstr "Google Drive, S3 uyumlu hizmetler, Dropbox, OneDrive ve WebDAV. Kimlik bilgileri AES-GCM şifrelemesiyle saklanır."
+
+msgid "Group"
+msgstr "Grup"
+
+#, python-format
+msgid "Group '%(name)s' created successfully."
+msgstr "'%(name)s' grubu başarıyla oluşturuldu."
+
+#, python-format
+msgid "Group '%(name)s' updated successfully."
+msgstr "'%(name)s' grubu başarıyla güncellendi."
+
+msgid "Group created"
+msgstr "Grup oluşturuldu"
+
+msgid "Group deleted"
+msgstr "Grup silindi"
+
+msgid "Group deleted successfully. Existing members were moved to the 'Viewer' group."
+msgstr "Grup başarıyla silindi. Mevcut üyeler 'İzleyici' grubuna taşındı."
+
+msgid "Group name"
+msgstr "Grup adı"
+
+msgid "Group name must be between 2 and 50 characters long."
+msgstr "Grup adı 2 ile 50 karakter arasında olmalı."
+
+msgid "Group not found."
+msgstr "Grup bulunamadı."
+
+msgid "Group saved"
+msgstr "Grup kaydedildi"
+
+msgid "HLS connection lost — reconnecting…"
+msgstr "HLS bağlantısı koptu — yeniden bağlanılıyor…"
+
+msgid "HLS could not be recovered."
+msgstr "HLS kurtarılamadı."
+
+msgid "HLS is being created. Please reload the page in a few minutes."
+msgstr "HLS oluşturuluyor. Lütfen birkaç dakika sonra sayfayı yenileyin."
+
+msgid "HLS is not supported by this browser."
+msgstr "HLS bu tarayıcı tarafından desteklenmiyor."
+
+msgid "HLS starts faster for very large files."
+msgstr "Çok büyük dosyalarda HLS daha hızlı başlar."
+
+msgid "High"
+msgstr "Yüksek"
+
+msgid "Home"
+msgstr "Ana sayfa"
+
+msgid "Hotkey"
+msgstr "Kısayol tuşu"
+
+msgid "House rules for the invite-only circle. No “official” framing — just binding terms of use."
+msgstr "Davetli çevre için ev kuralları. “Resmî” bir çerçeve yok — yalnızca bağlayıcı kullanım koşulları."
+
+msgid "I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access."
+msgstr "StreamVault kurallarını okudum ve kabul ediyorum. İhlallerin erişimin derhal iptaline yol açacağını anlıyorum."
+
+#, python-format
+msgid "I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access."
+msgstr "Koşulları (sürüm %(version)s) okudum ve kabul ediyorum. İhlaller erişimin derhal iptaline yol açabilir."
+
+msgid "IP"
+msgstr "IP"
+
+#, python-format
+msgid "If needed, set %(var)s to your public HTTPS address so the URL matches exactly."
+msgstr "Gerekirse URL'nin tam eşleşmesi için %(var)s değerini genel HTTPS adresinize ayarlayın."
+
+msgid "Image controls"
+msgstr "Görüntü kontrolleri"
+
+#, python-format
+msgid "Inactive (%(count)s)"
+msgstr "Etkin değil (%(count)s)"
+
+msgid "Inactive: new streams stay blocked. Only folders checked below are unlocked."
+msgstr "Etkin değil: yeni yayınlar engelli kalır. Yalnızca aşağıda işaretli klasörler açılır."
+
+msgid "Include audio"
+msgstr "Sesi dahil et"
+
+msgid "Info about the VOD…"
+msgstr "VOD hakkında bilgi…"
+
+msgid "Information on data processing within the invite-only circle. No legal notice."
+msgstr "Davetli çevrede veri işleme hakkında bilgi. Yasal bildirim değildir."
+
+msgid "Initial password"
+msgstr "İlk şifre"
+
+msgid "Instant clip parameters and hotkey in the web player."
+msgstr "Web oynatıcıda anlık klip parametreleri ve kısayol tuşu."
+
+msgid "Intensity"
+msgstr "Yoğunluk"
+
+msgid "Internal server error while creating the group."
+msgstr "Grup oluşturulurken dahili sunucu hatası."
+
+msgid "Internal server error while deleting the group."
+msgstr "Grup silinirken dahili sunucu hatası."
+
+msgid "Internal server error while updating the group."
+msgstr "Grup güncellenirken dahili sunucu hatası."
+
+msgid "Invalid OAuth state."
+msgstr "Geçersiz OAuth durumu."
+
+msgid "Invalid Twitch channel."
+msgstr "Geçersiz Twitch kanalı."
+
+msgid "Invalid channel name."
+msgstr "Geçersiz kanal adı."
+
+msgid "Invalid channel."
+msgstr "Geçersiz kanal."
+
+msgid "Invalid clip path."
+msgstr "Geçersiz klip yolu."
+
+msgid "Invalid file name."
+msgstr "Geçersiz dosya adı."
+
+msgid "Invalid file."
+msgstr "Geçersiz dosya."
+
+msgid "Invalid folder slug."
+msgstr "Geçersiz klasör kısa adı."
+
+msgid "Invalid group ID."
+msgstr "Geçersiz grup kimliği."
+
+msgid "Invalid image format (allowed: JPG, PNG, WEBP, GIF)."
+msgstr "Geçersiz görsel biçimi (izin verilenler: JPG, PNG, WEBP, GIF)."
+
+msgid "Invalid maintenance action."
+msgstr "Geçersiz bakım işlemi."
+
+msgid "Invalid new username."
+msgstr "Geçersiz yeni kullanıcı adı."
+
+msgid "Invalid path (control characters)."
+msgstr "Geçersiz yol (kontrol karakterleri)."
+
+msgid "Invalid path (null byte)."
+msgstr "Geçersiz yol (null bayt)."
+
+msgid "Invalid path (path traversal)."
+msgstr "Geçersiz yol (dizin geçişi)."
+
+#, python-format
+msgid "Invalid server response (%(status)s)."
+msgstr "Geçersiz sunucu yanıtı (%(status)s)."
+
+msgid "Invalid source."
+msgstr "Geçersiz kaynak."
+
+msgid "Invalid streamer name."
+msgstr "Geçersiz yayıncı adı."
+
+#, python-format
+msgid "Invalid subfolder: %(error)s"
+msgstr "Geçersiz alt klasör: %(error)s"
+
+msgid "Invalid time value."
+msgstr "Geçersiz zaman değeri."
+
+msgid "Invalid username (3-32 characters: letters, numbers, _ and -)."
+msgstr "Geçersiz kullanıcı adı (3-32 karakter: harf, rakam, _ ve -)."
+
+msgid "Invite-only. Full terms text after sign-in."
+msgstr "Yalnızca davetle. Koşulların tam metni oturum açtıktan sonra."
+
+msgid "January"
+msgstr "Ocak"
+
+msgid "July"
+msgstr "Temmuz"
+
+msgid "June"
+msgstr "Haziran"
+
+msgid "LIVE"
+msgstr "CANLI"
+
+#, python-format
+msgid "LIVE %(name)s (without Twitch login)"
+msgstr "CANLI %(name)s (Twitch girişi olmadan)"
+
+msgid "LIVE & DISCORD ONLY"
+msgstr "YALNIZCA CANLI VE DISCORD"
+
+msgid "LIVE NOW"
+msgstr "ŞU AN CANLI"
+
+msgid "Language"
+msgstr "Dil"
+
+msgid "Largest"
+msgstr "En büyük"
+
+msgid "Last"
+msgstr "Son"
+
+msgid "Last active"
+msgstr "Son etkinlik"
+
+msgid "Last broadcast"
+msgstr "Son yayın"
+
+msgid "Last changed:"
+msgstr "Son değişiklik:"
+
+msgid "Last page"
+msgstr "Son sayfa"
+
+msgid "Last test:"
+msgstr "Son test:"
+
+msgid "Latest VODs"
+msgstr "En yeni VOD'lar"
+
+msgid "Leave empty to create a 'StreamVault' folder automatically."
+msgstr "Otomatik olarak 'StreamVault' klasörü oluşturmak için boş bırakın."
+
+msgid "Legend"
+msgstr "Açıklama"
+
+msgid "Link"
+msgstr "Bağlantı"
+
+msgid "Link copied"
+msgstr "Bağlantı kopyalandı"
+
+msgid "Link copied to clipboard:"
+msgstr "Bağlantı panoya kopyalandı:"
+
+msgid "Link copied:"
+msgstr "Bağlantı kopyalandı:"
+
+msgid "Live"
+msgstr "Canlı"
+
+msgid "Live & Discord only:"
+msgstr "Yalnızca canlı ve Discord:"
+
+msgid "Live (recovering...)"
+msgstr "Canlı (kurtarılıyor...)"
+
+msgid "Live channels"
+msgstr "Canlı kanallar"
+
+msgid "Live chat"
+msgstr "Canlı sohbet"
+
+msgid "Live clip created."
+msgstr "Canlı klip oluşturuldu."
+
+msgid "Live now"
+msgstr "Şu an canlı"
+
+msgid "Live on Twitch"
+msgstr "Twitch'te canlı"
+
+msgid "Live only: live stream + Discord (no recording)"
+msgstr "Yalnızca canlı: canlı yayın + Discord (kayıt yok)"
+
+msgid "Live recording"
+msgstr "Canlı kayıt"
+
+msgid "Live start failed."
+msgstr "Canlı başlatılamadı."
+
+msgid "Live stopped."
+msgstr "Canlı durduruldu."
+
+msgid "Live stream and Discord alerts only, no disk recording"
+msgstr "Yalnızca canlı yayın ve Discord bildirimleri, diske kayıt yok"
+
+msgid "Live stream highlight"
+msgstr "Canlı yayın öne çıkanı"
+
+msgid "Live stream is currently unavailable. Searching for stream..."
+msgstr "Canlı yayın şu anda kullanılamıyor. Yayın aranıyor..."
+
+msgid "Live stream not available."
+msgstr "Canlı yayın mevcut değil."
+
+msgid "Live via server"
+msgstr "Sunucu üzerinden canlı"
+
+msgid "Live view"
+msgstr "Canlı görünüm"
+
+msgid "Live watch"
+msgstr "Canlı izle"
+
+msgid "Live-only"
+msgstr "Yalnızca canlı"
+
+msgid "Load"
+msgstr "Yük"
+
+msgid "Load average (1m / 5m):"
+msgstr "Ortalama yük (1 dk / 5 dk):"
+
+msgid "Loading chat…"
+msgstr "Sohbet yükleniyor…"
+
+msgid "Loading model..."
+msgstr "Model yükleniyor..."
+
+msgid "Loading streams…"
+msgstr "Yayınlar yükleniyor…"
+
+msgid "Local"
+msgstr "Yerel"
+
+#, python-format
+msgid "Local rename failed: %(error)s"
+msgstr "Yerel yeniden adlandırma başarısız: %(error)s"
+
+msgid "Local retention (days)"
+msgstr "Yerel saklama süresi (gün)"
+
+msgid "Location"
+msgstr "Konum"
+
+msgid "Lock <strong>VOD player &amp; archive</strong>"
+msgstr "<strong>VOD oynatıcı &amp; arşivi</strong> kilitle"
+
+msgid "Lock <strong>live stream &amp; Twitch watch</strong>"
+msgstr "<strong>Canlı yayın &amp; Twitch izlemeyi</strong> kilitle"
+
+msgid "Lock <strong>mobile version</strong>"
+msgstr "<strong>Mobil sürümü</strong> kilitle"
+
+msgid "Log out"
+msgstr "Çıkış yap"
+
+msgid "Login"
+msgstr "Giriş"
+
+msgid "Login attempts"
+msgstr "Giriş denemeleri"
+
+msgid "Login failed."
+msgstr "Giriş başarısız."
+
+msgid "MP4 check not possible"
+msgstr "MP4 kontrolü yapılamıyor"
+
+msgid "Maintenance"
+msgstr "Bakım"
+
+msgid "Maintenance mode & area control"
+msgstr "Bakım modu ve alan kontrolü"
+
+#, python-format
+msgid "Maintenance mode active, but the Discord notice failed: %(error)s"
+msgstr "Bakım modu etkin, ancak Discord bildirimi başarısız: %(error)s"
+
+msgid "Maintenance mode active."
+msgstr "Bakım modu etkin."
+
+msgid "Maintenance mode active. Discord notice was sent."
+msgstr "Bakım modu etkin. Discord bildirimi gönderildi."
+
+#, python-format
+msgid "Maintenance mode ended, but the Discord notice failed: %(error)s"
+msgstr "Bakım modu sona erdi, ancak Discord bildirimi başarısız: %(error)s"
+
+msgid "Maintenance mode ended. Discord notice (available again) was sent."
+msgstr "Bakım modu sona erdi. Discord bildirimi (yeniden erişilebilir) gönderildi."
+
+msgid "Maintenance mode ended. The site is available to everyone again."
+msgstr "Bakım modu sona erdi. Site yeniden herkesin kullanımına açık."
+
+msgid "Manage documents, media files and archive assets"
+msgstr "Belgeleri, medya dosyalarını ve arşiv varlıklarını yönetin"
+
+msgid "Manage streamers"
+msgstr "Yayıncıları yönet"
+
+msgid "Manage users & groups"
+msgstr "Kullanıcıları ve grupları yönet"
+
+msgid "Manual sync"
+msgstr "Manuel senkronizasyon"
+
+msgid "March"
+msgstr "Mart"
+
+msgid "Matches found"
+msgstr "Bulunan eşleşmeler"
+
+msgid "Max. files per sync"
+msgstr "Senkronizasyon başına en fazla dosya"
+
+msgid "May"
+msgstr "Mayıs"
+
+msgid "Member"
+msgstr "Üye"
+
+msgid "Member VOD access saved."
+msgstr "Üye VOD erişimi kaydedildi."
+
+msgid "Members"
+msgstr "Üyeler"
+
+msgid "Message"
+msgstr "Mesaj"
+
+msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
+msgstr "Mobil canlı geçici olarak devre dışı. Lütfen masaüstü sürümünü veya yüklü uygulamayı kullanın."
+
+msgid "Monitored"
+msgstr "İzleniyor"
+
+msgid "Must point to a writable folder and end with / (added automatically)."
+msgstr "Yazılabilir bir klasörü göstermeli ve / ile bitmeli (otomatik eklenir)."
+
+msgid "Mute"
+msgstr "Sesi kapat"
+
+msgid "Muted"
+msgstr "Sessiz"
+
+msgid "My streamers"
+msgstr "Yayıncılarım"
+
+msgid "Network error"
+msgstr "Ağ hatası"
+
+msgid "Network error while loading streams."
+msgstr "Yayınlar yüklenirken ağ hatası."
+
+msgid "Network error:"
+msgstr "Ağ hatası:"
+
+msgid "Network is back — reconnecting…"
+msgstr "Ağ geri geldi — yeniden bağlanılıyor…"
+
+msgid "Never"
+msgstr "Hiçbir zaman"
+
+msgid "New clips"
+msgstr "Yeni klipler"
+
+msgid "New group"
+msgstr "Yeni grup"
+
+msgid "New password (leave empty to keep unchanged)"
+msgstr "Yeni şifre (değiştirmemek için boş bırakın)"
+
+msgid "New password * (min. 8 characters)"
+msgstr "Yeni şifre * (en az 8 karakter)"
+
+msgid "New password..."
+msgstr "Yeni şifre..."
+
+msgid "New user"
+msgstr "Yeni kullanıcı"
+
+msgid "Newest"
+msgstr "En yeni"
+
+msgid "Newest first"
+msgstr "Önce en yeni"
+
+msgid "Next"
+msgstr "İleri"
+
+msgid "Next page"
+msgstr "Sonraki sayfa"
+
+msgid "Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password."
+msgstr "Uygulama şifresi olan Nextcloud, ownCloud, Hetzner Storage Box veya herhangi bir WebDAV sunucusu."
+
+msgid "No (self-signed only)"
+msgstr "Hayır (yalnızca kendinden imzalı için)"
+
+msgid "No VODs available in the archive"
+msgstr "Arşivde VOD yok"
+
+msgid "No acceptances yet."
+msgstr "Henüz onay yok."
+
+msgid "No account yet? Accounts are issued by the administrators of this instance."
+msgstr "Henüz hesabınız yok mu? Hesaplar bu sunucunun yöneticileri tarafından verilir."
+
+msgid "No accounts match this filter."
+msgstr "Bu filtreyle eşleşen hesap yok."
+
+msgid "No active file"
+msgstr "Etkin dosya yok"
+
+msgid "No active provider"
+msgstr "Etkin sağlayıcı yok"
+
+msgid "No active shares."
+msgstr "Etkin paylaşım yok."
+
+msgid "No active streams"
+msgstr "Etkin yayın yok"
+
+msgid "No archive objects yet. Start a sync or upload a recording."
+msgstr "Henüz arşiv nesnesi yok. Bir senkronizasyon başlatın veya bir kayıt yükleyin."
+
+msgid "No backup script configured (VOD_BACKUP_SCRIPT)."
+msgstr "Yedekleme betiği yapılandırılmamış (VOD_BACKUP_SCRIPT)."
+
+msgid "No backups available."
+msgstr "Kullanılabilir yedek yok."
+
+msgid "No badges received from Twitch."
+msgstr "Twitch'ten rozet alınamadı."
+
+msgid "No chat"
+msgstr "Sohbet yok"
+
+msgid "No cloud storage configured yet. Add a provider or use the console:"
+msgstr "Henüz bulut depolama yapılandırılmamış. Bir sağlayıcı ekleyin veya konsolu kullanın:"
+
+msgid "No connection. As soon as the device is back online, the app continues loading the page normally."
+msgstr "Bağlantı yok. Cihaz yeniden çevrimiçi olduğunda uygulama sayfayı normal şekilde yüklemeye devam eder."
+
+msgid "No discovery streams right now."
+msgstr "Şu anda keşfedilecek yayın yok."
+
+msgid "No files stored in the vault."
+msgstr "Vault'ta saklanan dosya yok."
+
+msgid "No jobs in the queue."
+msgstr "Kuyrukta iş yok."
+
+msgid "No live chat available. Chat appears when StreamVault records the stream."
+msgstr "Canlı sohbet yok. Sohbet, StreamVault yayını kaydettiğinde görünür."
+
+msgid "No live stream active"
+msgstr "Etkin canlı yayın yok"
+
+msgid "No live streams among the monitored channels. Use the search."
+msgstr "İzlenen kanallarda canlı yayın yok. Aramayı kullanın."
+
+msgid "No local entries found for this search term. Press [Enter] to search the server."
+msgstr "Bu arama terimi için yerel kayıt bulunamadı. Sunucuda aramak için [Enter] tuşuna basın."
+
+#, python-format
+msgid "No matches found for \"%(query)s\"."
+msgstr "\"%(query)s\" için eşleşme bulunamadı."
+
+msgid "No monitored Twitch channels."
+msgstr "İzlenen Twitch kanalı yok."
+
+msgid "No monitored Twitch channels. Add streamers under Streamers."
+msgstr "İzlenen Twitch kanalı yok. Yayıncılar bölümünden yayıncı ekleyin."
+
+msgid "No monitored channels configured."
+msgstr "İzlenen kanal yapılandırılmamış."
+
+msgid "No recently watched streams yet."
+msgstr "Henüz yakın zamanda izlenen yayın yok."
+
+msgid "No recorded chat is available for this VOD."
+msgstr "Bu VOD için kayıtlı sohbet yok."
+
+msgid "No recorder data found."
+msgstr "Kayıt verisi bulunamadı."
+
+msgid "No recordings found."
+msgstr "Kayıt bulunamadı."
+
+msgid "No results."
+msgstr "Sonuç yok."
+
+msgid "No running transcription found."
+msgstr "Çalışan transkripsiyon bulunamadı."
+
+msgid "No streams"
+msgstr "Yayın yok"
+
+msgid "No transcript output received"
+msgstr "Transkript çıktısı alınamadı"
+
+msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
+msgstr "Henüz transkript yok. Sunucuda yerel olarak oluşturulur ve uzun VOD'larda biraz zaman alabilir."
+
+msgid "No transcription active"
+msgstr "Etkin transkripsiyon yok"
+
+msgid "No videos found."
+msgstr "Video bulunamadı."
+
+msgid "Not authenticated."
+msgstr "Kimlik doğrulanmadı."
+
+msgid "Not live"
+msgstr "Canlı değil"
+
+msgid "Notification + live stream (no recording)"
+msgstr "Bildirim + canlı yayın (kayıt yok)"
+
+msgid "November"
+msgstr "Kasım"
+
+msgid "OAuth code is missing."
+msgstr "OAuth kodu eksik."
+
+msgid "OAuth note"
+msgstr "OAuth notu"
+
+msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
+msgstr "OAuth durum belirteçleri güçlü bir VOD_SECRET_KEY gerektirir."
+
+msgid "OFF (normal operation)"
+msgstr "KAPALI (normal çalışma)"
+
+msgid "OFFLINE"
+msgstr "ÇEVRİMDIŞI"
+
+msgid "OK"
+msgstr "Tamam"
+
+msgid "ONLINE"
+msgstr "ÇEVRİMİÇİ"
+
+msgid "OPERATING MODE:"
+msgstr "ÇALIŞMA MODU:"
+
+msgid "OPTION A: UPLOAD IMAGE FILE"
+msgstr "SEÇENEK A: GÖRSEL DOSYASI YÜKLE"
+
+msgid "OPTION A: UPLOAD PROFILE PICTURE"
+msgstr "SEÇENEK A: PROFİL RESMİ YÜKLE"
+
+msgid "OPTION B: USE IMAGE URL"
+msgstr "SEÇENEK B: GÖRSEL URL'Sİ KULLAN"
+
+msgid "OR"
+msgstr "VEYA"
+
+#, python-format
+msgid "Object #%(id)s removed from the database. Files are kept."
+msgstr "#%(id)s nesnesi veritabanından kaldırıldı. Dosyalar korunur."
+
+msgid "October"
+msgstr "Ekim"
+
+msgid "Offline"
+msgstr "Çevrimdışı"
+
+msgid "Offload the VOD archive to external storage automatically or manually"
+msgstr "VOD arşivini otomatik veya manuel olarak harici depolamaya aktarın"
+
+msgid "Oldest"
+msgstr "En eski"
+
+msgid "Oldest first"
+msgstr "Önce en eski"
+
+msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
+msgstr "OAuth 2.0 ile Microsoft Graph üzerinden OneDrive / Microsoft 365."
+
+msgid "Only after a successful upload and optional cloud verification."
+msgstr "Yalnızca başarılı bir yüklemeden ve isteğe bağlı bulut doğrulamasından sonra."
+
+msgid "Only needed if no refresh token is used."
+msgstr "Yalnızca yenileme belirteci kullanılmıyorsa gereklidir."
+
+msgid "Open"
+msgstr "Aç"
+
+msgid "Open Twitch"
+msgstr "Twitch'i aç"
+
+msgid "Open channel"
+msgstr "Kanalı aç"
+
+msgid "Open clip"
+msgstr "Klibi aç"
+
+msgid "Open editor"
+msgstr "Düzenleyiciyi aç"
+
+msgid "Option sections"
+msgstr "Seçenek bölümleri"
+
+msgid "Options"
+msgstr "Seçenekler"
+
+msgid "Options & system control"
+msgstr "Seçenekler ve sistem kontrolü"
+
+msgid "Other platform"
+msgstr "Diğer platform"
+
+#, python-format
+msgid "Page %(page)s / %(pages)s (%(count)s VODs)"
+msgstr "Sayfa %(page)s / %(pages)s (%(count)s VOD)"
+
+#, python-format
+msgid "Page %(page)s / %(total)s"
+msgstr "Sayfa %(page)s / %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "Sayfa %(page)s / %(pages)s"
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr "Sayfa %(page)s / %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(total)s (%(count)s VODs)"
+msgstr "Sayfa %(page)s / %(total)s (%(count)s VOD)"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+msgstr "Sayfa <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VOD)"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; %(count)s VODs in quick access"
+msgstr "Sayfa <strong>%(page)s</strong> / <strong>%(pages)s</strong> &bull; hızlı erişimde %(count)s VOD"
+
+msgid "Page navigation"
+msgstr "Sayfa gezintisi"
+
+msgid "Page navigation (top)"
+msgstr "Sayfa gezintisi (üst)"
+
+msgid "Page:"
+msgstr "Sayfa:"
+
+msgid "Pages"
+msgstr "Sayfalar"
+
+msgid "Pagination"
+msgstr "Sayfalama"
+
+msgid "Pagination (top)"
+msgstr "Sayfalama (üst)"
+
+msgid "Password"
+msgstr "Şifre"
+
+msgid "Password / app password"
+msgstr "Şifre / uygulama şifresi"
+
+msgid "Password changed successfully."
+msgstr "Şifre başarıyla değiştirildi."
+
+msgid "Password is required."
+msgstr "Şifre gerekli."
+
+#, python-format
+msgid "Password must be at least %(min)s characters long."
+msgstr "Şifre en az %(min)s karakter uzunluğunda olmalı."
+
+msgid "Path below the target folder ID. Empty = directly in the target folder ID."
+msgstr "Hedef klasör kimliğinin altındaki yol. Boş = doğrudan hedef klasör kimliğinde."
+
+msgid "Pause"
+msgstr "Duraklat"
+
+msgid "Pause playback"
+msgstr "Oynatmayı duraklat"
+
+msgid "Pause preview"
+msgstr "Önizlemeyi duraklat"
+
+msgid "Peak"
+msgstr "Zirve"
+
+msgid "Pending"
+msgstr "Bekliyor"
+
+msgid "Photo viewer"
+msgstr "Fotoğraf görüntüleyici"
+
+msgid "Play"
+msgstr "Oynat"
+
+msgid "Play / pause"
+msgstr "Oynat / duraklat"
+
+msgid "Play preview"
+msgstr "Önizlemeyi oynat"
+
+msgid "Playback unavailable"
+msgstr "Oynatma kullanılamıyor"
+
+msgid "Player error — reconnecting…"
+msgstr "Oynatıcı hatası — yeniden bağlanılıyor…"
+
+msgid "Please enter a name for the storage provider."
+msgstr "Lütfen depolama sağlayıcısı için bir ad girin."
+
+msgid "Please enter your current password."
+msgstr "Lütfen mevcut şifrenizi girin."
+
+msgid "Please save the client ID and client secret first, then connect."
+msgstr "Lütfen önce istemci kimliğini ve istemci sırrını kaydedin, ardından bağlanın."
+
+msgid "Please scroll to the end of the text first."
+msgstr "Lütfen önce metnin sonuna kadar kaydırın."
+
+msgid "Points"
+msgstr "Puanlar"
+
+msgid "Popular categories"
+msgstr "Popüler kategoriler"
+
+msgid "Prefix"
+msgstr "Önek"
+
+#, python-format
+msgid "Presence %(user)s"
+msgstr "Varlık %(user)s"
+
+msgid "Present"
+msgstr "Mevcut"
+
+msgid "Preview"
+msgstr "Önizleme"
+
+msgid "Previous"
+msgstr "Önceki"
+
+msgid "Previous page"
+msgstr "Önceki sayfa"
+
+msgid "Privacy"
+msgstr "Gizlilik"
+
+msgid "Privacy policy"
+msgstr "Gizlilik politikası"
+
+msgid "Private"
+msgstr "Özel"
+
+msgid "Private video and stream archive console."
+msgstr "Özel video ve yayın arşivi konsolu."
+
+msgid "Processing video (this may take a while)..."
+msgstr "Video işleniyor (bu biraz sürebilir)..."
+
+msgid "Processing video..."
+msgstr "Video işleniyor..."
+
+msgid "Profile picture reset to default."
+msgstr "Profil resmi varsayılana sıfırlandı."
+
+msgid "Profile picture uploaded successfully."
+msgstr "Profil resmi başarıyla yüklendi."
+
+msgid "Progress"
+msgstr "İlerleme"
+
+msgid "Provider"
+msgstr "Sağlayıcı"
+
+#, python-format
+msgid "Provider #%(id)s created. Please test the connection."
+msgstr "#%(id)s sağlayıcısı oluşturuldu. Lütfen bağlantıyı test edin."
+
+#, python-format
+msgid "Provider #%(id)s removed. Cloud files are kept."
+msgstr "#%(id)s sağlayıcısı kaldırıldı. Bulut dosyaları korunur."
+
+#, python-format
+msgid "Provider #%(id)s saved."
+msgstr "#%(id)s sağlayıcısı kaydedildi."
+
+msgid "Provider default"
+msgstr "Sağlayıcı varsayılanı"
+
+msgid "Provider not found."
+msgstr "Sağlayıcı bulunamadı."
+
+#, python-format
+msgid "Provider reported: %(error)s"
+msgstr "Sağlayıcının bildirdiği: %(error)s"
+
+msgid "Provider type"
+msgstr "Sağlayıcı türü"
+
+msgid "Providers"
+msgstr "Sağlayıcılar"
+
+msgid "Public link created:"
+msgstr "Herkese açık bağlantı oluşturuldu:"
+
+msgid "Purpose of this user group..."
+msgstr "Bu kullanıcı grubunun amacı..."
+
+msgid "Quality"
+msgstr "Kalite"
+
+msgid "Queue"
+msgstr "Kuyruk"
+
+msgid "Queue not readable"
+msgstr "Kuyruk okunamıyor"
+
+msgid "Quiet"
+msgstr "Sakin"
+
+msgid "RECORDING"
+msgstr "KAYDEDİLİYOR"
+
+msgid "RECORDING ACTIVE"
+msgstr "KAYIT ETKİN"
+
+msgid "Ready"
+msgstr "Hazır"
+
+msgid "Real-time stream error — reconnecting…"
+msgstr "Gerçek zamanlı yayın hatası — yeniden bağlanılıyor…"
+
+#, python-format
+msgid "Really delete backup %(name)s?"
+msgstr "%(name)s yedeği gerçekten silinsin mi?"
+
+msgid "Really delete file?"
+msgstr "Dosya gerçekten silinsin mi?"
+
+msgid "Really delete the cloud file? A local copy is kept."
+msgstr "Bulut dosyası gerçekten silinsin mi? Yerel kopya korunur."
+
+msgid "Really delete the local file? The cloud copy is kept."
+msgstr "Yerel dosya gerçekten silinsin mi? Bulut kopyası korunur."
+
+msgid "Really delete?"
+msgstr "Gerçekten silinsin mi?"
+
+#, python-format
+msgid "Really remove channel %(name)s?"
+msgstr "%(name)s kanalı gerçekten kaldırılsın mı?"
+
+msgid "Really remove the provider? The cloud files are kept."
+msgstr "Sağlayıcı gerçekten kaldırılsın mı? Bulut dosyaları korunur."
+
+msgid "Really rename the file?"
+msgstr "Dosya gerçekten yeniden adlandırılsın mı?"
+
+msgid "Really reset the custom banner and switch to the default?"
+msgstr "Özel banner gerçekten sıfırlanıp varsayılana geçilsin mi?"
+
+msgid "Really reset the custom profile picture and switch to the default?"
+msgstr "Özel profil resmi gerçekten sıfırlanıp varsayılana geçilsin mi?"
+
+msgid "Really revoke this share?"
+msgstr "Bu paylaşım gerçekten iptal edilsin mi?"
+
+msgid "Really stop the recording?"
+msgstr "Kayıt gerçekten durdurulsun mu?"
+
+msgid "Recent task errors"
+msgstr "Son görev hataları"
+
+msgid "Recently watched"
+msgstr "Son izlenenler"
+
+msgid "Recommended. Prevents data loss from incomplete uploads."
+msgstr "Önerilir. Eksik yüklemelerden kaynaklanan veri kaybını önler."
+
+msgid "Reconnecting…"
+msgstr "Yeniden bağlanılıyor…"
+
+msgid "Recorded"
+msgstr "Kaydedildi"
+
+msgid "Recorder & worker restarted."
+msgstr "Kaydedici ve worker yeniden başlatıldı."
+
+msgid "Recording"
+msgstr "Kayıt"
+
+msgid "Recording + live stream & Discord notification"
+msgstr "Kayıt + canlı yayın ve Discord bildirimi"
+
+msgid "Recording disabled (live & Discord only)"
+msgstr "Kayıt devre dışı (yalnızca canlı ve Discord)"
+
+#, python-format
+msgid "Recording disabled for source %(name)s."
+msgstr "%(name)s kaynağı için kayıt devre dışı bırakıldı."
+
+msgid "Recording enabled (full mode)"
+msgstr "Kayıt etkin (tam mod)"
+
+#, python-format
+msgid "Recording enabled for source %(name)s."
+msgstr "%(name)s kaynağı için kayıt etkinleştirildi."
+
+msgid "Recording health"
+msgstr "Kayıt sağlığı"
+
+msgid "Recording in progress"
+msgstr "Kayıt devam ediyor"
+
+msgid "Recording not available."
+msgstr "Kayıt mevcut değil."
+
+#, python-format
+msgid "Recording stopped: %(count)s source(s) for %(archive)s disabled. The process will be terminated at the next check."
+msgstr "Kayıt durduruldu: %(archive)s için %(count)s kaynak devre dışı bırakıldı. İşlem bir sonraki kontrolde sonlandırılacak."
+
+#, python-format
+msgid "Recordings (%(count)s)"
+msgstr "Kayıtlar (%(count)s)"
+
+#, python-format
+msgid "Redeemed “%(title)s”"
+msgstr "“%(title)s” kullanıldı"
+
+#, python-format
+msgid "Registration via Discord · accept there with %(keyword)s."
+msgstr "Discord üzerinden kayıt · orada %(keyword)s ile kabul edin."
+
+msgid "Related recordings"
+msgstr "İlgili kayıtlar"
+
+msgid "Remove"
+msgstr "Kaldır"
+
+msgid "Remove channel"
+msgstr "Kanalı kaldır"
+
+#, python-format
+msgid "Remove channel %(name)s?"
+msgstr "%(name)s kanalı kaldırılsın mı?"
+
+msgid "Remove only the database entry?"
+msgstr "Yalnızca veritabanı kaydı kaldırılsın mı?"
+
+#, python-format
+msgid "Remux job could not be started: %(error)s"
+msgstr "Remux işi başlatılamadı: %(error)s"
+
+msgid "Remux job started. Progress is shown in the admin panel."
+msgstr "Remux işi başlatıldı. İlerleme yönetim panelinde gösterilir."
+
+msgid "Rename file"
+msgstr "Dosyayı yeniden adlandır"
+
+msgid "Renamed."
+msgstr "Yeniden adlandırıldı."
+
+msgid "Repair in progress"
+msgstr "Onarım sürüyor"
+
+msgid "Repair seeking"
+msgstr "Sarmayı onar"
+
+msgid "Repeat new password"
+msgstr "Yeni şifreyi tekrarla"
+
+msgid "Repeat password"
+msgstr "Şifreyi tekrarla"
+
+#, python-format
+msgid "Request '%(username)s' denied and deleted."
+msgstr "'%(username)s' talebi reddedildi ve silindi."
+
+msgid "Restart failed."
+msgstr "Yeniden başlatma başarısız."
+
+msgid "Restart services"
+msgstr "Hizmetleri yeniden başlat"
+
+msgid "Restore"
+msgstr "Geri yükle"
+
+msgid "Restore default"
+msgstr "Varsayılanı geri yükle"
+
+#, python-format
+msgid "Restore queued (task #%(task)s)."
+msgstr "Geri yükleme kuyruğa alındı (görev #%(task)s)."
+
+msgid "Resume playback"
+msgstr "Oynatmayı sürdür"
+
+msgid "Revoke"
+msgstr "İptal et"
+
+#, python-format
+msgid "Role access '%(slug)s' added."
+msgstr "'%(slug)s' rol erişimi eklendi."
+
+#, python-format
+msgid "Role access '%(slug)s' removed."
+msgstr "'%(slug)s' rol erişimi kaldırıldı."
+
+msgid "Role access grant not found."
+msgstr "Rol erişim izni bulunamadı."
+
+msgid "Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member."
+msgstr "Rol modeli: tam erişim (<code>admin</code>), arşiv izleyicisi (<code>viewer</code>), yalnızca canlı (<code>live_only</code>) &amp; Discord üyesi."
+
+msgid "Rules"
+msgstr "Kurallar"
+
+msgid "Rules accepted. Continuing to the dashboard…"
+msgstr "Kurallar kabul edildi. Panele geçiliyor…"
+
+msgid "Rules text"
+msgstr "Kural metni"
+
+msgid "Running"
+msgstr "Çalışıyor"
+
+msgid "Running…"
+msgstr "Çalışıyor…"
+
+msgid "S3-compatible"
+msgstr "S3 uyumlu"
+
+msgid "START"
+msgstr "BAŞLANGIÇ"
+
+msgid "Safety migration:"
+msgstr "Güvenlik geçişi:"
+
+msgid "Same session"
+msgstr "Aynı oturum"
+
+msgid "Save"
+msgstr "Kaydet"
+
+msgid "Save area maintenance"
+msgstr "Alan bakımını kaydet"
+
+msgid "Save changes"
+msgstr "Değişiklikleri kaydet"
+
+msgid "Save clip"
+msgstr "Klibi kaydet"
+
+msgid "Save clip settings"
+msgstr "Klip ayarlarını kaydet"
+
+msgid "Save group"
+msgstr "Grubu kaydet"
+
+msgid "Save password"
+msgstr "Şifreyi kaydet"
+
+msgid "Save settings"
+msgstr "Ayarları kaydet"
+
+msgid "Saved"
+msgstr "Kaydedildi"
+
+msgid "Saved automatically when connecting."
+msgstr "Bağlanırken otomatik olarak kaydedilir."
+
+msgid "Saved automatically when connecting. Alternatively, paste it manually."
+msgstr "Bağlanırken otomatik olarak kaydedilir. Alternatif olarak elle yapıştırın."
+
+msgid "Saved – leave empty to keep"
+msgstr "Kaydedildi – korumak için boş bırakın"
+
+msgid "Saved."
+msgstr "Kaydedildi."
+
+msgid "Saving transcript failed"
+msgstr "Transkript kaydedilemedi"
+
+#, python-format
+msgid "Saving transcript failed: %(error)s"
+msgstr "Transkript kaydedilemedi: %(error)s"
+
+msgid "Saving transcript..."
+msgstr "Transkript kaydediliyor..."
+
+msgid "Saving..."
+msgstr "Kaydediliyor..."
+
+msgid "Saving…"
+msgstr "Kaydediliyor…"
+
+msgid "Search"
+msgstr "Ara"
+
+msgid "Search VODs, streamers or games..."
+msgstr "VOD, yayıncı veya oyun ara..."
+
+msgid "Search category"
+msgstr "Kategori ara"
+
+msgid "Search category / game…"
+msgstr "Kategori / oyun ara…"
+
+msgid "Search failed."
+msgstr "Arama başarısız."
+
+msgid "Search recordings (title, date, game)..."
+msgstr "Kayıtlarda ara (başlık, tarih, oyun)..."
+
+msgid "Search results"
+msgstr "Arama sonuçları"
+
+msgid "Search streamer or channel…"
+msgstr "Yayıncı veya kanal ara…"
+
+msgid "Search streamers"
+msgstr "Yayıncı ara"
+
+msgid "Search term (e.g. player name, chat message, date)..."
+msgstr "Arama terimi (ör. oyuncu adı, sohbet mesajı, tarih)..."
+
+msgid "Search user, email or group..."
+msgstr "Kullanıcı, e-posta veya grup ara..."
+
+msgid "Search..."
+msgstr "Ara..."
+
+msgid "Searching for stream..."
+msgstr "Yayın aranıyor..."
+
+msgid "Searching…"
+msgstr "Aranıyor…"
+
+msgid "Seconds after trigger"
+msgstr "Tetikleyiciden sonraki saniye"
+
+msgid "Seconds before trigger"
+msgstr "Tetikleyiciden önceki saniye"
+
+msgid "Security & shares"
+msgstr "Güvenlik ve paylaşımlar"
+
+#, python-format
+msgid "Seek repair is already running (%(status)s)."
+msgstr "Sarma onarımı zaten çalışıyor (%(status)s)."
+
+msgid "Seek repair queued."
+msgstr "Sarma onarımı kuyruğa alındı."
+
+msgid "Segment creation failed"
+msgstr "Parça oluşturma başarısız"
+
+msgid "Select folders to unlock:"
+msgstr "Açılacak klasörleri seçin:"
+
+msgid "Self-hosted"
+msgstr "Kendi sunucunuzda"
+
+msgid "Send Discord message"
+msgstr "Discord mesajı gönder"
+
+msgid "September"
+msgstr "Eylül"
+
+msgid "Server is loading the stream (Turbo, without viewer list)…"
+msgstr "Sunucu yayını yüklüyor (Turbo, izleyici listesi olmadan)…"
+
+msgid "Server is loading the stream (without Twitch account)…"
+msgstr "Sunucu yayını yüklüyor (Twitch hesabı olmadan)…"
+
+msgid "Server is loading the stream…"
+msgstr "Sunucu yayını yüklüyor…"
+
+msgid "Server-side encryption"
+msgstr "Sunucu tarafı şifreleme"
+
+msgid "Set"
+msgstr "Ayarla"
+
+#, python-format
+msgid "Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved."
+msgstr "Kimlik bilgileri kaydedilmeden önce %(key)s (en az 16 karakter) veya %(alt_key)s ayarlayın."
+
+msgid "Set end to current position"
+msgstr "Bitişi mevcut konuma ayarla"
+
+msgid "Set start to current position"
+msgstr "Başlangıcı mevcut konuma ayarla"
+
+msgid "Settings"
+msgstr "Ayarlar"
+
+msgid "Settings saved."
+msgstr "Ayarlar kaydedildi."
+
+msgid "Share"
+msgstr "Paylaş"
+
+msgid "Share not found."
+msgstr "Paylaşım bulunamadı."
+
+msgid "Share of period"
+msgstr "Dönem içindeki pay"
+
+msgid "Share revoked."
+msgstr "Paylaşım iptal edildi."
+
+msgid "Sharing failed"
+msgstr "Paylaşım başarısız"
+
+msgid "Sharing failed:"
+msgstr "Paylaşım başarısız:"
+
+msgid "Short rules / Discord house rules. Part of the terms; accepted together with the consent below."
+msgstr "Kısa kurallar / Discord ev kuralları. Koşulların bir parçasıdır; aşağıdaki onayla birlikte kabul edilir."
+
+msgid "Shown in the navigation, sidebar and on streamer cards."
+msgstr "Gezinme çubuğunda, kenar çubuğunda ve yayıncı kartlarında gösterilir."
+
+msgid "Sign in"
+msgstr "Oturum aç"
+
+msgid "Size"
+msgstr "Boyut"
+
+msgid "Sound"
+msgstr "Ses"
+
+msgid "Sound on"
+msgstr "Ses açık"
+
+msgid "Source"
+msgstr "Kaynak"
+
+#, python-format
+msgid "Source %(name)s not found."
+msgstr "%(name)s kaynağı bulunamadı."
+
+msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "Eski kilit kaldırıldı, transkripsiyon worker kuyruğuna alındı. Sonuç, tamamlandıktan sonraki ilk sayfa yüklemesinde görünür."
+
+msgid "Start"
+msgstr "Başlat"
+
+msgid "Start HLS"
+msgstr "HLS başlat"
+
+msgid "Start local cleanup"
+msgstr "Yerel temizlemeyi başlat"
+
+msgid "Start playback"
+msgstr "Oynatmayı başlat"
+
+msgid "Start playback or move along the timeline to sync chat messages."
+msgstr "Sohbet mesajlarını eşitlemek için oynatmayı başlatın veya zaman çizelgesinde ilerleyin."
+
+msgid "Start sync"
+msgstr "Senkronizasyonu başlat"
+
+msgid "Start time must be >= 0."
+msgstr "Başlangıç zamanı >= 0 olmalı."
+
+msgid "Starting"
+msgstr "Başlatılıyor"
+
+msgid "Starting download..."
+msgstr "İndirme başlatılıyor..."
+
+msgid "Status"
+msgstr "Durum"
+
+msgid "Status, progress and actions of the most recently synced files. “Forget” only removes the database entry."
+msgstr "En son senkronize edilen dosyaların durumu, ilerlemesi ve işlemleri. “Unut” yalnızca veritabanı kaydını kaldırır."
+
+msgid "Status:"
+msgstr "Durum:"
+
+msgid "Stop"
+msgstr "Durdur"
+
+msgid "Stop preview"
+msgstr "Önizlemeyi durdur"
+
+msgid "Stop recording"
+msgstr "Kaydı durdur"
+
+msgid "Storage"
+msgstr "Depolama"
+
+msgid "Storage (free):"
+msgstr "Depolama (boş):"
+
+msgid "Storage (total):"
+msgstr "Depolama (toplam):"
+
+#, python-format
+msgid "Storage critical: %(pct)s%% used, only %(free)s free."
+msgstr "Depolama kritik: %%%(pct)s kullanıldı, yalnızca %(free)s boş."
+
+msgid "Storage provider not found."
+msgstr "Depolama sağlayıcısı bulunamadı."
+
+msgid "Storage providers"
+msgstr "Depolama sağlayıcıları"
+
+#, python-format
+msgid "Storage: <strong>%(pct)s%%</strong>"
+msgstr "Depolama: <strong>%%%(pct)s</strong>"
+
+msgid "Stream & channel access"
+msgstr "Yayın ve kanal erişimi"
+
+msgid "Stream & folder access"
+msgstr "Yayın ve klasör erişimi"
+
+msgid "Stream and VOD archive"
+msgstr "Yayın ve VOD arşivi"
+
+msgid "Stream channel"
+msgstr "Yayın kanalı"
+
+msgid "Stream connection lost — reconnecting…"
+msgstr "Yayın bağlantısı koptu — yeniden bağlanılıyor…"
+
+msgid "Stream is not starting — check the live status or reload the page."
+msgstr "Yayın başlamıyor — canlı durumunu kontrol edin veya sayfayı yenileyin."
+
+msgid "Stream media error — reconnecting…"
+msgstr "Yayın medya hatası — yeniden bağlanılıyor…"
+
+msgid "Stream stopped — reconnecting…"
+msgstr "Yayın durdu — yeniden bağlanılıyor…"
+
+msgid "StreamVault is temporarily unavailable due to maintenance. Please be patient — the site will be back soon."
+msgstr "StreamVault bakım nedeniyle geçici olarak kullanılamıyor. Lütfen sabırlı olun — site yakında geri dönecek."
+
+msgid "StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later."
+msgstr "StreamVault devam eden çalışmalar nedeniyle geçici olarak kullanılamıyor. Lütfen sabırlı olun — site daha sonra yeniden kullanılabilir olacak."
+
+msgid "Streamer"
+msgstr "Yayıncı"
+
+msgid "Streamer & source management"
+msgstr "Yayıncı ve kaynak yönetimi"
+
+msgid "Streamer (optional)"
+msgstr "Yayıncı (isteğe bağlı)"
+
+msgid "Streamer / folder missing."
+msgstr "Yayıncı / klasör eksik."
+
+msgid "Streamer is currently offline."
+msgstr "Yayıncı şu anda çevrimdışı."
+
+msgid "Streamer management"
+msgstr "Yayıncı yönetimi"
+
+msgid "Streamer profile"
+msgstr "Yayıncı profili"
+
+msgid "Streamers, VODs & chat histories"
+msgstr "Yayıncılar, VOD'lar ve sohbet geçmişleri"
+
+msgid "Subfolder"
+msgstr "Alt klasör"
+
+msgid "Success"
+msgstr "Başarılı"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)"
+msgstr "Desteklenenler: JPG, PNG, WEBP, GIF (önerilen: 1920x360 veya 1200x300)"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)"
+msgstr "Desteklenenler: JPG, PNG, WEBP, GIF (kare önerilir, ör. 300x300)"
+
+msgid "Switch to live only"
+msgstr "Yalnızca canlıya geç"
+
+msgid "Synced"
+msgstr "Senkronize edildi"
+
+msgid "System & recorder"
+msgstr "Sistem ve kaydedici"
+
+msgid "System backup created successfully."
+msgstr "Sistem yedeği başarıyla oluşturuldu."
+
+msgid "System backups"
+msgstr "Sistem yedekleri"
+
+msgid "System group"
+msgstr "Sistem grubu"
+
+msgid "System group 'Viewer' was not found. Deletion cancelled."
+msgstr "'İzleyici' sistem grubu bulunamadı. Silme iptal edildi."
+
+#, python-format
+msgid "System groups (%(name)s) cannot be deleted."
+msgstr "Sistem grupları (%(name)s) silinemez."
+
+msgid "System quick status"
+msgstr "Sistem hızlı durumu"
+
+msgid "System settings"
+msgstr "Sistem ayarları"
+
+msgid "System status"
+msgstr "Sistem durumu"
+
+msgid "System telemetry"
+msgstr "Sistem telemetrisi"
+
+#, python-format
+msgid "Target already exists: %(path)s"
+msgstr "Hedef zaten var: %(path)s"
+
+msgid "Target archive folder (optional)"
+msgstr "Hedef arşiv klasörü (isteğe bağlı)"
+
+msgid "Target folder ID (optional)"
+msgstr "Hedef klasör kimliği (isteğe bağlı)"
+
+msgid "Target name already exists locally."
+msgstr "Hedef ad yerel olarak zaten var."
+
+msgid "Task queue"
+msgstr "Görev kuyruğu"
+
+msgid "Terms"
+msgstr "Koşullar"
+
+msgid "Terms & rules"
+msgstr "Koşullar ve kurallar"
+
+#, python-format
+msgid "Terms (version %(terms)s) including house rules (%(rules)s) not yet accepted — approval only after consent on the website or on re-registration."
+msgstr "Koşullar (sürüm %(terms)s) ve ev kuralları (%(rules)s) henüz kabul edilmedi — onay ancak web sitesinde veya yeniden kayıtta kabul edildikten sonra verilir."
+
+msgid "Terms accepted. Continuing to the dashboard…"
+msgstr "Koşullar kabul edildi. Panele geçiliyor…"
+
+msgid "Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms."
+msgstr "Davetli çevre için kullanım koşulları ve ev kuralları. Hak sahiplerine veya platformlara karşı kullanım hakkı doğurmaz."
+
+msgid "Terms version outdated or not accepted. Acceptance required at /agb."
+msgstr "Koşullar sürümü eski veya kabul edilmemiş. /agb adresinde kabul gerekli."
+
+msgid "Terms version outdated — reload the page and accept again."
+msgstr "Koşullar sürümü eski — sayfayı yenileyin ve yeniden kabul edin."
+
+msgid "Test"
+msgstr "Test et"
+
+msgid "Thanks for your understanding. Authorized users can sign in via the login page."
+msgstr "Anlayışınız için teşekkürler. Yetkili kullanıcılar giriş sayfasından oturum açabilir."
+
+msgid "The 'can_manage_users' permission cannot be removed from the Administrator group."
+msgstr "'can_manage_users' izni Yönetici grubundan kaldırılamaz."
+
+msgid "The OAuth link has expired. Please start again."
+msgstr "OAuth bağlantısının süresi doldu. Lütfen yeniden başlayın."
+
+msgid "The VOD player and archive are currently under maintenance."
+msgstr "VOD oynatıcı ve arşiv şu anda bakımda."
+
+msgid "The current password is incorrect."
+msgstr "Mevcut şifre yanlış."
+
+msgid "The default system admin cannot be deleted."
+msgstr "Varsayılan sistem yöneticisi silinemez."
+
+msgid "The folder cannot be emptied while a recording is being written."
+msgstr "Bir kayıt yazılırken klasör boşaltılamaz."
+
+msgid "The live stream area is currently under maintenance."
+msgstr "Canlı yayın alanı şu anda bakımda."
+
+msgid "The local file has already been removed. Please restore it first."
+msgstr "Yerel dosya zaten kaldırılmış. Lütfen önce geri yükleyin."
+
+msgid "The mobile version of StreamVault is currently under maintenance. Please use the desktop version."
+msgstr "StreamVault'un mobil sürümü şu anda bakımda. Lütfen masaüstü sürümünü kullanın."
+
+msgid "The name of system groups cannot be changed."
+msgstr "Sistem gruplarının adı değiştirilemez."
+
+msgid "The new password must be at least 8 characters long."
+msgstr "Yeni şifre en az 8 karakter uzunluğunda olmalı."
+
+msgid "The new password must differ from the current password."
+msgstr "Yeni şifre mevcut şifreden farklı olmalı."
+
+msgid "The passwords do not match."
+msgstr "Şifreler eşleşmiyor."
+
+msgid "The provider did not return valid OAuth data."
+msgstr "Sağlayıcı geçerli OAuth verisi döndürmedi."
+
+msgid "The provider name must be at most 80 characters long."
+msgstr "Sağlayıcı adı en fazla 80 karakter uzunluğunda olmalı."
+
+msgid "The provider type cannot be changed while archive objects are assigned. Create a new provider instead."
+msgstr "Arşiv nesneleri atanmışken sağlayıcı türü değiştirilemez. Bunun yerine yeni bir sağlayıcı oluşturun."
+
+msgid "The recorder worker performs the sync. Unchanged files that were already uploaded are skipped."
+msgstr "Senkronizasyonu kaydedici worker'ı yapar. Daha önce yüklenmiş ve değişmemiş dosyalar atlanır."
+
+msgid "The remote path must not be empty."
+msgstr "Uzak yol boş olmamalı."
+
+msgid "The selected default provider does not exist."
+msgstr "Seçilen varsayılan sağlayıcı mevcut değil."
+
+msgid "The selected default provider is disabled. Enable it first or choose another provider."
+msgstr "Seçilen varsayılan sağlayıcı devre dışı. Önce etkinleştirin veya başka bir sağlayıcı seçin."
+
+msgid "The selected group does not exist."
+msgstr "Seçilen grup mevcut değil."
+
+msgid "The system administrator's password can only be changed via environment variables."
+msgstr "Sistem yöneticisinin şifresi yalnızca ortam değişkenleriyle değiştirilebilir."
+
+msgid "The video file could not be loaded or is still being transcoded."
+msgstr "Video dosyası yüklenemedi veya hâlâ dönüştürülüyor."
+
+msgid "This admin user is protected and cannot be deleted."
+msgstr "Bu yönetici kullanıcı korumalıdır ve silinemez."
+
+msgid "This admin user is protected."
+msgstr "Bu yönetici kullanıcı korumalıdır."
+
+msgid "This channel is not live right now."
+msgstr "Bu kanal şu anda canlı değil."
+
+msgid "This file type is not allowed for security reasons."
+msgstr "Bu dosya türüne güvenlik nedeniyle izin verilmiyor."
+
+msgid "Time"
+msgstr "Zaman"
+
+msgid "Time (UTC)"
+msgstr "Zaman (UTC)"
+
+msgid "Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer."
+msgstr "İpucu: ortak bir arşiv klasörü, aynı yayıncının Twitch ve YouTube yayınlarını birleştirir."
+
+msgid "Title & description"
+msgstr "Başlık ve açıklama"
+
+msgid "Title & info"
+msgstr "Başlık ve bilgi"
+
+msgid "Title (optional)"
+msgstr "Başlık (isteğe bağlı)"
+
+msgid "Title as on YouTube"
+msgstr "YouTube'daki başlık"
+
+#, python-format
+msgid "Today, %(time)s"
+msgstr "Bugün, %(time)s"
+
+msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
+msgstr "Şu anda çok fazla VOD oynatılıyor. Canlı yayın etkilenmez. Birkaç dakika sonra tekrar deneyin — biri oynatıcıyı kapattığında bir yuva boşalır."
+
+msgid "Too many attempts. IP temporarily blocked. Please try again later."
+msgstr "Çok fazla deneme. IP geçici olarak engellendi. Lütfen daha sonra tekrar deneyin."
+
+msgid "Top streams are currently unavailable. Use monitored channels or the search."
+msgstr "Popüler yayınlar şu anda kullanılamıyor. İzlenen kanalları veya aramayı kullanın."
+
+msgid "Total in period"
+msgstr "Dönem toplamı"
+
+msgid "Total recordings"
+msgstr "Toplam kayıt"
+
+msgid "Total runtime"
+msgstr "Toplam süre"
+
+#, python-format
+msgid "Total: %(count)s registered accounts"
+msgstr "Toplam: %(count)s kayıtlı hesap"
+
+#, python-format
+msgid "Total: %(count)s user groups"
+msgstr "Toplam: %(count)s kullanıcı grubu"
+
+msgid "Traffic"
+msgstr "Trafik"
+
+msgid "Traffic overview"
+msgstr "Trafik özeti"
+
+#, python-format
+msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
+msgstr "%(index)s/%(total)s parçası yazıya dökülüyor (%%%(percent)s)"
+
+msgid "Transcript"
+msgstr "Transkript"
+
+msgid "Transcript already exists"
+msgstr "Transkript zaten var"
+
+msgid "Transcript already exists."
+msgstr "Transkript zaten var."
+
+msgid "Transcript available"
+msgstr "Transkript mevcut"
+
+msgid "Transcript created"
+msgstr "Transkript oluşturuldu"
+
+msgid "Transcript finished"
+msgstr "Transkript tamamlandı"
+
+msgid "Transcript missing despite finished status"
+msgstr "Tamamlandı durumuna rağmen transkript eksik"
+
+msgid "Transcription cancelled"
+msgstr "Transkripsiyon iptal edildi"
+
+msgid "Transcription cancelled."
+msgstr "Transkripsiyon iptal edildi."
+
+msgid "Transcription failed"
+msgstr "Transkripsiyon başarısız"
+
+#, python-format
+msgid "Transcription failed: %(error)s"
+msgstr "Transkripsiyon başarısız: %(error)s"
+
+msgid "Transcription is already running"
+msgstr "Transkripsiyon zaten çalışıyor"
+
+msgid "Transcription is already running. Please reload later."
+msgstr "Transkripsiyon zaten çalışıyor. Lütfen daha sonra yenileyin."
+
+msgid "Transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "Transkripsiyon worker kuyruğuna alındı. Sonuç, tamamlandıktan sonraki ilk sayfa yüklemesinde görünür."
+
+msgid "Transcription running..."
+msgstr "Transkripsiyon çalışıyor..."
+
+msgid "Transcription timed out"
+msgstr "Transkripsiyon zaman aşımına uğradı"
+
+msgid "Transfer new recordings and periodic archive syncs to the cloud."
+msgstr "Yeni kayıtları ve periyodik arşiv senkronizasyonlarını buluta aktarın."
+
+msgid "Trim"
+msgstr "Kırp"
+
+msgid "Twitch / default"
+msgstr "Twitch / varsayılan"
+
+msgid "Twitch badge library synchronized."
+msgstr "Twitch rozet kitaplığı senkronize edildi."
+
+msgid "Twitch channel name..."
+msgstr "Twitch kanal adı..."
+
+msgid "Twitch live chat"
+msgstr "Twitch canlı sohbet"
+
+msgid "Twitch live stream"
+msgstr "Twitch canlı yayını"
+
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
+msgstr "Twitch adı (ör. shroud) veya YouTube URL'si / @kullanıcı adı..."
+
+msgid "Twitch or YouTube supported"
+msgstr "Twitch veya YouTube desteklenir"
+
+msgid "Twitch profile"
+msgstr "Twitch profili"
+
+msgid "Twitch profile banner"
+msgstr "Twitch profil banner'ı"
+
+msgid "Twitch search failed."
+msgstr "Twitch araması başarısız."
+
+msgid "Twitch streams could not be loaded."
+msgstr "Twitch yayınları yüklenemedi."
+
+msgid "Type"
+msgstr "Tür"
+
+msgid "Unchanged."
+msgstr "Değişmedi."
+
+msgid "Unknown"
+msgstr "Bilinmiyor"
+
+msgid "Unknown error"
+msgstr "Bilinmeyen hata"
+
+#, python-format
+msgid "Unknown storage provider: %(type)s"
+msgstr "Bilinmeyen depolama sağlayıcısı: %(type)s"
+
+msgid "Unmute"
+msgstr "Sesi aç"
+
+msgid "Updated"
+msgstr "Güncellendi"
+
+#, python-format
+msgid "Updated %(age)s"
+msgstr "%(age)s güncellendi"
+
+msgid "Upload"
+msgstr "Yükle"
+
+msgid "Upload automatically"
+msgstr "Otomatik olarak yükle"
+
+msgid "Upload new file"
+msgstr "Yeni dosya yükle"
+
+#, python-format
+msgid "Upload queued (task #%(task)s)."
+msgstr "Yükleme kuyruğa alındı (görev #%(task)s)."
+
+msgid "Upload videos & media"
+msgstr "Video ve medya yükle"
+
+msgid "Usage rules"
+msgstr "Kullanım kuralları"
+
+msgid "Used vault volume"
+msgstr "Kullanılan vault hacmi"
+
+msgid "User"
+msgstr "Kullanıcı"
+
+#, python-format
+msgid "User '%(username)s' already exists."
+msgstr "'%(username)s' kullanıcısı zaten var."
+
+#, python-format
+msgid "User '%(username)s' approved."
+msgstr "'%(username)s' kullanıcısı onaylandı."
+
+#, python-format
+msgid "User '%(username)s' created successfully."
+msgstr "'%(username)s' kullanıcısı başarıyla oluşturuldu."
+
+#, python-format
+msgid "User '%(username)s' has been deleted."
+msgstr "'%(username)s' kullanıcısı silindi."
+
+#, python-format
+msgid "User '%(username)s' not found."
+msgstr "'%(username)s' kullanıcısı bulunamadı."
+
+#, python-format
+msgid "User '%(username)s' updated successfully."
+msgstr "'%(username)s' kullanıcısı başarıyla güncellendi."
+
+msgid "User accounts"
+msgstr "Kullanıcı hesapları"
+
+msgid "User created"
+msgstr "Kullanıcı oluşturuldu"
+
+msgid "User deleted"
+msgstr "Kullanıcı silindi"
+
+msgid "User deleted."
+msgstr "Kullanıcı silindi."
+
+msgid "User group"
+msgstr "Kullanıcı grubu"
+
+msgid "User groups & permissions"
+msgstr "Kullanıcı grupları ve izinler"
+
+msgid "User management"
+msgstr "Kullanıcı yönetimi"
+
+msgid "User not found."
+msgstr "Kullanıcı bulunamadı."
+
+msgid "User updated"
+msgstr "Kullanıcı güncellendi"
+
+msgid "User updated."
+msgstr "Kullanıcı güncellendi."
+
+msgid "Username"
+msgstr "Kullanıcı adı"
+
+#, python-format
+msgid "Username '%(username)s' is reserved."
+msgstr "'%(username)s' kullanıcı adı ayrılmıştır."
+
+msgid "Username is required."
+msgstr "Kullanıcı adı gerekli."
+
+msgid "Username must be 3-32 alphanumeric characters (hyphens and underscores allowed)."
+msgstr "Kullanıcı adı 3-32 alfanümerik karakterden oluşmalı (tire ve alt çizgiye izin verilir)."
+
+msgid "Users & groups"
+msgstr "Kullanıcılar ve gruplar"
+
+#, python-format
+msgid "Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = presence, bars = login/pages/video/chat per day."
+msgstr "Kullanıcılar A–Z · son %(days)s gün (%(since)s – %(until)s). Isı haritası = varlık, çubuklar = günlük giriş/sayfa/video/sohbet."
+
+msgid "VOD access grants are currently only available for members."
+msgstr "VOD erişim izinleri şu anda yalnızca üyeler için kullanılabilir."
+
+msgid "VOD archive"
+msgstr "VOD arşivi"
+
+msgid "VOD page navigation"
+msgstr "VOD sayfa gezintisi"
+
+msgid "VOD pagination"
+msgstr "VOD sayfalama"
+
+#, python-format
+msgid "VOD recordings (%(count)s)"
+msgstr "VOD kayıtları (%(count)s)"
+
+msgid "VOD_SECRET_KEY must be set to a strong value before credentials can be stored."
+msgstr "Kimlik bilgileri saklanmadan önce VOD_SECRET_KEY güçlü bir değere ayarlanmalıdır."
+
+msgid "VODs are recorded to disk"
+msgstr "VOD'lar diske kaydedilir"
+
+msgid "Verify TLS certificate"
+msgstr "TLS sertifikasını doğrula"
+
+msgid "Verify cloud copy before deletion"
+msgstr "Silmeden önce bulut kopyasını doğrula"
+
+msgid "Version"
+msgstr "Sürüm"
+
+msgid "Video"
+msgstr "Video"
+
+msgid "Video actions"
+msgstr "Video işlemleri"
+
+msgid "Video could not be deleted."
+msgstr "Video silinemedi."
+
+msgid "Video deleted."
+msgstr "Video silindi."
+
+msgid "Video player controls"
+msgstr "Video oynatıcı kontrolleri"
+
+msgid "Video upload"
+msgstr "Video yükleme"
+
+msgid "View streams"
+msgstr "Yayınları izle"
+
+msgid "View streams & live chat"
+msgstr "Yayınları ve canlı sohbeti izle"
+
+msgid "Viewer"
+msgstr "İzleyici"
+
+msgid "Viewers"
+msgstr "İzleyiciler"
+
+msgid "Visibility could not be saved."
+msgstr "Görünürlük kaydedilemedi."
+
+msgid "Visibility: admins only."
+msgstr "Görünürlük: yalnızca yöneticiler."
+
+msgid "Visibility: all users."
+msgstr "Görünürlük: tüm kullanıcılar."
+
+msgid "Visible to:"
+msgstr "Görebilenler:"
+
+msgid "Volume"
+msgstr "Ses düzeyi"
+
+msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
+msgstr "UYARI: Bu yayıncıyı ve tüm kayıtları kalıcı olarak silmek istiyor musunuz?"
+
+msgid "WATCH LIVE"
+msgstr "CANLI İZLE"
+
+msgid "Waiting for server stream…"
+msgstr "Sunucu yayını bekleniyor…"
+
+msgid "Warning"
+msgstr "Uyarı"
+
+msgid "Watch"
+msgstr "İzle"
+
+msgid "Watch latest video"
+msgstr "En son videoyu izle"
+
+msgid "Watch now"
+msgstr "Şimdi izle"
+
+msgid "Watch stream directly"
+msgstr "Yayını doğrudan izle"
+
+msgid "We are working on the vault right now. Back in a moment."
+msgstr "Şu anda vault üzerinde çalışıyoruz. Birazdan döneceğiz."
+
+msgid "WebDAV base URL"
+msgstr "WebDAV temel URL'si"
+
+msgid "WebDAV base URL must be a valid http(s) URL."
+msgstr "WebDAV temel URL'si geçerli bir http(s) URL'si olmalı."
+
+msgid "WebDAV base URL must not contain a query or fragment."
+msgstr "WebDAV temel URL'si sorgu veya parça içermemeli."
+
+msgid "WebDAV base URL must not contain credentials; use the username and password fields."
+msgstr "WebDAV temel URL'si kimlik bilgisi içermemeli; kullanıcı adı ve şifre alanlarını kullanın."
+
+msgid "Webhook active."
+msgstr "Webhook etkin."
+
+msgid "Webhook not configured."
+msgstr "Webhook yapılandırılmamış."
+
+msgid "Welcome back. Sign in with your credentials to access StreamVault."
+msgstr "Tekrar hoş geldiniz. StreamVault'a erişmek için kimlik bilgilerinizle oturum açın."
+
+msgid "Work in progress"
+msgstr "Çalışma sürüyor"
+
+msgid "Yes (recommended)"
+msgstr "Evet (önerilen)"
+
+#, python-format
+msgid "Yesterday, %(time)s"
+msgstr "Dün, %(time)s"
+
+msgid "You can agree now."
+msgstr "Artık onaylayabilirsiniz."
+
+msgid "You cannot deactivate your own administrator account."
+msgstr "Kendi yönetici hesabınızı devre dışı bırakamazsınız."
+
+msgid "You cannot delete your own account."
+msgstr "Kendi hesabınızı silemezsiniz."
+
+msgid "You cannot move yourself into a group without user management permissions."
+msgstr "Kendinizi kullanıcı yönetimi izni olmayan bir gruba taşıyamazsınız."
+
+#, python-format
+msgid "You have accepted version %(version)s."
+msgstr "%(version)s sürümünü kabul ettiniz."
+
+msgid "Your IP has been temporarily blocked. Please try again later."
+msgstr "IP adresiniz geçici olarak engellendi. Lütfen daha sonra tekrar deneyin."
+
+msgid "Your browser does not support the video tag."
+msgstr "Tarayıcınız video etiketini desteklemiyor."
+
+msgid "Zoom in"
+msgstr "Yakınlaştır"
+
+msgid "Zoom out"
+msgstr "Uzaklaştır"
+
+msgid "according to the object database"
+msgstr "nesne veritabanına göre"
+
+msgid "active"
+msgstr "etkin"
+
+msgid "available"
+msgstr "mevcut"
+
+msgid "being created"
+msgstr "oluşturuluyor"
+
+msgid "cancelled"
+msgstr "iptal edildi"
+
+msgid "disabled"
+msgstr "devre dışı"
+
+msgid "done – please reload the page"
+msgstr "tamamlandı – lütfen sayfayı yenileyin"
+
+msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
+msgstr "drive.file = yalnızca StreamVault tarafından oluşturulan dosyalar (önerilen). Mevcut klasörler için gerekirse https://www.googleapis.com/auth/drive kullanın."
+
+msgid "e.g. Google Drive archive"
+msgstr "ör. Google Drive arşivi"
+
+msgid "e.g. VIP archive"
+msgstr "ör. VIP arşivi"
+
+msgid "e.g. alice, bob"
+msgstr "ör. alice, bob"
+
+msgid "e.g. john_doe"
+msgstr "ör. john_doe"
+
+msgid "e.g. montanablack88"
+msgstr "ör. montanablack88"
+
+#, python-format
+msgid "effective from %(date)s"
+msgstr "%(date)s tarihinden itibaren geçerli"
+
+msgid "just now"
+msgstr "az önce"
+
+#, python-format
+msgid "last seen %(when)s"
+msgstr "son görülme %(when)s"
+
+msgid "logged in"
+msgstr "giriş yaptı"
+
+msgid "max. 300s"
+msgstr "en fazla 300 sn"
+
+msgid "never"
+msgstr "hiçbir zaman"
+
+msgid "not created"
+msgstr "oluşturulmadı"
+
+#, python-format
+msgid "today %(time)s"
+msgstr "bugün %(time)s"
+
+msgid "unknown"
+msgstr "bilinmiyor"
+
+msgid "user@example.com"
+msgstr "user@example.com"
+
+msgid "users"
+msgstr "kullanıcı"
+
+msgid "viewers"
+msgstr "izleyici"
+
+msgid "yesterday"
+msgstr "dün"
+
+msgid "≥30 days quiet"
+msgstr "≥30 gün sessiz"
+
+msgid "✓ CLIP SAVED"
+msgstr "✓ KLİP KAYDEDİLDİ"
+
+msgid "✕ CLIP FAILED"
+msgstr "✕ KLİP BAŞARISIZ"
+

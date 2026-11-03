@@ -1,0 +1,3412 @@
+# Japanese translations for StreamVault.
+# Copyright (C) 2026 StreamVault contributors
+# This file is distributed under the same license as the StreamVault
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamVault VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"PO-Revision-Date: 2026-11-03 19:31+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ja\n"
+"Language-Team: ja <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(channel)s added (%(mode)s)."
+msgstr "%(channel)s を追加しました（%(mode)s）。"
+
+#, python-format
+msgid "%(channel)s added as a YouTube source (%(mode)s)."
+msgstr "%(channel)s を YouTube ソースとして追加しました（%(mode)s）。"
+
+#, python-format
+msgid "%(channel)s mode updated to: %(mode)s."
+msgstr "%(channel)s のモードを更新しました: %(mode)s。"
+
+#, python-format
+msgid "%(count)s VODs"
+msgstr "%(count)s 件の VOD"
+
+#, python-format
+msgid "%(count)s VODs in quick access"
+msgstr "クイックアクセスに %(count)s 件の VOD"
+
+#, python-format
+msgid "%(count)s active"
+msgstr "%(count)s 件がアクティブ"
+
+#, python-format
+msgid "%(count)s clips"
+msgstr "%(count)s 件のクリップ"
+
+#, python-format
+msgid "%(count)s clips archived"
+msgstr "%(count)s 件のクリップをアーカイブ済み"
+
+#, python-format
+msgid "%(count)s clips in total"
+msgstr "合計 %(count)s 件のクリップ"
+
+#, python-format
+msgid "%(count)s in the cloud"
+msgstr "クラウドに %(count)s 件"
+
+#, python-format
+msgid "%(count)s live"
+msgstr "%(count)s 件がライブ中"
+
+#, python-format
+msgid "%(count)s recordings"
+msgstr "%(count)s 件の録画"
+
+#, python-format
+msgid "%(count)s recordings in total"
+msgstr "合計 %(count)s 件の録画"
+
+#, python-format
+msgid "%(count)s viewers"
+msgstr "視聴者 %(count)s 人"
+
+#, python-format
+msgid "%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)"
+msgstr "%(day)s: %(total)s（ログイン %(logins)s、ページ %(pages)s、動画 %(media)s、チャット %(chats)s）"
+
+#, python-format
+msgid "%(day)s: no activity"
+msgstr "%(day)s: アクティビティなし"
+
+#, python-format
+msgid "%(days)s days ago"
+msgstr "%(days)s 日前"
+
+#, python-format
+msgid "%(field)s is missing."
+msgstr "%(field)s が入力されていません。"
+
+#, python-format
+msgid "%(minutes)s min ago"
+msgstr "%(minutes)s 分前"
+
+#, python-format
+msgid "%(month)s %(day)s, %(time)s"
+msgstr "%(month)s %(day)s日 %(time)s"
+
+#, python-format
+msgid "%(n)s new VODs available"
+msgstr "新しい VOD が %(n)s 件あります"
+
+#, python-format
+msgid "%(name)s removed."
+msgstr "%(name)s を削除しました。"
+
+#, python-format
+msgid "%(num)d attempt"
+msgid_plural "%(num)d attempts"
+msgstr[0] "%(num)d 回の試行"
+
+#, python-format
+msgid "%(num)d channel"
+msgid_plural "%(num)d channels"
+msgstr[0] "%(num)d チャンネル"
+
+#, python-format
+msgid "%(num)d entry"
+msgid_plural "%(num)d entries"
+msgstr[0] "%(num)d 件のエントリ"
+
+#, python-format
+msgid "%(num)d folder allowed"
+msgid_plural "%(num)d folders allowed"
+msgstr[0] "%(num)d 個のフォルダーを許可"
+
+#, python-format
+msgid "%(num)d link"
+msgid_plural "%(num)d links"
+msgstr[0] "%(num)d 件のリンク"
+
+#, python-format
+msgid "%(num)d source"
+msgid_plural "%(num)d sources"
+msgstr[0] "%(num)d 件のソース"
+
+#, python-format
+msgid "%(num)s days"
+msgstr "%(num)s 日"
+
+#, python-format
+msgid "%(provider)s does not support OAuth."
+msgstr "%(provider)s は OAuth に対応していません。"
+
+msgid "0 = delete immediately once the cloud copy is verified."
+msgstr "0 = クラウドのコピーを確認後すぐに削除します。"
+
+msgid "0 = no automatic sync. Only used when auto-upload is enabled."
+msgstr "0 = 自動同期なし。自動アップロードが有効な場合のみ使用されます。"
+
+msgid "1 new VOD available"
+msgstr "新しい VOD が 1 件あります"
+
+#, python-format
+msgid "<strong>%(free)s</strong> free"
+msgstr "空き <strong>%(free)s</strong>"
+
+msgid "A cleanup is already running."
+msgstr "クリーンアップはすでに実行中です。"
+
+msgid "A cloud deletion is already running."
+msgstr "クラウドの削除はすでに実行中です。"
+
+msgid "A cloud sync is already running."
+msgstr "クラウド同期はすでに実行中です。"
+
+#, python-format
+msgid "A group named '%(name)s' already exists."
+msgstr "「%(name)s」という名前のグループはすでに存在します。"
+
+#, python-format
+msgid "A provider named '%(name)s' already exists."
+msgstr "「%(name)s」という名前のプロバイダーはすでに存在します。"
+
+msgid "A restore is already running."
+msgstr "復元はすでに実行中です。"
+
+msgid "A saved value is kept if the field is left empty."
+msgstr "空欄のままにすると、保存済みの値が維持されます。"
+
+msgid "ACTIVE (locked)"
+msgstr "有効（ロック中）"
+
+msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
+msgstr "AWS S3、Cloudflare R2、Backblaze B2、Wasabi、MinIO、Hetzner、または任意の S3 互換エンドポイント。"
+
+msgid "Accept rules"
+msgstr "ルールに同意する"
+
+msgid "Accept terms"
+msgstr "利用規約に同意する"
+
+msgid "Account active (access allowed)"
+msgstr "アカウント有効（アクセス許可）"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Activate account immediately"
+msgstr "アカウントをすぐに有効化"
+
+msgid "Active"
+msgstr "有効"
+
+msgid "Active shares"
+msgstr "有効な共有"
+
+msgid "Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them)."
+msgstr "有効: 新しい配信とフォルダーは自動的に解放されます。下で個別のフォルダーを無効にできます（チェックを外す）。"
+
+msgid "Active: new streams are unlocked automatically. Below you can disable / block individual folders."
+msgstr "有効: 新しい配信は自動的に解放されます。下で個別のフォルダーを無効化／ブロックできます。"
+
+msgid "Actively monitored by the recorder core"
+msgstr "録画コアによって監視中"
+
+msgid "Add channel"
+msgstr "チャンネルを追加"
+
+msgid "Add new channel"
+msgstr "新しいチャンネルを追加"
+
+msgid "Add provider"
+msgstr "プロバイダーを追加"
+
+msgid "Addressing"
+msgstr "アドレス指定"
+
+msgid "Admin"
+msgstr "管理者"
+
+msgid "Admin controls"
+msgstr "管理者コントロール"
+
+msgid "Admins only"
+msgstr "管理者のみ"
+
+msgid "All"
+msgstr "すべて"
+
+#, python-format
+msgid "All (%(count)s)"
+msgstr "すべて（%(count)s）"
+
+msgid "All VOD slots are in use"
+msgstr "すべての VOD スロットが使用中です"
+
+msgid "All VODs"
+msgstr "すべての VOD"
+
+msgid "All categories"
+msgstr "すべてのカテゴリ"
+
+msgid "All off"
+msgstr "すべてオフ"
+
+msgid "All on"
+msgstr "すべてオン"
+
+msgid "All saved settings of this account will be deleted completely."
+msgstr "このアカウントの保存済み設定はすべて完全に削除されます。"
+
+msgid "All streamers are currently offline. Past broadcasts can be watched in the archive."
+msgstr "現在、すべての配信者がオフラインです。過去の配信はアーカイブで視聴できます。"
+
+msgid "All streams (+ auto-new)"
+msgstr "すべての配信（新規も自動）"
+
+msgid "All users"
+msgstr "すべてのユーザー"
+
+msgid "Allowlist (comma-separated):"
+msgstr "許可リスト（カンマ区切り）:"
+
+#, python-format
+msgid "Also transfers %(path)s."
+msgstr "%(path)s も転送します。"
+
+#, python-format
+msgid "Also transfers preview images from %(path)s."
+msgstr "%(path)s のプレビュー画像も転送します。"
+
+msgid "An upload for this file is already running."
+msgstr "このファイルのアップロードはすでに実行中です。"
+
+msgid "Anonymous"
+msgstr "匿名"
+
+msgid "Appendix A house rules"
+msgstr "付録 A ハウスルール"
+
+#, python-format
+msgid "Appendix A — %(title)s"
+msgstr "付録 A — %(title)s"
+
+msgid "Apply"
+msgstr "適用"
+
+msgid "April"
+msgstr "4月"
+
+msgid "Archive"
+msgstr "アーカイブ"
+
+msgid "Archive / media folder"
+msgstr "アーカイブ／メディアフォルダー"
+
+msgid "Archive download"
+msgstr "アーカイブのダウンロード"
+
+msgid "Archive object not found."
+msgstr "アーカイブオブジェクトが見つかりません。"
+
+msgid "Archive objects"
+msgstr "アーカイブオブジェクト"
+
+msgid "Archive overview"
+msgstr "アーカイブ概要"
+
+msgid "Archive recording (latest VOD)"
+msgstr "アーカイブ録画（最新の VOD）"
+
+#, python-format
+msgid "Archive: %(name)s"
+msgstr "アーカイブ: %(name)s"
+
+#, python-format
+msgid "Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs"
+msgstr "アーカイブ: <strong>%(channels)s</strong> チャンネル • <strong>%(vods)s</strong> 件の VOD"
+
+msgid "Archived airtime"
+msgstr "アーカイブ済みの配信時間"
+
+#, python-format
+msgid "Archived files (%(count)s)"
+msgstr "アーカイブ済みファイル（%(count)s）"
+
+msgid "Area maintenance and exempt users saved successfully."
+msgstr "エリアのメンテナンスと除外ユーザーを保存しました。"
+
+msgid "At least 8 characters"
+msgstr "8 文字以上"
+
+msgid "Audio extraction error"
+msgstr "音声抽出エラー"
+
+msgid "Audio extraction failed"
+msgstr "音声の抽出に失敗しました"
+
+msgid "August"
+msgstr "8月"
+
+msgid "Auto"
+msgstr "自動"
+
+msgid "Auto-sync interval (minutes)"
+msgstr "自動同期の間隔（分）"
+
+msgid "Auto: off"
+msgstr "自動: オフ"
+
+msgid "Auto: on"
+msgstr "自動: オン"
+
+msgid "Automatic"
+msgstr "自動"
+
+msgid "Automatic (browser)"
+msgstr "自動（ブラウザー）"
+
+msgid "Automatic (first active)"
+msgstr "自動（最初の有効なもの）"
+
+msgid "Automatic and manual backups (SQLite database, configuration and metadata)."
+msgstr "自動および手動バックアップ（SQLite データベース、設定、メタデータ）。"
+
+msgid "Automatically unlock future streams & folders"
+msgstr "今後の配信とフォルダーを自動的に解放"
+
+msgid "Automation & retention"
+msgstr "自動化と保持"
+
+msgid "Avg. active"
+msgstr "平均アクティブ"
+
+msgid "Back"
+msgstr "戻る"
+
+msgid "Back shortly"
+msgstr "まもなく再開します"
+
+msgid "Back to dashboard"
+msgstr "ダッシュボードに戻る"
+
+msgid "Back to overview"
+msgstr "概要に戻る"
+
+msgid "Back to user management"
+msgstr "ユーザー管理に戻る"
+
+msgid "Back up chat logs too"
+msgstr "チャットログもバックアップ"
+
+msgid "Back up thumbnails too"
+msgstr "サムネイルもバックアップ"
+
+#, python-format
+msgid "Backup %(name)s could not be deleted."
+msgstr "バックアップ %(name)s を削除できませんでした。"
+
+#, python-format
+msgid "Backup %(name)s deleted."
+msgstr "バックアップ %(name)s を削除しました。"
+
+#, python-format
+msgid "Backup error: %(error)s"
+msgstr "バックアップエラー: %(error)s"
+
+msgid "Badge library is up to date."
+msgstr "バッジライブラリは最新です。"
+
+msgid "Badge sync is already running."
+msgstr "バッジの同期はすでに実行中です。"
+
+msgid "Badge sync started."
+msgstr "バッジの同期を開始しました。"
+
+msgid "Ban"
+msgstr "BAN"
+
+msgid "Ban IP"
+msgstr "IP を BAN"
+
+msgid "Banned"
+msgstr "BAN 済み"
+
+#, python-format
+msgid "Banner URL for %(streamer)s saved."
+msgstr "%(streamer)s のバナー URL を保存しました。"
+
+#, python-format
+msgid "Banner for %(streamer)s reset to default."
+msgstr "%(streamer)s のバナーをデフォルトに戻しました。"
+
+#, python-format
+msgid "Banner image for %(streamer)s uploaded successfully."
+msgstr "%(streamer)s のバナー画像をアップロードしました。"
+
+msgid "Banner image uploaded successfully."
+msgstr "バナー画像をアップロードしました。"
+
+msgid "Banner reset to default."
+msgstr "バナーをデフォルトに戻しました。"
+
+msgid "Base:"
+msgstr "ベース:"
+
+msgid "Blocked"
+msgstr "ブロック中"
+
+#, python-format
+msgid "Blocked (%(count)s): %(list)s"
+msgstr "ブロック中（%(count)s）: %(list)s"
+
+msgid "Browser supports neither MPEG-TS nor live HLS."
+msgstr "ブラウザーが MPEG-TS にもライブ HLS にも対応していません。"
+
+msgid "Bucket name contains invalid characters."
+msgstr "バケット名に無効な文字が含まれています。"
+
+msgid "Buffer is still short — the clip window grows with it."
+msgstr "バッファーがまだ短いです。クリップの範囲はバッファーとともに広がります。"
+
+msgid "Buffer:"
+msgstr "バッファー:"
+
+msgid "Buffering..."
+msgstr "バッファリング中..."
+
+msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
+msgstr "初期設定では、何も自動でアップロード・削除されません。これらの機能は意図的に有効にしてください。"
+
+msgid "CHANGE"
+msgstr "変更"
+
+msgid "CHANNEL MANAGEMENT (ADMIN)"
+msgstr "チャンネル管理（管理者）"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "Category search failed."
+msgstr "カテゴリ検索に失敗しました。"
+
+msgid "Category search is currently unavailable."
+msgstr "カテゴリ検索は現在利用できません。"
+
+msgid "Change banner"
+msgstr "バナーを変更"
+
+msgid "Change password"
+msgstr "パスワードを変更"
+
+msgid "Channel"
+msgstr "チャンネル"
+
+msgid "Channel actions"
+msgstr "チャンネル操作"
+
+msgid "Channel archive & recording metrics"
+msgstr "チャンネルのアーカイブと録画の指標"
+
+msgid "Channel not found."
+msgstr "チャンネルが見つかりません。"
+
+msgid "Channels"
+msgstr "チャンネル"
+
+msgid "Chat"
+msgstr "チャット"
+
+#, python-format
+msgid "Chat %(age)s"
+msgstr "チャット %(age)s"
+
+msgid "Chat density & event timeline (click to jump)"
+msgstr "チャット密度とイベントのタイムライン（クリックでジャンプ）"
+
+#, python-format
+msgid "Chat export - %(user)s"
+msgstr "チャットのエクスポート - %(user)s"
+
+msgid "Chat filter"
+msgstr "チャットフィルター"
+
+#, python-format
+msgid "Chat history: %(user)s"
+msgstr "チャット履歴: %(user)s"
+
+msgid "Chat messages"
+msgstr "チャットメッセージ"
+
+msgid "Chat replay"
+msgstr "チャットリプレイ"
+
+msgid "Chat replay ready"
+msgstr "チャットリプレイの準備ができました"
+
+#, python-format
+msgid "Chat replay ready · first message at %(time)s"
+msgstr "チャットリプレイの準備完了 · 最初のメッセージ %(time)s"
+
+msgid "Chat tracker & global search"
+msgstr "チャットトラッカーとグローバル検索"
+
+msgid "Check"
+msgstr "確認"
+
+msgid "Cleanup interval (minutes)"
+msgstr "クリーンアップの間隔（分）"
+
+#, python-format
+msgid "Cleanup queued (task #%(task)s)."
+msgstr "クリーンアップをキューに追加しました（タスク #%(task)s）。"
+
+msgid "Clear filters"
+msgstr "フィルターをクリア"
+
+msgid "Click to change password"
+msgstr "クリックしてパスワードを変更"
+
+msgid "Clip"
+msgstr "クリップ"
+
+msgid "Clip URL is missing on this page."
+msgstr "このページにクリップの URL がありません。"
+
+msgid "Clip could not be deleted."
+msgstr "クリップを削除できませんでした。"
+
+msgid "Clip created."
+msgstr "クリップを作成しました。"
+
+msgid "Clip deleted."
+msgstr "クリップを削除しました。"
+
+msgid "Clip end"
+msgstr "クリップの終了"
+
+msgid "Clip failed."
+msgstr "クリップに失敗しました。"
+
+msgid "Clip is already starting…"
+msgstr "クリップはすでに開始中です…"
+
+msgid "Clip is taking too long."
+msgstr "クリップの処理に時間がかかりすぎています。"
+
+msgid "Clip job not found."
+msgstr "クリップジョブが見つかりません。"
+
+msgid "Clip saved."
+msgstr "クリップを保存しました。"
+
+msgid "Clip settings"
+msgstr "クリップ設定"
+
+msgid "Clip settings saved."
+msgstr "クリップ設定を保存しました。"
+
+msgid "Clip start"
+msgstr "クリップの開始"
+
+msgid "Clip title"
+msgstr "クリップのタイトル"
+
+msgid "Clip title (optional)"
+msgstr "クリップのタイトル（任意）"
+
+#, python-format
+msgid "Clips (%(count)s)"
+msgstr "クリップ（%(count)s）"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Close transcript"
+msgstr "文字起こしを閉じる"
+
+#, python-format
+msgid "Cloud deletion queued (task #%(task)s)."
+msgstr "クラウドの削除をキューに追加しました（タスク #%(task)s）。"
+
+msgid "Cloud only"
+msgstr "クラウドのみ"
+
+msgid "Cloud storage"
+msgstr "クラウドストレージ"
+
+#, python-format
+msgid "Cloud sync queued (task #%(task)s)."
+msgstr "クラウド同期をキューに追加しました（タスク #%(task)s）。"
+
+msgid "Cloud volume"
+msgstr "クラウド容量"
+
+msgid "Collapse chat"
+msgstr "チャットを折りたたむ"
+
+msgid "Configure dynamic permissions for streams, the video archive and channel access."
+msgstr "配信、動画アーカイブ、チャンネルへのアクセスに関する動的な権限を設定します。"
+
+msgid "Configure recording channels and manage archive assignments"
+msgstr "録画チャンネルを設定し、アーカイブの割り当てを管理します"
+
+msgid "Configured streamers & sources"
+msgstr "設定済みの配信者とソース"
+
+msgid "Connect account"
+msgstr "アカウントを連携"
+
+msgid "Connect with Dropbox"
+msgstr "Dropbox と連携"
+
+msgid "Connect with Google"
+msgstr "Google と連携"
+
+msgid "Connect with Microsoft"
+msgstr "Microsoft と連携"
+
+msgid "Connecting…"
+msgstr "接続中…"
+
+msgid "Connection OK"
+msgstr "接続 OK"
+
+msgid "Connection failed"
+msgstr "接続に失敗しました"
+
+msgid "Connection lost — reconnecting…"
+msgstr "接続が切れました — 再接続中…"
+
+#, python-format
+msgid "Connection test queued (task #%(task)s)."
+msgstr "接続テストをキューに追加しました（タスク #%(task)s）。"
+
+msgid "Consent required."
+msgstr "同意が必要です。"
+
+msgid "Control panel"
+msgstr "コントロールパネル"
+
+msgid "Control the global maintenance mode or lock individual platform areas."
+msgstr "グローバルメンテナンスモードを制御するか、プラットフォームの個別エリアをロックします。"
+
+msgid "Copy"
+msgstr "コピー"
+
+msgid "Copy link"
+msgstr "リンクをコピー"
+
+msgid "Could not create clip."
+msgstr "クリップを作成できませんでした。"
+
+msgid "Could not load status."
+msgstr "ステータスを読み込めませんでした。"
+
+msgid "Could not start clip."
+msgstr "クリップを開始できませんでした。"
+
+msgid "Create"
+msgstr "作成"
+
+msgid "Create backup now"
+msgstr "今すぐバックアップを作成"
+
+msgid "Create clip"
+msgstr "クリップを作成"
+
+msgid "Create group"
+msgstr "グループを作成"
+
+msgid "Create new user"
+msgstr "新しいユーザーを作成"
+
+msgid "Create new user group"
+msgstr "新しいユーザーグループを作成"
+
+msgid "Create transcript"
+msgstr "文字起こしを作成"
+
+msgid "Create user"
+msgstr "ユーザーを作成"
+
+msgid "Created"
+msgstr "作成日時"
+
+msgid "Created on"
+msgstr "作成日"
+
+msgid "Creating clip…"
+msgstr "クリップを作成中…"
+
+msgid "Critical"
+msgstr "重大"
+
+msgid "Current password"
+msgstr "現在のパスワード"
+
+msgid "Current preview"
+msgstr "現在のプレビュー"
+
+msgid "Current profile picture"
+msgstr "現在のプロフィール画像"
+
+msgid "Custom"
+msgstr "カスタム"
+
+msgid "Custom banner URL saved successfully."
+msgstr "カスタムバナーの URL を保存しました。"
+
+msgid "Custom banner active"
+msgstr "カスタムバナー使用中"
+
+#, python-format
+msgid "Custom banner for %(streamer)s removed."
+msgstr "%(streamer)s のカスタムバナーを削除しました。"
+
+msgid "Custom banner removed."
+msgstr "カスタムバナーを削除しました。"
+
+msgid "Custom file"
+msgstr "カスタムファイル"
+
+msgid "Custom profile picture URL saved successfully."
+msgstr "カスタムプロフィール画像の URL を保存しました。"
+
+msgid "Custom profile picture active"
+msgstr "カスタムプロフィール画像使用中"
+
+msgid "Custom profile picture removed."
+msgstr "カスタムプロフィール画像を削除しました。"
+
+msgid "Customize channel banner"
+msgstr "チャンネルバナーをカスタマイズ"
+
+msgid "Customize profile picture"
+msgstr "プロフィール画像をカスタマイズ"
+
+#, python-format
+msgid "Daily activity %(user)s"
+msgstr "%(user)s の日別アクティビティ"
+
+msgid "Dashboard"
+msgstr "ダッシュボード"
+
+msgid "December"
+msgstr "12月"
+
+msgid "Default"
+msgstr "デフォルト"
+
+msgid "Default provider"
+msgstr "デフォルトのプロバイダー"
+
+msgid "Default target"
+msgstr "デフォルトの保存先"
+
+msgid "Delete"
+msgstr "削除"
+
+msgid "Delete folder"
+msgstr "フォルダーを削除"
+
+msgid "Delete from cloud"
+msgstr "クラウドから削除"
+
+msgid "Delete group"
+msgstr "グループを削除"
+
+msgid "Delete local copies after retention"
+msgstr "保持期間後にローカルコピーを削除"
+
+msgid "Delete locally"
+msgstr "ローカルで削除"
+
+msgid "Delete permanently"
+msgstr "完全に削除"
+
+msgid "Delete user"
+msgstr "ユーザーを削除"
+
+msgid "Delete user group"
+msgstr "ユーザーグループを削除"
+
+msgid "Delete videos"
+msgstr "動画を削除"
+
+msgid "Delete videos & recordings"
+msgstr "動画と録画を削除"
+
+msgid "Deleted!"
+msgstr "削除しました！"
+
+msgid "Description"
+msgstr "説明"
+
+msgid "Description (optional)"
+msgstr "説明（任意）"
+
+msgid "Direct modules"
+msgstr "直接モジュール"
+
+msgid "Directly into the vault archive"
+msgstr "Vault アーカイブに直接"
+
+msgid "Disable / block individual folders:"
+msgstr "個別のフォルダーを無効化／ブロック:"
+
+msgid "Disable / enable individual folders:"
+msgstr "個別のフォルダーを無効化／有効化:"
+
+msgid "Disable recording (live & Discord only)"
+msgstr "録画を無効化（ライブと Discord のみ）"
+
+msgid "Disabled"
+msgstr "無効"
+
+msgid "Discard clip? Unsaved changes will be lost."
+msgstr "クリップを破棄しますか？保存されていない変更は失われます。"
+
+msgid "Discord integration not active"
+msgstr "Discord 連携は無効です"
+
+msgid "Discover"
+msgstr "発見"
+
+msgid "Discover and watch Twitch streams in StreamVault"
+msgstr "StreamVault で Twitch の配信を見つけて視聴"
+
+msgid "Display name"
+msgstr "表示名"
+
+msgid "Display title"
+msgstr "表示タイトル"
+
+#, python-format
+msgid "Do you really want to delete the group %(name)s?"
+msgstr "グループ %(name)s を本当に削除しますか？"
+
+#, python-format
+msgid "Do you really want to permanently delete the user %(name)s?"
+msgstr "ユーザー %(name)s を完全に削除してもよろしいですか？"
+
+msgid "Do you want to empty the entire recording folder?"
+msgstr "録画フォルダー全体を空にしますか？"
+
+msgid "Done"
+msgstr "完了"
+
+msgid "Download"
+msgstr "ダウンロード"
+
+msgid "Download TXT"
+msgstr "TXT をダウンロード"
+
+msgid "Download all"
+msgstr "すべてダウンロード"
+
+msgid "Download all VODs?"
+msgstr "すべての VOD をダウンロードしますか？"
+
+msgid "Download archive & VODs"
+msgstr "アーカイブと VOD をダウンロード"
+
+msgid "Download complete."
+msgstr "ダウンロードが完了しました。"
+
+msgid "Download file"
+msgstr "ファイルをダウンロード"
+
+msgid "Download is disabled. Please watch in the player (if available)."
+msgstr "ダウンロードは無効です。プレーヤーで視聴してください（利用可能な場合）。"
+
+msgid "Download of all VODs started in the background."
+msgstr "すべての VOD のダウンロードをバックグラウンドで開始しました。"
+
+#, python-format
+msgid "Downloading... %(percent)s"
+msgstr "ダウンロード中... %(percent)s"
+
+#, python-format
+msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
+msgstr "Drive のクォータ制限中です — 再生を再度押さないでください（制限が延長されます）。読み込み済みの部分に戻るか、約 %(minutes)s 分お待ちください。"
+
+msgid "Drop a file here or click to select"
+msgstr "ここにファイルをドロップするか、クリックして選択"
+
+msgid "Dropbox with OAuth 2.0, refresh token and large upload sessions."
+msgstr "OAuth 2.0、リフレッシュトークン、大容量アップロードセッションに対応した Dropbox。"
+
+msgid "Duration"
+msgstr "長さ"
+
+msgid "Duration must be > 0."
+msgstr "長さは 0 より大きくする必要があります。"
+
+msgid "Duration:"
+msgstr "長さ:"
+
+msgid "Dynamic user account and group management with granular stream and permission control"
+msgstr "配信と権限をきめ細かく制御できる、動的なユーザーアカウントとグループの管理"
+
+msgid "END"
+msgstr "終了"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "Edit group"
+msgstr "グループを編集"
+
+msgid "Edit group & permissions"
+msgstr "グループと権限を編集"
+
+msgid "Edit provider"
+msgstr "プロバイダーを編集"
+
+msgid "Edit user"
+msgstr "ユーザーを編集"
+
+msgid "Email"
+msgstr "メール"
+
+msgid "Email address"
+msgstr "メールアドレス"
+
+msgid "Email address (optional)"
+msgstr "メールアドレス（任意）"
+
+msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
+msgstr "空欄 = AWS。R2、B2、Wasabi、MinIO などの場合は S3 エンドポイントを入力してください。"
+
+msgid "Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers use their own region."
+msgstr "空欄 = AWS の場合は us-east-1。Cloudflare R2 は「auto」、その他の S3 プロバイダーは独自のリージョンを使用します。"
+
+msgid "Empty folder"
+msgstr "フォルダーを空にする"
+
+msgid "Enable immediately"
+msgstr "すぐに有効化"
+
+msgid "Enable maintenance mode"
+msgstr "メンテナンスモードを有効化"
+
+msgid "Enable recording"
+msgstr "録画を有効化"
+
+msgid "Enable recording for this channel"
+msgstr "このチャンネルの録画を有効化"
+
+msgid "Enabled"
+msgstr "有効"
+
+msgid "Encryption not ready."
+msgstr "暗号化の準備ができていません。"
+
+msgid "End"
+msgstr "終了"
+
+msgid "End global maintenance mode"
+msgstr "グローバルメンテナンスモードを終了"
+
+msgid "Endpoint URL (optional)"
+msgstr "エンドポイント URL（任意）"
+
+msgid "Endpoint URL must be a valid http(s) URL."
+msgstr "エンドポイント URL は有効な http(s) URL である必要があります。"
+
+msgid "Endpoint URL must not contain a query or fragment."
+msgstr "エンドポイント URL にクエリやフラグメントを含めることはできません。"
+
+msgid "Endpoint URL must not contain credentials; use Access Key and Secret Key."
+msgstr "エンドポイント URL に認証情報を含めないでください。Access Key と Secret Key を使用してください。"
+
+msgid "Endpoint:"
+msgstr "エンドポイント:"
+
+msgid "Enter current password"
+msgstr "現在のパスワードを入力"
+
+msgid "Error"
+msgstr "エラー"
+
+msgid "Error cancelling the transcription"
+msgstr "文字起こしのキャンセル中にエラーが発生しました"
+
+msgid "Error changing the password."
+msgstr "パスワードの変更中にエラーが発生しました。"
+
+msgid "Error creating group"
+msgstr "グループの作成中にエラーが発生しました"
+
+msgid "Error creating the audio segment"
+msgstr "音声セグメントの作成中にエラーが発生しました"
+
+msgid "Error creating the user."
+msgstr "ユーザーの作成中にエラーが発生しました。"
+
+msgid "Error creating user"
+msgstr "ユーザーの作成中にエラーが発生しました"
+
+msgid "Error deleting group"
+msgstr "グループの削除中にエラーが発生しました"
+
+msgid "Error deleting user"
+msgstr "ユーザーの削除中にエラーが発生しました"
+
+msgid "Error loading cloud storage management."
+msgstr "クラウドストレージ管理の読み込み中にエラーが発生しました。"
+
+msgid "Error loading the admin panel. Please try again later."
+msgstr "管理パネルの読み込み中にエラーが発生しました。しばらくしてから再度お試しください。"
+
+msgid "Error loading the traffic overview."
+msgstr "トラフィック概要の読み込み中にエラーが発生しました。"
+
+msgid "Error queuing the transcription"
+msgstr "文字起こしをキューに追加する際にエラーが発生しました"
+
+msgid "Error saving group"
+msgstr "グループの保存中にエラーが発生しました"
+
+msgid "Error updating user"
+msgstr "ユーザーの更新中にエラーが発生しました"
+
+msgid "Error while deleting"
+msgstr "削除中にエラーが発生しました"
+
+msgid "Error while loading."
+msgstr "読み込み中にエラーが発生しました。"
+
+msgid "Error while saving"
+msgstr "保存中にエラーが発生しました"
+
+msgid "Error:"
+msgstr "エラー:"
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr "エラー: %(error)s"
+
+msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
+msgstr "このグループの既存メンバーは、自動的にデフォルトグループ <strong>視聴者</strong> に割り当てられます。"
+
+msgid "Exit fullscreen"
+msgstr "全画面を終了"
+
+msgid "Expand chat"
+msgstr "チャットを展開"
+
+msgid "Expires"
+msgstr "有効期限"
+
+msgid "Exported by StreamVault"
+msgstr "StreamVault によるエクスポート"
+
+msgid "Extracting audio..."
+msgstr "音声を抽出中..."
+
+msgid "FEATURED VOD"
+msgstr "注目の VOD"
+
+msgid "Failed"
+msgstr "失敗"
+
+msgid "Fast"
+msgstr "高速"
+
+msgid "Feature permissions"
+msgstr "機能の権限"
+
+msgid "Featured highlight"
+msgstr "注目のハイライト"
+
+msgid "February"
+msgstr "2月"
+
+msgid "File"
+msgstr "ファイル"
+
+msgid "File manager"
+msgstr "ファイルマネージャー"
+
+msgid "File name"
+msgstr "ファイル名"
+
+msgid "File not found"
+msgstr "ファイルが見つかりません"
+
+msgid "File not found locally."
+msgstr "ローカルにファイルが見つかりません。"
+
+msgid "File size"
+msgstr "ファイルサイズ"
+
+msgid "File was uploaded."
+msgstr "ファイルをアップロードしました。"
+
+msgid "Filter"
+msgstr "フィルター"
+
+msgid "Filter chat..."
+msgstr "チャットを絞り込み..."
+
+msgid "First"
+msgstr "最初"
+
+msgid "First page"
+msgstr "最初のページ"
+
+msgid "Folder ID:"
+msgstr "フォルダー ID:"
+
+msgid "Folder is being emptied in the background."
+msgstr "フォルダーをバックグラウンドで空にしています。"
+
+msgid "Folder not found or invalid."
+msgstr "フォルダーが見つからないか無効です。"
+
+msgid "For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:"
+msgstr "Google Drive、Dropbox、OneDrive では、このコールバック URL をプロバイダー側に登録する必要があります:"
+
+msgid "For encrypted credential storage, VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least 16 characters)."
+msgstr "認証情報を暗号化して保存するには、VOD_SECRET_KEY（または STORAGE_ENCRYPTION_KEY）に強力で一意な値（16 文字以上）を設定する必要があります。"
+
+msgid "Forget"
+msgstr "削除"
+
+msgid "Free"
+msgstr "空き"
+
+msgid "Full mode:"
+msgstr "フルモード:"
+
+msgid "Full mode: recording + live + Discord"
+msgstr "フルモード: 録画 + ライブ + Discord"
+
+msgid "Full terms text"
+msgstr "利用規約の全文"
+
+msgid "Full-text search across chat logs, metadata and VOD archives"
+msgstr "チャットログ、メタデータ、VOD アーカイブの全文検索"
+
+msgid "Full-text search query"
+msgstr "全文検索クエリ"
+
+msgid "Fullscreen"
+msgstr "全画面"
+
+msgid "Game"
+msgstr "ゲーム"
+
+#, python-format
+msgid "Game: %(category)s"
+msgstr "ゲーム: %(category)s"
+
+#, python-format
+msgid "Game: %(name)s"
+msgstr "ゲーム: %(name)s"
+
+msgid "Generate HLS now"
+msgstr "今すぐ HLS を生成"
+
+msgid "Global maintenance mode:"
+msgstr "グローバルメンテナンスモード:"
+
+msgid "Go"
+msgstr "実行"
+
+msgid "Go to dashboard"
+msgstr "ダッシュボードへ"
+
+msgid "Go to login"
+msgstr "ログインへ"
+
+msgid "Go to sign in"
+msgstr "サインインへ"
+
+msgid "Go to sign-in"
+msgstr "サインインへ"
+
+msgid "Go to terms"
+msgstr "利用規約へ"
+
+msgid "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+msgstr "Google Cloud Console → API とサービス → 認証情報 → OAuth クライアント（ウェブアプリケーション）。"
+
+msgid "Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads."
+msgstr "OAuth 2.0 と再開可能なアップロードに対応した Google Drive / Workspace Drive。"
+
+msgid "Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption."
+msgstr "Google Drive、S3 互換サービス、Dropbox、OneDrive、WebDAV。認証情報は AES-GCM で暗号化して保存されます。"
+
+msgid "Group"
+msgstr "グループ"
+
+#, python-format
+msgid "Group '%(name)s' created successfully."
+msgstr "グループ「%(name)s」を作成しました。"
+
+#, python-format
+msgid "Group '%(name)s' updated successfully."
+msgstr "グループ「%(name)s」を更新しました。"
+
+msgid "Group created"
+msgstr "グループを作成しました"
+
+msgid "Group deleted"
+msgstr "グループを削除しました"
+
+msgid "Group deleted successfully. Existing members were moved to the 'Viewer' group."
+msgstr "グループを削除しました。既存メンバーは「視聴者」グループに移動されました。"
+
+msgid "Group name"
+msgstr "グループ名"
+
+msgid "Group name must be between 2 and 50 characters long."
+msgstr "グループ名は 2〜50 文字にしてください。"
+
+msgid "Group not found."
+msgstr "グループが見つかりません。"
+
+msgid "Group saved"
+msgstr "グループを保存しました"
+
+msgid "HLS connection lost — reconnecting…"
+msgstr "HLS の接続が切れました — 再接続中…"
+
+msgid "HLS could not be recovered."
+msgstr "HLS を復旧できませんでした。"
+
+msgid "HLS is being created. Please reload the page in a few minutes."
+msgstr "HLS を作成中です。数分後にページを再読み込みしてください。"
+
+msgid "HLS is not supported by this browser."
+msgstr "このブラウザーは HLS に対応していません。"
+
+msgid "HLS starts faster for very large files."
+msgstr "非常に大きなファイルでは HLS の方が速く開始します。"
+
+msgid "High"
+msgstr "高"
+
+msgid "Home"
+msgstr "ホーム"
+
+msgid "Hotkey"
+msgstr "ホットキー"
+
+msgid "House rules for the invite-only circle. No “official” framing — just binding terms of use."
+msgstr "招待制コミュニティのハウスルールです。「公式」な体裁はなく、拘束力のある利用規約のみです。"
+
+msgid "I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access."
+msgstr "StreamVault のルールを読み、同意します。違反した場合、直ちにアクセス権が取り消されることを理解しています。"
+
+#, python-format
+msgid "I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access."
+msgstr "利用規約（バージョン %(version)s）を読み、同意します。違反した場合、直ちにアクセス権が取り消されることがあります。"
+
+msgid "IP"
+msgstr "IP"
+
+#, python-format
+msgid "If needed, set %(var)s to your public HTTPS address so the URL matches exactly."
+msgstr "必要に応じて、URL が完全に一致するよう %(var)s に公開 HTTPS アドレスを設定してください。"
+
+msgid "Image controls"
+msgstr "映像コントロール"
+
+#, python-format
+msgid "Inactive (%(count)s)"
+msgstr "無効（%(count)s）"
+
+msgid "Inactive: new streams stay blocked. Only folders checked below are unlocked."
+msgstr "無効: 新しい配信はブロックされたままです。下でチェックしたフォルダーのみが解放されます。"
+
+msgid "Include audio"
+msgstr "音声を含める"
+
+msgid "Info about the VOD…"
+msgstr "VOD の情報…"
+
+msgid "Information on data processing within the invite-only circle. No legal notice."
+msgstr "招待制コミュニティにおけるデータ処理に関する情報です。法的表示ではありません。"
+
+msgid "Initial password"
+msgstr "初期パスワード"
+
+msgid "Instant clip parameters and hotkey in the web player."
+msgstr "ウェブプレーヤーのインスタントクリップのパラメーターとホットキー。"
+
+msgid "Intensity"
+msgstr "強度"
+
+msgid "Internal server error while creating the group."
+msgstr "グループの作成中に内部サーバーエラーが発生しました。"
+
+msgid "Internal server error while deleting the group."
+msgstr "グループの削除中に内部サーバーエラーが発生しました。"
+
+msgid "Internal server error while updating the group."
+msgstr "グループの更新中に内部サーバーエラーが発生しました。"
+
+msgid "Invalid OAuth state."
+msgstr "OAuth の state が無効です。"
+
+msgid "Invalid Twitch channel."
+msgstr "無効な Twitch チャンネルです。"
+
+msgid "Invalid channel name."
+msgstr "無効なチャンネル名です。"
+
+msgid "Invalid channel."
+msgstr "無効なチャンネルです。"
+
+msgid "Invalid clip path."
+msgstr "無効なクリップのパスです。"
+
+msgid "Invalid file name."
+msgstr "無効なファイル名です。"
+
+msgid "Invalid file."
+msgstr "無効なファイルです。"
+
+msgid "Invalid folder slug."
+msgstr "無効なフォルダースラッグです。"
+
+msgid "Invalid group ID."
+msgstr "無効なグループ ID です。"
+
+msgid "Invalid image format (allowed: JPG, PNG, WEBP, GIF)."
+msgstr "無効な画像形式です（許可: JPG、PNG、WEBP、GIF）。"
+
+msgid "Invalid maintenance action."
+msgstr "無効なメンテナンス操作です。"
+
+msgid "Invalid new username."
+msgstr "新しいユーザー名が無効です。"
+
+msgid "Invalid path (control characters)."
+msgstr "無効なパスです（制御文字）。"
+
+msgid "Invalid path (null byte)."
+msgstr "無効なパスです（NULL バイト）。"
+
+msgid "Invalid path (path traversal)."
+msgstr "無効なパスです（パストラバーサル）。"
+
+#, python-format
+msgid "Invalid server response (%(status)s)."
+msgstr "無効なサーバー応答です（%(status)s）。"
+
+msgid "Invalid source."
+msgstr "無効なソースです。"
+
+msgid "Invalid streamer name."
+msgstr "無効な配信者名です。"
+
+#, python-format
+msgid "Invalid subfolder: %(error)s"
+msgstr "無効なサブフォルダー: %(error)s"
+
+msgid "Invalid time value."
+msgstr "無効な時間の値です。"
+
+msgid "Invalid username (3-32 characters: letters, numbers, _ and -)."
+msgstr "無効なユーザー名です（3〜32 文字: 英字、数字、_ と -）。"
+
+msgid "Invite-only. Full terms text after sign-in."
+msgstr "招待制です。利用規約の全文はサインイン後に表示されます。"
+
+msgid "January"
+msgstr "1月"
+
+msgid "July"
+msgstr "7月"
+
+msgid "June"
+msgstr "6月"
+
+msgid "LIVE"
+msgstr "ライブ"
+
+#, python-format
+msgid "LIVE %(name)s (without Twitch login)"
+msgstr "ライブ %(name)s（Twitch ログイン不要）"
+
+msgid "LIVE & DISCORD ONLY"
+msgstr "ライブと Discord のみ"
+
+msgid "LIVE NOW"
+msgstr "ライブ配信中"
+
+msgid "Language"
+msgstr "言語"
+
+msgid "Largest"
+msgstr "大きい順"
+
+msgid "Last"
+msgstr "最後"
+
+msgid "Last active"
+msgstr "最終アクティブ"
+
+msgid "Last broadcast"
+msgstr "最終配信"
+
+msgid "Last changed:"
+msgstr "最終更新:"
+
+msgid "Last page"
+msgstr "最後のページ"
+
+msgid "Last test:"
+msgstr "最終テスト:"
+
+msgid "Latest VODs"
+msgstr "最新の VOD"
+
+msgid "Leave empty to create a 'StreamVault' folder automatically."
+msgstr "空欄にすると「StreamVault」フォルダーが自動的に作成されます。"
+
+msgid "Legend"
+msgstr "凡例"
+
+msgid "Link"
+msgstr "リンク"
+
+msgid "Link copied"
+msgstr "リンクをコピーしました"
+
+msgid "Link copied to clipboard:"
+msgstr "リンクをクリップボードにコピーしました:"
+
+msgid "Link copied:"
+msgstr "リンクをコピーしました:"
+
+msgid "Live"
+msgstr "ライブ"
+
+msgid "Live & Discord only:"
+msgstr "ライブと Discord のみ:"
+
+msgid "Live (recovering...)"
+msgstr "ライブ（復旧中...）"
+
+msgid "Live channels"
+msgstr "ライブ中のチャンネル"
+
+msgid "Live chat"
+msgstr "ライブチャット"
+
+msgid "Live clip created."
+msgstr "ライブクリップを作成しました。"
+
+msgid "Live now"
+msgstr "ライブ配信中"
+
+msgid "Live on Twitch"
+msgstr "Twitch でライブ配信中"
+
+msgid "Live only: live stream + Discord (no recording)"
+msgstr "ライブのみ: ライブ配信 + Discord（録画なし）"
+
+msgid "Live recording"
+msgstr "ライブ録画"
+
+msgid "Live start failed."
+msgstr "ライブの開始に失敗しました。"
+
+msgid "Live stopped."
+msgstr "ライブを停止しました。"
+
+msgid "Live stream and Discord alerts only, no disk recording"
+msgstr "ライブ配信と Discord 通知のみ、ディスクへの録画なし"
+
+msgid "Live stream highlight"
+msgstr "ライブ配信のハイライト"
+
+msgid "Live stream is currently unavailable. Searching for stream..."
+msgstr "ライブ配信は現在利用できません。配信を検索中..."
+
+msgid "Live stream not available."
+msgstr "ライブ配信は利用できません。"
+
+msgid "Live via server"
+msgstr "サーバー経由でライブ"
+
+msgid "Live view"
+msgstr "ライブビュー"
+
+msgid "Live watch"
+msgstr "ライブ視聴"
+
+msgid "Live-only"
+msgstr "ライブのみ"
+
+msgid "Load"
+msgstr "負荷"
+
+msgid "Load average (1m / 5m):"
+msgstr "平均負荷（1 分 / 5 分）:"
+
+msgid "Loading chat…"
+msgstr "チャットを読み込み中…"
+
+msgid "Loading model..."
+msgstr "モデルを読み込み中..."
+
+msgid "Loading streams…"
+msgstr "配信を読み込み中…"
+
+msgid "Local"
+msgstr "ローカル"
+
+#, python-format
+msgid "Local rename failed: %(error)s"
+msgstr "ローカルでの名前変更に失敗しました: %(error)s"
+
+msgid "Local retention (days)"
+msgstr "ローカル保持期間（日）"
+
+msgid "Location"
+msgstr "保存場所"
+
+msgid "Lock <strong>VOD player &amp; archive</strong>"
+msgstr "<strong>VOD プレーヤー &amp; アーカイブ</strong>をロック"
+
+msgid "Lock <strong>live stream &amp; Twitch watch</strong>"
+msgstr "<strong>ライブ配信 &amp; Twitch 視聴</strong>をロック"
+
+msgid "Lock <strong>mobile version</strong>"
+msgstr "<strong>モバイル版</strong>をロック"
+
+msgid "Log out"
+msgstr "ログアウト"
+
+msgid "Login"
+msgstr "ログイン"
+
+msgid "Login attempts"
+msgstr "ログイン試行"
+
+msgid "Login failed."
+msgstr "ログインに失敗しました。"
+
+msgid "MP4 check not possible"
+msgstr "MP4 チェックを実行できません"
+
+msgid "Maintenance"
+msgstr "メンテナンス"
+
+msgid "Maintenance mode & area control"
+msgstr "メンテナンスモードとエリア制御"
+
+#, python-format
+msgid "Maintenance mode active, but the Discord notice failed: %(error)s"
+msgstr "メンテナンスモードは有効ですが、Discord への通知に失敗しました: %(error)s"
+
+msgid "Maintenance mode active."
+msgstr "メンテナンスモードが有効です。"
+
+msgid "Maintenance mode active. Discord notice was sent."
+msgstr "メンテナンスモードが有効です。Discord に通知を送信しました。"
+
+#, python-format
+msgid "Maintenance mode ended, but the Discord notice failed: %(error)s"
+msgstr "メンテナンスモードを終了しましたが、Discord への通知に失敗しました: %(error)s"
+
+msgid "Maintenance mode ended. Discord notice (available again) was sent."
+msgstr "メンテナンスモードを終了しました。Discord に通知（再開）を送信しました。"
+
+msgid "Maintenance mode ended. The site is available to everyone again."
+msgstr "メンテナンスモードを終了しました。サイトは再び全員が利用できます。"
+
+msgid "Manage documents, media files and archive assets"
+msgstr "ドキュメント、メディアファイル、アーカイブ資産を管理"
+
+msgid "Manage streamers"
+msgstr "配信者を管理"
+
+msgid "Manage users & groups"
+msgstr "ユーザーとグループを管理"
+
+msgid "Manual sync"
+msgstr "手動同期"
+
+msgid "March"
+msgstr "3月"
+
+msgid "Matches found"
+msgstr "一致した結果"
+
+msgid "Max. files per sync"
+msgstr "同期ごとの最大ファイル数"
+
+msgid "May"
+msgstr "5月"
+
+msgid "Member"
+msgstr "メンバー"
+
+msgid "Member VOD access saved."
+msgstr "メンバーの VOD アクセスを保存しました。"
+
+msgid "Members"
+msgstr "メンバー"
+
+msgid "Message"
+msgstr "メッセージ"
+
+msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
+msgstr "モバイルでのライブは一時的に無効です。デスクトップ版またはインストール済みのアプリをご利用ください。"
+
+msgid "Monitored"
+msgstr "監視中"
+
+msgid "Must point to a writable folder and end with / (added automatically)."
+msgstr "書き込み可能なフォルダーを指し、/ で終わる必要があります（自動で付加されます）。"
+
+msgid "Mute"
+msgstr "ミュート"
+
+msgid "Muted"
+msgstr "ミュート中"
+
+msgid "My streamers"
+msgstr "マイ配信者"
+
+msgid "Network error"
+msgstr "ネットワークエラー"
+
+msgid "Network error while loading streams."
+msgstr "配信の読み込み中にネットワークエラーが発生しました。"
+
+msgid "Network error:"
+msgstr "ネットワークエラー:"
+
+msgid "Network is back — reconnecting…"
+msgstr "ネットワークが復旧しました — 再接続中…"
+
+msgid "Never"
+msgstr "なし"
+
+msgid "New clips"
+msgstr "新しいクリップ"
+
+msgid "New group"
+msgstr "新しいグループ"
+
+msgid "New password (leave empty to keep unchanged)"
+msgstr "新しいパスワード（変更しない場合は空欄）"
+
+msgid "New password * (min. 8 characters)"
+msgstr "新しいパスワード *（8 文字以上）"
+
+msgid "New password..."
+msgstr "新しいパスワード..."
+
+msgid "New user"
+msgstr "新しいユーザー"
+
+msgid "Newest"
+msgstr "新しい順"
+
+msgid "Newest first"
+msgstr "新しい順"
+
+msgid "Next"
+msgstr "次へ"
+
+msgid "Next page"
+msgstr "次のページ"
+
+msgid "Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password."
+msgstr "アプリパスワードを使用する Nextcloud、ownCloud、Hetzner Storage Box、または任意の WebDAV サーバー。"
+
+msgid "No (self-signed only)"
+msgstr "いいえ（自己署名証明書の場合のみ）"
+
+msgid "No VODs available in the archive"
+msgstr "アーカイブに VOD がありません"
+
+msgid "No acceptances yet."
+msgstr "まだ同意はありません。"
+
+msgid "No account yet? Accounts are issued by the administrators of this instance."
+msgstr "アカウントをお持ちでないですか？アカウントはこのインスタンスの管理者が発行します。"
+
+msgid "No accounts match this filter."
+msgstr "このフィルターに一致するアカウントはありません。"
+
+msgid "No active file"
+msgstr "アクティブなファイルはありません"
+
+msgid "No active provider"
+msgstr "有効なプロバイダーはありません"
+
+msgid "No active shares."
+msgstr "有効な共有はありません。"
+
+msgid "No active streams"
+msgstr "アクティブな配信はありません"
+
+msgid "No archive objects yet. Start a sync or upload a recording."
+msgstr "アーカイブオブジェクトはまだありません。同期を開始するか、録画をアップロードしてください。"
+
+msgid "No backup script configured (VOD_BACKUP_SCRIPT)."
+msgstr "バックアップスクリプトが設定されていません（VOD_BACKUP_SCRIPT）。"
+
+msgid "No backups available."
+msgstr "利用可能なバックアップはありません。"
+
+msgid "No badges received from Twitch."
+msgstr "Twitch からバッジを取得できませんでした。"
+
+msgid "No chat"
+msgstr "チャットなし"
+
+msgid "No cloud storage configured yet. Add a provider or use the console:"
+msgstr "クラウドストレージはまだ設定されていません。プロバイダーを追加するか、コンソールを使用してください:"
+
+msgid "No connection. As soon as the device is back online, the app continues loading the page normally."
+msgstr "接続がありません。デバイスがオンラインに戻ると、アプリは通常どおりページの読み込みを再開します。"
+
+msgid "No discovery streams right now."
+msgstr "現在、おすすめの配信はありません。"
+
+msgid "No files stored in the vault."
+msgstr "Vault に保存されたファイルはありません。"
+
+msgid "No jobs in the queue."
+msgstr "キューにジョブはありません。"
+
+msgid "No live chat available. Chat appears when StreamVault records the stream."
+msgstr "ライブチャットはありません。StreamVault が配信を録画すると、チャットが表示されます。"
+
+msgid "No live stream active"
+msgstr "アクティブなライブ配信はありません"
+
+msgid "No live streams among the monitored channels. Use the search."
+msgstr "監視中のチャンネルにライブ配信はありません。検索をご利用ください。"
+
+msgid "No local entries found for this search term. Press [Enter] to search the server."
+msgstr "この検索語に一致するローカルのエントリはありません。[Enter] を押すとサーバーを検索します。"
+
+#, python-format
+msgid "No matches found for \"%(query)s\"."
+msgstr "「%(query)s」に一致する結果はありません。"
+
+msgid "No monitored Twitch channels."
+msgstr "監視中の Twitch チャンネルはありません。"
+
+msgid "No monitored Twitch channels. Add streamers under Streamers."
+msgstr "監視中の Twitch チャンネルはありません。「配信者」から配信者を追加してください。"
+
+msgid "No monitored channels configured."
+msgstr "監視対象のチャンネルが設定されていません。"
+
+msgid "No recently watched streams yet."
+msgstr "最近視聴した配信はまだありません。"
+
+msgid "No recorded chat is available for this VOD."
+msgstr "この VOD には録画されたチャットがありません。"
+
+msgid "No recorder data found."
+msgstr "レコーダーのデータが見つかりません。"
+
+msgid "No recordings found."
+msgstr "録画が見つかりません。"
+
+msgid "No results."
+msgstr "結果はありません。"
+
+msgid "No running transcription found."
+msgstr "実行中の文字起こしが見つかりません。"
+
+msgid "No streams"
+msgstr "配信なし"
+
+msgid "No transcript output received"
+msgstr "文字起こしの出力がありません"
+
+msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
+msgstr "文字起こしはまだありません。サーバー上でローカルに生成されるため、長い VOD では時間がかかることがあります。"
+
+msgid "No transcription active"
+msgstr "実行中の文字起こしはありません"
+
+msgid "No videos found."
+msgstr "動画が見つかりません。"
+
+msgid "Not authenticated."
+msgstr "認証されていません。"
+
+msgid "Not live"
+msgstr "ライブ配信なし"
+
+msgid "Notification + live stream (no recording)"
+msgstr "通知 + ライブ配信（録画なし）"
+
+msgid "November"
+msgstr "11月"
+
+msgid "OAuth code is missing."
+msgstr "OAuth コードがありません。"
+
+msgid "OAuth note"
+msgstr "OAuth に関する注意"
+
+msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
+msgstr "OAuth の state トークンには強力な VOD_SECRET_KEY が必要です。"
+
+msgid "OFF (normal operation)"
+msgstr "オフ（通常運用）"
+
+msgid "OFFLINE"
+msgstr "オフライン"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "ONLINE"
+msgstr "オンライン"
+
+msgid "OPERATING MODE:"
+msgstr "動作モード:"
+
+msgid "OPTION A: UPLOAD IMAGE FILE"
+msgstr "オプション A: 画像ファイルをアップロード"
+
+msgid "OPTION A: UPLOAD PROFILE PICTURE"
+msgstr "オプション A: プロフィール画像をアップロード"
+
+msgid "OPTION B: USE IMAGE URL"
+msgstr "オプション B: 画像 URL を使用"
+
+msgid "OR"
+msgstr "または"
+
+#, python-format
+msgid "Object #%(id)s removed from the database. Files are kept."
+msgstr "オブジェクト #%(id)s をデータベースから削除しました。ファイルは保持されます。"
+
+msgid "October"
+msgstr "10月"
+
+msgid "Offline"
+msgstr "オフライン"
+
+msgid "Offload the VOD archive to external storage automatically or manually"
+msgstr "VOD アーカイブを自動または手動で外部ストレージに移します"
+
+msgid "Oldest"
+msgstr "古い順"
+
+msgid "Oldest first"
+msgstr "古い順"
+
+msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
+msgstr "OAuth 2.0 を使用した Microsoft Graph 経由の OneDrive / Microsoft 365。"
+
+msgid "Only after a successful upload and optional cloud verification."
+msgstr "アップロードの成功と、任意のクラウド検証の後にのみ。"
+
+msgid "Only needed if no refresh token is used."
+msgstr "リフレッシュトークンを使用しない場合のみ必要です。"
+
+msgid "Open"
+msgstr "開く"
+
+msgid "Open Twitch"
+msgstr "Twitch を開く"
+
+msgid "Open channel"
+msgstr "チャンネルを開く"
+
+msgid "Open clip"
+msgstr "クリップを開く"
+
+msgid "Open editor"
+msgstr "エディターを開く"
+
+msgid "Option sections"
+msgstr "オプションセクション"
+
+msgid "Options"
+msgstr "オプション"
+
+msgid "Options & system control"
+msgstr "オプションとシステム制御"
+
+msgid "Other platform"
+msgstr "その他のプラットフォーム"
+
+#, python-format
+msgid "Page %(page)s / %(pages)s (%(count)s VODs)"
+msgstr "ページ %(page)s / %(pages)s（%(count)s 件の VOD）"
+
+#, python-format
+msgid "Page %(page)s / %(total)s"
+msgstr "ページ %(page)s / %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "%(pages)s ページ中 %(page)s ページ"
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr "%(total)s ページ中 %(page)s ページ"
+
+#, python-format
+msgid "Page %(page)s of %(total)s (%(count)s VODs)"
+msgstr "%(total)s ページ中 %(page)s ページ（%(count)s 件の VOD）"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+msgstr "ページ <strong>%(page)s</strong> / <strong>%(pages)s</strong>（%(count)s 件の VOD）"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; %(count)s VODs in quick access"
+msgstr "<strong>%(pages)s</strong> ページ中 <strong>%(page)s</strong> ページ &bull; クイックアクセスに %(count)s 件の VOD"
+
+msgid "Page navigation"
+msgstr "ページナビゲーション"
+
+msgid "Page navigation (top)"
+msgstr "ページナビゲーション（上部）"
+
+msgid "Page:"
+msgstr "ページ:"
+
+msgid "Pages"
+msgstr "ページ"
+
+msgid "Pagination"
+msgstr "ページ送り"
+
+msgid "Pagination (top)"
+msgstr "ページ送り（上部）"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "Password / app password"
+msgstr "パスワード／アプリパスワード"
+
+msgid "Password changed successfully."
+msgstr "パスワードを変更しました。"
+
+msgid "Password is required."
+msgstr "パスワードは必須です。"
+
+#, python-format
+msgid "Password must be at least %(min)s characters long."
+msgstr "パスワードは %(min)s 文字以上にしてください。"
+
+msgid "Path below the target folder ID. Empty = directly in the target folder ID."
+msgstr "保存先フォルダー ID 以下のパス。空欄 = 保存先フォルダー ID の直下。"
+
+msgid "Pause"
+msgstr "一時停止"
+
+msgid "Pause playback"
+msgstr "再生を一時停止"
+
+msgid "Pause preview"
+msgstr "プレビューを一時停止"
+
+msgid "Peak"
+msgstr "ピーク"
+
+msgid "Pending"
+msgstr "待機中"
+
+msgid "Photo viewer"
+msgstr "フォトビューアー"
+
+msgid "Play"
+msgstr "再生"
+
+msgid "Play / pause"
+msgstr "再生／一時停止"
+
+msgid "Play preview"
+msgstr "プレビューを再生"
+
+msgid "Playback unavailable"
+msgstr "再生できません"
+
+msgid "Player error — reconnecting…"
+msgstr "プレーヤーエラー — 再接続中…"
+
+msgid "Please enter a name for the storage provider."
+msgstr "ストレージプロバイダーの名前を入力してください。"
+
+msgid "Please enter your current password."
+msgstr "現在のパスワードを入力してください。"
+
+msgid "Please save the client ID and client secret first, then connect."
+msgstr "先にクライアント ID とクライアントシークレットを保存してから連携してください。"
+
+msgid "Please scroll to the end of the text first."
+msgstr "まずテキストの最後までスクロールしてください。"
+
+msgid "Points"
+msgstr "ポイント"
+
+msgid "Popular categories"
+msgstr "人気のカテゴリ"
+
+msgid "Prefix"
+msgstr "プレフィックス"
+
+#, python-format
+msgid "Presence %(user)s"
+msgstr "%(user)s の在席状況"
+
+msgid "Present"
+msgstr "あり"
+
+msgid "Preview"
+msgstr "プレビュー"
+
+msgid "Previous"
+msgstr "前へ"
+
+msgid "Previous page"
+msgstr "前のページ"
+
+msgid "Privacy"
+msgstr "プライバシー"
+
+msgid "Privacy policy"
+msgstr "プライバシーポリシー"
+
+msgid "Private"
+msgstr "非公開"
+
+msgid "Private video and stream archive console."
+msgstr "プライベートな動画・配信アーカイブコンソール。"
+
+msgid "Processing video (this may take a while)..."
+msgstr "動画を処理中（時間がかかる場合があります）..."
+
+msgid "Processing video..."
+msgstr "動画を処理中..."
+
+msgid "Profile picture reset to default."
+msgstr "プロフィール画像をデフォルトに戻しました。"
+
+msgid "Profile picture uploaded successfully."
+msgstr "プロフィール画像をアップロードしました。"
+
+msgid "Progress"
+msgstr "進捗"
+
+msgid "Provider"
+msgstr "プロバイダー"
+
+#, python-format
+msgid "Provider #%(id)s created. Please test the connection."
+msgstr "プロバイダー #%(id)s を作成しました。接続をテストしてください。"
+
+#, python-format
+msgid "Provider #%(id)s removed. Cloud files are kept."
+msgstr "プロバイダー #%(id)s を削除しました。クラウドのファイルは保持されます。"
+
+#, python-format
+msgid "Provider #%(id)s saved."
+msgstr "プロバイダー #%(id)s を保存しました。"
+
+msgid "Provider default"
+msgstr "プロバイダーのデフォルト"
+
+msgid "Provider not found."
+msgstr "プロバイダーが見つかりません。"
+
+#, python-format
+msgid "Provider reported: %(error)s"
+msgstr "プロバイダーからの報告: %(error)s"
+
+msgid "Provider type"
+msgstr "プロバイダーの種類"
+
+msgid "Providers"
+msgstr "プロバイダー"
+
+msgid "Public link created:"
+msgstr "公開リンクを作成しました:"
+
+msgid "Purpose of this user group..."
+msgstr "このユーザーグループの目的..."
+
+msgid "Quality"
+msgstr "画質"
+
+msgid "Queue"
+msgstr "キュー"
+
+msgid "Queue not readable"
+msgstr "キューを読み取れません"
+
+msgid "Quiet"
+msgstr "静か"
+
+msgid "RECORDING"
+msgstr "録画中"
+
+msgid "RECORDING ACTIVE"
+msgstr "録画中"
+
+msgid "Ready"
+msgstr "準備完了"
+
+msgid "Real-time stream error — reconnecting…"
+msgstr "リアルタイム配信エラー — 再接続中…"
+
+#, python-format
+msgid "Really delete backup %(name)s?"
+msgstr "バックアップ %(name)s を本当に削除しますか？"
+
+msgid "Really delete file?"
+msgstr "ファイルを本当に削除しますか？"
+
+msgid "Really delete the cloud file? A local copy is kept."
+msgstr "クラウドのファイルを本当に削除しますか？ローカルのコピーは保持されます。"
+
+msgid "Really delete the local file? The cloud copy is kept."
+msgstr "ローカルのファイルを本当に削除しますか？クラウドのコピーは保持されます。"
+
+msgid "Really delete?"
+msgstr "本当に削除しますか？"
+
+#, python-format
+msgid "Really remove channel %(name)s?"
+msgstr "チャンネル %(name)s を本当に削除しますか？"
+
+msgid "Really remove the provider? The cloud files are kept."
+msgstr "プロバイダーを本当に削除しますか？クラウドのファイルは保持されます。"
+
+msgid "Really rename the file?"
+msgstr "ファイル名を本当に変更しますか？"
+
+msgid "Really reset the custom banner and switch to the default?"
+msgstr "カスタムバナーをリセットしてデフォルトに戻しますか？"
+
+msgid "Really reset the custom profile picture and switch to the default?"
+msgstr "カスタムプロフィール画像をリセットしてデフォルトに戻しますか？"
+
+msgid "Really revoke this share?"
+msgstr "この共有を本当に取り消しますか？"
+
+msgid "Really stop the recording?"
+msgstr "録画を本当に停止しますか？"
+
+msgid "Recent task errors"
+msgstr "最近のタスクエラー"
+
+msgid "Recently watched"
+msgstr "最近視聴した配信"
+
+msgid "Recommended. Prevents data loss from incomplete uploads."
+msgstr "推奨。不完全なアップロードによるデータ損失を防ぎます。"
+
+msgid "Reconnecting…"
+msgstr "再接続中…"
+
+msgid "Recorded"
+msgstr "録画日"
+
+msgid "Recorder & worker restarted."
+msgstr "レコーダーとワーカーを再起動しました。"
+
+msgid "Recording"
+msgstr "録画"
+
+msgid "Recording + live stream & Discord notification"
+msgstr "録画 + ライブ配信と Discord 通知"
+
+msgid "Recording disabled (live & Discord only)"
+msgstr "録画無効（ライブと Discord のみ）"
+
+#, python-format
+msgid "Recording disabled for source %(name)s."
+msgstr "ソース %(name)s の録画を無効にしました。"
+
+msgid "Recording enabled (full mode)"
+msgstr "録画有効（フルモード）"
+
+#, python-format
+msgid "Recording enabled for source %(name)s."
+msgstr "ソース %(name)s の録画を有効にしました。"
+
+msgid "Recording health"
+msgstr "録画の状態"
+
+msgid "Recording in progress"
+msgstr "録画中"
+
+msgid "Recording not available."
+msgstr "録画は利用できません。"
+
+#, python-format
+msgid "Recording stopped: %(count)s source(s) for %(archive)s disabled. The process will be terminated at the next check."
+msgstr "録画を停止しました: %(archive)s の %(count)s 件のソースを無効にしました。プロセスは次回のチェック時に終了します。"
+
+#, python-format
+msgid "Recordings (%(count)s)"
+msgstr "録画（%(count)s）"
+
+#, python-format
+msgid "Redeemed “%(title)s”"
+msgstr "「%(title)s」を引き換えました"
+
+#, python-format
+msgid "Registration via Discord · accept there with %(keyword)s."
+msgstr "Discord 経由で登録 · そこで %(keyword)s を使って承認します。"
+
+msgid "Related recordings"
+msgstr "関連する録画"
+
+msgid "Remove"
+msgstr "削除"
+
+msgid "Remove channel"
+msgstr "チャンネルを削除"
+
+#, python-format
+msgid "Remove channel %(name)s?"
+msgstr "チャンネル %(name)s を削除しますか？"
+
+msgid "Remove only the database entry?"
+msgstr "データベースのエントリのみを削除しますか？"
+
+#, python-format
+msgid "Remux job could not be started: %(error)s"
+msgstr "リマックスジョブを開始できませんでした: %(error)s"
+
+msgid "Remux job started. Progress is shown in the admin panel."
+msgstr "リマックスジョブを開始しました。進捗は管理パネルに表示されます。"
+
+msgid "Rename file"
+msgstr "ファイル名を変更"
+
+msgid "Renamed."
+msgstr "名前を変更しました。"
+
+msgid "Repair in progress"
+msgstr "修復中"
+
+msgid "Repair seeking"
+msgstr "シークを修復"
+
+msgid "Repeat new password"
+msgstr "新しいパスワード（確認）"
+
+msgid "Repeat password"
+msgstr "パスワード（確認）"
+
+#, python-format
+msgid "Request '%(username)s' denied and deleted."
+msgstr "「%(username)s」のリクエストを拒否して削除しました。"
+
+msgid "Restart failed."
+msgstr "再起動に失敗しました。"
+
+msgid "Restart services"
+msgstr "サービスを再起動"
+
+msgid "Restore"
+msgstr "復元"
+
+msgid "Restore default"
+msgstr "デフォルトに戻す"
+
+#, python-format
+msgid "Restore queued (task #%(task)s)."
+msgstr "復元をキューに追加しました（タスク #%(task)s）。"
+
+msgid "Resume playback"
+msgstr "再生を再開"
+
+msgid "Revoke"
+msgstr "取り消す"
+
+#, python-format
+msgid "Role access '%(slug)s' added."
+msgstr "ロールアクセス「%(slug)s」を追加しました。"
+
+#, python-format
+msgid "Role access '%(slug)s' removed."
+msgstr "ロールアクセス「%(slug)s」を削除しました。"
+
+msgid "Role access grant not found."
+msgstr "ロールアクセスの付与が見つかりません。"
+
+msgid "Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member."
+msgstr "ロールモデル: フルアクセス（<code>admin</code>）、アーカイブ閲覧者（<code>viewer</code>）、ライブのみ（<code>live_only</code>）&amp; Discord メンバー。"
+
+msgid "Rules"
+msgstr "ルール"
+
+msgid "Rules accepted. Continuing to the dashboard…"
+msgstr "ルールに同意しました。ダッシュボードへ移動します…"
+
+msgid "Rules text"
+msgstr "ルール本文"
+
+msgid "Running"
+msgstr "実行中"
+
+msgid "Running…"
+msgstr "実行中…"
+
+msgid "S3-compatible"
+msgstr "S3 互換"
+
+msgid "START"
+msgstr "開始"
+
+msgid "Safety migration:"
+msgstr "安全移行:"
+
+msgid "Same session"
+msgstr "同じセッション"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Save area maintenance"
+msgstr "エリアのメンテナンスを保存"
+
+msgid "Save changes"
+msgstr "変更を保存"
+
+msgid "Save clip"
+msgstr "クリップを保存"
+
+msgid "Save clip settings"
+msgstr "クリップ設定を保存"
+
+msgid "Save group"
+msgstr "グループを保存"
+
+msgid "Save password"
+msgstr "パスワードを保存"
+
+msgid "Save settings"
+msgstr "設定を保存"
+
+msgid "Saved"
+msgstr "保存済み"
+
+msgid "Saved automatically when connecting."
+msgstr "連携時に自動的に保存されます。"
+
+msgid "Saved automatically when connecting. Alternatively, paste it manually."
+msgstr "連携時に自動的に保存されます。手動で貼り付けることもできます。"
+
+msgid "Saved – leave empty to keep"
+msgstr "保存済み – 維持する場合は空欄のまま"
+
+msgid "Saved."
+msgstr "保存しました。"
+
+msgid "Saving transcript failed"
+msgstr "文字起こしの保存に失敗しました"
+
+#, python-format
+msgid "Saving transcript failed: %(error)s"
+msgstr "文字起こしの保存に失敗しました: %(error)s"
+
+msgid "Saving transcript..."
+msgstr "文字起こしを保存中..."
+
+msgid "Saving..."
+msgstr "保存中..."
+
+msgid "Saving…"
+msgstr "保存中…"
+
+msgid "Search"
+msgstr "検索"
+
+msgid "Search VODs, streamers or games..."
+msgstr "VOD、配信者、ゲームを検索..."
+
+msgid "Search category"
+msgstr "カテゴリを検索"
+
+msgid "Search category / game…"
+msgstr "カテゴリ／ゲームを検索…"
+
+msgid "Search failed."
+msgstr "検索に失敗しました。"
+
+msgid "Search recordings (title, date, game)..."
+msgstr "録画を検索（タイトル、日付、ゲーム）..."
+
+msgid "Search results"
+msgstr "検索結果"
+
+msgid "Search streamer or channel…"
+msgstr "配信者またはチャンネルを検索…"
+
+msgid "Search streamers"
+msgstr "配信者を検索"
+
+msgid "Search term (e.g. player name, chat message, date)..."
+msgstr "検索語（例: プレイヤー名、チャットメッセージ、日付）..."
+
+msgid "Search user, email or group..."
+msgstr "ユーザー、メール、グループを検索..."
+
+msgid "Search..."
+msgstr "検索..."
+
+msgid "Searching for stream..."
+msgstr "配信を検索中..."
+
+msgid "Searching…"
+msgstr "検索中…"
+
+msgid "Seconds after trigger"
+msgstr "トリガー後の秒数"
+
+msgid "Seconds before trigger"
+msgstr "トリガー前の秒数"
+
+msgid "Security & shares"
+msgstr "セキュリティと共有"
+
+#, python-format
+msgid "Seek repair is already running (%(status)s)."
+msgstr "シークの修復はすでに実行中です（%(status)s）。"
+
+msgid "Seek repair queued."
+msgstr "シークの修復をキューに追加しました。"
+
+msgid "Segment creation failed"
+msgstr "セグメントの作成に失敗しました"
+
+msgid "Select folders to unlock:"
+msgstr "解放するフォルダーを選択:"
+
+msgid "Self-hosted"
+msgstr "セルフホスト"
+
+msgid "Send Discord message"
+msgstr "Discord メッセージを送信"
+
+msgid "September"
+msgstr "9月"
+
+msgid "Server is loading the stream (Turbo, without viewer list)…"
+msgstr "サーバーが配信を読み込み中（Turbo、視聴者リストなし）…"
+
+msgid "Server is loading the stream (without Twitch account)…"
+msgstr "サーバーが配信を読み込み中（Twitch アカウントなし）…"
+
+msgid "Server is loading the stream…"
+msgstr "サーバーが配信を読み込み中…"
+
+msgid "Server-side encryption"
+msgstr "サーバー側暗号化"
+
+msgid "Set"
+msgstr "設定"
+
+#, python-format
+msgid "Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved."
+msgstr "認証情報を保存する前に、%(key)s（16 文字以上）または %(alt_key)s を設定してください。"
+
+msgid "Set end to current position"
+msgstr "終了を現在位置に設定"
+
+msgid "Set start to current position"
+msgstr "開始を現在位置に設定"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Settings saved."
+msgstr "設定を保存しました。"
+
+msgid "Share"
+msgstr "共有"
+
+msgid "Share not found."
+msgstr "共有が見つかりません。"
+
+msgid "Share of period"
+msgstr "期間内の割合"
+
+msgid "Share revoked."
+msgstr "共有を取り消しました。"
+
+msgid "Sharing failed"
+msgstr "共有に失敗しました"
+
+msgid "Sharing failed:"
+msgstr "共有に失敗しました:"
+
+msgid "Short rules / Discord house rules. Part of the terms; accepted together with the consent below."
+msgstr "簡易ルール／Discord ハウスルール。利用規約の一部であり、下の同意とあわせて承認されます。"
+
+msgid "Shown in the navigation, sidebar and on streamer cards."
+msgstr "ナビゲーション、サイドバー、配信者カードに表示されます。"
+
+msgid "Sign in"
+msgstr "サインイン"
+
+msgid "Size"
+msgstr "サイズ"
+
+msgid "Sound"
+msgstr "サウンド"
+
+msgid "Sound on"
+msgstr "サウンドオン"
+
+msgid "Source"
+msgstr "ソース"
+
+#, python-format
+msgid "Source %(name)s not found."
+msgstr "ソース %(name)s が見つかりません。"
+
+msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "古いロックを削除し、文字起こしをワーカーのキューに追加しました。完了後、次回のページ読み込み時に結果が表示されます。"
+
+msgid "Start"
+msgstr "開始"
+
+msgid "Start HLS"
+msgstr "HLS を開始"
+
+msgid "Start local cleanup"
+msgstr "ローカルのクリーンアップを開始"
+
+msgid "Start playback"
+msgstr "再生を開始"
+
+msgid "Start playback or move along the timeline to sync chat messages."
+msgstr "再生を開始するか、タイムラインを移動すると、チャットメッセージが同期されます。"
+
+msgid "Start sync"
+msgstr "同期を開始"
+
+msgid "Start time must be >= 0."
+msgstr "開始時間は 0 以上にしてください。"
+
+msgid "Starting"
+msgstr "開始中"
+
+msgid "Starting download..."
+msgstr "ダウンロードを開始中..."
+
+msgid "Status"
+msgstr "ステータス"
+
+msgid "Status, progress and actions of the most recently synced files. “Forget” only removes the database entry."
+msgstr "最近同期したファイルのステータス、進捗、操作。「削除」はデータベースのエントリのみを削除します。"
+
+msgid "Status:"
+msgstr "ステータス:"
+
+msgid "Stop"
+msgstr "停止"
+
+msgid "Stop preview"
+msgstr "プレビューを停止"
+
+msgid "Stop recording"
+msgstr "録画を停止"
+
+msgid "Storage"
+msgstr "ストレージ"
+
+msgid "Storage (free):"
+msgstr "ストレージ（空き）:"
+
+msgid "Storage (total):"
+msgstr "ストレージ（合計）:"
+
+#, python-format
+msgid "Storage critical: %(pct)s%% used, only %(free)s free."
+msgstr "ストレージが危険な状態です: %(pct)s%% 使用中、空きは %(free)s のみです。"
+
+msgid "Storage provider not found."
+msgstr "ストレージプロバイダーが見つかりません。"
+
+msgid "Storage providers"
+msgstr "ストレージプロバイダー"
+
+#, python-format
+msgid "Storage: <strong>%(pct)s%%</strong>"
+msgstr "ストレージ: <strong>%(pct)s%%</strong>"
+
+msgid "Stream & channel access"
+msgstr "配信とチャンネルへのアクセス"
+
+msgid "Stream & folder access"
+msgstr "配信とフォルダーへのアクセス"
+
+msgid "Stream and VOD archive"
+msgstr "配信と VOD アーカイブ"
+
+msgid "Stream channel"
+msgstr "配信チャンネル"
+
+msgid "Stream connection lost — reconnecting…"
+msgstr "配信の接続が切れました — 再接続中…"
+
+msgid "Stream is not starting — check the live status or reload the page."
+msgstr "配信が開始されません — ライブの状態を確認するか、ページを再読み込みしてください。"
+
+msgid "Stream media error — reconnecting…"
+msgstr "配信メディアエラー — 再接続中…"
+
+msgid "Stream stopped — reconnecting…"
+msgstr "配信が停止しました — 再接続中…"
+
+msgid "StreamVault is temporarily unavailable due to maintenance. Please be patient — the site will be back soon."
+msgstr "StreamVault はメンテナンスのため一時的に利用できません。しばらくお待ちください。まもなく再開します。"
+
+msgid "StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later."
+msgstr "StreamVault は作業中のため一時的に利用できません。しばらくお待ちください。後ほど再び利用できるようになります。"
+
+msgid "Streamer"
+msgstr "配信者"
+
+msgid "Streamer & source management"
+msgstr "配信者とソースの管理"
+
+msgid "Streamer (optional)"
+msgstr "配信者（任意）"
+
+msgid "Streamer / folder missing."
+msgstr "配信者／フォルダーが指定されていません。"
+
+msgid "Streamer is currently offline."
+msgstr "配信者は現在オフラインです。"
+
+msgid "Streamer management"
+msgstr "配信者の管理"
+
+msgid "Streamer profile"
+msgstr "配信者プロフィール"
+
+msgid "Streamers, VODs & chat histories"
+msgstr "配信者、VOD、チャット履歴"
+
+msgid "Subfolder"
+msgstr "サブフォルダー"
+
+msgid "Success"
+msgstr "成功"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)"
+msgstr "対応形式: JPG、PNG、WEBP、GIF（推奨: 1920x360 または 1200x300）"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)"
+msgstr "対応形式: JPG、PNG、WEBP、GIF（正方形推奨、例: 300x300）"
+
+msgid "Switch to live only"
+msgstr "ライブのみに切り替え"
+
+msgid "Synced"
+msgstr "同期済み"
+
+msgid "System & recorder"
+msgstr "システムとレコーダー"
+
+msgid "System backup created successfully."
+msgstr "システムバックアップを作成しました。"
+
+msgid "System backups"
+msgstr "システムバックアップ"
+
+msgid "System group"
+msgstr "システムグループ"
+
+msgid "System group 'Viewer' was not found. Deletion cancelled."
+msgstr "システムグループ「視聴者」が見つかりません。削除をキャンセルしました。"
+
+#, python-format
+msgid "System groups (%(name)s) cannot be deleted."
+msgstr "システムグループ（%(name)s）は削除できません。"
+
+msgid "System quick status"
+msgstr "システムのクイックステータス"
+
+msgid "System settings"
+msgstr "システム設定"
+
+msgid "System status"
+msgstr "システムステータス"
+
+msgid "System telemetry"
+msgstr "システムテレメトリ"
+
+#, python-format
+msgid "Target already exists: %(path)s"
+msgstr "保存先はすでに存在します: %(path)s"
+
+msgid "Target archive folder (optional)"
+msgstr "保存先のアーカイブフォルダー（任意）"
+
+msgid "Target folder ID (optional)"
+msgstr "保存先フォルダー ID（任意）"
+
+msgid "Target name already exists locally."
+msgstr "変更後の名前はローカルにすでに存在します。"
+
+msgid "Task queue"
+msgstr "タスクキュー"
+
+msgid "Terms"
+msgstr "利用規約"
+
+msgid "Terms & rules"
+msgstr "利用規約とルール"
+
+#, python-format
+msgid "Terms (version %(terms)s) including house rules (%(rules)s) not yet accepted — approval only after consent on the website or on re-registration."
+msgstr "利用規約（バージョン %(terms)s）とハウスルール（%(rules)s）にまだ同意していません — ウェブサイトまたは再登録時に同意した後にのみ承認されます。"
+
+msgid "Terms accepted. Continuing to the dashboard…"
+msgstr "利用規約に同意しました。ダッシュボードへ移動します…"
+
+msgid "Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms."
+msgstr "招待制コミュニティの利用規約とハウスルールです。権利者やプラットフォームに対する利用権を付与するものではありません。"
+
+msgid "Terms version outdated or not accepted. Acceptance required at /agb."
+msgstr "利用規約のバージョンが古いか、同意されていません。/agb で同意が必要です。"
+
+msgid "Terms version outdated — reload the page and accept again."
+msgstr "利用規約のバージョンが古くなっています — ページを再読み込みして再度同意してください。"
+
+msgid "Test"
+msgstr "テスト"
+
+msgid "Thanks for your understanding. Authorized users can sign in via the login page."
+msgstr "ご理解いただきありがとうございます。権限のあるユーザーはログインページからサインインできます。"
+
+msgid "The 'can_manage_users' permission cannot be removed from the Administrator group."
+msgstr "「can_manage_users」権限は管理者グループから削除できません。"
+
+msgid "The OAuth link has expired. Please start again."
+msgstr "OAuth リンクの有効期限が切れました。最初からやり直してください。"
+
+msgid "The VOD player and archive are currently under maintenance."
+msgstr "VOD プレーヤーとアーカイブは現在メンテナンス中です。"
+
+msgid "The current password is incorrect."
+msgstr "現在のパスワードが正しくありません。"
+
+msgid "The default system admin cannot be deleted."
+msgstr "デフォルトのシステム管理者は削除できません。"
+
+msgid "The folder cannot be emptied while a recording is being written."
+msgstr "録画の書き込み中はフォルダーを空にできません。"
+
+msgid "The live stream area is currently under maintenance."
+msgstr "ライブ配信エリアは現在メンテナンス中です。"
+
+msgid "The local file has already been removed. Please restore it first."
+msgstr "ローカルファイルはすでに削除されています。先に復元してください。"
+
+msgid "The mobile version of StreamVault is currently under maintenance. Please use the desktop version."
+msgstr "StreamVault のモバイル版は現在メンテナンス中です。デスクトップ版をご利用ください。"
+
+msgid "The name of system groups cannot be changed."
+msgstr "システムグループの名前は変更できません。"
+
+msgid "The new password must be at least 8 characters long."
+msgstr "新しいパスワードは 8 文字以上にしてください。"
+
+msgid "The new password must differ from the current password."
+msgstr "新しいパスワードは現在のパスワードと異なるものにしてください。"
+
+msgid "The passwords do not match."
+msgstr "パスワードが一致しません。"
+
+msgid "The provider did not return valid OAuth data."
+msgstr "プロバイダーから有効な OAuth データが返されませんでした。"
+
+msgid "The provider name must be at most 80 characters long."
+msgstr "プロバイダー名は 80 文字以内にしてください。"
+
+msgid "The provider type cannot be changed while archive objects are assigned. Create a new provider instead."
+msgstr "アーカイブオブジェクトが割り当てられている間は、プロバイダーの種類を変更できません。代わりに新しいプロバイダーを作成してください。"
+
+msgid "The recorder worker performs the sync. Unchanged files that were already uploaded are skipped."
+msgstr "同期はレコーダーのワーカーが実行します。アップロード済みで変更のないファイルはスキップされます。"
+
+msgid "The remote path must not be empty."
+msgstr "リモートパスを空にすることはできません。"
+
+msgid "The selected default provider does not exist."
+msgstr "選択したデフォルトのプロバイダーは存在しません。"
+
+msgid "The selected default provider is disabled. Enable it first or choose another provider."
+msgstr "選択したデフォルトのプロバイダーは無効です。先に有効にするか、別のプロバイダーを選択してください。"
+
+msgid "The selected group does not exist."
+msgstr "選択したグループは存在しません。"
+
+msgid "The system administrator's password can only be changed via environment variables."
+msgstr "システム管理者のパスワードは環境変数でのみ変更できます。"
+
+msgid "The video file could not be loaded or is still being transcoded."
+msgstr "動画ファイルを読み込めないか、まだトランスコード中です。"
+
+msgid "This admin user is protected and cannot be deleted."
+msgstr "この管理者ユーザーは保護されているため削除できません。"
+
+msgid "This admin user is protected."
+msgstr "この管理者ユーザーは保護されています。"
+
+msgid "This channel is not live right now."
+msgstr "このチャンネルは現在ライブ配信していません。"
+
+msgid "This file type is not allowed for security reasons."
+msgstr "セキュリティ上の理由により、このファイル形式は許可されていません。"
+
+msgid "Time"
+msgstr "時刻"
+
+msgid "Time (UTC)"
+msgstr "時刻（UTC）"
+
+msgid "Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer."
+msgstr "ヒント: アーカイブフォルダーを共有すると、同じ配信者の Twitch と YouTube の配信をまとめられます。"
+
+msgid "Title & description"
+msgstr "タイトルと説明"
+
+msgid "Title & info"
+msgstr "タイトルと情報"
+
+msgid "Title (optional)"
+msgstr "タイトル（任意）"
+
+msgid "Title as on YouTube"
+msgstr "YouTube と同じタイトル"
+
+#, python-format
+msgid "Today, %(time)s"
+msgstr "今日 %(time)s"
+
+msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
+msgstr "現在、再生中の VOD が多すぎます。ライブには影響しません。数分後に再度お試しください。誰かがプレーヤーを閉じるとスロットが空きます。"
+
+msgid "Too many attempts. IP temporarily blocked. Please try again later."
+msgstr "試行回数が多すぎます。IP が一時的にブロックされました。しばらくしてから再度お試しください。"
+
+msgid "Top streams are currently unavailable. Use monitored channels or the search."
+msgstr "トップ配信は現在利用できません。監視中のチャンネルまたは検索をご利用ください。"
+
+msgid "Total in period"
+msgstr "期間内の合計"
+
+msgid "Total recordings"
+msgstr "録画の合計"
+
+msgid "Total runtime"
+msgstr "合計再生時間"
+
+#, python-format
+msgid "Total: %(count)s registered accounts"
+msgstr "合計: %(count)s 件の登録アカウント"
+
+#, python-format
+msgid "Total: %(count)s user groups"
+msgstr "合計: %(count)s 件のユーザーグループ"
+
+msgid "Traffic"
+msgstr "トラフィック"
+
+msgid "Traffic overview"
+msgstr "トラフィック概要"
+
+#, python-format
+msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
+msgstr "セグメント %(index)s/%(total)s を文字起こし中（%(percent)s%%）"
+
+msgid "Transcript"
+msgstr "文字起こし"
+
+msgid "Transcript already exists"
+msgstr "文字起こしはすでに存在します"
+
+msgid "Transcript already exists."
+msgstr "文字起こしはすでに存在します。"
+
+msgid "Transcript available"
+msgstr "文字起こしあり"
+
+msgid "Transcript created"
+msgstr "文字起こしを作成しました"
+
+msgid "Transcript finished"
+msgstr "文字起こしが完了しました"
+
+msgid "Transcript missing despite finished status"
+msgstr "完了ステータスなのに文字起こしがありません"
+
+msgid "Transcription cancelled"
+msgstr "文字起こしをキャンセルしました"
+
+msgid "Transcription cancelled."
+msgstr "文字起こしをキャンセルしました。"
+
+msgid "Transcription failed"
+msgstr "文字起こしに失敗しました"
+
+#, python-format
+msgid "Transcription failed: %(error)s"
+msgstr "文字起こしに失敗しました: %(error)s"
+
+msgid "Transcription is already running"
+msgstr "文字起こしはすでに実行中です"
+
+msgid "Transcription is already running. Please reload later."
+msgstr "文字起こしはすでに実行中です。後で再読み込みしてください。"
+
+msgid "Transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "文字起こしをワーカーのキューに追加しました。完了後、次回のページ読み込み時に結果が表示されます。"
+
+msgid "Transcription running..."
+msgstr "文字起こしを実行中..."
+
+msgid "Transcription timed out"
+msgstr "文字起こしがタイムアウトしました"
+
+msgid "Transfer new recordings and periodic archive syncs to the cloud."
+msgstr "新しい録画と定期的なアーカイブ同期をクラウドに転送します。"
+
+msgid "Trim"
+msgstr "トリミング"
+
+msgid "Twitch / default"
+msgstr "Twitch／デフォルト"
+
+msgid "Twitch badge library synchronized."
+msgstr "Twitch のバッジライブラリを同期しました。"
+
+msgid "Twitch channel name..."
+msgstr "Twitch チャンネル名..."
+
+msgid "Twitch live chat"
+msgstr "Twitch ライブチャット"
+
+msgid "Twitch live stream"
+msgstr "Twitch ライブ配信"
+
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
+msgstr "Twitch 名（例: shroud）または YouTube の URL／@ハンドル..."
+
+msgid "Twitch or YouTube supported"
+msgstr "Twitch または YouTube に対応"
+
+msgid "Twitch profile"
+msgstr "Twitch プロフィール"
+
+msgid "Twitch profile banner"
+msgstr "Twitch プロフィールバナー"
+
+msgid "Twitch search failed."
+msgstr "Twitch の検索に失敗しました。"
+
+msgid "Twitch streams could not be loaded."
+msgstr "Twitch の配信を読み込めませんでした。"
+
+msgid "Type"
+msgstr "種類"
+
+msgid "Unchanged."
+msgstr "変更なし。"
+
+msgid "Unknown"
+msgstr "不明"
+
+msgid "Unknown error"
+msgstr "不明なエラー"
+
+#, python-format
+msgid "Unknown storage provider: %(type)s"
+msgstr "不明なストレージプロバイダー: %(type)s"
+
+msgid "Unmute"
+msgstr "ミュート解除"
+
+msgid "Updated"
+msgstr "更新日時"
+
+#, python-format
+msgid "Updated %(age)s"
+msgstr "%(age)s に更新"
+
+msgid "Upload"
+msgstr "アップロード"
+
+msgid "Upload automatically"
+msgstr "自動的にアップロード"
+
+msgid "Upload new file"
+msgstr "新しいファイルをアップロード"
+
+#, python-format
+msgid "Upload queued (task #%(task)s)."
+msgstr "アップロードをキューに追加しました（タスク #%(task)s）。"
+
+msgid "Upload videos & media"
+msgstr "動画とメディアをアップロード"
+
+msgid "Usage rules"
+msgstr "利用ルール"
+
+msgid "Used vault volume"
+msgstr "Vault の使用容量"
+
+msgid "User"
+msgstr "ユーザー"
+
+#, python-format
+msgid "User '%(username)s' already exists."
+msgstr "ユーザー「%(username)s」はすでに存在します。"
+
+#, python-format
+msgid "User '%(username)s' approved."
+msgstr "ユーザー「%(username)s」を承認しました。"
+
+#, python-format
+msgid "User '%(username)s' created successfully."
+msgstr "ユーザー「%(username)s」を作成しました。"
+
+#, python-format
+msgid "User '%(username)s' has been deleted."
+msgstr "ユーザー「%(username)s」を削除しました。"
+
+#, python-format
+msgid "User '%(username)s' not found."
+msgstr "ユーザー「%(username)s」が見つかりません。"
+
+#, python-format
+msgid "User '%(username)s' updated successfully."
+msgstr "ユーザー「%(username)s」を更新しました。"
+
+msgid "User accounts"
+msgstr "ユーザーアカウント"
+
+msgid "User created"
+msgstr "ユーザーを作成しました"
+
+msgid "User deleted"
+msgstr "ユーザーを削除しました"
+
+msgid "User deleted."
+msgstr "ユーザーを削除しました。"
+
+msgid "User group"
+msgstr "ユーザーグループ"
+
+msgid "User groups & permissions"
+msgstr "ユーザーグループと権限"
+
+msgid "User management"
+msgstr "ユーザー管理"
+
+msgid "User not found."
+msgstr "ユーザーが見つかりません。"
+
+msgid "User updated"
+msgstr "ユーザーを更新しました"
+
+msgid "User updated."
+msgstr "ユーザーを更新しました。"
+
+msgid "Username"
+msgstr "ユーザー名"
+
+#, python-format
+msgid "Username '%(username)s' is reserved."
+msgstr "ユーザー名「%(username)s」は予約されています。"
+
+msgid "Username is required."
+msgstr "ユーザー名は必須です。"
+
+msgid "Username must be 3-32 alphanumeric characters (hyphens and underscores allowed)."
+msgstr "ユーザー名は 3〜32 文字の英数字にしてください（ハイフンとアンダースコアを使用可）。"
+
+msgid "Users & groups"
+msgstr "ユーザーとグループ"
+
+#, python-format
+msgid "Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = presence, bars = login/pages/video/chat per day."
+msgstr "ユーザー A–Z · 過去 %(days)s 日間（%(since)s – %(until)s）。ヒートマップ = 在席状況、バー = 日別のログイン／ページ／動画／チャット。"
+
+msgid "VOD access grants are currently only available for members."
+msgstr "VOD アクセスの付与は現在メンバーのみ利用できます。"
+
+msgid "VOD archive"
+msgstr "VOD アーカイブ"
+
+msgid "VOD page navigation"
+msgstr "VOD ページナビゲーション"
+
+msgid "VOD pagination"
+msgstr "VOD ページ送り"
+
+#, python-format
+msgid "VOD recordings (%(count)s)"
+msgstr "VOD 録画（%(count)s）"
+
+msgid "VOD_SECRET_KEY must be set to a strong value before credentials can be stored."
+msgstr "認証情報を保存するには、VOD_SECRET_KEY に強力な値を設定する必要があります。"
+
+msgid "VODs are recorded to disk"
+msgstr "VOD はディスクに録画されます"
+
+msgid "Verify TLS certificate"
+msgstr "TLS 証明書を検証"
+
+msgid "Verify cloud copy before deletion"
+msgstr "削除前にクラウドのコピーを検証"
+
+msgid "Version"
+msgstr "バージョン"
+
+msgid "Video"
+msgstr "動画"
+
+msgid "Video actions"
+msgstr "動画の操作"
+
+msgid "Video could not be deleted."
+msgstr "動画を削除できませんでした。"
+
+msgid "Video deleted."
+msgstr "動画を削除しました。"
+
+msgid "Video player controls"
+msgstr "動画プレーヤーのコントロール"
+
+msgid "Video upload"
+msgstr "動画のアップロード"
+
+msgid "View streams"
+msgstr "配信を視聴"
+
+msgid "View streams & live chat"
+msgstr "配信とライブチャットを視聴"
+
+msgid "Viewer"
+msgstr "視聴者"
+
+msgid "Viewers"
+msgstr "視聴者"
+
+msgid "Visibility could not be saved."
+msgstr "公開範囲を保存できませんでした。"
+
+msgid "Visibility: admins only."
+msgstr "公開範囲: 管理者のみ。"
+
+msgid "Visibility: all users."
+msgstr "公開範囲: すべてのユーザー。"
+
+msgid "Visible to:"
+msgstr "公開対象:"
+
+msgid "Volume"
+msgstr "音量"
+
+msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
+msgstr "警告: この配信者とすべての録画を完全に削除しますか？"
+
+msgid "WATCH LIVE"
+msgstr "ライブを視聴"
+
+msgid "Waiting for server stream…"
+msgstr "サーバーの配信を待機中…"
+
+msgid "Warning"
+msgstr "警告"
+
+msgid "Watch"
+msgstr "視聴"
+
+msgid "Watch latest video"
+msgstr "最新の動画を視聴"
+
+msgid "Watch now"
+msgstr "今すぐ視聴"
+
+msgid "Watch stream directly"
+msgstr "配信を直接視聴"
+
+msgid "We are working on the vault right now. Back in a moment."
+msgstr "現在 Vault の作業中です。まもなく再開します。"
+
+msgid "WebDAV base URL"
+msgstr "WebDAV ベース URL"
+
+msgid "WebDAV base URL must be a valid http(s) URL."
+msgstr "WebDAV ベース URL は有効な http(s) URL である必要があります。"
+
+msgid "WebDAV base URL must not contain a query or fragment."
+msgstr "WebDAV ベース URL にクエリやフラグメントを含めることはできません。"
+
+msgid "WebDAV base URL must not contain credentials; use the username and password fields."
+msgstr "WebDAV ベース URL に認証情報を含めないでください。ユーザー名とパスワードの欄を使用してください。"
+
+msgid "Webhook active."
+msgstr "Webhook は有効です。"
+
+msgid "Webhook not configured."
+msgstr "Webhook が設定されていません。"
+
+msgid "Welcome back. Sign in with your credentials to access StreamVault."
+msgstr "おかえりなさい。StreamVault にアクセスするには、認証情報でサインインしてください。"
+
+msgid "Work in progress"
+msgstr "作業中"
+
+msgid "Yes (recommended)"
+msgstr "はい（推奨）"
+
+#, python-format
+msgid "Yesterday, %(time)s"
+msgstr "昨日 %(time)s"
+
+msgid "You can agree now."
+msgstr "同意できるようになりました。"
+
+msgid "You cannot deactivate your own administrator account."
+msgstr "自分の管理者アカウントを無効にすることはできません。"
+
+msgid "You cannot delete your own account."
+msgstr "自分のアカウントを削除することはできません。"
+
+msgid "You cannot move yourself into a group without user management permissions."
+msgstr "ユーザー管理権限のないグループに自分を移動することはできません。"
+
+#, python-format
+msgid "You have accepted version %(version)s."
+msgstr "バージョン %(version)s に同意済みです。"
+
+msgid "Your IP has been temporarily blocked. Please try again later."
+msgstr "お使いの IP は一時的にブロックされています。しばらくしてから再度お試しください。"
+
+msgid "Your browser does not support the video tag."
+msgstr "お使いのブラウザーは video タグに対応していません。"
+
+msgid "Zoom in"
+msgstr "ズームイン"
+
+msgid "Zoom out"
+msgstr "ズームアウト"
+
+msgid "according to the object database"
+msgstr "オブジェクトデータベースによる"
+
+msgid "active"
+msgstr "有効"
+
+msgid "available"
+msgstr "あり"
+
+msgid "being created"
+msgstr "作成中"
+
+msgid "cancelled"
+msgstr "キャンセル済み"
+
+msgid "disabled"
+msgstr "無効"
+
+msgid "done – please reload the page"
+msgstr "完了 – ページを再読み込みしてください"
+
+msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
+msgstr "drive.file = StreamVault が作成したファイルのみ（推奨）。既存のフォルダーを使う場合は、必要に応じて https://www.googleapis.com/auth/drive を使用してください。"
+
+msgid "e.g. Google Drive archive"
+msgstr "例: Google Drive アーカイブ"
+
+msgid "e.g. VIP archive"
+msgstr "例: VIP アーカイブ"
+
+msgid "e.g. alice, bob"
+msgstr "例: alice, bob"
+
+msgid "e.g. john_doe"
+msgstr "例: john_doe"
+
+msgid "e.g. montanablack88"
+msgstr "例: montanablack88"
+
+#, python-format
+msgid "effective from %(date)s"
+msgstr "%(date)s から有効"
+
+msgid "just now"
+msgstr "たった今"
+
+#, python-format
+msgid "last seen %(when)s"
+msgstr "最終確認 %(when)s"
+
+msgid "logged in"
+msgstr "ログイン中"
+
+msgid "max. 300s"
+msgstr "最大 300 秒"
+
+msgid "never"
+msgstr "なし"
+
+msgid "not created"
+msgstr "未作成"
+
+#, python-format
+msgid "today %(time)s"
+msgstr "今日 %(time)s"
+
+msgid "unknown"
+msgstr "不明"
+
+msgid "user@example.com"
+msgstr "user@example.com"
+
+msgid "users"
+msgstr "ユーザー"
+
+msgid "viewers"
+msgstr "視聴者"
+
+msgid "yesterday"
+msgstr "昨日"
+
+msgid "≥30 days quiet"
+msgstr "≥30 日間アクティビティなし"
+
+msgid "✓ CLIP SAVED"
+msgstr "✓ クリップを保存しました"
+
+msgid "✕ CLIP FAILED"
+msgstr "✕ クリップに失敗しました"
+

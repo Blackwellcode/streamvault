@@ -1,0 +1,3412 @@
+# Chinese (Simplified) translations for StreamVault.
+# Copyright (C) 2026 StreamVault contributors
+# This file is distributed under the same license as the StreamVault
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamVault VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"PO-Revision-Date: 2026-11-03 19:31+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_Hans\n"
+"Language-Team: zh_Hans <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(channel)s added (%(mode)s)."
+msgstr "已添加 %(channel)s（%(mode)s）。"
+
+#, python-format
+msgid "%(channel)s added as a YouTube source (%(mode)s)."
+msgstr "已将 %(channel)s 添加为 YouTube 来源（%(mode)s）。"
+
+#, python-format
+msgid "%(channel)s mode updated to: %(mode)s."
+msgstr "%(channel)s 的模式已更新为：%(mode)s。"
+
+#, python-format
+msgid "%(count)s VODs"
+msgstr "%(count)s 个 VOD"
+
+#, python-format
+msgid "%(count)s VODs in quick access"
+msgstr "快速访问中有 %(count)s 个 VOD"
+
+#, python-format
+msgid "%(count)s active"
+msgstr "%(count)s 个活跃"
+
+#, python-format
+msgid "%(count)s clips"
+msgstr "%(count)s 个剪辑"
+
+#, python-format
+msgid "%(count)s clips archived"
+msgstr "已存档 %(count)s 个剪辑"
+
+#, python-format
+msgid "%(count)s clips in total"
+msgstr "共 %(count)s 个剪辑"
+
+#, python-format
+msgid "%(count)s in the cloud"
+msgstr "云端 %(count)s 个"
+
+#, python-format
+msgid "%(count)s live"
+msgstr "%(count)s 个直播中"
+
+#, python-format
+msgid "%(count)s recordings"
+msgstr "%(count)s 个录制"
+
+#, python-format
+msgid "%(count)s recordings in total"
+msgstr "共 %(count)s 个录制"
+
+#, python-format
+msgid "%(count)s viewers"
+msgstr "%(count)s 名观众"
+
+#, python-format
+msgid "%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)"
+msgstr "%(day)s：%(total)s（登录 %(logins)s，页面 %(pages)s，视频 %(media)s，聊天 %(chats)s）"
+
+#, python-format
+msgid "%(day)s: no activity"
+msgstr "%(day)s：无活动"
+
+#, python-format
+msgid "%(days)s days ago"
+msgstr "%(days)s 天前"
+
+#, python-format
+msgid "%(field)s is missing."
+msgstr "缺少 %(field)s。"
+
+#, python-format
+msgid "%(minutes)s min ago"
+msgstr "%(minutes)s 分钟前"
+
+#, python-format
+msgid "%(month)s %(day)s, %(time)s"
+msgstr "%(month)s%(day)s日 %(time)s"
+
+#, python-format
+msgid "%(n)s new VODs available"
+msgstr "有 %(n)s 个新 VOD"
+
+#, python-format
+msgid "%(name)s removed."
+msgstr "已移除 %(name)s。"
+
+#, python-format
+msgid "%(num)d attempt"
+msgid_plural "%(num)d attempts"
+msgstr[0] "%(num)d 次尝试"
+
+#, python-format
+msgid "%(num)d channel"
+msgid_plural "%(num)d channels"
+msgstr[0] "%(num)d 个频道"
+
+#, python-format
+msgid "%(num)d entry"
+msgid_plural "%(num)d entries"
+msgstr[0] "%(num)d 个条目"
+
+#, python-format
+msgid "%(num)d folder allowed"
+msgid_plural "%(num)d folders allowed"
+msgstr[0] "允许 %(num)d 个文件夹"
+
+#, python-format
+msgid "%(num)d link"
+msgid_plural "%(num)d links"
+msgstr[0] "%(num)d 个链接"
+
+#, python-format
+msgid "%(num)d source"
+msgid_plural "%(num)d sources"
+msgstr[0] "%(num)d 个来源"
+
+#, python-format
+msgid "%(num)s days"
+msgstr "%(num)s 天"
+
+#, python-format
+msgid "%(provider)s does not support OAuth."
+msgstr "%(provider)s 不支持 OAuth。"
+
+msgid "0 = delete immediately once the cloud copy is verified."
+msgstr "0 = 云端副本验证后立即删除。"
+
+msgid "0 = no automatic sync. Only used when auto-upload is enabled."
+msgstr "0 = 不自动同步。仅在启用自动上传时生效。"
+
+msgid "1 new VOD available"
+msgstr "有 1 个新 VOD"
+
+#, python-format
+msgid "<strong>%(free)s</strong> free"
+msgstr "可用 <strong>%(free)s</strong>"
+
+msgid "A cleanup is already running."
+msgstr "已有清理任务正在运行。"
+
+msgid "A cloud deletion is already running."
+msgstr "已有云端删除任务正在运行。"
+
+msgid "A cloud sync is already running."
+msgstr "已有云同步任务正在运行。"
+
+#, python-format
+msgid "A group named '%(name)s' already exists."
+msgstr "名为“%(name)s”的用户组已存在。"
+
+#, python-format
+msgid "A provider named '%(name)s' already exists."
+msgstr "名为“%(name)s”的提供商已存在。"
+
+msgid "A restore is already running."
+msgstr "已有恢复任务正在运行。"
+
+msgid "A saved value is kept if the field is left empty."
+msgstr "字段留空时将保留已保存的值。"
+
+msgid "ACTIVE (locked)"
+msgstr "活跃（已锁定）"
+
+msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
+msgstr "AWS S3、Cloudflare R2、Backblaze B2、Wasabi、MinIO、Hetzner 或任何兼容 S3 的端点。"
+
+msgid "Accept rules"
+msgstr "接受规则"
+
+msgid "Accept terms"
+msgstr "接受条款"
+
+msgid "Account active (access allowed)"
+msgstr "账户已启用（允许访问）"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Activate account immediately"
+msgstr "立即激活账户"
+
+msgid "Active"
+msgstr "活跃"
+
+msgid "Active shares"
+msgstr "当前共享"
+
+msgid "Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them)."
+msgstr "已启用：新直播和文件夹将自动开放。可在下方停用单个文件夹（取消勾选）。"
+
+msgid "Active: new streams are unlocked automatically. Below you can disable / block individual folders."
+msgstr "已启用：新直播将自动开放。可在下方停用/屏蔽单个文件夹。"
+
+msgid "Actively monitored by the recorder core"
+msgstr "由录制核心主动监控"
+
+msgid "Add channel"
+msgstr "添加频道"
+
+msgid "Add new channel"
+msgstr "添加新频道"
+
+msgid "Add provider"
+msgstr "添加提供商"
+
+msgid "Addressing"
+msgstr "寻址"
+
+msgid "Admin"
+msgstr "管理员"
+
+msgid "Admin controls"
+msgstr "管理员控制"
+
+msgid "Admins only"
+msgstr "仅限管理员"
+
+msgid "All"
+msgstr "全部"
+
+#, python-format
+msgid "All (%(count)s)"
+msgstr "全部（%(count)s）"
+
+msgid "All VOD slots are in use"
+msgstr "VOD 名额已满"
+
+msgid "All VODs"
+msgstr "全部 VOD"
+
+msgid "All categories"
+msgstr "全部分类"
+
+msgid "All off"
+msgstr "全部关闭"
+
+msgid "All on"
+msgstr "全部开启"
+
+msgid "All saved settings of this account will be deleted completely."
+msgstr "此账户的所有已保存设置将被彻底删除。"
+
+msgid "All streamers are currently offline. Past broadcasts can be watched in the archive."
+msgstr "所有主播当前均未开播。可在存档中观看往期直播。"
+
+msgid "All streams (+ auto-new)"
+msgstr "全部直播（+ 自动新增）"
+
+msgid "All users"
+msgstr "所有用户"
+
+msgid "Allowlist (comma-separated):"
+msgstr "白名单（逗号分隔）："
+
+#, python-format
+msgid "Also transfers %(path)s."
+msgstr "同时传输 %(path)s。"
+
+#, python-format
+msgid "Also transfers preview images from %(path)s."
+msgstr "同时传输 %(path)s 中的预览图。"
+
+msgid "An upload for this file is already running."
+msgstr "该文件已有上传任务正在运行。"
+
+msgid "Anonymous"
+msgstr "匿名"
+
+msgid "Appendix A house rules"
+msgstr "附录 A 社区守则"
+
+#, python-format
+msgid "Appendix A — %(title)s"
+msgstr "附录 A — %(title)s"
+
+msgid "Apply"
+msgstr "应用"
+
+msgid "April"
+msgstr "四月"
+
+msgid "Archive"
+msgstr "存档"
+
+msgid "Archive / media folder"
+msgstr "存档/媒体文件夹"
+
+msgid "Archive download"
+msgstr "存档下载"
+
+msgid "Archive object not found."
+msgstr "未找到存档对象。"
+
+msgid "Archive objects"
+msgstr "存档对象"
+
+msgid "Archive overview"
+msgstr "存档概览"
+
+msgid "Archive recording (latest VOD)"
+msgstr "存档录制（最新 VOD）"
+
+#, python-format
+msgid "Archive: %(name)s"
+msgstr "存档：%(name)s"
+
+#, python-format
+msgid "Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs"
+msgstr "存档：<strong>%(channels)s</strong> 个频道 • <strong>%(vods)s</strong> 个 VOD"
+
+msgid "Archived airtime"
+msgstr "已存档直播时长"
+
+#, python-format
+msgid "Archived files (%(count)s)"
+msgstr "已存档文件（%(count)s）"
+
+msgid "Area maintenance and exempt users saved successfully."
+msgstr "区域维护和豁免用户已成功保存。"
+
+msgid "At least 8 characters"
+msgstr "至少 8 个字符"
+
+msgid "Audio extraction error"
+msgstr "音频提取出错"
+
+msgid "Audio extraction failed"
+msgstr "音频提取失败"
+
+msgid "August"
+msgstr "八月"
+
+msgid "Auto"
+msgstr "自动"
+
+msgid "Auto-sync interval (minutes)"
+msgstr "自动同步间隔（分钟）"
+
+msgid "Auto: off"
+msgstr "自动：关"
+
+msgid "Auto: on"
+msgstr "自动：开"
+
+msgid "Automatic"
+msgstr "自动"
+
+msgid "Automatic (browser)"
+msgstr "自动（浏览器）"
+
+msgid "Automatic (first active)"
+msgstr "自动（第一个启用的）"
+
+msgid "Automatic and manual backups (SQLite database, configuration and metadata)."
+msgstr "自动和手动备份（SQLite 数据库、配置和元数据）。"
+
+msgid "Automatically unlock future streams & folders"
+msgstr "自动开放今后的新直播和文件夹"
+
+msgid "Automation & retention"
+msgstr "自动化与保留"
+
+msgid "Avg. active"
+msgstr "平均活跃"
+
+msgid "Back"
+msgstr "返回"
+
+msgid "Back shortly"
+msgstr "马上回来"
+
+msgid "Back to dashboard"
+msgstr "返回仪表板"
+
+msgid "Back to overview"
+msgstr "返回概览"
+
+msgid "Back to user management"
+msgstr "返回用户管理"
+
+msgid "Back up chat logs too"
+msgstr "同时备份聊天记录"
+
+msgid "Back up thumbnails too"
+msgstr "同时备份缩略图"
+
+#, python-format
+msgid "Backup %(name)s could not be deleted."
+msgstr "无法删除备份 %(name)s。"
+
+#, python-format
+msgid "Backup %(name)s deleted."
+msgstr "已删除备份 %(name)s。"
+
+#, python-format
+msgid "Backup error: %(error)s"
+msgstr "备份出错：%(error)s"
+
+msgid "Badge library is up to date."
+msgstr "徽章库已是最新。"
+
+msgid "Badge sync is already running."
+msgstr "徽章同步已在运行。"
+
+msgid "Badge sync started."
+msgstr "徽章同步已开始。"
+
+msgid "Ban"
+msgstr "封禁"
+
+msgid "Ban IP"
+msgstr "封禁 IP"
+
+msgid "Banned"
+msgstr "已封禁"
+
+#, python-format
+msgid "Banner URL for %(streamer)s saved."
+msgstr "已保存 %(streamer)s 的横幅 URL。"
+
+#, python-format
+msgid "Banner for %(streamer)s reset to default."
+msgstr "%(streamer)s 的横幅已恢复默认。"
+
+#, python-format
+msgid "Banner image for %(streamer)s uploaded successfully."
+msgstr "%(streamer)s 的横幅图片上传成功。"
+
+msgid "Banner image uploaded successfully."
+msgstr "横幅图片上传成功。"
+
+msgid "Banner reset to default."
+msgstr "横幅已恢复默认。"
+
+msgid "Base:"
+msgstr "基础："
+
+msgid "Blocked"
+msgstr "已屏蔽"
+
+#, python-format
+msgid "Blocked (%(count)s): %(list)s"
+msgstr "已屏蔽（%(count)s）：%(list)s"
+
+msgid "Browser supports neither MPEG-TS nor live HLS."
+msgstr "浏览器既不支持 MPEG-TS 也不支持直播 HLS。"
+
+msgid "Bucket name contains invalid characters."
+msgstr "存储桶名称包含无效字符。"
+
+msgid "Buffer is still short — the clip window grows with it."
+msgstr "缓冲仍较短——剪辑时间窗口会随之增长。"
+
+msgid "Buffer:"
+msgstr "缓冲："
+
+msgid "Buffering..."
+msgstr "缓冲中..."
+
+msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
+msgstr "默认情况下不会自动上传或删除任何内容。请谨慎启用这些功能。"
+
+msgid "CHANGE"
+msgstr "更改"
+
+msgid "CHANNEL MANAGEMENT (ADMIN)"
+msgstr "频道管理（管理员）"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Category search failed."
+msgstr "分类搜索失败。"
+
+msgid "Category search is currently unavailable."
+msgstr "分类搜索暂不可用。"
+
+msgid "Change banner"
+msgstr "更换横幅"
+
+msgid "Change password"
+msgstr "修改密码"
+
+msgid "Channel"
+msgstr "频道"
+
+msgid "Channel actions"
+msgstr "频道操作"
+
+msgid "Channel archive & recording metrics"
+msgstr "频道存档与录制指标"
+
+msgid "Channel not found."
+msgstr "未找到频道。"
+
+msgid "Channels"
+msgstr "频道"
+
+msgid "Chat"
+msgstr "聊天"
+
+#, python-format
+msgid "Chat %(age)s"
+msgstr "聊天 %(age)s"
+
+msgid "Chat density & event timeline (click to jump)"
+msgstr "聊天密度与事件时间轴（点击跳转）"
+
+#, python-format
+msgid "Chat export - %(user)s"
+msgstr "聊天导出 - %(user)s"
+
+msgid "Chat filter"
+msgstr "聊天过滤"
+
+#, python-format
+msgid "Chat history: %(user)s"
+msgstr "聊天记录：%(user)s"
+
+msgid "Chat messages"
+msgstr "聊天消息"
+
+msgid "Chat replay"
+msgstr "聊天回放"
+
+msgid "Chat replay ready"
+msgstr "聊天回放已就绪"
+
+#, python-format
+msgid "Chat replay ready · first message at %(time)s"
+msgstr "聊天回放已就绪 · 第一条消息于 %(time)s"
+
+msgid "Chat tracker & global search"
+msgstr "聊天追踪与全局搜索"
+
+msgid "Check"
+msgstr "检查"
+
+msgid "Cleanup interval (minutes)"
+msgstr "清理间隔（分钟）"
+
+#, python-format
+msgid "Cleanup queued (task #%(task)s)."
+msgstr "清理已加入队列（任务 #%(task)s）。"
+
+msgid "Clear filters"
+msgstr "清除筛选"
+
+msgid "Click to change password"
+msgstr "点击修改密码"
+
+msgid "Clip"
+msgstr "剪辑"
+
+msgid "Clip URL is missing on this page."
+msgstr "此页面缺少剪辑 URL。"
+
+msgid "Clip could not be deleted."
+msgstr "无法删除剪辑。"
+
+msgid "Clip created."
+msgstr "剪辑已创建。"
+
+msgid "Clip deleted."
+msgstr "剪辑已删除。"
+
+msgid "Clip end"
+msgstr "剪辑结束"
+
+msgid "Clip failed."
+msgstr "剪辑失败。"
+
+msgid "Clip is already starting…"
+msgstr "剪辑已在启动中…"
+
+msgid "Clip is taking too long."
+msgstr "剪辑耗时过长。"
+
+msgid "Clip job not found."
+msgstr "未找到剪辑任务。"
+
+msgid "Clip saved."
+msgstr "剪辑已保存。"
+
+msgid "Clip settings"
+msgstr "剪辑设置"
+
+msgid "Clip settings saved."
+msgstr "剪辑设置已保存。"
+
+msgid "Clip start"
+msgstr "剪辑开始"
+
+msgid "Clip title"
+msgstr "剪辑标题"
+
+msgid "Clip title (optional)"
+msgstr "剪辑标题（可选）"
+
+#, python-format
+msgid "Clips (%(count)s)"
+msgstr "剪辑（%(count)s）"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Close transcript"
+msgstr "关闭转录文本"
+
+#, python-format
+msgid "Cloud deletion queued (task #%(task)s)."
+msgstr "云端删除已加入队列（任务 #%(task)s）。"
+
+msgid "Cloud only"
+msgstr "仅云端"
+
+msgid "Cloud storage"
+msgstr "云存储"
+
+#, python-format
+msgid "Cloud sync queued (task #%(task)s)."
+msgstr "云同步已加入队列（任务 #%(task)s）。"
+
+msgid "Cloud volume"
+msgstr "云端容量"
+
+msgid "Collapse chat"
+msgstr "收起聊天"
+
+msgid "Configure dynamic permissions for streams, the video archive and channel access."
+msgstr "为直播、视频存档和频道访问配置动态权限。"
+
+msgid "Configure recording channels and manage archive assignments"
+msgstr "配置录制频道并管理存档分配"
+
+msgid "Configured streamers & sources"
+msgstr "已配置的主播与来源"
+
+msgid "Connect account"
+msgstr "连接账户"
+
+msgid "Connect with Dropbox"
+msgstr "连接 Dropbox"
+
+msgid "Connect with Google"
+msgstr "连接 Google"
+
+msgid "Connect with Microsoft"
+msgstr "连接 Microsoft"
+
+msgid "Connecting…"
+msgstr "连接中…"
+
+msgid "Connection OK"
+msgstr "连接正常"
+
+msgid "Connection failed"
+msgstr "连接失败"
+
+msgid "Connection lost — reconnecting…"
+msgstr "连接中断——正在重连…"
+
+#, python-format
+msgid "Connection test queued (task #%(task)s)."
+msgstr "连接测试已加入队列（任务 #%(task)s）。"
+
+msgid "Consent required."
+msgstr "需要同意。"
+
+msgid "Control panel"
+msgstr "控制面板"
+
+msgid "Control the global maintenance mode or lock individual platform areas."
+msgstr "控制全局维护模式，或锁定特定平台区域。"
+
+msgid "Copy"
+msgstr "复制"
+
+msgid "Copy link"
+msgstr "复制链接"
+
+msgid "Could not create clip."
+msgstr "无法创建剪辑。"
+
+msgid "Could not load status."
+msgstr "无法加载状态。"
+
+msgid "Could not start clip."
+msgstr "无法开始剪辑。"
+
+msgid "Create"
+msgstr "创建"
+
+msgid "Create backup now"
+msgstr "立即创建备份"
+
+msgid "Create clip"
+msgstr "创建剪辑"
+
+msgid "Create group"
+msgstr "创建用户组"
+
+msgid "Create new user"
+msgstr "创建新用户"
+
+msgid "Create new user group"
+msgstr "创建新用户组"
+
+msgid "Create transcript"
+msgstr "创建转录文本"
+
+msgid "Create user"
+msgstr "创建用户"
+
+msgid "Created"
+msgstr "已创建"
+
+msgid "Created on"
+msgstr "创建于"
+
+msgid "Creating clip…"
+msgstr "正在创建剪辑…"
+
+msgid "Critical"
+msgstr "严重"
+
+msgid "Current password"
+msgstr "当前密码"
+
+msgid "Current preview"
+msgstr "当前预览"
+
+msgid "Current profile picture"
+msgstr "当前头像"
+
+msgid "Custom"
+msgstr "自定义"
+
+msgid "Custom banner URL saved successfully."
+msgstr "自定义横幅 URL 已保存。"
+
+msgid "Custom banner active"
+msgstr "自定义横幅已启用"
+
+#, python-format
+msgid "Custom banner for %(streamer)s removed."
+msgstr "已移除 %(streamer)s 的自定义横幅。"
+
+msgid "Custom banner removed."
+msgstr "已移除自定义横幅。"
+
+msgid "Custom file"
+msgstr "自定义文件"
+
+msgid "Custom profile picture URL saved successfully."
+msgstr "自定义头像 URL 已保存。"
+
+msgid "Custom profile picture active"
+msgstr "自定义头像已启用"
+
+msgid "Custom profile picture removed."
+msgstr "已移除自定义头像。"
+
+msgid "Customize channel banner"
+msgstr "自定义频道横幅"
+
+msgid "Customize profile picture"
+msgstr "自定义头像"
+
+#, python-format
+msgid "Daily activity %(user)s"
+msgstr "%(user)s 的每日活动"
+
+msgid "Dashboard"
+msgstr "仪表板"
+
+msgid "December"
+msgstr "十二月"
+
+msgid "Default"
+msgstr "默认"
+
+msgid "Default provider"
+msgstr "默认提供商"
+
+msgid "Default target"
+msgstr "默认目标"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Delete folder"
+msgstr "删除文件夹"
+
+msgid "Delete from cloud"
+msgstr "从云端删除"
+
+msgid "Delete group"
+msgstr "删除用户组"
+
+msgid "Delete local copies after retention"
+msgstr "保留期满后删除本地副本"
+
+msgid "Delete locally"
+msgstr "本地删除"
+
+msgid "Delete permanently"
+msgstr "永久删除"
+
+msgid "Delete user"
+msgstr "删除用户"
+
+msgid "Delete user group"
+msgstr "删除用户组"
+
+msgid "Delete videos"
+msgstr "删除视频"
+
+msgid "Delete videos & recordings"
+msgstr "删除视频和录制"
+
+msgid "Deleted!"
+msgstr "已删除！"
+
+msgid "Description"
+msgstr "描述"
+
+msgid "Description (optional)"
+msgstr "描述（可选）"
+
+msgid "Direct modules"
+msgstr "直接模块"
+
+msgid "Directly into the vault archive"
+msgstr "直接存入 Vault 存档"
+
+msgid "Disable / block individual folders:"
+msgstr "停用/屏蔽单个文件夹："
+
+msgid "Disable / enable individual folders:"
+msgstr "停用/开放单个文件夹："
+
+msgid "Disable recording (live & Discord only)"
+msgstr "停用录制（仅直播和 Discord）"
+
+msgid "Disabled"
+msgstr "已停用"
+
+msgid "Discard clip? Unsaved changes will be lost."
+msgstr "放弃剪辑？未保存的更改将丢失。"
+
+msgid "Discord integration not active"
+msgstr "Discord 集成未启用"
+
+msgid "Discover"
+msgstr "发现"
+
+msgid "Discover and watch Twitch streams in StreamVault"
+msgstr "在 StreamVault 中发现并观看 Twitch 直播"
+
+msgid "Display name"
+msgstr "显示名称"
+
+msgid "Display title"
+msgstr "显示标题"
+
+#, python-format
+msgid "Do you really want to delete the group %(name)s?"
+msgstr "确定要删除用户组 %(name)s 吗？"
+
+#, python-format
+msgid "Do you really want to permanently delete the user %(name)s?"
+msgstr "确定要永久删除用户 %(name)s 吗？"
+
+msgid "Do you want to empty the entire recording folder?"
+msgstr "要清空整个录制文件夹吗？"
+
+msgid "Done"
+msgstr "完成"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Download TXT"
+msgstr "下载 TXT"
+
+msgid "Download all"
+msgstr "全部下载"
+
+msgid "Download all VODs?"
+msgstr "下载全部 VOD？"
+
+msgid "Download archive & VODs"
+msgstr "下载存档和 VOD"
+
+msgid "Download complete."
+msgstr "下载完成。"
+
+msgid "Download file"
+msgstr "下载文件"
+
+msgid "Download is disabled. Please watch in the player (if available)."
+msgstr "下载已禁用。请在播放器中观看（如可用）。"
+
+msgid "Download of all VODs started in the background."
+msgstr "已在后台开始下载全部 VOD。"
+
+#, python-format
+msgid "Downloading... %(percent)s"
+msgstr "下载中... %(percent)s"
+
+#, python-format
+msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
+msgstr "Drive 配额限制生效中——请勿再次点击播放（会延长限制）。可回退到已加载的部分，或等待约 %(minutes)s 分钟。"
+
+msgid "Drop a file here or click to select"
+msgstr "将文件拖放到此处或点击选择"
+
+msgid "Dropbox with OAuth 2.0, refresh token and large upload sessions."
+msgstr "Dropbox，支持 OAuth 2.0、刷新令牌和大文件分段上传。"
+
+msgid "Duration"
+msgstr "时长"
+
+msgid "Duration must be > 0."
+msgstr "时长必须大于 0。"
+
+msgid "Duration:"
+msgstr "时长："
+
+msgid "Dynamic user account and group management with granular stream and permission control"
+msgstr "动态用户账户和用户组管理，可精细控制直播和权限"
+
+msgid "END"
+msgstr "结束"
+
+msgid "Edit"
+msgstr "编辑"
+
+msgid "Edit group"
+msgstr "编辑用户组"
+
+msgid "Edit group & permissions"
+msgstr "编辑用户组和权限"
+
+msgid "Edit provider"
+msgstr "编辑提供商"
+
+msgid "Edit user"
+msgstr "编辑用户"
+
+msgid "Email"
+msgstr "电子邮件"
+
+msgid "Email address"
+msgstr "电子邮件地址"
+
+msgid "Email address (optional)"
+msgstr "电子邮件地址（可选）"
+
+msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
+msgstr "留空 = AWS。对于 R2、B2、Wasabi、MinIO 等，请填写 S3 端点。"
+
+msgid "Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers use their own region."
+msgstr "留空 = AWS 使用 us-east-1。Cloudflare R2 使用“auto”；其他 S3 提供商使用各自的区域。"
+
+msgid "Empty folder"
+msgstr "清空文件夹"
+
+msgid "Enable immediately"
+msgstr "立即启用"
+
+msgid "Enable maintenance mode"
+msgstr "启用维护模式"
+
+msgid "Enable recording"
+msgstr "启用录制"
+
+msgid "Enable recording for this channel"
+msgstr "为此频道启用录制"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Encryption not ready."
+msgstr "加密尚未就绪。"
+
+msgid "End"
+msgstr "结束"
+
+msgid "End global maintenance mode"
+msgstr "结束全局维护模式"
+
+msgid "Endpoint URL (optional)"
+msgstr "端点 URL（可选）"
+
+msgid "Endpoint URL must be a valid http(s) URL."
+msgstr "端点 URL 必须是有效的 http(s) URL。"
+
+msgid "Endpoint URL must not contain a query or fragment."
+msgstr "端点 URL 不能包含查询参数或片段。"
+
+msgid "Endpoint URL must not contain credentials; use Access Key and Secret Key."
+msgstr "端点 URL 不能包含凭据；请使用 Access Key 和 Secret Key。"
+
+msgid "Endpoint:"
+msgstr "端点："
+
+msgid "Enter current password"
+msgstr "输入当前密码"
+
+msgid "Error"
+msgstr "错误"
+
+msgid "Error cancelling the transcription"
+msgstr "取消转录时出错"
+
+msgid "Error changing the password."
+msgstr "修改密码时出错。"
+
+msgid "Error creating group"
+msgstr "创建用户组时出错"
+
+msgid "Error creating the audio segment"
+msgstr "创建音频片段时出错"
+
+msgid "Error creating the user."
+msgstr "创建用户时出错。"
+
+msgid "Error creating user"
+msgstr "创建用户时出错"
+
+msgid "Error deleting group"
+msgstr "删除用户组时出错"
+
+msgid "Error deleting user"
+msgstr "删除用户时出错"
+
+msgid "Error loading cloud storage management."
+msgstr "加载云存储管理时出错。"
+
+msgid "Error loading the admin panel. Please try again later."
+msgstr "加载管理面板时出错。请稍后重试。"
+
+msgid "Error loading the traffic overview."
+msgstr "加载流量概览时出错。"
+
+msgid "Error queuing the transcription"
+msgstr "转录加入队列时出错"
+
+msgid "Error saving group"
+msgstr "保存用户组时出错"
+
+msgid "Error updating user"
+msgstr "更新用户时出错"
+
+msgid "Error while deleting"
+msgstr "删除时出错"
+
+msgid "Error while loading."
+msgstr "加载时出错。"
+
+msgid "Error while saving"
+msgstr "保存时出错"
+
+msgid "Error:"
+msgstr "错误："
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr "错误：%(error)s"
+
+msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
+msgstr "该用户组的现有成员将自动分配到默认用户组 <strong>Viewer</strong>。"
+
+msgid "Exit fullscreen"
+msgstr "退出全屏"
+
+msgid "Expand chat"
+msgstr "展开聊天"
+
+msgid "Expires"
+msgstr "到期"
+
+msgid "Exported by StreamVault"
+msgstr "由 StreamVault 导出"
+
+msgid "Extracting audio..."
+msgstr "正在提取音频..."
+
+msgid "FEATURED VOD"
+msgstr "精选 VOD"
+
+msgid "Failed"
+msgstr "失败"
+
+msgid "Fast"
+msgstr "快速"
+
+msgid "Feature permissions"
+msgstr "功能权限"
+
+msgid "Featured highlight"
+msgstr "精选亮点"
+
+msgid "February"
+msgstr "二月"
+
+msgid "File"
+msgstr "文件"
+
+msgid "File manager"
+msgstr "文件管理器"
+
+msgid "File name"
+msgstr "文件名"
+
+msgid "File not found"
+msgstr "未找到文件"
+
+msgid "File not found locally."
+msgstr "本地未找到文件。"
+
+msgid "File size"
+msgstr "文件大小"
+
+msgid "File was uploaded."
+msgstr "文件已上传。"
+
+msgid "Filter"
+msgstr "筛选"
+
+msgid "Filter chat..."
+msgstr "筛选聊天..."
+
+msgid "First"
+msgstr "第一个"
+
+msgid "First page"
+msgstr "第一页"
+
+msgid "Folder ID:"
+msgstr "文件夹 ID："
+
+msgid "Folder is being emptied in the background."
+msgstr "正在后台清空文件夹。"
+
+msgid "Folder not found or invalid."
+msgstr "文件夹不存在或无效。"
+
+msgid "For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:"
+msgstr "对于 Google Drive、Dropbox 和 OneDrive，必须在提供商处注册此回调 URL："
+
+msgid "For encrypted credential storage, VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least 16 characters)."
+msgstr "要加密存储凭据，必须将 VOD_SECRET_KEY（或 STORAGE_ENCRYPTION_KEY）设置为强度足够且唯一的值（至少 16 个字符）。"
+
+msgid "Forget"
+msgstr "忘记"
+
+msgid "Free"
+msgstr "可用"
+
+msgid "Full mode:"
+msgstr "完整模式："
+
+msgid "Full mode: recording + live + Discord"
+msgstr "完整模式：录制 + 直播 + Discord"
+
+msgid "Full terms text"
+msgstr "条款全文"
+
+msgid "Full-text search across chat logs, metadata and VOD archives"
+msgstr "在聊天记录、元数据和 VOD 存档中全文搜索"
+
+msgid "Full-text search query"
+msgstr "全文搜索查询"
+
+msgid "Fullscreen"
+msgstr "全屏"
+
+msgid "Game"
+msgstr "游戏"
+
+#, python-format
+msgid "Game: %(category)s"
+msgstr "游戏：%(category)s"
+
+#, python-format
+msgid "Game: %(name)s"
+msgstr "游戏：%(name)s"
+
+msgid "Generate HLS now"
+msgstr "立即生成 HLS"
+
+msgid "Global maintenance mode:"
+msgstr "全局维护模式："
+
+msgid "Go"
+msgstr "前往"
+
+msgid "Go to dashboard"
+msgstr "前往仪表板"
+
+msgid "Go to login"
+msgstr "前往登录"
+
+msgid "Go to sign in"
+msgstr "前往登录"
+
+msgid "Go to sign-in"
+msgstr "前往登录"
+
+msgid "Go to terms"
+msgstr "前往条款"
+
+msgid "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+msgstr "Google Cloud Console → API 和服务 → 凭据 → OAuth 客户端（Web 应用）。"
+
+msgid "Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads."
+msgstr "Google Drive / Workspace Drive，支持 OAuth 2.0 和断点续传。"
+
+msgid "Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption."
+msgstr "Google Drive、兼容 S3 的服务、Dropbox、OneDrive 和 WebDAV。凭据使用 AES-GCM 加密存储。"
+
+msgid "Group"
+msgstr "用户组"
+
+#, python-format
+msgid "Group '%(name)s' created successfully."
+msgstr "用户组“%(name)s”已创建。"
+
+#, python-format
+msgid "Group '%(name)s' updated successfully."
+msgstr "用户组“%(name)s”已更新。"
+
+msgid "Group created"
+msgstr "用户组已创建"
+
+msgid "Group deleted"
+msgstr "用户组已删除"
+
+msgid "Group deleted successfully. Existing members were moved to the 'Viewer' group."
+msgstr "用户组已删除。现有成员已移至“Viewer”用户组。"
+
+msgid "Group name"
+msgstr "用户组名称"
+
+msgid "Group name must be between 2 and 50 characters long."
+msgstr "用户组名称长度必须为 2 到 50 个字符。"
+
+msgid "Group not found."
+msgstr "未找到用户组。"
+
+msgid "Group saved"
+msgstr "用户组已保存"
+
+msgid "HLS connection lost — reconnecting…"
+msgstr "HLS 连接中断——正在重连…"
+
+msgid "HLS could not be recovered."
+msgstr "无法恢复 HLS。"
+
+msgid "HLS is being created. Please reload the page in a few minutes."
+msgstr "正在生成 HLS。请几分钟后刷新页面。"
+
+msgid "HLS is not supported by this browser."
+msgstr "此浏览器不支持 HLS。"
+
+msgid "HLS starts faster for very large files."
+msgstr "对于超大文件，HLS 启动更快。"
+
+msgid "High"
+msgstr "高"
+
+msgid "Home"
+msgstr "首页"
+
+msgid "Hotkey"
+msgstr "快捷键"
+
+msgid "House rules for the invite-only circle. No “official” framing — just binding terms of use."
+msgstr "仅限受邀圈子的社区守则。不是“官方”文件——只是有约束力的使用规则。"
+
+msgid "I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access."
+msgstr "我已阅读并接受 StreamVault 规则。我理解违规将导致立即取消访问权限。"
+
+#, python-format
+msgid "I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access."
+msgstr "我已阅读并接受条款（版本 %(version)s）。违规可能导致立即取消访问权限。"
+
+msgid "IP"
+msgstr "IP"
+
+#, python-format
+msgid "If needed, set %(var)s to your public HTTPS address so the URL matches exactly."
+msgstr "如有需要，请将 %(var)s 设置为你的公网 HTTPS 地址，使 URL 完全匹配。"
+
+msgid "Image controls"
+msgstr "画面控制"
+
+#, python-format
+msgid "Inactive (%(count)s)"
+msgstr "未启用（%(count)s）"
+
+msgid "Inactive: new streams stay blocked. Only folders checked below are unlocked."
+msgstr "未启用：新直播保持屏蔽。仅开放下方勾选的文件夹。"
+
+msgid "Include audio"
+msgstr "包含音频"
+
+msgid "Info about the VOD…"
+msgstr "VOD 信息…"
+
+msgid "Information on data processing within the invite-only circle. No legal notice."
+msgstr "受邀圈子内的数据处理说明。非法律声明。"
+
+msgid "Initial password"
+msgstr "初始密码"
+
+msgid "Instant clip parameters and hotkey in the web player."
+msgstr "网页播放器中的即时剪辑参数和快捷键。"
+
+msgid "Intensity"
+msgstr "强度"
+
+msgid "Internal server error while creating the group."
+msgstr "创建用户组时发生内部服务器错误。"
+
+msgid "Internal server error while deleting the group."
+msgstr "删除用户组时发生内部服务器错误。"
+
+msgid "Internal server error while updating the group."
+msgstr "更新用户组时发生内部服务器错误。"
+
+msgid "Invalid OAuth state."
+msgstr "OAuth 状态无效。"
+
+msgid "Invalid Twitch channel."
+msgstr "Twitch 频道无效。"
+
+msgid "Invalid channel name."
+msgstr "频道名称无效。"
+
+msgid "Invalid channel."
+msgstr "频道无效。"
+
+msgid "Invalid clip path."
+msgstr "剪辑路径无效。"
+
+msgid "Invalid file name."
+msgstr "文件名无效。"
+
+msgid "Invalid file."
+msgstr "文件无效。"
+
+msgid "Invalid folder slug."
+msgstr "文件夹 slug 无效。"
+
+msgid "Invalid group ID."
+msgstr "用户组 ID 无效。"
+
+msgid "Invalid image format (allowed: JPG, PNG, WEBP, GIF)."
+msgstr "图片格式无效（允许：JPG、PNG、WEBP、GIF）。"
+
+msgid "Invalid maintenance action."
+msgstr "维护操作无效。"
+
+msgid "Invalid new username."
+msgstr "新用户名无效。"
+
+msgid "Invalid path (control characters)."
+msgstr "路径无效（含控制字符）。"
+
+msgid "Invalid path (null byte)."
+msgstr "路径无效（含空字节）。"
+
+msgid "Invalid path (path traversal)."
+msgstr "路径无效（路径遍历）。"
+
+#, python-format
+msgid "Invalid server response (%(status)s)."
+msgstr "服务器响应无效（%(status)s）。"
+
+msgid "Invalid source."
+msgstr "来源无效。"
+
+msgid "Invalid streamer name."
+msgstr "主播名称无效。"
+
+#, python-format
+msgid "Invalid subfolder: %(error)s"
+msgstr "子文件夹无效：%(error)s"
+
+msgid "Invalid time value."
+msgstr "时间值无效。"
+
+msgid "Invalid username (3-32 characters: letters, numbers, _ and -)."
+msgstr "用户名无效（3-32 个字符：字母、数字、_ 和 -）。"
+
+msgid "Invite-only. Full terms text after sign-in."
+msgstr "仅限受邀。登录后查看条款全文。"
+
+msgid "January"
+msgstr "一月"
+
+msgid "July"
+msgstr "七月"
+
+msgid "June"
+msgstr "六月"
+
+msgid "LIVE"
+msgstr "直播"
+
+#, python-format
+msgid "LIVE %(name)s (without Twitch login)"
+msgstr "直播 %(name)s（无需 Twitch 登录）"
+
+msgid "LIVE & DISCORD ONLY"
+msgstr "仅直播和 DISCORD"
+
+msgid "LIVE NOW"
+msgstr "正在直播"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Largest"
+msgstr "最大"
+
+msgid "Last"
+msgstr "最后一个"
+
+msgid "Last active"
+msgstr "最近活跃"
+
+msgid "Last broadcast"
+msgstr "上次直播"
+
+msgid "Last changed:"
+msgstr "上次更改："
+
+msgid "Last page"
+msgstr "最后一页"
+
+msgid "Last test:"
+msgstr "上次测试："
+
+msgid "Latest VODs"
+msgstr "最新 VOD"
+
+msgid "Leave empty to create a 'StreamVault' folder automatically."
+msgstr "留空将自动创建“StreamVault”文件夹。"
+
+msgid "Legend"
+msgstr "图例"
+
+msgid "Link"
+msgstr "链接"
+
+msgid "Link copied"
+msgstr "链接已复制"
+
+msgid "Link copied to clipboard:"
+msgstr "链接已复制到剪贴板："
+
+msgid "Link copied:"
+msgstr "链接已复制："
+
+msgid "Live"
+msgstr "直播"
+
+msgid "Live & Discord only:"
+msgstr "仅直播和 Discord："
+
+msgid "Live (recovering...)"
+msgstr "直播（恢复中...）"
+
+msgid "Live channels"
+msgstr "直播频道"
+
+msgid "Live chat"
+msgstr "直播聊天"
+
+msgid "Live clip created."
+msgstr "直播剪辑已创建。"
+
+msgid "Live now"
+msgstr "正在直播"
+
+msgid "Live on Twitch"
+msgstr "正在 Twitch 直播"
+
+msgid "Live only: live stream + Discord (no recording)"
+msgstr "仅直播：直播流 + Discord（不录制）"
+
+msgid "Live recording"
+msgstr "直播录制"
+
+msgid "Live start failed."
+msgstr "直播启动失败。"
+
+msgid "Live stopped."
+msgstr "直播已停止。"
+
+msgid "Live stream and Discord alerts only, no disk recording"
+msgstr "仅直播流和 Discord 提醒，不录制到磁盘"
+
+msgid "Live stream highlight"
+msgstr "直播亮点"
+
+msgid "Live stream is currently unavailable. Searching for stream..."
+msgstr "直播流当前不可用。正在搜索直播流..."
+
+msgid "Live stream not available."
+msgstr "直播流不可用。"
+
+msgid "Live via server"
+msgstr "通过服务器直播"
+
+msgid "Live view"
+msgstr "直播视图"
+
+msgid "Live watch"
+msgstr "观看直播"
+
+msgid "Live-only"
+msgstr "仅直播"
+
+msgid "Load"
+msgstr "负载"
+
+msgid "Load average (1m / 5m):"
+msgstr "平均负载（1 分钟 / 5 分钟）："
+
+msgid "Loading chat…"
+msgstr "正在加载聊天…"
+
+msgid "Loading model..."
+msgstr "正在加载模型..."
+
+msgid "Loading streams…"
+msgstr "正在加载直播…"
+
+msgid "Local"
+msgstr "本地"
+
+#, python-format
+msgid "Local rename failed: %(error)s"
+msgstr "本地重命名失败：%(error)s"
+
+msgid "Local retention (days)"
+msgstr "本地保留天数"
+
+msgid "Location"
+msgstr "存储位置"
+
+msgid "Lock <strong>VOD player &amp; archive</strong>"
+msgstr "锁定<strong>VOD 播放器和存档</strong>"
+
+msgid "Lock <strong>live stream &amp; Twitch watch</strong>"
+msgstr "锁定<strong>直播流和 Twitch 观看</strong>"
+
+msgid "Lock <strong>mobile version</strong>"
+msgstr "锁定<strong>移动版</strong>"
+
+msgid "Log out"
+msgstr "退出登录"
+
+msgid "Login"
+msgstr "登录"
+
+msgid "Login attempts"
+msgstr "登录尝试"
+
+msgid "Login failed."
+msgstr "登录失败。"
+
+msgid "MP4 check not possible"
+msgstr "无法检查 MP4"
+
+msgid "Maintenance"
+msgstr "维护中"
+
+msgid "Maintenance mode & area control"
+msgstr "维护模式与区域控制"
+
+#, python-format
+msgid "Maintenance mode active, but the Discord notice failed: %(error)s"
+msgstr "维护模式已启用，但 Discord 通知发送失败：%(error)s"
+
+msgid "Maintenance mode active."
+msgstr "维护模式已启用。"
+
+msgid "Maintenance mode active. Discord notice was sent."
+msgstr "维护模式已启用。已发送 Discord 通知。"
+
+#, python-format
+msgid "Maintenance mode ended, but the Discord notice failed: %(error)s"
+msgstr "维护模式已结束，但 Discord 通知发送失败：%(error)s"
+
+msgid "Maintenance mode ended. Discord notice (available again) was sent."
+msgstr "维护模式已结束。已发送 Discord 通知（已恢复可用）。"
+
+msgid "Maintenance mode ended. The site is available to everyone again."
+msgstr "维护模式已结束。网站已重新对所有人开放。"
+
+msgid "Manage documents, media files and archive assets"
+msgstr "管理文档、媒体文件和存档资源"
+
+msgid "Manage streamers"
+msgstr "管理主播"
+
+msgid "Manage users & groups"
+msgstr "管理用户和用户组"
+
+msgid "Manual sync"
+msgstr "手动同步"
+
+msgid "March"
+msgstr "三月"
+
+msgid "Matches found"
+msgstr "找到的结果"
+
+msgid "Max. files per sync"
+msgstr "每次同步最大文件数"
+
+msgid "May"
+msgstr "五月"
+
+msgid "Member"
+msgstr "成员"
+
+msgid "Member VOD access saved."
+msgstr "成员 VOD 访问权限已保存。"
+
+msgid "Members"
+msgstr "成员"
+
+msgid "Message"
+msgstr "消息"
+
+msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
+msgstr "移动端直播暂时停用。请使用桌面版或已安装的应用。"
+
+msgid "Monitored"
+msgstr "已监控"
+
+msgid "Must point to a writable folder and end with / (added automatically)."
+msgstr "必须指向可写文件夹并以 / 结尾（会自动补全）。"
+
+msgid "Mute"
+msgstr "静音"
+
+msgid "Muted"
+msgstr "已静音"
+
+msgid "My streamers"
+msgstr "我的主播"
+
+msgid "Network error"
+msgstr "网络错误"
+
+msgid "Network error while loading streams."
+msgstr "加载直播时发生网络错误。"
+
+msgid "Network error:"
+msgstr "网络错误："
+
+msgid "Network is back — reconnecting…"
+msgstr "网络已恢复——正在重连…"
+
+msgid "Never"
+msgstr "从不"
+
+msgid "New clips"
+msgstr "新剪辑"
+
+msgid "New group"
+msgstr "新用户组"
+
+msgid "New password (leave empty to keep unchanged)"
+msgstr "新密码（留空则不更改）"
+
+msgid "New password * (min. 8 characters)"
+msgstr "新密码 *（至少 8 个字符）"
+
+msgid "New password..."
+msgstr "新密码..."
+
+msgid "New user"
+msgstr "新用户"
+
+msgid "Newest"
+msgstr "最新"
+
+msgid "Newest first"
+msgstr "最新优先"
+
+msgid "Next"
+msgstr "下一个"
+
+msgid "Next page"
+msgstr "下一页"
+
+msgid "Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password."
+msgstr "Nextcloud、ownCloud、Hetzner Storage Box 或任何使用应用密码的 WebDAV 服务器。"
+
+msgid "No (self-signed only)"
+msgstr "否（仅限自签名证书）"
+
+msgid "No VODs available in the archive"
+msgstr "存档中没有可用的 VOD"
+
+msgid "No acceptances yet."
+msgstr "尚无人同意。"
+
+msgid "No account yet? Accounts are issued by the administrators of this instance."
+msgstr "还没有账户？账户由此实例的管理员分配。"
+
+msgid "No accounts match this filter."
+msgstr "没有符合此筛选条件的账户。"
+
+msgid "No active file"
+msgstr "没有活动文件"
+
+msgid "No active provider"
+msgstr "没有启用的提供商"
+
+msgid "No active shares."
+msgstr "没有生效的共享。"
+
+msgid "No active streams"
+msgstr "没有进行中的直播"
+
+msgid "No archive objects yet. Start a sync or upload a recording."
+msgstr "还没有存档对象。请开始同步或上传录制。"
+
+msgid "No backup script configured (VOD_BACKUP_SCRIPT)."
+msgstr "未配置备份脚本（VOD_BACKUP_SCRIPT）。"
+
+msgid "No backups available."
+msgstr "没有可用的备份。"
+
+msgid "No badges received from Twitch."
+msgstr "未从 Twitch 获取到徽章。"
+
+msgid "No chat"
+msgstr "无聊天"
+
+msgid "No cloud storage configured yet. Add a provider or use the console:"
+msgstr "尚未配置云存储。请添加提供商或使用控制台："
+
+msgid "No connection. As soon as the device is back online, the app continues loading the page normally."
+msgstr "无网络连接。设备恢复联网后，应用将继续正常加载页面。"
+
+msgid "No discovery streams right now."
+msgstr "当前没有可发现的直播。"
+
+msgid "No files stored in the vault."
+msgstr "Vault 中没有存储文件。"
+
+msgid "No jobs in the queue."
+msgstr "队列中没有任务。"
+
+msgid "No live chat available. Chat appears when StreamVault records the stream."
+msgstr "没有可用的直播聊天。StreamVault 录制直播时将显示聊天。"
+
+msgid "No live stream active"
+msgstr "没有进行中的直播流"
+
+msgid "No live streams among the monitored channels. Use the search."
+msgstr "监控的频道中没有正在直播的。请使用搜索。"
+
+msgid "No local entries found for this search term. Press [Enter] to search the server."
+msgstr "未找到与此搜索词匹配的本地条目。按 [Enter] 搜索服务器。"
+
+#, python-format
+msgid "No matches found for \"%(query)s\"."
+msgstr "未找到与“%(query)s”匹配的结果。"
+
+msgid "No monitored Twitch channels."
+msgstr "没有监控的 Twitch 频道。"
+
+msgid "No monitored Twitch channels. Add streamers under Streamers."
+msgstr "没有监控的 Twitch 频道。请在“主播”中添加主播。"
+
+msgid "No monitored channels configured."
+msgstr "未配置监控频道。"
+
+msgid "No recently watched streams yet."
+msgstr "还没有最近观看的直播。"
+
+msgid "No recorded chat is available for this VOD."
+msgstr "此 VOD 没有录制的聊天。"
+
+msgid "No recorder data found."
+msgstr "未找到录制器数据。"
+
+msgid "No recordings found."
+msgstr "未找到录制。"
+
+msgid "No results."
+msgstr "无结果。"
+
+msgid "No running transcription found."
+msgstr "未找到正在进行的转录。"
+
+msgid "No streams"
+msgstr "没有直播"
+
+msgid "No transcript output received"
+msgstr "未收到转录输出"
+
+msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
+msgstr "尚无转录文本。转录在服务器本地生成，长 VOD 可能需要一段时间。"
+
+msgid "No transcription active"
+msgstr "没有进行中的转录"
+
+msgid "No videos found."
+msgstr "未找到视频。"
+
+msgid "Not authenticated."
+msgstr "未通过身份验证。"
+
+msgid "Not live"
+msgstr "未开播"
+
+msgid "Notification + live stream (no recording)"
+msgstr "通知 + 直播流（不录制）"
+
+msgid "November"
+msgstr "十一月"
+
+msgid "OAuth code is missing."
+msgstr "缺少 OAuth 代码。"
+
+msgid "OAuth note"
+msgstr "OAuth 说明"
+
+msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
+msgstr "OAuth 状态令牌需要强度足够的 VOD_SECRET_KEY。"
+
+msgid "OFF (normal operation)"
+msgstr "关（正常运行）"
+
+msgid "OFFLINE"
+msgstr "离线"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "ONLINE"
+msgstr "在线"
+
+msgid "OPERATING MODE:"
+msgstr "运行模式："
+
+msgid "OPTION A: UPLOAD IMAGE FILE"
+msgstr "选项 A：上传图片文件"
+
+msgid "OPTION A: UPLOAD PROFILE PICTURE"
+msgstr "选项 A：上传头像"
+
+msgid "OPTION B: USE IMAGE URL"
+msgstr "选项 B：使用图片 URL"
+
+msgid "OR"
+msgstr "或"
+
+#, python-format
+msgid "Object #%(id)s removed from the database. Files are kept."
+msgstr "已从数据库中移除对象 #%(id)s。文件保留。"
+
+msgid "October"
+msgstr "十月"
+
+msgid "Offline"
+msgstr "离线"
+
+msgid "Offload the VOD archive to external storage automatically or manually"
+msgstr "自动或手动将 VOD 存档转移到外部存储"
+
+msgid "Oldest"
+msgstr "最早"
+
+msgid "Oldest first"
+msgstr "最早优先"
+
+msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
+msgstr "OneDrive / Microsoft 365，通过 Microsoft Graph 和 OAuth 2.0。"
+
+msgid "Only after a successful upload and optional cloud verification."
+msgstr "仅在上传成功且（可选）云端验证通过后。"
+
+msgid "Only needed if no refresh token is used."
+msgstr "仅在不使用刷新令牌时需要。"
+
+msgid "Open"
+msgstr "打开"
+
+msgid "Open Twitch"
+msgstr "打开 Twitch"
+
+msgid "Open channel"
+msgstr "打开频道"
+
+msgid "Open clip"
+msgstr "打开剪辑"
+
+msgid "Open editor"
+msgstr "打开编辑器"
+
+msgid "Option sections"
+msgstr "选项分区"
+
+msgid "Options"
+msgstr "选项"
+
+msgid "Options & system control"
+msgstr "选项与系统控制"
+
+msgid "Other platform"
+msgstr "其他平台"
+
+#, python-format
+msgid "Page %(page)s / %(pages)s (%(count)s VODs)"
+msgstr "第 %(page)s / %(pages)s 页（%(count)s 个 VOD）"
+
+#, python-format
+msgid "Page %(page)s / %(total)s"
+msgstr "第 %(page)s / %(total)s 页"
+
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "第 %(page)s 页，共 %(pages)s 页"
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr "第 %(page)s 页，共 %(total)s 页"
+
+#, python-format
+msgid "Page %(page)s of %(total)s (%(count)s VODs)"
+msgstr "第 %(page)s 页，共 %(total)s 页（%(count)s 个 VOD）"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+msgstr "第 <strong>%(page)s</strong> / <strong>%(pages)s</strong> 页（%(count)s 个 VOD）"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; %(count)s VODs in quick access"
+msgstr "第 <strong>%(page)s</strong> 页，共 <strong>%(pages)s</strong> 页 &bull; 快速访问中有 %(count)s 个 VOD"
+
+msgid "Page navigation"
+msgstr "页面导航"
+
+msgid "Page navigation (top)"
+msgstr "页面导航（顶部）"
+
+msgid "Page:"
+msgstr "页："
+
+msgid "Pages"
+msgstr "页面"
+
+msgid "Pagination"
+msgstr "分页"
+
+msgid "Pagination (top)"
+msgstr "分页（顶部）"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Password / app password"
+msgstr "密码/应用密码"
+
+msgid "Password changed successfully."
+msgstr "密码修改成功。"
+
+msgid "Password is required."
+msgstr "必须填写密码。"
+
+#, python-format
+msgid "Password must be at least %(min)s characters long."
+msgstr "密码长度至少为 %(min)s 个字符。"
+
+msgid "Path below the target folder ID. Empty = directly in the target folder ID."
+msgstr "目标文件夹 ID 下的路径。留空 = 直接放在目标文件夹 ID 中。"
+
+msgid "Pause"
+msgstr "暂停"
+
+msgid "Pause playback"
+msgstr "暂停播放"
+
+msgid "Pause preview"
+msgstr "暂停预览"
+
+msgid "Peak"
+msgstr "峰值"
+
+msgid "Pending"
+msgstr "等待中"
+
+msgid "Photo viewer"
+msgstr "照片查看器"
+
+msgid "Play"
+msgstr "播放"
+
+msgid "Play / pause"
+msgstr "播放/暂停"
+
+msgid "Play preview"
+msgstr "播放预览"
+
+msgid "Playback unavailable"
+msgstr "无法播放"
+
+msgid "Player error — reconnecting…"
+msgstr "播放器错误——正在重连…"
+
+msgid "Please enter a name for the storage provider."
+msgstr "请输入存储提供商的名称。"
+
+msgid "Please enter your current password."
+msgstr "请输入当前密码。"
+
+msgid "Please save the client ID and client secret first, then connect."
+msgstr "请先保存客户端 ID 和客户端密钥，然后再连接。"
+
+msgid "Please scroll to the end of the text first."
+msgstr "请先滚动到文本末尾。"
+
+msgid "Points"
+msgstr "积分"
+
+msgid "Popular categories"
+msgstr "热门分类"
+
+msgid "Prefix"
+msgstr "前缀"
+
+#, python-format
+msgid "Presence %(user)s"
+msgstr "%(user)s 的在线情况"
+
+msgid "Present"
+msgstr "存在"
+
+msgid "Preview"
+msgstr "预览"
+
+msgid "Previous"
+msgstr "上一个"
+
+msgid "Previous page"
+msgstr "上一页"
+
+msgid "Privacy"
+msgstr "隐私"
+
+msgid "Privacy policy"
+msgstr "隐私政策"
+
+msgid "Private"
+msgstr "私密"
+
+msgid "Private video and stream archive console."
+msgstr "私人视频和直播存档控制台。"
+
+msgid "Processing video (this may take a while)..."
+msgstr "正在处理视频（可能需要一些时间）..."
+
+msgid "Processing video..."
+msgstr "正在处理视频..."
+
+msgid "Profile picture reset to default."
+msgstr "头像已恢复默认。"
+
+msgid "Profile picture uploaded successfully."
+msgstr "头像上传成功。"
+
+msgid "Progress"
+msgstr "进度"
+
+msgid "Provider"
+msgstr "提供商"
+
+#, python-format
+msgid "Provider #%(id)s created. Please test the connection."
+msgstr "已创建提供商 #%(id)s。请测试连接。"
+
+#, python-format
+msgid "Provider #%(id)s removed. Cloud files are kept."
+msgstr "已移除提供商 #%(id)s。云端文件保留。"
+
+#, python-format
+msgid "Provider #%(id)s saved."
+msgstr "已保存提供商 #%(id)s。"
+
+msgid "Provider default"
+msgstr "提供商默认值"
+
+msgid "Provider not found."
+msgstr "未找到提供商。"
+
+#, python-format
+msgid "Provider reported: %(error)s"
+msgstr "提供商报告：%(error)s"
+
+msgid "Provider type"
+msgstr "提供商类型"
+
+msgid "Providers"
+msgstr "提供商"
+
+msgid "Public link created:"
+msgstr "已创建公开链接："
+
+msgid "Purpose of this user group..."
+msgstr "此用户组的用途..."
+
+msgid "Quality"
+msgstr "画质"
+
+msgid "Queue"
+msgstr "队列"
+
+msgid "Queue not readable"
+msgstr "无法读取队列"
+
+msgid "Quiet"
+msgstr "安静"
+
+msgid "RECORDING"
+msgstr "录制中"
+
+msgid "RECORDING ACTIVE"
+msgstr "录制进行中"
+
+msgid "Ready"
+msgstr "就绪"
+
+msgid "Real-time stream error — reconnecting…"
+msgstr "实时流错误——正在重连…"
+
+#, python-format
+msgid "Really delete backup %(name)s?"
+msgstr "确定删除备份 %(name)s 吗？"
+
+msgid "Really delete file?"
+msgstr "确定删除文件吗？"
+
+msgid "Really delete the cloud file? A local copy is kept."
+msgstr "确定删除云端文件吗？本地副本将保留。"
+
+msgid "Really delete the local file? The cloud copy is kept."
+msgstr "确定删除本地文件吗？云端副本将保留。"
+
+msgid "Really delete?"
+msgstr "确定删除吗？"
+
+#, python-format
+msgid "Really remove channel %(name)s?"
+msgstr "确定移除频道 %(name)s 吗？"
+
+msgid "Really remove the provider? The cloud files are kept."
+msgstr "确定移除该提供商吗？云端文件将保留。"
+
+msgid "Really rename the file?"
+msgstr "确定重命名文件吗？"
+
+msgid "Really reset the custom banner and switch to the default?"
+msgstr "确定重置自定义横幅并切换为默认吗？"
+
+msgid "Really reset the custom profile picture and switch to the default?"
+msgstr "确定重置自定义头像并切换为默认吗？"
+
+msgid "Really revoke this share?"
+msgstr "确定撤销此共享吗？"
+
+msgid "Really stop the recording?"
+msgstr "确定停止录制吗？"
+
+msgid "Recent task errors"
+msgstr "最近的任务错误"
+
+msgid "Recently watched"
+msgstr "最近观看"
+
+msgid "Recommended. Prevents data loss from incomplete uploads."
+msgstr "推荐。防止因上传不完整造成数据丢失。"
+
+msgid "Reconnecting…"
+msgstr "正在重连…"
+
+msgid "Recorded"
+msgstr "已录制"
+
+msgid "Recorder & worker restarted."
+msgstr "录制器和工作进程已重启。"
+
+msgid "Recording"
+msgstr "录制"
+
+msgid "Recording + live stream & Discord notification"
+msgstr "录制 + 直播流和 Discord 通知"
+
+msgid "Recording disabled (live & Discord only)"
+msgstr "录制已停用（仅直播和 Discord）"
+
+#, python-format
+msgid "Recording disabled for source %(name)s."
+msgstr "已停用来源 %(name)s 的录制。"
+
+msgid "Recording enabled (full mode)"
+msgstr "录制已启用（完整模式）"
+
+#, python-format
+msgid "Recording enabled for source %(name)s."
+msgstr "已启用来源 %(name)s 的录制。"
+
+msgid "Recording health"
+msgstr "录制健康状况"
+
+msgid "Recording in progress"
+msgstr "正在录制"
+
+msgid "Recording not available."
+msgstr "录制不可用。"
+
+#, python-format
+msgid "Recording stopped: %(count)s source(s) for %(archive)s disabled. The process will be terminated at the next check."
+msgstr "录制已停止：%(archive)s 的 %(count)s 个来源已停用。进程将在下次检查时终止。"
+
+#, python-format
+msgid "Recordings (%(count)s)"
+msgstr "录制（%(count)s）"
+
+#, python-format
+msgid "Redeemed “%(title)s”"
+msgstr "兑换了“%(title)s”"
+
+#, python-format
+msgid "Registration via Discord · accept there with %(keyword)s."
+msgstr "通过 Discord 注册 · 在 Discord 中用 %(keyword)s 表示同意。"
+
+msgid "Related recordings"
+msgstr "相关录制"
+
+msgid "Remove"
+msgstr "移除"
+
+msgid "Remove channel"
+msgstr "移除频道"
+
+#, python-format
+msgid "Remove channel %(name)s?"
+msgstr "移除频道 %(name)s？"
+
+msgid "Remove only the database entry?"
+msgstr "仅移除数据库条目？"
+
+#, python-format
+msgid "Remux job could not be started: %(error)s"
+msgstr "无法启动重新封装任务：%(error)s"
+
+msgid "Remux job started. Progress is shown in the admin panel."
+msgstr "重新封装任务已启动。进度显示在管理面板中。"
+
+msgid "Rename file"
+msgstr "重命名文件"
+
+msgid "Renamed."
+msgstr "已重命名。"
+
+msgid "Repair in progress"
+msgstr "修复中"
+
+msgid "Repair seeking"
+msgstr "修复跳转"
+
+msgid "Repeat new password"
+msgstr "再次输入新密码"
+
+msgid "Repeat password"
+msgstr "再次输入密码"
+
+#, python-format
+msgid "Request '%(username)s' denied and deleted."
+msgstr "已拒绝并删除申请“%(username)s”。"
+
+msgid "Restart failed."
+msgstr "重启失败。"
+
+msgid "Restart services"
+msgstr "重启服务"
+
+msgid "Restore"
+msgstr "恢复"
+
+msgid "Restore default"
+msgstr "恢复默认"
+
+#, python-format
+msgid "Restore queued (task #%(task)s)."
+msgstr "恢复已加入队列（任务 #%(task)s）。"
+
+msgid "Resume playback"
+msgstr "继续播放"
+
+msgid "Revoke"
+msgstr "撤销"
+
+#, python-format
+msgid "Role access '%(slug)s' added."
+msgstr "已添加角色授权“%(slug)s”。"
+
+#, python-format
+msgid "Role access '%(slug)s' removed."
+msgstr "已移除角色授权“%(slug)s”。"
+
+msgid "Role access grant not found."
+msgstr "未找到角色授权。"
+
+msgid "Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member."
+msgstr "角色模型：完全访问（<code>admin</code>）、存档观众（<code>viewer</code>）、仅直播（<code>live_only</code>）&amp; Discord 成员。"
+
+msgid "Rules"
+msgstr "规则"
+
+msgid "Rules accepted. Continuing to the dashboard…"
+msgstr "已接受规则。正在前往仪表板…"
+
+msgid "Rules text"
+msgstr "规则文本"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Running…"
+msgstr "运行中…"
+
+msgid "S3-compatible"
+msgstr "兼容 S3"
+
+msgid "START"
+msgstr "开始"
+
+msgid "Safety migration:"
+msgstr "安全迁移："
+
+msgid "Same session"
+msgstr "同一会话"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Save area maintenance"
+msgstr "保存区域维护"
+
+msgid "Save changes"
+msgstr "保存更改"
+
+msgid "Save clip"
+msgstr "保存剪辑"
+
+msgid "Save clip settings"
+msgstr "保存剪辑设置"
+
+msgid "Save group"
+msgstr "保存用户组"
+
+msgid "Save password"
+msgstr "保存密码"
+
+msgid "Save settings"
+msgstr "保存设置"
+
+msgid "Saved"
+msgstr "已保存"
+
+msgid "Saved automatically when connecting."
+msgstr "连接时自动保存。"
+
+msgid "Saved automatically when connecting. Alternatively, paste it manually."
+msgstr "连接时自动保存。也可以手动粘贴。"
+
+msgid "Saved – leave empty to keep"
+msgstr "已保存——留空则保留"
+
+msgid "Saved."
+msgstr "已保存。"
+
+msgid "Saving transcript failed"
+msgstr "保存转录文本失败"
+
+#, python-format
+msgid "Saving transcript failed: %(error)s"
+msgstr "保存转录文本失败：%(error)s"
+
+msgid "Saving transcript..."
+msgstr "正在保存转录文本..."
+
+msgid "Saving..."
+msgstr "正在保存..."
+
+msgid "Saving…"
+msgstr "正在保存…"
+
+msgid "Search"
+msgstr "搜索"
+
+msgid "Search VODs, streamers or games..."
+msgstr "搜索 VOD、主播或游戏..."
+
+msgid "Search category"
+msgstr "搜索分类"
+
+msgid "Search category / game…"
+msgstr "搜索分类/游戏…"
+
+msgid "Search failed."
+msgstr "搜索失败。"
+
+msgid "Search recordings (title, date, game)..."
+msgstr "搜索录制（标题、日期、游戏）..."
+
+msgid "Search results"
+msgstr "搜索结果"
+
+msgid "Search streamer or channel…"
+msgstr "搜索主播或频道…"
+
+msgid "Search streamers"
+msgstr "搜索主播"
+
+msgid "Search term (e.g. player name, chat message, date)..."
+msgstr "搜索词（如玩家名、聊天消息、日期）..."
+
+msgid "Search user, email or group..."
+msgstr "搜索用户、电子邮件或用户组..."
+
+msgid "Search..."
+msgstr "搜索..."
+
+msgid "Searching for stream..."
+msgstr "正在搜索直播流..."
+
+msgid "Searching…"
+msgstr "正在搜索…"
+
+msgid "Seconds after trigger"
+msgstr "触发后秒数"
+
+msgid "Seconds before trigger"
+msgstr "触发前秒数"
+
+msgid "Security & shares"
+msgstr "安全与共享"
+
+#, python-format
+msgid "Seek repair is already running (%(status)s)."
+msgstr "跳转修复已在运行（%(status)s）。"
+
+msgid "Seek repair queued."
+msgstr "跳转修复已加入队列。"
+
+msgid "Segment creation failed"
+msgstr "片段创建失败"
+
+msgid "Select folders to unlock:"
+msgstr "选择要开放的文件夹："
+
+msgid "Self-hosted"
+msgstr "自托管"
+
+msgid "Send Discord message"
+msgstr "发送 Discord 消息"
+
+msgid "September"
+msgstr "九月"
+
+msgid "Server is loading the stream (Turbo, without viewer list)…"
+msgstr "服务器正在加载直播流（Turbo，无观众列表）…"
+
+msgid "Server is loading the stream (without Twitch account)…"
+msgstr "服务器正在加载直播流（无需 Twitch 账户）…"
+
+msgid "Server is loading the stream…"
+msgstr "服务器正在加载直播流…"
+
+msgid "Server-side encryption"
+msgstr "服务器端加密"
+
+msgid "Set"
+msgstr "设置"
+
+#, python-format
+msgid "Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved."
+msgstr "请在保存凭据前设置 %(key)s（至少 16 个字符）或 %(alt_key)s。"
+
+msgid "Set end to current position"
+msgstr "将结束点设为当前位置"
+
+msgid "Set start to current position"
+msgstr "将起始点设为当前位置"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Settings saved."
+msgstr "设置已保存。"
+
+msgid "Share"
+msgstr "分享"
+
+msgid "Share not found."
+msgstr "未找到共享。"
+
+msgid "Share of period"
+msgstr "占时段比例"
+
+msgid "Share revoked."
+msgstr "共享已撤销。"
+
+msgid "Sharing failed"
+msgstr "分享失败"
+
+msgid "Sharing failed:"
+msgstr "分享失败："
+
+msgid "Short rules / Discord house rules. Part of the terms; accepted together with the consent below."
+msgstr "简要规则 / Discord 社区守则。属于条款的一部分；与下方的同意一并接受。"
+
+msgid "Shown in the navigation, sidebar and on streamer cards."
+msgstr "显示在导航栏、侧边栏和主播卡片上。"
+
+msgid "Sign in"
+msgstr "登录"
+
+msgid "Size"
+msgstr "大小"
+
+msgid "Sound"
+msgstr "声音"
+
+msgid "Sound on"
+msgstr "开启声音"
+
+msgid "Source"
+msgstr "来源"
+
+#, python-format
+msgid "Source %(name)s not found."
+msgstr "未找到来源 %(name)s。"
+
+msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "已移除过期锁，转录已加入工作进程队列。完成后下次加载页面时将显示结果。"
+
+msgid "Start"
+msgstr "开始"
+
+msgid "Start HLS"
+msgstr "启动 HLS"
+
+msgid "Start local cleanup"
+msgstr "开始本地清理"
+
+msgid "Start playback"
+msgstr "开始播放"
+
+msgid "Start playback or move along the timeline to sync chat messages."
+msgstr "开始播放或在时间轴上移动以同步聊天消息。"
+
+msgid "Start sync"
+msgstr "开始同步"
+
+msgid "Start time must be >= 0."
+msgstr "开始时间必须 >= 0。"
+
+msgid "Starting"
+msgstr "启动中"
+
+msgid "Starting download..."
+msgstr "正在开始下载..."
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Status, progress and actions of the most recently synced files. “Forget” only removes the database entry."
+msgstr "最近同步文件的状态、进度和操作。“忘记”仅移除数据库条目。"
+
+msgid "Status:"
+msgstr "状态："
+
+msgid "Stop"
+msgstr "停止"
+
+msgid "Stop preview"
+msgstr "停止预览"
+
+msgid "Stop recording"
+msgstr "停止录制"
+
+msgid "Storage"
+msgstr "存储空间"
+
+msgid "Storage (free):"
+msgstr "存储（可用）："
+
+msgid "Storage (total):"
+msgstr "存储（总计）："
+
+#, python-format
+msgid "Storage critical: %(pct)s%% used, only %(free)s free."
+msgstr "存储空间告急：已使用 %(pct)s%%，仅剩 %(free)s 可用。"
+
+msgid "Storage provider not found."
+msgstr "未找到存储提供商。"
+
+msgid "Storage providers"
+msgstr "存储提供商"
+
+#, python-format
+msgid "Storage: <strong>%(pct)s%%</strong>"
+msgstr "存储：<strong>%(pct)s%%</strong>"
+
+msgid "Stream & channel access"
+msgstr "直播和频道访问"
+
+msgid "Stream & folder access"
+msgstr "直播和文件夹访问"
+
+msgid "Stream and VOD archive"
+msgstr "直播和 VOD 存档"
+
+msgid "Stream channel"
+msgstr "直播频道"
+
+msgid "Stream connection lost — reconnecting…"
+msgstr "直播流连接中断——正在重连…"
+
+msgid "Stream is not starting — check the live status or reload the page."
+msgstr "直播流无法启动——请检查直播状态或刷新页面。"
+
+msgid "Stream media error — reconnecting…"
+msgstr "直播流媒体错误——正在重连…"
+
+msgid "Stream stopped — reconnecting…"
+msgstr "直播流已停止——正在重连…"
+
+msgid "StreamVault is temporarily unavailable due to maintenance. Please be patient — the site will be back soon."
+msgstr "StreamVault 正在维护，暂时无法使用。请耐心等待——网站很快就会恢复。"
+
+msgid "StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later."
+msgstr "StreamVault 正在进行相关工作，暂时无法访问。请耐心等待——网站稍后将恢复可用。"
+
+msgid "Streamer"
+msgstr "主播"
+
+msgid "Streamer & source management"
+msgstr "主播与来源管理"
+
+msgid "Streamer (optional)"
+msgstr "主播（可选）"
+
+msgid "Streamer / folder missing."
+msgstr "缺少主播/文件夹。"
+
+msgid "Streamer is currently offline."
+msgstr "主播当前未开播。"
+
+msgid "Streamer management"
+msgstr "主播管理"
+
+msgid "Streamer profile"
+msgstr "主播资料"
+
+msgid "Streamers, VODs & chat histories"
+msgstr "主播、VOD 和聊天记录"
+
+msgid "Subfolder"
+msgstr "子文件夹"
+
+msgid "Success"
+msgstr "成功"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)"
+msgstr "支持：JPG、PNG、WEBP、GIF（推荐：1920x360 或 1200x300）"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)"
+msgstr "支持：JPG、PNG、WEBP、GIF（推荐正方形，如 300x300）"
+
+msgid "Switch to live only"
+msgstr "切换为仅直播"
+
+msgid "Synced"
+msgstr "已同步"
+
+msgid "System & recorder"
+msgstr "系统与录制器"
+
+msgid "System backup created successfully."
+msgstr "系统备份创建成功。"
+
+msgid "System backups"
+msgstr "系统备份"
+
+msgid "System group"
+msgstr "系统用户组"
+
+msgid "System group 'Viewer' was not found. Deletion cancelled."
+msgstr "未找到系统用户组“Viewer”。已取消删除。"
+
+#, python-format
+msgid "System groups (%(name)s) cannot be deleted."
+msgstr "系统用户组（%(name)s）不能删除。"
+
+msgid "System quick status"
+msgstr "系统快速状态"
+
+msgid "System settings"
+msgstr "系统设置"
+
+msgid "System status"
+msgstr "系统状态"
+
+msgid "System telemetry"
+msgstr "系统遥测"
+
+#, python-format
+msgid "Target already exists: %(path)s"
+msgstr "目标已存在：%(path)s"
+
+msgid "Target archive folder (optional)"
+msgstr "目标存档文件夹（可选）"
+
+msgid "Target folder ID (optional)"
+msgstr "目标文件夹 ID（可选）"
+
+msgid "Target name already exists locally."
+msgstr "目标名称在本地已存在。"
+
+msgid "Task queue"
+msgstr "任务队列"
+
+msgid "Terms"
+msgstr "条款"
+
+msgid "Terms & rules"
+msgstr "条款与规则"
+
+#, python-format
+msgid "Terms (version %(terms)s) including house rules (%(rules)s) not yet accepted — approval only after consent on the website or on re-registration."
+msgstr "尚未接受条款（版本 %(terms)s）及使用规则（%(rules)s）——需在网站上同意或重新注册后才能获得批准。"
+
+msgid "Terms accepted. Continuing to the dashboard…"
+msgstr "已接受条款。正在前往仪表板…"
+
+msgid "Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms."
+msgstr "仅限受邀圈子的使用协议和社区守则。不对权利人或平台授予任何使用权。"
+
+msgid "Terms version outdated or not accepted. Acceptance required at /agb."
+msgstr "条款版本已过期或未接受。需在 /agb 同意。"
+
+msgid "Terms version outdated — reload the page and accept again."
+msgstr "条款版本已过期——请刷新页面并重新接受。"
+
+msgid "Test"
+msgstr "测试"
+
+msgid "Thanks for your understanding. Authorized users can sign in via the login page."
+msgstr "感谢理解。授权用户可通过登录页面登录。"
+
+msgid "The 'can_manage_users' permission cannot be removed from the Administrator group."
+msgstr "不能从 Administrator 用户组中移除“can_manage_users”权限。"
+
+msgid "The OAuth link has expired. Please start again."
+msgstr "OAuth 链接已过期。请重新开始。"
+
+msgid "The VOD player and archive are currently under maintenance."
+msgstr "VOD 播放器和存档正在维护中。"
+
+msgid "The current password is incorrect."
+msgstr "当前密码不正确。"
+
+msgid "The default system admin cannot be deleted."
+msgstr "无法删除默认系统管理员。"
+
+msgid "The folder cannot be emptied while a recording is being written."
+msgstr "正在写入录制时无法清空文件夹。"
+
+msgid "The live stream area is currently under maintenance."
+msgstr "直播区域正在维护中。"
+
+msgid "The local file has already been removed. Please restore it first."
+msgstr "本地文件已被移除。请先恢复。"
+
+msgid "The mobile version of StreamVault is currently under maintenance. Please use the desktop version."
+msgstr "StreamVault 移动版正在维护中。请使用桌面版。"
+
+msgid "The name of system groups cannot be changed."
+msgstr "系统用户组的名称不能更改。"
+
+msgid "The new password must be at least 8 characters long."
+msgstr "新密码长度至少为 8 个字符。"
+
+msgid "The new password must differ from the current password."
+msgstr "新密码必须与当前密码不同。"
+
+msgid "The passwords do not match."
+msgstr "两次输入的密码不一致。"
+
+msgid "The provider did not return valid OAuth data."
+msgstr "提供商未返回有效的 OAuth 数据。"
+
+msgid "The provider name must be at most 80 characters long."
+msgstr "提供商名称最多 80 个字符。"
+
+msgid "The provider type cannot be changed while archive objects are assigned. Create a new provider instead."
+msgstr "已分配存档对象时无法更改提供商类型。请改为创建新的提供商。"
+
+msgid "The recorder worker performs the sync. Unchanged files that were already uploaded are skipped."
+msgstr "同步由录制器工作进程执行。已上传且未更改的文件将被跳过。"
+
+msgid "The remote path must not be empty."
+msgstr "远程路径不能为空。"
+
+msgid "The selected default provider does not exist."
+msgstr "所选的默认提供商不存在。"
+
+msgid "The selected default provider is disabled. Enable it first or choose another provider."
+msgstr "所选的默认提供商已停用。请先启用它或选择其他提供商。"
+
+msgid "The selected group does not exist."
+msgstr "所选用户组不存在。"
+
+msgid "The system administrator's password can only be changed via environment variables."
+msgstr "系统管理员的密码只能通过环境变量更改。"
+
+msgid "The video file could not be loaded or is still being transcoded."
+msgstr "视频文件无法加载或仍在转码中。"
+
+msgid "This admin user is protected and cannot be deleted."
+msgstr "此管理员用户受保护，无法删除。"
+
+msgid "This admin user is protected."
+msgstr "此管理员用户受保护。"
+
+msgid "This channel is not live right now."
+msgstr "该频道当前未在直播。"
+
+msgid "This file type is not allowed for security reasons."
+msgstr "出于安全原因，不允许此文件类型。"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Time (UTC)"
+msgstr "时间（UTC）"
+
+msgid "Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer."
+msgstr "提示：共享的存档文件夹会合并同一主播的 Twitch 和 YouTube 直播。"
+
+msgid "Title & description"
+msgstr "标题与描述"
+
+msgid "Title & info"
+msgstr "标题与信息"
+
+msgid "Title (optional)"
+msgstr "标题（可选）"
+
+msgid "Title as on YouTube"
+msgstr "与 YouTube 上的标题一致"
+
+#, python-format
+msgid "Today, %(time)s"
+msgstr "今天 %(time)s"
+
+msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
+msgstr "当前播放的 VOD 过多。直播不受影响。请几分钟后再试——有人关闭播放器后就会空出名额。"
+
+msgid "Too many attempts. IP temporarily blocked. Please try again later."
+msgstr "尝试次数过多。IP 已被暂时封禁。请稍后重试。"
+
+msgid "Top streams are currently unavailable. Use monitored channels or the search."
+msgstr "热门直播暂不可用。请使用监控频道或搜索。"
+
+msgid "Total in period"
+msgstr "时段内合计"
+
+msgid "Total recordings"
+msgstr "录制总数"
+
+msgid "Total runtime"
+msgstr "总时长"
+
+#, python-format
+msgid "Total: %(count)s registered accounts"
+msgstr "共 %(count)s 个注册账户"
+
+#, python-format
+msgid "Total: %(count)s user groups"
+msgstr "共 %(count)s 个用户组"
+
+msgid "Traffic"
+msgstr "流量"
+
+msgid "Traffic overview"
+msgstr "流量概览"
+
+#, python-format
+msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
+msgstr "正在转录片段 %(index)s/%(total)s（%(percent)s%%）"
+
+msgid "Transcript"
+msgstr "转录文本"
+
+msgid "Transcript already exists"
+msgstr "转录文本已存在"
+
+msgid "Transcript already exists."
+msgstr "转录文本已存在。"
+
+msgid "Transcript available"
+msgstr "转录文本可用"
+
+msgid "Transcript created"
+msgstr "转录文本已创建"
+
+msgid "Transcript finished"
+msgstr "转录文本已完成"
+
+msgid "Transcript missing despite finished status"
+msgstr "状态为已完成，但缺少转录文本"
+
+msgid "Transcription cancelled"
+msgstr "转录已取消"
+
+msgid "Transcription cancelled."
+msgstr "转录已取消。"
+
+msgid "Transcription failed"
+msgstr "转录失败"
+
+#, python-format
+msgid "Transcription failed: %(error)s"
+msgstr "转录失败：%(error)s"
+
+msgid "Transcription is already running"
+msgstr "转录已在运行"
+
+msgid "Transcription is already running. Please reload later."
+msgstr "转录已在运行。请稍后刷新。"
+
+msgid "Transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "转录已加入工作进程队列。完成后下次加载页面时将显示结果。"
+
+msgid "Transcription running..."
+msgstr "正在转录..."
+
+msgid "Transcription timed out"
+msgstr "转录超时"
+
+msgid "Transfer new recordings and periodic archive syncs to the cloud."
+msgstr "将新录制和定期存档同步传输到云端。"
+
+msgid "Trim"
+msgstr "裁剪"
+
+msgid "Twitch / default"
+msgstr "Twitch / 默认"
+
+msgid "Twitch badge library synchronized."
+msgstr "Twitch 徽章库已同步。"
+
+msgid "Twitch channel name..."
+msgstr "Twitch 频道名称..."
+
+msgid "Twitch live chat"
+msgstr "Twitch 直播聊天"
+
+msgid "Twitch live stream"
+msgstr "Twitch 直播流"
+
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
+msgstr "Twitch 名称（如 shroud）或 YouTube URL / @handle..."
+
+msgid "Twitch or YouTube supported"
+msgstr "支持 Twitch 或 YouTube"
+
+msgid "Twitch profile"
+msgstr "Twitch 资料"
+
+msgid "Twitch profile banner"
+msgstr "Twitch 资料横幅"
+
+msgid "Twitch search failed."
+msgstr "Twitch 搜索失败。"
+
+msgid "Twitch streams could not be loaded."
+msgstr "无法加载 Twitch 直播。"
+
+msgid "Type"
+msgstr "类型"
+
+msgid "Unchanged."
+msgstr "未更改。"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Unknown error"
+msgstr "未知错误"
+
+#, python-format
+msgid "Unknown storage provider: %(type)s"
+msgstr "未知存储提供商：%(type)s"
+
+msgid "Unmute"
+msgstr "取消静音"
+
+msgid "Updated"
+msgstr "已更新"
+
+#, python-format
+msgid "Updated %(age)s"
+msgstr "更新于 %(age)s"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Upload automatically"
+msgstr "自动上传"
+
+msgid "Upload new file"
+msgstr "上传新文件"
+
+#, python-format
+msgid "Upload queued (task #%(task)s)."
+msgstr "上传已加入队列（任务 #%(task)s）。"
+
+msgid "Upload videos & media"
+msgstr "上传视频和媒体"
+
+msgid "Usage rules"
+msgstr "使用规则"
+
+msgid "Used vault volume"
+msgstr "Vault 已用容量"
+
+msgid "User"
+msgstr "用户"
+
+#, python-format
+msgid "User '%(username)s' already exists."
+msgstr "用户“%(username)s”已存在。"
+
+#, python-format
+msgid "User '%(username)s' approved."
+msgstr "已批准用户“%(username)s”。"
+
+#, python-format
+msgid "User '%(username)s' created successfully."
+msgstr "用户“%(username)s”创建成功。"
+
+#, python-format
+msgid "User '%(username)s' has been deleted."
+msgstr "用户“%(username)s”已被删除。"
+
+#, python-format
+msgid "User '%(username)s' not found."
+msgstr "未找到用户“%(username)s”。"
+
+#, python-format
+msgid "User '%(username)s' updated successfully."
+msgstr "用户“%(username)s”更新成功。"
+
+msgid "User accounts"
+msgstr "用户账户"
+
+msgid "User created"
+msgstr "用户已创建"
+
+msgid "User deleted"
+msgstr "用户已删除"
+
+msgid "User deleted."
+msgstr "用户已删除。"
+
+msgid "User group"
+msgstr "用户组"
+
+msgid "User groups & permissions"
+msgstr "用户组与权限"
+
+msgid "User management"
+msgstr "用户管理"
+
+msgid "User not found."
+msgstr "未找到用户。"
+
+msgid "User updated"
+msgstr "用户已更新"
+
+msgid "User updated."
+msgstr "用户已更新。"
+
+msgid "Username"
+msgstr "用户名"
+
+#, python-format
+msgid "Username '%(username)s' is reserved."
+msgstr "用户名“%(username)s”为保留名称。"
+
+msgid "Username is required."
+msgstr "必须填写用户名。"
+
+msgid "Username must be 3-32 alphanumeric characters (hyphens and underscores allowed)."
+msgstr "用户名必须为 3-32 个字母或数字（允许连字符和下划线）。"
+
+msgid "Users & groups"
+msgstr "用户与用户组"
+
+#, python-format
+msgid "Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = presence, bars = login/pages/video/chat per day."
+msgstr "用户 A–Z · 最近 %(days)s 天（%(since)s – %(until)s）。热力图 = 在线情况，柱状条 = 每天的登录/页面/视频/聊天。"
+
+msgid "VOD access grants are currently only available for members."
+msgstr "VOD 访问授权目前仅适用于成员。"
+
+msgid "VOD archive"
+msgstr "VOD 存档"
+
+msgid "VOD page navigation"
+msgstr "VOD 页面导航"
+
+msgid "VOD pagination"
+msgstr "VOD 分页"
+
+#, python-format
+msgid "VOD recordings (%(count)s)"
+msgstr "VOD 录制（%(count)s）"
+
+msgid "VOD_SECRET_KEY must be set to a strong value before credentials can be stored."
+msgstr "必须先将 VOD_SECRET_KEY 设置为强度足够的值，才能存储凭据。"
+
+msgid "VODs are recorded to disk"
+msgstr "VOD 录制到磁盘"
+
+msgid "Verify TLS certificate"
+msgstr "验证 TLS 证书"
+
+msgid "Verify cloud copy before deletion"
+msgstr "删除前验证云端副本"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "Video"
+msgstr "视频"
+
+msgid "Video actions"
+msgstr "视频操作"
+
+msgid "Video could not be deleted."
+msgstr "无法删除视频。"
+
+msgid "Video deleted."
+msgstr "视频已删除。"
+
+msgid "Video player controls"
+msgstr "视频播放器控件"
+
+msgid "Video upload"
+msgstr "视频上传"
+
+msgid "View streams"
+msgstr "观看直播"
+
+msgid "View streams & live chat"
+msgstr "观看直播和直播聊天"
+
+msgid "Viewer"
+msgstr "观众"
+
+msgid "Viewers"
+msgstr "观众"
+
+msgid "Visibility could not be saved."
+msgstr "无法保存可见性。"
+
+msgid "Visibility: admins only."
+msgstr "可见性：仅管理员。"
+
+msgid "Visibility: all users."
+msgstr "可见性：所有用户。"
+
+msgid "Visible to:"
+msgstr "可见范围："
+
+msgid "Volume"
+msgstr "音量"
+
+msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
+msgstr "警告：确定要永久删除此主播及所有录制吗？"
+
+msgid "WATCH LIVE"
+msgstr "观看直播"
+
+msgid "Waiting for server stream…"
+msgstr "正在等待服务器流…"
+
+msgid "Warning"
+msgstr "警告"
+
+msgid "Watch"
+msgstr "观看"
+
+msgid "Watch latest video"
+msgstr "观看最新视频"
+
+msgid "Watch now"
+msgstr "立即观看"
+
+msgid "Watch stream directly"
+msgstr "直接观看直播"
+
+msgid "We are working on the vault right now. Back in a moment."
+msgstr "我们正在维护 Vault，马上回来。"
+
+msgid "WebDAV base URL"
+msgstr "WebDAV 基础 URL"
+
+msgid "WebDAV base URL must be a valid http(s) URL."
+msgstr "WebDAV 基础 URL 必须是有效的 http(s) URL。"
+
+msgid "WebDAV base URL must not contain a query or fragment."
+msgstr "WebDAV 基础 URL 不能包含查询参数或片段。"
+
+msgid "WebDAV base URL must not contain credentials; use the username and password fields."
+msgstr "WebDAV 基础 URL 不能包含凭据；请使用用户名和密码字段。"
+
+msgid "Webhook active."
+msgstr "Webhook 已启用。"
+
+msgid "Webhook not configured."
+msgstr "未配置 Webhook。"
+
+msgid "Welcome back. Sign in with your credentials to access StreamVault."
+msgstr "欢迎回来。使用你的凭据登录以访问 StreamVault。"
+
+msgid "Work in progress"
+msgstr "施工中"
+
+msgid "Yes (recommended)"
+msgstr "是（推荐）"
+
+#, python-format
+msgid "Yesterday, %(time)s"
+msgstr "昨天 %(time)s"
+
+msgid "You can agree now."
+msgstr "现在可以同意了。"
+
+msgid "You cannot deactivate your own administrator account."
+msgstr "不能停用你自己的管理员账户。"
+
+msgid "You cannot delete your own account."
+msgstr "不能删除你自己的账户。"
+
+msgid "You cannot move yourself into a group without user management permissions."
+msgstr "不能将自己移到没有用户管理权限的用户组。"
+
+#, python-format
+msgid "You have accepted version %(version)s."
+msgstr "你已接受版本 %(version)s。"
+
+msgid "Your IP has been temporarily blocked. Please try again later."
+msgstr "你的 IP 已被暂时封禁。请稍后重试。"
+
+msgid "Your browser does not support the video tag."
+msgstr "你的浏览器不支持 video 标签。"
+
+msgid "Zoom in"
+msgstr "放大"
+
+msgid "Zoom out"
+msgstr "缩小"
+
+msgid "according to the object database"
+msgstr "根据对象数据库"
+
+msgid "active"
+msgstr "活跃"
+
+msgid "available"
+msgstr "可用"
+
+msgid "being created"
+msgstr "正在创建"
+
+msgid "cancelled"
+msgstr "已取消"
+
+msgid "disabled"
+msgstr "已停用"
+
+msgid "done – please reload the page"
+msgstr "完成——请刷新页面"
+
+msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
+msgstr "drive.file = 仅限 StreamVault 创建的文件（推荐）。如需使用现有文件夹，请按需使用 https://www.googleapis.com/auth/drive。"
+
+msgid "e.g. Google Drive archive"
+msgstr "如：Google Drive 存档"
+
+msgid "e.g. VIP archive"
+msgstr "如：VIP 存档"
+
+msgid "e.g. alice, bob"
+msgstr "如：alice, bob"
+
+msgid "e.g. john_doe"
+msgstr "如：zhang_san"
+
+msgid "e.g. montanablack88"
+msgstr "如：montanablack88"
+
+#, python-format
+msgid "effective from %(date)s"
+msgstr "自 %(date)s 起生效"
+
+msgid "just now"
+msgstr "刚刚"
+
+#, python-format
+msgid "last seen %(when)s"
+msgstr "最后在线 %(when)s"
+
+msgid "logged in"
+msgstr "已登录"
+
+msgid "max. 300s"
+msgstr "最长 300 秒"
+
+msgid "never"
+msgstr "从不"
+
+msgid "not created"
+msgstr "未创建"
+
+#, python-format
+msgid "today %(time)s"
+msgstr "今天 %(time)s"
+
+msgid "unknown"
+msgstr "未知"
+
+msgid "user@example.com"
+msgstr "user@example.com"
+
+msgid "users"
+msgstr "用户"
+
+msgid "viewers"
+msgstr "观众"
+
+msgid "yesterday"
+msgstr "昨天"
+
+msgid "≥30 days quiet"
+msgstr "≥30 天无活动"
+
+msgid "✓ CLIP SAVED"
+msgstr "✓ 剪辑已保存"
+
+msgid "✕ CLIP FAILED"
+msgstr "✕ 剪辑失败"
+

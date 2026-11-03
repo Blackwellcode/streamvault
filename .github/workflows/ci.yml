@@ -41,6 +41,12 @@ jobs:
       - name: Lint
         run: ruff check .
 
+      - name: Translations (placeholders, compiled catalogs up to date)
+        run: |
+          python scripts/check_translations.py
+          pybabel compile -d WEBUI/translations
+          git diff --exit-code -- WEBUI/translations
+
       - name: Unit tests
         run: python -m unittest discover -s tests -v
 

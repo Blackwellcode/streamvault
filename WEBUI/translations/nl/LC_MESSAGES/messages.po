@@ -1,0 +1,3418 @@
+# Dutch translations for StreamVault.
+# Copyright (C) 2026 StreamVault contributors
+# This file is distributed under the same license as the StreamVault
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamVault VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"PO-Revision-Date: 2026-11-03 19:31+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: nl\n"
+"Language-Team: nl <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(channel)s added (%(mode)s)."
+msgstr "%(channel)s toegevoegd (%(mode)s)."
+
+#, python-format
+msgid "%(channel)s added as a YouTube source (%(mode)s)."
+msgstr "%(channel)s toegevoegd als YouTube-bron (%(mode)s)."
+
+#, python-format
+msgid "%(channel)s mode updated to: %(mode)s."
+msgstr "Modus van %(channel)s bijgewerkt naar: %(mode)s."
+
+#, python-format
+msgid "%(count)s VODs"
+msgstr "%(count)s VOD's"
+
+#, python-format
+msgid "%(count)s VODs in quick access"
+msgstr "%(count)s VOD's in snelle toegang"
+
+#, python-format
+msgid "%(count)s active"
+msgstr "%(count)s actief"
+
+#, python-format
+msgid "%(count)s clips"
+msgstr "%(count)s clips"
+
+#, python-format
+msgid "%(count)s clips archived"
+msgstr "%(count)s clips gearchiveerd"
+
+#, python-format
+msgid "%(count)s clips in total"
+msgstr "%(count)s clips in totaal"
+
+#, python-format
+msgid "%(count)s in the cloud"
+msgstr "%(count)s in de cloud"
+
+#, python-format
+msgid "%(count)s live"
+msgstr "%(count)s live"
+
+#, python-format
+msgid "%(count)s recordings"
+msgstr "%(count)s opnames"
+
+#, python-format
+msgid "%(count)s recordings in total"
+msgstr "%(count)s opnames in totaal"
+
+#, python-format
+msgid "%(count)s viewers"
+msgstr "%(count)s kijkers"
+
+#, python-format
+msgid "%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)"
+msgstr "%(day)s: %(total)s (login %(logins)s, pagina's %(pages)s, video %(media)s, chat %(chats)s)"
+
+#, python-format
+msgid "%(day)s: no activity"
+msgstr "%(day)s: geen activiteit"
+
+#, python-format
+msgid "%(days)s days ago"
+msgstr "%(days)s dagen geleden"
+
+#, python-format
+msgid "%(field)s is missing."
+msgstr "%(field)s ontbreekt."
+
+#, python-format
+msgid "%(minutes)s min ago"
+msgstr "%(minutes)s min geleden"
+
+#, python-format
+msgid "%(month)s %(day)s, %(time)s"
+msgstr "%(day)s %(month)s, %(time)s"
+
+#, python-format
+msgid "%(n)s new VODs available"
+msgstr "%(n)s nieuwe VOD's beschikbaar"
+
+#, python-format
+msgid "%(name)s removed."
+msgstr "%(name)s verwijderd."
+
+#, python-format
+msgid "%(num)d attempt"
+msgid_plural "%(num)d attempts"
+msgstr[0] "%(num)d poging"
+msgstr[1] "%(num)d pogingen"
+
+#, python-format
+msgid "%(num)d channel"
+msgid_plural "%(num)d channels"
+msgstr[0] "%(num)d kanaal"
+msgstr[1] "%(num)d kanalen"
+
+#, python-format
+msgid "%(num)d entry"
+msgid_plural "%(num)d entries"
+msgstr[0] "%(num)d item"
+msgstr[1] "%(num)d items"
+
+#, python-format
+msgid "%(num)d folder allowed"
+msgid_plural "%(num)d folders allowed"
+msgstr[0] "%(num)d map toegestaan"
+msgstr[1] "%(num)d mappen toegestaan"
+
+#, python-format
+msgid "%(num)d link"
+msgid_plural "%(num)d links"
+msgstr[0] "%(num)d link"
+msgstr[1] "%(num)d links"
+
+#, python-format
+msgid "%(num)d source"
+msgid_plural "%(num)d sources"
+msgstr[0] "%(num)d bron"
+msgstr[1] "%(num)d bronnen"
+
+#, python-format
+msgid "%(num)s days"
+msgstr "%(num)s dagen"
+
+#, python-format
+msgid "%(provider)s does not support OAuth."
+msgstr "%(provider)s ondersteunt geen OAuth."
+
+msgid "0 = delete immediately once the cloud copy is verified."
+msgstr "0 = direct verwijderen zodra de cloudkopie is geverifieerd."
+
+msgid "0 = no automatic sync. Only used when auto-upload is enabled."
+msgstr "0 = geen automatische synchronisatie. Alleen gebruikt als automatisch uploaden aan staat."
+
+msgid "1 new VOD available"
+msgstr "1 nieuwe VOD beschikbaar"
+
+#, python-format
+msgid "<strong>%(free)s</strong> free"
+msgstr "<strong>%(free)s</strong> vrij"
+
+msgid "A cleanup is already running."
+msgstr "Er loopt al een opschoning."
+
+msgid "A cloud deletion is already running."
+msgstr "Er loopt al een cloudverwijdering."
+
+msgid "A cloud sync is already running."
+msgstr "Er loopt al een cloudsynchronisatie."
+
+#, python-format
+msgid "A group named '%(name)s' already exists."
+msgstr "Er bestaat al een groep met de naam '%(name)s'."
+
+#, python-format
+msgid "A provider named '%(name)s' already exists."
+msgstr "Er bestaat al een provider met de naam '%(name)s'."
+
+msgid "A restore is already running."
+msgstr "Er loopt al een herstel."
+
+msgid "A saved value is kept if the field is left empty."
+msgstr "Een opgeslagen waarde blijft behouden als het veld leeg blijft."
+
+msgid "ACTIVE (locked)"
+msgstr "ACTIEF (vergrendeld)"
+
+msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
+msgstr "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner of elk S3-compatibel endpoint."
+
+msgid "Accept rules"
+msgstr "Regels accepteren"
+
+msgid "Accept terms"
+msgstr "Voorwaarden accepteren"
+
+msgid "Account active (access allowed)"
+msgstr "Account actief (toegang toegestaan)"
+
+msgid "Action"
+msgstr "Actie"
+
+msgid "Actions"
+msgstr "Acties"
+
+msgid "Activate account immediately"
+msgstr "Account direct activeren"
+
+msgid "Active"
+msgstr "Actief"
+
+msgid "Active shares"
+msgstr "Actieve deelacties"
+
+msgid "Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them)."
+msgstr "Actief: nieuwe streams en mappen worden automatisch vrijgegeven. Hieronder kun je afzonderlijke mappen uitschakelen (vinkje weghalen)."
+
+msgid "Active: new streams are unlocked automatically. Below you can disable / block individual folders."
+msgstr "Actief: nieuwe streams worden automatisch vrijgegeven. Hieronder kun je afzonderlijke mappen uitschakelen / blokkeren."
+
+msgid "Actively monitored by the recorder core"
+msgstr "Actief bewaakt door de recorder-kern"
+
+msgid "Add channel"
+msgstr "Kanaal toevoegen"
+
+msgid "Add new channel"
+msgstr "Nieuw kanaal toevoegen"
+
+msgid "Add provider"
+msgstr "Provider toevoegen"
+
+msgid "Addressing"
+msgstr "Adressering"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Admin controls"
+msgstr "Adminbeheer"
+
+msgid "Admins only"
+msgstr "Alleen admins"
+
+msgid "All"
+msgstr "Alle"
+
+#, python-format
+msgid "All (%(count)s)"
+msgstr "Alle (%(count)s)"
+
+msgid "All VOD slots are in use"
+msgstr "Alle VOD-plekken zijn in gebruik"
+
+msgid "All VODs"
+msgstr "Alle VOD's"
+
+msgid "All categories"
+msgstr "Alle categorieën"
+
+msgid "All off"
+msgstr "Alles uit"
+
+msgid "All on"
+msgstr "Alles aan"
+
+msgid "All saved settings of this account will be deleted completely."
+msgstr "Alle opgeslagen instellingen van dit account worden volledig verwijderd."
+
+msgid "All streamers are currently offline. Past broadcasts can be watched in the archive."
+msgstr "Alle streamers zijn momenteel offline. Eerdere uitzendingen kun je in het archief bekijken."
+
+msgid "All streams (+ auto-new)"
+msgstr "Alle streams (+ automatisch nieuw)"
+
+msgid "All users"
+msgstr "Alle gebruikers"
+
+msgid "Allowlist (comma-separated):"
+msgstr "Toegestane lijst (kommagescheiden):"
+
+#, python-format
+msgid "Also transfers %(path)s."
+msgstr "Draagt ook %(path)s over."
+
+#, python-format
+msgid "Also transfers preview images from %(path)s."
+msgstr "Draagt ook voorbeeldafbeeldingen uit %(path)s over."
+
+msgid "An upload for this file is already running."
+msgstr "Er loopt al een upload voor dit bestand."
+
+msgid "Anonymous"
+msgstr "Anoniem"
+
+msgid "Appendix A house rules"
+msgstr "Bijlage A huisregels"
+
+#, python-format
+msgid "Appendix A — %(title)s"
+msgstr "Bijlage A — %(title)s"
+
+msgid "Apply"
+msgstr "Toepassen"
+
+msgid "April"
+msgstr "april"
+
+msgid "Archive"
+msgstr "Archief"
+
+msgid "Archive / media folder"
+msgstr "Archief- / mediamap"
+
+msgid "Archive download"
+msgstr "Archief downloaden"
+
+msgid "Archive object not found."
+msgstr "Archiefobject niet gevonden."
+
+msgid "Archive objects"
+msgstr "Archiefobjecten"
+
+msgid "Archive overview"
+msgstr "Archiefoverzicht"
+
+msgid "Archive recording (latest VOD)"
+msgstr "Archiefopname (nieuwste VOD)"
+
+#, python-format
+msgid "Archive: %(name)s"
+msgstr "Archief: %(name)s"
+
+#, python-format
+msgid "Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs"
+msgstr "Archief: <strong>%(channels)s</strong> kanalen • <strong>%(vods)s</strong> VOD's"
+
+msgid "Archived airtime"
+msgstr "Gearchiveerde zendtijd"
+
+#, python-format
+msgid "Archived files (%(count)s)"
+msgstr "Gearchiveerde bestanden (%(count)s)"
+
+msgid "Area maintenance and exempt users saved successfully."
+msgstr "Onderhoud per onderdeel en uitgezonderde gebruikers opgeslagen."
+
+msgid "At least 8 characters"
+msgstr "Minimaal 8 tekens"
+
+msgid "Audio extraction error"
+msgstr "Fout bij audio-extractie"
+
+msgid "Audio extraction failed"
+msgstr "Audio-extractie mislukt"
+
+msgid "August"
+msgstr "augustus"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Auto-sync interval (minutes)"
+msgstr "Interval automatische synchronisatie (minuten)"
+
+msgid "Auto: off"
+msgstr "Auto: uit"
+
+msgid "Auto: on"
+msgstr "Auto: aan"
+
+msgid "Automatic"
+msgstr "Automatisch"
+
+msgid "Automatic (browser)"
+msgstr "Automatisch (browser)"
+
+msgid "Automatic (first active)"
+msgstr "Automatisch (eerste actieve)"
+
+msgid "Automatic and manual backups (SQLite database, configuration and metadata)."
+msgstr "Automatische en handmatige back-ups (SQLite-database, configuratie en metadata)."
+
+msgid "Automatically unlock future streams & folders"
+msgstr "Toekomstige streams en mappen automatisch vrijgeven"
+
+msgid "Automation & retention"
+msgstr "Automatisering & bewaartermijn"
+
+msgid "Avg. active"
+msgstr "Gem. actief"
+
+msgid "Back"
+msgstr "Terug"
+
+msgid "Back shortly"
+msgstr "Zo terug"
+
+msgid "Back to dashboard"
+msgstr "Terug naar dashboard"
+
+msgid "Back to overview"
+msgstr "Terug naar overzicht"
+
+msgid "Back to user management"
+msgstr "Terug naar gebruikersbeheer"
+
+msgid "Back up chat logs too"
+msgstr "Ook chatlogs back-uppen"
+
+msgid "Back up thumbnails too"
+msgstr "Ook miniaturen back-uppen"
+
+#, python-format
+msgid "Backup %(name)s could not be deleted."
+msgstr "Back-up %(name)s kon niet worden verwijderd."
+
+#, python-format
+msgid "Backup %(name)s deleted."
+msgstr "Back-up %(name)s verwijderd."
+
+#, python-format
+msgid "Backup error: %(error)s"
+msgstr "Back-upfout: %(error)s"
+
+msgid "Badge library is up to date."
+msgstr "Badgebibliotheek is up-to-date."
+
+msgid "Badge sync is already running."
+msgstr "Badgesynchronisatie loopt al."
+
+msgid "Badge sync started."
+msgstr "Badgesynchronisatie gestart."
+
+msgid "Ban"
+msgstr "Blokkeren"
+
+msgid "Ban IP"
+msgstr "IP bannen"
+
+msgid "Banned"
+msgstr "Verbannen"
+
+#, python-format
+msgid "Banner URL for %(streamer)s saved."
+msgstr "Banner-URL voor %(streamer)s opgeslagen."
+
+#, python-format
+msgid "Banner for %(streamer)s reset to default."
+msgstr "Banner voor %(streamer)s teruggezet naar standaard."
+
+#, python-format
+msgid "Banner image for %(streamer)s uploaded successfully."
+msgstr "Bannerafbeelding voor %(streamer)s geüpload."
+
+msgid "Banner image uploaded successfully."
+msgstr "Bannerafbeelding geüpload."
+
+msgid "Banner reset to default."
+msgstr "Banner teruggezet naar standaard."
+
+msgid "Base:"
+msgstr "Basis:"
+
+msgid "Blocked"
+msgstr "Geblokkeerd"
+
+#, python-format
+msgid "Blocked (%(count)s): %(list)s"
+msgstr "Geblokkeerd (%(count)s): %(list)s"
+
+msgid "Browser supports neither MPEG-TS nor live HLS."
+msgstr "Browser ondersteunt geen MPEG-TS en geen live HLS."
+
+msgid "Bucket name contains invalid characters."
+msgstr "Bucketnaam bevat ongeldige tekens."
+
+msgid "Buffer is still short — the clip window grows with it."
+msgstr "Buffer is nog kort — het clipvenster groeit mee."
+
+msgid "Buffer:"
+msgstr "Buffer:"
+
+msgid "Buffering..."
+msgstr "Bufferen..."
+
+msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
+msgstr "Standaard wordt er niets automatisch geüpload of verwijderd. Schakel deze functies bewust in."
+
+msgid "CHANGE"
+msgstr "WIJZIGEN"
+
+msgid "CHANNEL MANAGEMENT (ADMIN)"
+msgstr "KANAALBEHEER (ADMIN)"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Category search failed."
+msgstr "Zoeken naar categorie mislukt."
+
+msgid "Category search is currently unavailable."
+msgstr "Zoeken naar categorie is momenteel niet beschikbaar."
+
+msgid "Change banner"
+msgstr "Banner wijzigen"
+
+msgid "Change password"
+msgstr "Wachtwoord wijzigen"
+
+msgid "Channel"
+msgstr "Kanaal"
+
+msgid "Channel actions"
+msgstr "Kanaalacties"
+
+msgid "Channel archive & recording metrics"
+msgstr "Kanaalarchief & opnamestatistieken"
+
+msgid "Channel not found."
+msgstr "Kanaal niet gevonden."
+
+msgid "Channels"
+msgstr "Kanalen"
+
+msgid "Chat"
+msgstr "Chat"
+
+#, python-format
+msgid "Chat %(age)s"
+msgstr "Chat %(age)s"
+
+msgid "Chat density & event timeline (click to jump)"
+msgstr "Chatdichtheid & tijdlijn van gebeurtenissen (klik om te springen)"
+
+#, python-format
+msgid "Chat export - %(user)s"
+msgstr "Chatexport - %(user)s"
+
+msgid "Chat filter"
+msgstr "Chatfilter"
+
+#, python-format
+msgid "Chat history: %(user)s"
+msgstr "Chatgeschiedenis: %(user)s"
+
+msgid "Chat messages"
+msgstr "Chatberichten"
+
+msgid "Chat replay"
+msgstr "Chatreplay"
+
+msgid "Chat replay ready"
+msgstr "Chatreplay klaar"
+
+#, python-format
+msgid "Chat replay ready · first message at %(time)s"
+msgstr "Chatreplay klaar · eerste bericht om %(time)s"
+
+msgid "Chat tracker & global search"
+msgstr "Chattracker & globaal zoeken"
+
+msgid "Check"
+msgstr "Controleren"
+
+msgid "Cleanup interval (minutes)"
+msgstr "Opschoninterval (minuten)"
+
+#, python-format
+msgid "Cleanup queued (task #%(task)s)."
+msgstr "Opschoning in wachtrij (taak #%(task)s)."
+
+msgid "Clear filters"
+msgstr "Filters wissen"
+
+msgid "Click to change password"
+msgstr "Klik om wachtwoord te wijzigen"
+
+msgid "Clip"
+msgstr "Clip"
+
+msgid "Clip URL is missing on this page."
+msgstr "Clip-URL ontbreekt op deze pagina."
+
+msgid "Clip could not be deleted."
+msgstr "Clip kon niet worden verwijderd."
+
+msgid "Clip created."
+msgstr "Clip gemaakt."
+
+msgid "Clip deleted."
+msgstr "Clip verwijderd."
+
+msgid "Clip end"
+msgstr "Clipeinde"
+
+msgid "Clip failed."
+msgstr "Clip mislukt."
+
+msgid "Clip is already starting…"
+msgstr "Clip wordt al gestart…"
+
+msgid "Clip is taking too long."
+msgstr "Clip duurt te lang."
+
+msgid "Clip job not found."
+msgstr "Cliptaak niet gevonden."
+
+msgid "Clip saved."
+msgstr "Clip opgeslagen."
+
+msgid "Clip settings"
+msgstr "Clipinstellingen"
+
+msgid "Clip settings saved."
+msgstr "Clipinstellingen opgeslagen."
+
+msgid "Clip start"
+msgstr "Clipstart"
+
+msgid "Clip title"
+msgstr "Cliptitel"
+
+msgid "Clip title (optional)"
+msgstr "Cliptitel (optioneel)"
+
+#, python-format
+msgid "Clips (%(count)s)"
+msgstr "Clips (%(count)s)"
+
+msgid "Close"
+msgstr "Sluiten"
+
+msgid "Close transcript"
+msgstr "Transcript sluiten"
+
+#, python-format
+msgid "Cloud deletion queued (task #%(task)s)."
+msgstr "Cloudverwijdering in wachtrij (taak #%(task)s)."
+
+msgid "Cloud only"
+msgstr "Alleen cloud"
+
+msgid "Cloud storage"
+msgstr "Cloudopslag"
+
+#, python-format
+msgid "Cloud sync queued (task #%(task)s)."
+msgstr "Cloudsynchronisatie in wachtrij (taak #%(task)s)."
+
+msgid "Cloud volume"
+msgstr "Cloudvolume"
+
+msgid "Collapse chat"
+msgstr "Chat inklappen"
+
+msgid "Configure dynamic permissions for streams, the video archive and channel access."
+msgstr "Configureer dynamische rechten voor streams, het videoarchief en kanaaltoegang."
+
+msgid "Configure recording channels and manage archive assignments"
+msgstr "Opnamekanalen configureren en archieftoewijzingen beheren"
+
+msgid "Configured streamers & sources"
+msgstr "Geconfigureerde streamers & bronnen"
+
+msgid "Connect account"
+msgstr "Account koppelen"
+
+msgid "Connect with Dropbox"
+msgstr "Koppelen met Dropbox"
+
+msgid "Connect with Google"
+msgstr "Koppelen met Google"
+
+msgid "Connect with Microsoft"
+msgstr "Koppelen met Microsoft"
+
+msgid "Connecting…"
+msgstr "Verbinden…"
+
+msgid "Connection OK"
+msgstr "Verbinding OK"
+
+msgid "Connection failed"
+msgstr "Verbinding mislukt"
+
+msgid "Connection lost — reconnecting…"
+msgstr "Verbinding verbroken — opnieuw verbinden…"
+
+#, python-format
+msgid "Connection test queued (task #%(task)s)."
+msgstr "Verbindingstest in wachtrij (taak #%(task)s)."
+
+msgid "Consent required."
+msgstr "Toestemming vereist."
+
+msgid "Control panel"
+msgstr "Configuratiescherm"
+
+msgid "Control the global maintenance mode or lock individual platform areas."
+msgstr "Beheer de globale onderhoudsmodus of vergrendel afzonderlijke onderdelen van het platform."
+
+msgid "Copy"
+msgstr "Kopiëren"
+
+msgid "Copy link"
+msgstr "Link kopiëren"
+
+msgid "Could not create clip."
+msgstr "Kon clip niet maken."
+
+msgid "Could not load status."
+msgstr "Kon status niet laden."
+
+msgid "Could not start clip."
+msgstr "Kon clip niet starten."
+
+msgid "Create"
+msgstr "Aanmaken"
+
+msgid "Create backup now"
+msgstr "Nu back-up maken"
+
+msgid "Create clip"
+msgstr "Clip maken"
+
+msgid "Create group"
+msgstr "Groep aanmaken"
+
+msgid "Create new user"
+msgstr "Nieuwe gebruiker aanmaken"
+
+msgid "Create new user group"
+msgstr "Nieuwe gebruikersgroep aanmaken"
+
+msgid "Create transcript"
+msgstr "Transcript maken"
+
+msgid "Create user"
+msgstr "Gebruiker aanmaken"
+
+msgid "Created"
+msgstr "Aangemaakt"
+
+msgid "Created on"
+msgstr "Aangemaakt op"
+
+msgid "Creating clip…"
+msgstr "Clip wordt gemaakt…"
+
+msgid "Critical"
+msgstr "Kritiek"
+
+msgid "Current password"
+msgstr "Huidig wachtwoord"
+
+msgid "Current preview"
+msgstr "Huidig voorbeeld"
+
+msgid "Current profile picture"
+msgstr "Huidige profielfoto"
+
+msgid "Custom"
+msgstr "Aangepast"
+
+msgid "Custom banner URL saved successfully."
+msgstr "Aangepaste banner-URL opgeslagen."
+
+msgid "Custom banner active"
+msgstr "Aangepaste banner actief"
+
+#, python-format
+msgid "Custom banner for %(streamer)s removed."
+msgstr "Aangepaste banner voor %(streamer)s verwijderd."
+
+msgid "Custom banner removed."
+msgstr "Aangepaste banner verwijderd."
+
+msgid "Custom file"
+msgstr "Eigen bestand"
+
+msgid "Custom profile picture URL saved successfully."
+msgstr "Aangepaste profielfoto-URL opgeslagen."
+
+msgid "Custom profile picture active"
+msgstr "Aangepaste profielfoto actief"
+
+msgid "Custom profile picture removed."
+msgstr "Aangepaste profielfoto verwijderd."
+
+msgid "Customize channel banner"
+msgstr "Kanaalbanner aanpassen"
+
+msgid "Customize profile picture"
+msgstr "Profielfoto aanpassen"
+
+#, python-format
+msgid "Daily activity %(user)s"
+msgstr "Dagelijkse activiteit %(user)s"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "December"
+msgstr "december"
+
+msgid "Default"
+msgstr "Standaard"
+
+msgid "Default provider"
+msgstr "Standaardprovider"
+
+msgid "Default target"
+msgstr "Standaarddoel"
+
+msgid "Delete"
+msgstr "Verwijderen"
+
+msgid "Delete folder"
+msgstr "Map verwijderen"
+
+msgid "Delete from cloud"
+msgstr "Uit cloud verwijderen"
+
+msgid "Delete group"
+msgstr "Groep verwijderen"
+
+msgid "Delete local copies after retention"
+msgstr "Lokale kopieën verwijderen na bewaartermijn"
+
+msgid "Delete locally"
+msgstr "Lokaal verwijderen"
+
+msgid "Delete permanently"
+msgstr "Definitief verwijderen"
+
+msgid "Delete user"
+msgstr "Gebruiker verwijderen"
+
+msgid "Delete user group"
+msgstr "Gebruikersgroep verwijderen"
+
+msgid "Delete videos"
+msgstr "Video's verwijderen"
+
+msgid "Delete videos & recordings"
+msgstr "Video's & opnames verwijderen"
+
+msgid "Deleted!"
+msgstr "Verwijderd!"
+
+msgid "Description"
+msgstr "Beschrijving"
+
+msgid "Description (optional)"
+msgstr "Beschrijving (optioneel)"
+
+msgid "Direct modules"
+msgstr "Directe modules"
+
+msgid "Directly into the vault archive"
+msgstr "Direct in het vault-archief"
+
+msgid "Disable / block individual folders:"
+msgstr "Afzonderlijke mappen uitschakelen / blokkeren:"
+
+msgid "Disable / enable individual folders:"
+msgstr "Afzonderlijke mappen uit-/inschakelen:"
+
+msgid "Disable recording (live & Discord only)"
+msgstr "Opname uitschakelen (alleen live & Discord)"
+
+msgid "Disabled"
+msgstr "Uitgeschakeld"
+
+msgid "Discard clip? Unsaved changes will be lost."
+msgstr "Clip weggooien? Niet-opgeslagen wijzigingen gaan verloren."
+
+msgid "Discord integration not active"
+msgstr "Discord-integratie niet actief"
+
+msgid "Discover"
+msgstr "Ontdekken"
+
+msgid "Discover and watch Twitch streams in StreamVault"
+msgstr "Twitch-streams ontdekken en bekijken in StreamVault"
+
+msgid "Display name"
+msgstr "Weergavenaam"
+
+msgid "Display title"
+msgstr "Weergavetitel"
+
+#, python-format
+msgid "Do you really want to delete the group %(name)s?"
+msgstr "Wil je de groep %(name)s echt verwijderen?"
+
+#, python-format
+msgid "Do you really want to permanently delete the user %(name)s?"
+msgstr "Wil je de gebruiker %(name)s echt definitief verwijderen?"
+
+msgid "Do you want to empty the entire recording folder?"
+msgstr "Wil je de hele opnamemap leegmaken?"
+
+msgid "Done"
+msgstr "Klaar"
+
+msgid "Download"
+msgstr "Downloaden"
+
+msgid "Download TXT"
+msgstr "TXT downloaden"
+
+msgid "Download all"
+msgstr "Alles downloaden"
+
+msgid "Download all VODs?"
+msgstr "Alle VOD's downloaden?"
+
+msgid "Download archive & VODs"
+msgstr "Archief & VOD's downloaden"
+
+msgid "Download complete."
+msgstr "Download voltooid."
+
+msgid "Download file"
+msgstr "Bestand downloaden"
+
+msgid "Download is disabled. Please watch in the player (if available)."
+msgstr "Downloaden is uitgeschakeld. Bekijk het in de speler (indien beschikbaar)."
+
+msgid "Download of all VODs started in the background."
+msgstr "Download van alle VOD's op de achtergrond gestart."
+
+#, python-format
+msgid "Downloading... %(percent)s"
+msgstr "Downloaden... %(percent)s"
+
+#, python-format
+msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
+msgstr "Drive-quotum actief — druk niet opnieuw op Afspelen (dat verlengt de blokkade). Spoel terug naar het al geladen deel of wacht ongeveer %(minutes)s min."
+
+msgid "Drop a file here or click to select"
+msgstr "Sleep een bestand hierheen of klik om te selecteren"
+
+msgid "Dropbox with OAuth 2.0, refresh token and large upload sessions."
+msgstr "Dropbox met OAuth 2.0, refresh token en grote uploadsessies."
+
+msgid "Duration"
+msgstr "Duur"
+
+msgid "Duration must be > 0."
+msgstr "Duur moet > 0 zijn."
+
+msgid "Duration:"
+msgstr "Duur:"
+
+msgid "Dynamic user account and group management with granular stream and permission control"
+msgstr "Dynamisch beheer van gebruikersaccounts en groepen met nauwkeurige controle over streams en rechten"
+
+msgid "END"
+msgstr "EINDE"
+
+msgid "Edit"
+msgstr "Bewerken"
+
+msgid "Edit group"
+msgstr "Groep bewerken"
+
+msgid "Edit group & permissions"
+msgstr "Groep & rechten bewerken"
+
+msgid "Edit provider"
+msgstr "Provider bewerken"
+
+msgid "Edit user"
+msgstr "Gebruiker bewerken"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Email address"
+msgstr "E-mailadres"
+
+msgid "Email address (optional)"
+msgstr "E-mailadres (optioneel)"
+
+msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
+msgstr "Leeg = AWS. Vul voor R2, B2, Wasabi, MinIO enz. het S3-endpoint in."
+
+msgid "Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers use their own region."
+msgstr "Leeg = us-east-1 voor AWS. Cloudflare R2 gebruikt 'auto'; andere S3-providers gebruiken hun eigen regio."
+
+msgid "Empty folder"
+msgstr "Map leegmaken"
+
+msgid "Enable immediately"
+msgstr "Direct inschakelen"
+
+msgid "Enable maintenance mode"
+msgstr "Onderhoudsmodus inschakelen"
+
+msgid "Enable recording"
+msgstr "Opname inschakelen"
+
+msgid "Enable recording for this channel"
+msgstr "Opname inschakelen voor dit kanaal"
+
+msgid "Enabled"
+msgstr "Ingeschakeld"
+
+msgid "Encryption not ready."
+msgstr "Versleuteling niet gereed."
+
+msgid "End"
+msgstr "Einde"
+
+msgid "End global maintenance mode"
+msgstr "Globale onderhoudsmodus beëindigen"
+
+msgid "Endpoint URL (optional)"
+msgstr "Endpoint-URL (optioneel)"
+
+msgid "Endpoint URL must be a valid http(s) URL."
+msgstr "Endpoint-URL moet een geldige http(s)-URL zijn."
+
+msgid "Endpoint URL must not contain a query or fragment."
+msgstr "Endpoint-URL mag geen query of fragment bevatten."
+
+msgid "Endpoint URL must not contain credentials; use Access Key and Secret Key."
+msgstr "Endpoint-URL mag geen inloggegevens bevatten; gebruik Access Key en Secret Key."
+
+msgid "Endpoint:"
+msgstr "Endpoint:"
+
+msgid "Enter current password"
+msgstr "Huidig wachtwoord invoeren"
+
+msgid "Error"
+msgstr "Fout"
+
+msgid "Error cancelling the transcription"
+msgstr "Fout bij annuleren van de transcriptie"
+
+msgid "Error changing the password."
+msgstr "Fout bij wijzigen van het wachtwoord."
+
+msgid "Error creating group"
+msgstr "Fout bij aanmaken van groep"
+
+msgid "Error creating the audio segment"
+msgstr "Fout bij aanmaken van het audiosegment"
+
+msgid "Error creating the user."
+msgstr "Fout bij aanmaken van de gebruiker."
+
+msgid "Error creating user"
+msgstr "Fout bij aanmaken van gebruiker"
+
+msgid "Error deleting group"
+msgstr "Fout bij verwijderen van groep"
+
+msgid "Error deleting user"
+msgstr "Fout bij verwijderen van gebruiker"
+
+msgid "Error loading cloud storage management."
+msgstr "Fout bij laden van cloudopslagbeheer."
+
+msgid "Error loading the admin panel. Please try again later."
+msgstr "Fout bij laden van het adminpaneel. Probeer het later opnieuw."
+
+msgid "Error loading the traffic overview."
+msgstr "Fout bij laden van het verkeersoverzicht."
+
+msgid "Error queuing the transcription"
+msgstr "Fout bij in de wachtrij plaatsen van de transcriptie"
+
+msgid "Error saving group"
+msgstr "Fout bij opslaan van groep"
+
+msgid "Error updating user"
+msgstr "Fout bij bijwerken van gebruiker"
+
+msgid "Error while deleting"
+msgstr "Fout bij verwijderen"
+
+msgid "Error while loading."
+msgstr "Fout bij laden."
+
+msgid "Error while saving"
+msgstr "Fout bij opslaan"
+
+msgid "Error:"
+msgstr "Fout:"
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr "Fout: %(error)s"
+
+msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
+msgstr "Bestaande leden van deze groep worden automatisch toegewezen aan de standaardgroep <strong>Viewer</strong>."
+
+msgid "Exit fullscreen"
+msgstr "Volledig scherm afsluiten"
+
+msgid "Expand chat"
+msgstr "Chat uitklappen"
+
+msgid "Expires"
+msgstr "Verloopt"
+
+msgid "Exported by StreamVault"
+msgstr "Geëxporteerd door StreamVault"
+
+msgid "Extracting audio..."
+msgstr "Audio extraheren..."
+
+msgid "FEATURED VOD"
+msgstr "UITGELICHTE VOD"
+
+msgid "Failed"
+msgstr "Mislukt"
+
+msgid "Fast"
+msgstr "Snel"
+
+msgid "Feature permissions"
+msgstr "Functierechten"
+
+msgid "Featured highlight"
+msgstr "Uitgelicht hoogtepunt"
+
+msgid "February"
+msgstr "februari"
+
+msgid "File"
+msgstr "Bestand"
+
+msgid "File manager"
+msgstr "Bestandsbeheer"
+
+msgid "File name"
+msgstr "Bestandsnaam"
+
+msgid "File not found"
+msgstr "Bestand niet gevonden"
+
+msgid "File not found locally."
+msgstr "Bestand lokaal niet gevonden."
+
+msgid "File size"
+msgstr "Bestandsgrootte"
+
+msgid "File was uploaded."
+msgstr "Bestand is geüpload."
+
+msgid "Filter"
+msgstr "Filteren"
+
+msgid "Filter chat..."
+msgstr "Chat filteren..."
+
+msgid "First"
+msgstr "Eerste"
+
+msgid "First page"
+msgstr "Eerste pagina"
+
+msgid "Folder ID:"
+msgstr "Map-ID:"
+
+msgid "Folder is being emptied in the background."
+msgstr "Map wordt op de achtergrond leeggemaakt."
+
+msgid "Folder not found or invalid."
+msgstr "Map niet gevonden of ongeldig."
+
+msgid "For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:"
+msgstr "Voor Google Drive, Dropbox en OneDrive moet deze callback-URL bij de provider worden geregistreerd:"
+
+msgid "For encrypted credential storage, VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least 16 characters)."
+msgstr "Voor versleutelde opslag van inloggegevens moet VOD_SECRET_KEY (of STORAGE_ENCRYPTION_KEY) op een sterke, unieke waarde zijn ingesteld (minimaal 16 tekens)."
+
+msgid "Forget"
+msgstr "Vergeten"
+
+msgid "Free"
+msgstr "Vrij"
+
+msgid "Full mode:"
+msgstr "Volledige modus:"
+
+msgid "Full mode: recording + live + Discord"
+msgstr "Volledige modus: opname + live + Discord"
+
+msgid "Full terms text"
+msgstr "Volledige tekst van de voorwaarden"
+
+msgid "Full-text search across chat logs, metadata and VOD archives"
+msgstr "Zoeken in volledige tekst van chatlogs, metadata en VOD-archieven"
+
+msgid "Full-text search query"
+msgstr "Zoekopdracht (volledige tekst)"
+
+msgid "Fullscreen"
+msgstr "Volledig scherm"
+
+msgid "Game"
+msgstr "Game"
+
+#, python-format
+msgid "Game: %(category)s"
+msgstr "Game: %(category)s"
+
+#, python-format
+msgid "Game: %(name)s"
+msgstr "Game: %(name)s"
+
+msgid "Generate HLS now"
+msgstr "HLS nu genereren"
+
+msgid "Global maintenance mode:"
+msgstr "Globale onderhoudsmodus:"
+
+msgid "Go"
+msgstr "Ga"
+
+msgid "Go to dashboard"
+msgstr "Naar dashboard"
+
+msgid "Go to login"
+msgstr "Naar inloggen"
+
+msgid "Go to sign in"
+msgstr "Naar inloggen"
+
+msgid "Go to sign-in"
+msgstr "Naar inloggen"
+
+msgid "Go to terms"
+msgstr "Naar voorwaarden"
+
+msgid "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+msgstr "Google Cloud Console → APIs & Services → Credentials → OAuth-client (webapplicatie)."
+
+msgid "Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads."
+msgstr "Google Drive / Workspace Drive met OAuth 2.0 en hervatbare uploads."
+
+msgid "Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption."
+msgstr "Google Drive, S3-compatibele diensten, Dropbox, OneDrive en WebDAV. Inloggegevens worden met AES-GCM versleuteld opgeslagen."
+
+msgid "Group"
+msgstr "Groep"
+
+#, python-format
+msgid "Group '%(name)s' created successfully."
+msgstr "Groep '%(name)s' aangemaakt."
+
+#, python-format
+msgid "Group '%(name)s' updated successfully."
+msgstr "Groep '%(name)s' bijgewerkt."
+
+msgid "Group created"
+msgstr "Groep aangemaakt"
+
+msgid "Group deleted"
+msgstr "Groep verwijderd"
+
+msgid "Group deleted successfully. Existing members were moved to the 'Viewer' group."
+msgstr "Groep verwijderd. Bestaande leden zijn naar de groep 'Viewer' verplaatst."
+
+msgid "Group name"
+msgstr "Groepsnaam"
+
+msgid "Group name must be between 2 and 50 characters long."
+msgstr "Groepsnaam moet tussen 2 en 50 tekens lang zijn."
+
+msgid "Group not found."
+msgstr "Groep niet gevonden."
+
+msgid "Group saved"
+msgstr "Groep opgeslagen"
+
+msgid "HLS connection lost — reconnecting…"
+msgstr "HLS-verbinding verbroken — opnieuw verbinden…"
+
+msgid "HLS could not be recovered."
+msgstr "HLS kon niet worden hersteld."
+
+msgid "HLS is being created. Please reload the page in a few minutes."
+msgstr "HLS wordt aangemaakt. Laad de pagina over een paar minuten opnieuw."
+
+msgid "HLS is not supported by this browser."
+msgstr "HLS wordt niet ondersteund door deze browser."
+
+msgid "HLS starts faster for very large files."
+msgstr "HLS start sneller bij zeer grote bestanden."
+
+msgid "High"
+msgstr "Hoog"
+
+msgid "Home"
+msgstr "Start"
+
+msgid "Hotkey"
+msgstr "Sneltoets"
+
+msgid "House rules for the invite-only circle. No “official” framing — just binding terms of use."
+msgstr "Huisregels voor de besloten kring. Geen “officiële” insteek — gewoon bindende gebruiksvoorwaarden."
+
+msgid "I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access."
+msgstr "Ik heb de regels van StreamVault gelezen en ga ermee akkoord. Ik begrijp dat overtredingen leiden tot het direct intrekken van de toegang."
+
+#, python-format
+msgid "I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access."
+msgstr "Ik heb de voorwaarden (versie %(version)s) gelezen en ga ermee akkoord. Overtredingen kunnen leiden tot het direct intrekken van de toegang."
+
+msgid "IP"
+msgstr "IP"
+
+#, python-format
+msgid "If needed, set %(var)s to your public HTTPS address so the URL matches exactly."
+msgstr "Stel indien nodig %(var)s in op je openbare HTTPS-adres, zodat de URL exact overeenkomt."
+
+msgid "Image controls"
+msgstr "Beeldinstellingen"
+
+#, python-format
+msgid "Inactive (%(count)s)"
+msgstr "Inactief (%(count)s)"
+
+msgid "Inactive: new streams stay blocked. Only folders checked below are unlocked."
+msgstr "Inactief: nieuwe streams blijven geblokkeerd. Alleen de hieronder aangevinkte mappen worden vrijgegeven."
+
+msgid "Include audio"
+msgstr "Audio meenemen"
+
+msgid "Info about the VOD…"
+msgstr "Info over de VOD…"
+
+msgid "Information on data processing within the invite-only circle. No legal notice."
+msgstr "Informatie over gegevensverwerking binnen de besloten kring. Geen colofon."
+
+msgid "Initial password"
+msgstr "Startwachtwoord"
+
+msgid "Instant clip parameters and hotkey in the web player."
+msgstr "Parameters voor directe clips en sneltoets in de webspeler."
+
+msgid "Intensity"
+msgstr "Intensiteit"
+
+msgid "Internal server error while creating the group."
+msgstr "Interne serverfout bij aanmaken van de groep."
+
+msgid "Internal server error while deleting the group."
+msgstr "Interne serverfout bij verwijderen van de groep."
+
+msgid "Internal server error while updating the group."
+msgstr "Interne serverfout bij bijwerken van de groep."
+
+msgid "Invalid OAuth state."
+msgstr "Ongeldige OAuth-status."
+
+msgid "Invalid Twitch channel."
+msgstr "Ongeldig Twitch-kanaal."
+
+msgid "Invalid channel name."
+msgstr "Ongeldige kanaalnaam."
+
+msgid "Invalid channel."
+msgstr "Ongeldig kanaal."
+
+msgid "Invalid clip path."
+msgstr "Ongeldig clippad."
+
+msgid "Invalid file name."
+msgstr "Ongeldige bestandsnaam."
+
+msgid "Invalid file."
+msgstr "Ongeldig bestand."
+
+msgid "Invalid folder slug."
+msgstr "Ongeldige mapslug."
+
+msgid "Invalid group ID."
+msgstr "Ongeldige groeps-ID."
+
+msgid "Invalid image format (allowed: JPG, PNG, WEBP, GIF)."
+msgstr "Ongeldig afbeeldingsformaat (toegestaan: JPG, PNG, WEBP, GIF)."
+
+msgid "Invalid maintenance action."
+msgstr "Ongeldige onderhoudsactie."
+
+msgid "Invalid new username."
+msgstr "Ongeldige nieuwe gebruikersnaam."
+
+msgid "Invalid path (control characters)."
+msgstr "Ongeldig pad (stuurtekens)."
+
+msgid "Invalid path (null byte)."
+msgstr "Ongeldig pad (null-byte)."
+
+msgid "Invalid path (path traversal)."
+msgstr "Ongeldig pad (path traversal)."
+
+#, python-format
+msgid "Invalid server response (%(status)s)."
+msgstr "Ongeldig serverantwoord (%(status)s)."
+
+msgid "Invalid source."
+msgstr "Ongeldige bron."
+
+msgid "Invalid streamer name."
+msgstr "Ongeldige streamernaam."
+
+#, python-format
+msgid "Invalid subfolder: %(error)s"
+msgstr "Ongeldige submap: %(error)s"
+
+msgid "Invalid time value."
+msgstr "Ongeldige tijdwaarde."
+
+msgid "Invalid username (3-32 characters: letters, numbers, _ and -)."
+msgstr "Ongeldige gebruikersnaam (3-32 tekens: letters, cijfers, _ en -)."
+
+msgid "Invite-only. Full terms text after sign-in."
+msgstr "Alleen op uitnodiging. Volledige tekst van de voorwaarden na het inloggen."
+
+msgid "January"
+msgstr "januari"
+
+msgid "July"
+msgstr "juli"
+
+msgid "June"
+msgstr "juni"
+
+msgid "LIVE"
+msgstr "LIVE"
+
+#, python-format
+msgid "LIVE %(name)s (without Twitch login)"
+msgstr "LIVE %(name)s (zonder Twitch-login)"
+
+msgid "LIVE & DISCORD ONLY"
+msgstr "ALLEEN LIVE & DISCORD"
+
+msgid "LIVE NOW"
+msgstr "NU LIVE"
+
+msgid "Language"
+msgstr "Taal"
+
+msgid "Largest"
+msgstr "Groot"
+
+msgid "Last"
+msgstr "Laatste"
+
+msgid "Last active"
+msgstr "Laatst actief"
+
+msgid "Last broadcast"
+msgstr "Laatste uitzending"
+
+msgid "Last changed:"
+msgstr "Laatst gewijzigd:"
+
+msgid "Last page"
+msgstr "Laatste pagina"
+
+msgid "Last test:"
+msgstr "Laatste test:"
+
+msgid "Latest VODs"
+msgstr "Nieuwste VOD's"
+
+msgid "Leave empty to create a 'StreamVault' folder automatically."
+msgstr "Laat leeg om automatisch een map 'StreamVault' aan te maken."
+
+msgid "Legend"
+msgstr "Legenda"
+
+msgid "Link"
+msgstr "Link"
+
+msgid "Link copied"
+msgstr "Link gekopieerd"
+
+msgid "Link copied to clipboard:"
+msgstr "Link gekopieerd naar klembord:"
+
+msgid "Link copied:"
+msgstr "Link gekopieerd:"
+
+msgid "Live"
+msgstr "Live"
+
+msgid "Live & Discord only:"
+msgstr "Alleen live & Discord:"
+
+msgid "Live (recovering...)"
+msgstr "Live (herstellen...)"
+
+msgid "Live channels"
+msgstr "Livekanalen"
+
+msgid "Live chat"
+msgstr "Livechat"
+
+msgid "Live clip created."
+msgstr "Liveclip gemaakt."
+
+msgid "Live now"
+msgstr "Nu live"
+
+msgid "Live on Twitch"
+msgstr "Live op Twitch"
+
+msgid "Live only: live stream + Discord (no recording)"
+msgstr "Alleen live: livestream + Discord (geen opname)"
+
+msgid "Live recording"
+msgstr "Liveopname"
+
+msgid "Live start failed."
+msgstr "Live starten mislukt."
+
+msgid "Live stopped."
+msgstr "Live gestopt."
+
+msgid "Live stream and Discord alerts only, no disk recording"
+msgstr "Alleen livestream en Discord-meldingen, geen opname op schijf"
+
+msgid "Live stream highlight"
+msgstr "Hoogtepunt van de livestream"
+
+msgid "Live stream is currently unavailable. Searching for stream..."
+msgstr "Livestream is momenteel niet beschikbaar. Stream wordt gezocht..."
+
+msgid "Live stream not available."
+msgstr "Livestream niet beschikbaar."
+
+msgid "Live via server"
+msgstr "Live via server"
+
+msgid "Live view"
+msgstr "Liveweergave"
+
+msgid "Live watch"
+msgstr "Live kijken"
+
+msgid "Live-only"
+msgstr "Alleen live"
+
+msgid "Load"
+msgstr "Belasting"
+
+msgid "Load average (1m / 5m):"
+msgstr "Gemiddelde belasting (1m / 5m):"
+
+msgid "Loading chat…"
+msgstr "Chat laden…"
+
+msgid "Loading model..."
+msgstr "Model laden..."
+
+msgid "Loading streams…"
+msgstr "Streams laden…"
+
+msgid "Local"
+msgstr "Lokaal"
+
+#, python-format
+msgid "Local rename failed: %(error)s"
+msgstr "Lokaal hernoemen mislukt: %(error)s"
+
+msgid "Local retention (days)"
+msgstr "Lokale bewaartermijn (dagen)"
+
+msgid "Location"
+msgstr "Opslaglocatie"
+
+msgid "Lock <strong>VOD player &amp; archive</strong>"
+msgstr "<strong>VOD-speler &amp; archief</strong> vergrendelen"
+
+msgid "Lock <strong>live stream &amp; Twitch watch</strong>"
+msgstr "<strong>Livestream &amp; Twitch kijken</strong> vergrendelen"
+
+msgid "Lock <strong>mobile version</strong>"
+msgstr "<strong>Mobiele versie</strong> vergrendelen"
+
+msgid "Log out"
+msgstr "Uitloggen"
+
+msgid "Login"
+msgstr "Inloggen"
+
+msgid "Login attempts"
+msgstr "Inlogpogingen"
+
+msgid "Login failed."
+msgstr "Inloggen mislukt."
+
+msgid "MP4 check not possible"
+msgstr "MP4-controle niet mogelijk"
+
+msgid "Maintenance"
+msgstr "Onderhoud"
+
+msgid "Maintenance mode & area control"
+msgstr "Onderhoudsmodus & beheer per onderdeel"
+
+#, python-format
+msgid "Maintenance mode active, but the Discord notice failed: %(error)s"
+msgstr "Onderhoudsmodus actief, maar de Discord-melding is mislukt: %(error)s"
+
+msgid "Maintenance mode active."
+msgstr "Onderhoudsmodus actief."
+
+msgid "Maintenance mode active. Discord notice was sent."
+msgstr "Onderhoudsmodus actief. Discord-melding is verzonden."
+
+#, python-format
+msgid "Maintenance mode ended, but the Discord notice failed: %(error)s"
+msgstr "Onderhoudsmodus beëindigd, maar de Discord-melding is mislukt: %(error)s"
+
+msgid "Maintenance mode ended. Discord notice (available again) was sent."
+msgstr "Onderhoudsmodus beëindigd. Discord-melding (weer beschikbaar) is verzonden."
+
+msgid "Maintenance mode ended. The site is available to everyone again."
+msgstr "Onderhoudsmodus beëindigd. De site is weer voor iedereen beschikbaar."
+
+msgid "Manage documents, media files and archive assets"
+msgstr "Documenten, mediabestanden en archiefitems beheren"
+
+msgid "Manage streamers"
+msgstr "Streamers beheren"
+
+msgid "Manage users & groups"
+msgstr "Gebruikers & groepen beheren"
+
+msgid "Manual sync"
+msgstr "Handmatige sync"
+
+msgid "March"
+msgstr "maart"
+
+msgid "Matches found"
+msgstr "Gevonden resultaten"
+
+msgid "Max. files per sync"
+msgstr "Max. bestanden per sync"
+
+msgid "May"
+msgstr "mei"
+
+msgid "Member"
+msgstr "Lid"
+
+msgid "Member VOD access saved."
+msgstr "VOD-toegang voor leden opgeslagen."
+
+msgid "Members"
+msgstr "Leden"
+
+msgid "Message"
+msgstr "Bericht"
+
+msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
+msgstr "Mobiel live kijken is tijdelijk uitgeschakeld. Gebruik de desktopversie of de geïnstalleerde app."
+
+msgid "Monitored"
+msgstr "Bewaakt"
+
+msgid "Must point to a writable folder and end with / (added automatically)."
+msgstr "Moet verwijzen naar een beschrijfbare map en eindigen op / (wordt automatisch toegevoegd)."
+
+msgid "Mute"
+msgstr "Dempen"
+
+msgid "Muted"
+msgstr "Gedempt"
+
+msgid "My streamers"
+msgstr "Mijn streamers"
+
+msgid "Network error"
+msgstr "Netwerkfout"
+
+msgid "Network error while loading streams."
+msgstr "Netwerkfout bij laden van streams."
+
+msgid "Network error:"
+msgstr "Netwerkfout:"
+
+msgid "Network is back — reconnecting…"
+msgstr "Netwerk is terug — opnieuw verbinden…"
+
+msgid "Never"
+msgstr "Nooit"
+
+msgid "New clips"
+msgstr "Nieuwe clips"
+
+msgid "New group"
+msgstr "Nieuwe groep"
+
+msgid "New password (leave empty to keep unchanged)"
+msgstr "Nieuw wachtwoord (leeg laten om niet te wijzigen)"
+
+msgid "New password * (min. 8 characters)"
+msgstr "Nieuw wachtwoord * (min. 8 tekens)"
+
+msgid "New password..."
+msgstr "Nieuw wachtwoord..."
+
+msgid "New user"
+msgstr "Nieuwe gebruiker"
+
+msgid "Newest"
+msgstr "Nieuwste"
+
+msgid "Newest first"
+msgstr "Nieuwste eerst"
+
+msgid "Next"
+msgstr "Volgende"
+
+msgid "Next page"
+msgstr "Volgende pagina"
+
+msgid "Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password."
+msgstr "Nextcloud, ownCloud, Hetzner Storage Box of elke WebDAV-server met een app-wachtwoord."
+
+msgid "No (self-signed only)"
+msgstr "Nee (alleen zelfondertekend)"
+
+msgid "No VODs available in the archive"
+msgstr "Geen VOD's beschikbaar in het archief"
+
+msgid "No acceptances yet."
+msgstr "Nog geen acceptaties."
+
+msgid "No account yet? Accounts are issued by the administrators of this instance."
+msgstr "Nog geen account? Accounts worden uitgegeven door de beheerders van deze instantie."
+
+msgid "No accounts match this filter."
+msgstr "Geen accounts gevonden voor dit filter."
+
+msgid "No active file"
+msgstr "Geen actief bestand"
+
+msgid "No active provider"
+msgstr "Geen actieve provider"
+
+msgid "No active shares."
+msgstr "Geen actieve deelacties."
+
+msgid "No active streams"
+msgstr "Geen actieve streams"
+
+msgid "No archive objects yet. Start a sync or upload a recording."
+msgstr "Nog geen archiefobjecten. Start een sync of upload een opname."
+
+msgid "No backup script configured (VOD_BACKUP_SCRIPT)."
+msgstr "Geen back-upscript geconfigureerd (VOD_BACKUP_SCRIPT)."
+
+msgid "No backups available."
+msgstr "Geen back-ups beschikbaar."
+
+msgid "No badges received from Twitch."
+msgstr "Geen badges ontvangen van Twitch."
+
+msgid "No chat"
+msgstr "Geen chat"
+
+msgid "No cloud storage configured yet. Add a provider or use the console:"
+msgstr "Nog geen cloudopslag geconfigureerd. Voeg een provider toe of gebruik de console:"
+
+msgid "No connection. As soon as the device is back online, the app continues loading the page normally."
+msgstr "Geen verbinding. Zodra het apparaat weer online is, laadt de app de pagina gewoon verder."
+
+msgid "No discovery streams right now."
+msgstr "Momenteel geen streams om te ontdekken."
+
+msgid "No files stored in the vault."
+msgstr "Geen bestanden opgeslagen in de vault."
+
+msgid "No jobs in the queue."
+msgstr "Geen taken in de wachtrij."
+
+msgid "No live chat available. Chat appears when StreamVault records the stream."
+msgstr "Geen livechat beschikbaar. De chat verschijnt zodra StreamVault de stream opneemt."
+
+msgid "No live stream active"
+msgstr "Geen livestream actief"
+
+msgid "No live streams among the monitored channels. Use the search."
+msgstr "Geen livestreams onder de bewaakte kanalen. Gebruik de zoekfunctie."
+
+msgid "No local entries found for this search term. Press [Enter] to search the server."
+msgstr "Geen lokale resultaten voor deze zoekterm. Druk op [Enter] om op de server te zoeken."
+
+#, python-format
+msgid "No matches found for \"%(query)s\"."
+msgstr "Geen resultaten gevonden voor \"%(query)s\"."
+
+msgid "No monitored Twitch channels."
+msgstr "Geen bewaakte Twitch-kanalen."
+
+msgid "No monitored Twitch channels. Add streamers under Streamers."
+msgstr "Geen bewaakte Twitch-kanalen. Voeg streamers toe onder Streamers."
+
+msgid "No monitored channels configured."
+msgstr "Geen bewaakte kanalen geconfigureerd."
+
+msgid "No recently watched streams yet."
+msgstr "Nog geen onlangs bekeken streams."
+
+msgid "No recorded chat is available for this VOD."
+msgstr "Voor deze VOD is geen opgenomen chat beschikbaar."
+
+msgid "No recorder data found."
+msgstr "Geen recordergegevens gevonden."
+
+msgid "No recordings found."
+msgstr "Geen opnames gevonden."
+
+msgid "No results."
+msgstr "Geen resultaten."
+
+msgid "No running transcription found."
+msgstr "Geen lopende transcriptie gevonden."
+
+msgid "No streams"
+msgstr "Geen streams"
+
+msgid "No transcript output received"
+msgstr "Geen transcriptie-uitvoer ontvangen"
+
+msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
+msgstr "Nog geen transcript. Het wordt lokaal op de server gegenereerd en kan bij lange VOD's even duren."
+
+msgid "No transcription active"
+msgstr "Geen transcriptie actief"
+
+msgid "No videos found."
+msgstr "Geen video's gevonden."
+
+msgid "Not authenticated."
+msgstr "Niet geverifieerd."
+
+msgid "Not live"
+msgstr "Niet live"
+
+msgid "Notification + live stream (no recording)"
+msgstr "Melding + livestream (geen opname)"
+
+msgid "November"
+msgstr "november"
+
+msgid "OAuth code is missing."
+msgstr "OAuth-code ontbreekt."
+
+msgid "OAuth note"
+msgstr "OAuth-opmerking"
+
+msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
+msgstr "OAuth-statustokens vereisen een sterke VOD_SECRET_KEY."
+
+msgid "OFF (normal operation)"
+msgstr "UIT (normaal bedrijf)"
+
+msgid "OFFLINE"
+msgstr "OFFLINE"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "ONLINE"
+msgstr "ONLINE"
+
+msgid "OPERATING MODE:"
+msgstr "BEDRIJFSMODUS:"
+
+msgid "OPTION A: UPLOAD IMAGE FILE"
+msgstr "OPTIE A: AFBEELDINGSBESTAND UPLOADEN"
+
+msgid "OPTION A: UPLOAD PROFILE PICTURE"
+msgstr "OPTIE A: PROFIELFOTO UPLOADEN"
+
+msgid "OPTION B: USE IMAGE URL"
+msgstr "OPTIE B: AFBEELDINGS-URL GEBRUIKEN"
+
+msgid "OR"
+msgstr "OF"
+
+#, python-format
+msgid "Object #%(id)s removed from the database. Files are kept."
+msgstr "Object #%(id)s uit de database verwijderd. Bestanden blijven behouden."
+
+msgid "October"
+msgstr "oktober"
+
+msgid "Offline"
+msgstr "Offline"
+
+msgid "Offload the VOD archive to external storage automatically or manually"
+msgstr "VOD-archief automatisch of handmatig naar externe opslag verplaatsen"
+
+msgid "Oldest"
+msgstr "Oudste"
+
+msgid "Oldest first"
+msgstr "Oudste eerst"
+
+msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
+msgstr "OneDrive / Microsoft 365 via Microsoft Graph met OAuth 2.0."
+
+msgid "Only after a successful upload and optional cloud verification."
+msgstr "Alleen na een geslaagde upload en optionele cloudverificatie."
+
+msgid "Only needed if no refresh token is used."
+msgstr "Alleen nodig als er geen refresh token wordt gebruikt."
+
+msgid "Open"
+msgstr "Openen"
+
+msgid "Open Twitch"
+msgstr "Twitch openen"
+
+msgid "Open channel"
+msgstr "Kanaal openen"
+
+msgid "Open clip"
+msgstr "Clip openen"
+
+msgid "Open editor"
+msgstr "Editor openen"
+
+msgid "Option sections"
+msgstr "Optiesecties"
+
+msgid "Options"
+msgstr "Opties"
+
+msgid "Options & system control"
+msgstr "Opties & systeembeheer"
+
+msgid "Other platform"
+msgstr "Ander platform"
+
+#, python-format
+msgid "Page %(page)s / %(pages)s (%(count)s VODs)"
+msgstr "Pagina %(page)s / %(pages)s (%(count)s VOD's)"
+
+#, python-format
+msgid "Page %(page)s / %(total)s"
+msgstr "Pagina %(page)s / %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "Pagina %(page)s van %(pages)s"
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr "Pagina %(page)s van %(total)s"
+
+#, python-format
+msgid "Page %(page)s of %(total)s (%(count)s VODs)"
+msgstr "Pagina %(page)s van %(total)s (%(count)s VOD's)"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+msgstr "Pagina <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VOD's)"
+
+#, python-format
+msgid "Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; %(count)s VODs in quick access"
+msgstr "Pagina <strong>%(page)s</strong> van <strong>%(pages)s</strong> &bull; %(count)s VOD's in snelle toegang"
+
+msgid "Page navigation"
+msgstr "Paginanavigatie"
+
+msgid "Page navigation (top)"
+msgstr "Paginanavigatie (boven)"
+
+msgid "Page:"
+msgstr "Pagina:"
+
+msgid "Pages"
+msgstr "Pagina's"
+
+msgid "Pagination"
+msgstr "Paginering"
+
+msgid "Pagination (top)"
+msgstr "Paginering (boven)"
+
+msgid "Password"
+msgstr "Wachtwoord"
+
+msgid "Password / app password"
+msgstr "Wachtwoord / app-wachtwoord"
+
+msgid "Password changed successfully."
+msgstr "Wachtwoord gewijzigd."
+
+msgid "Password is required."
+msgstr "Wachtwoord is verplicht."
+
+#, python-format
+msgid "Password must be at least %(min)s characters long."
+msgstr "Wachtwoord moet minimaal %(min)s tekens lang zijn."
+
+msgid "Path below the target folder ID. Empty = directly in the target folder ID."
+msgstr "Pad onder de doelmap-ID. Leeg = direct in de doelmap-ID."
+
+msgid "Pause"
+msgstr "Pauze"
+
+msgid "Pause playback"
+msgstr "Afspelen pauzeren"
+
+msgid "Pause preview"
+msgstr "Voorbeeld pauzeren"
+
+msgid "Peak"
+msgstr "Piek"
+
+msgid "Pending"
+msgstr "In afwachting"
+
+msgid "Photo viewer"
+msgstr "Fotoviewer"
+
+msgid "Play"
+msgstr "Afspelen"
+
+msgid "Play / pause"
+msgstr "Afspelen / pauzeren"
+
+msgid "Play preview"
+msgstr "Voorbeeld afspelen"
+
+msgid "Playback unavailable"
+msgstr "Afspelen niet beschikbaar"
+
+msgid "Player error — reconnecting…"
+msgstr "Spelerfout — opnieuw verbinden…"
+
+msgid "Please enter a name for the storage provider."
+msgstr "Voer een naam in voor de opslagprovider."
+
+msgid "Please enter your current password."
+msgstr "Voer je huidige wachtwoord in."
+
+msgid "Please save the client ID and client secret first, then connect."
+msgstr "Sla eerst de client-ID en het client secret op en maak daarna verbinding."
+
+msgid "Please scroll to the end of the text first."
+msgstr "Scroll eerst naar het einde van de tekst."
+
+msgid "Points"
+msgstr "Punten"
+
+msgid "Popular categories"
+msgstr "Populaire categorieën"
+
+msgid "Prefix"
+msgstr "Voorvoegsel"
+
+#, python-format
+msgid "Presence %(user)s"
+msgstr "Aanwezigheid %(user)s"
+
+msgid "Present"
+msgstr "Aanwezig"
+
+msgid "Preview"
+msgstr "Voorbeeld"
+
+msgid "Previous"
+msgstr "Vorige"
+
+msgid "Previous page"
+msgstr "Vorige pagina"
+
+msgid "Privacy"
+msgstr "Privacy"
+
+msgid "Privacy policy"
+msgstr "Privacybeleid"
+
+msgid "Private"
+msgstr "Privé"
+
+msgid "Private video and stream archive console."
+msgstr "Privéconsole voor video- en streamarchief."
+
+msgid "Processing video (this may take a while)..."
+msgstr "Video verwerken (dit kan even duren)..."
+
+msgid "Processing video..."
+msgstr "Video verwerken..."
+
+msgid "Profile picture reset to default."
+msgstr "Profielfoto teruggezet naar standaard."
+
+msgid "Profile picture uploaded successfully."
+msgstr "Profielfoto geüpload."
+
+msgid "Progress"
+msgstr "Voortgang"
+
+msgid "Provider"
+msgstr "Provider"
+
+#, python-format
+msgid "Provider #%(id)s created. Please test the connection."
+msgstr "Provider #%(id)s aangemaakt. Test de verbinding."
+
+#, python-format
+msgid "Provider #%(id)s removed. Cloud files are kept."
+msgstr "Provider #%(id)s verwijderd. Cloudbestanden blijven behouden."
+
+#, python-format
+msgid "Provider #%(id)s saved."
+msgstr "Provider #%(id)s opgeslagen."
+
+msgid "Provider default"
+msgstr "Standaard van provider"
+
+msgid "Provider not found."
+msgstr "Provider niet gevonden."
+
+#, python-format
+msgid "Provider reported: %(error)s"
+msgstr "Provider meldde: %(error)s"
+
+msgid "Provider type"
+msgstr "Providertype"
+
+msgid "Providers"
+msgstr "Providers"
+
+msgid "Public link created:"
+msgstr "Openbare link aangemaakt:"
+
+msgid "Purpose of this user group..."
+msgstr "Doel van deze gebruikersgroep..."
+
+msgid "Quality"
+msgstr "Kwaliteit"
+
+msgid "Queue"
+msgstr "Wachtrij"
+
+msgid "Queue not readable"
+msgstr "Wachtrij niet leesbaar"
+
+msgid "Quiet"
+msgstr "Stil"
+
+msgid "RECORDING"
+msgstr "OPNAME"
+
+msgid "RECORDING ACTIVE"
+msgstr "OPNAME ACTIEF"
+
+msgid "Ready"
+msgstr "Klaar"
+
+msgid "Real-time stream error — reconnecting…"
+msgstr "Fout in realtime stream — opnieuw verbinden…"
+
+#, python-format
+msgid "Really delete backup %(name)s?"
+msgstr "Back-up %(name)s echt verwijderen?"
+
+msgid "Really delete file?"
+msgstr "Bestand echt verwijderen?"
+
+msgid "Really delete the cloud file? A local copy is kept."
+msgstr "Cloudbestand echt verwijderen? Een lokale kopie blijft behouden."
+
+msgid "Really delete the local file? The cloud copy is kept."
+msgstr "Lokaal bestand echt verwijderen? De cloudkopie blijft behouden."
+
+msgid "Really delete?"
+msgstr "Echt verwijderen?"
+
+#, python-format
+msgid "Really remove channel %(name)s?"
+msgstr "Kanaal %(name)s echt verwijderen?"
+
+msgid "Really remove the provider? The cloud files are kept."
+msgstr "Provider echt verwijderen? De cloudbestanden blijven behouden."
+
+msgid "Really rename the file?"
+msgstr "Bestand echt hernoemen?"
+
+msgid "Really reset the custom banner and switch to the default?"
+msgstr "Aangepaste banner echt resetten en overschakelen naar de standaard?"
+
+msgid "Really reset the custom profile picture and switch to the default?"
+msgstr "Aangepaste profielfoto echt resetten en overschakelen naar de standaard?"
+
+msgid "Really revoke this share?"
+msgstr "Deze deelactie echt intrekken?"
+
+msgid "Really stop the recording?"
+msgstr "Opname echt stoppen?"
+
+msgid "Recent task errors"
+msgstr "Recente taakfouten"
+
+msgid "Recently watched"
+msgstr "Onlangs bekeken"
+
+msgid "Recommended. Prevents data loss from incomplete uploads."
+msgstr "Aanbevolen. Voorkomt gegevensverlies door onvolledige uploads."
+
+msgid "Reconnecting…"
+msgstr "Opnieuw verbinden…"
+
+msgid "Recorded"
+msgstr "Opgenomen"
+
+msgid "Recorder & worker restarted."
+msgstr "Recorder & worker herstart."
+
+msgid "Recording"
+msgstr "Opname"
+
+msgid "Recording + live stream & Discord notification"
+msgstr "Opname + livestream & Discord-melding"
+
+msgid "Recording disabled (live & Discord only)"
+msgstr "Opname uitgeschakeld (alleen live & Discord)"
+
+#, python-format
+msgid "Recording disabled for source %(name)s."
+msgstr "Opname uitgeschakeld voor bron %(name)s."
+
+msgid "Recording enabled (full mode)"
+msgstr "Opname ingeschakeld (volledige modus)"
+
+#, python-format
+msgid "Recording enabled for source %(name)s."
+msgstr "Opname ingeschakeld voor bron %(name)s."
+
+msgid "Recording health"
+msgstr "Opnamestatus"
+
+msgid "Recording in progress"
+msgstr "Opname bezig"
+
+msgid "Recording not available."
+msgstr "Opname niet beschikbaar."
+
+#, python-format
+msgid "Recording stopped: %(count)s source(s) for %(archive)s disabled. The process will be terminated at the next check."
+msgstr "Opname gestopt: %(count)s bron(nen) voor %(archive)s uitgeschakeld. Het proces wordt bij de volgende controle beëindigd."
+
+#, python-format
+msgid "Recordings (%(count)s)"
+msgstr "Opnames (%(count)s)"
+
+#, python-format
+msgid "Redeemed “%(title)s”"
+msgstr "“%(title)s” ingewisseld"
+
+#, python-format
+msgid "Registration via Discord · accept there with %(keyword)s."
+msgstr "Registratie via Discord · accepteer daar met %(keyword)s."
+
+msgid "Related recordings"
+msgstr "Gerelateerde opnames"
+
+msgid "Remove"
+msgstr "Verwijderen"
+
+msgid "Remove channel"
+msgstr "Kanaal verwijderen"
+
+#, python-format
+msgid "Remove channel %(name)s?"
+msgstr "Kanaal %(name)s verwijderen?"
+
+msgid "Remove only the database entry?"
+msgstr "Alleen het database-item verwijderen?"
+
+#, python-format
+msgid "Remux job could not be started: %(error)s"
+msgstr "Remuxtaak kon niet worden gestart: %(error)s"
+
+msgid "Remux job started. Progress is shown in the admin panel."
+msgstr "Remuxtaak gestart. De voortgang wordt in het adminpaneel getoond."
+
+msgid "Rename file"
+msgstr "Bestand hernoemen"
+
+msgid "Renamed."
+msgstr "Hernoemd."
+
+msgid "Repair in progress"
+msgstr "Reparatie bezig"
+
+msgid "Repair seeking"
+msgstr "Zoeken repareren"
+
+msgid "Repeat new password"
+msgstr "Nieuw wachtwoord herhalen"
+
+msgid "Repeat password"
+msgstr "Wachtwoord herhalen"
+
+#, python-format
+msgid "Request '%(username)s' denied and deleted."
+msgstr "Aanvraag '%(username)s' afgewezen en verwijderd."
+
+msgid "Restart failed."
+msgstr "Herstarten mislukt."
+
+msgid "Restart services"
+msgstr "Services herstarten"
+
+msgid "Restore"
+msgstr "Herstellen"
+
+msgid "Restore default"
+msgstr "Standaard herstellen"
+
+#, python-format
+msgid "Restore queued (task #%(task)s)."
+msgstr "Herstel in wachtrij (taak #%(task)s)."
+
+msgid "Resume playback"
+msgstr "Afspelen hervatten"
+
+msgid "Revoke"
+msgstr "Intrekken"
+
+#, python-format
+msgid "Role access '%(slug)s' added."
+msgstr "Roltoegang '%(slug)s' toegevoegd."
+
+#, python-format
+msgid "Role access '%(slug)s' removed."
+msgstr "Roltoegang '%(slug)s' verwijderd."
+
+msgid "Role access grant not found."
+msgstr "Toekenning van roltoegang niet gevonden."
+
+msgid "Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member."
+msgstr "Rolmodel: volledige toegang (<code>admin</code>), archiefkijker (<code>viewer</code>), alleen live (<code>live_only</code>) &amp; Discord-lid."
+
+msgid "Rules"
+msgstr "Regels"
+
+msgid "Rules accepted. Continuing to the dashboard…"
+msgstr "Regels geaccepteerd. Door naar het dashboard…"
+
+msgid "Rules text"
+msgstr "Regeltekst"
+
+msgid "Running"
+msgstr "Bezig"
+
+msgid "Running…"
+msgstr "Bezig…"
+
+msgid "S3-compatible"
+msgstr "S3-compatibel"
+
+msgid "START"
+msgstr "START"
+
+msgid "Safety migration:"
+msgstr "Veiligheidsmigratie:"
+
+msgid "Same session"
+msgstr "Zelfde sessie"
+
+msgid "Save"
+msgstr "Opslaan"
+
+msgid "Save area maintenance"
+msgstr "Onderhoud per onderdeel opslaan"
+
+msgid "Save changes"
+msgstr "Wijzigingen opslaan"
+
+msgid "Save clip"
+msgstr "Clip opslaan"
+
+msgid "Save clip settings"
+msgstr "Clipinstellingen opslaan"
+
+msgid "Save group"
+msgstr "Groep opslaan"
+
+msgid "Save password"
+msgstr "Wachtwoord opslaan"
+
+msgid "Save settings"
+msgstr "Instellingen opslaan"
+
+msgid "Saved"
+msgstr "Opgeslagen"
+
+msgid "Saved automatically when connecting."
+msgstr "Wordt automatisch opgeslagen bij het verbinden."
+
+msgid "Saved automatically when connecting. Alternatively, paste it manually."
+msgstr "Wordt automatisch opgeslagen bij het verbinden. Je kunt het ook handmatig plakken."
+
+msgid "Saved – leave empty to keep"
+msgstr "Opgeslagen – leeg laten om te behouden"
+
+msgid "Saved."
+msgstr "Opgeslagen."
+
+msgid "Saving transcript failed"
+msgstr "Transcript opslaan mislukt"
+
+#, python-format
+msgid "Saving transcript failed: %(error)s"
+msgstr "Transcript opslaan mislukt: %(error)s"
+
+msgid "Saving transcript..."
+msgstr "Transcript opslaan..."
+
+msgid "Saving..."
+msgstr "Opslaan..."
+
+msgid "Saving…"
+msgstr "Opslaan…"
+
+msgid "Search"
+msgstr "Zoeken"
+
+msgid "Search VODs, streamers or games..."
+msgstr "Zoek VOD's, streamers of games..."
+
+msgid "Search category"
+msgstr "Categorie zoeken"
+
+msgid "Search category / game…"
+msgstr "Categorie / game zoeken…"
+
+msgid "Search failed."
+msgstr "Zoeken mislukt."
+
+msgid "Search recordings (title, date, game)..."
+msgstr "Opnames zoeken (titel, datum, game)..."
+
+msgid "Search results"
+msgstr "Zoekresultaten"
+
+msgid "Search streamer or channel…"
+msgstr "Streamer of kanaal zoeken…"
+
+msgid "Search streamers"
+msgstr "Streamers zoeken"
+
+msgid "Search term (e.g. player name, chat message, date)..."
+msgstr "Zoekterm (bijv. spelernaam, chatbericht, datum)..."
+
+msgid "Search user, email or group..."
+msgstr "Gebruiker, e-mail of groep zoeken..."
+
+msgid "Search..."
+msgstr "Zoeken..."
+
+msgid "Searching for stream..."
+msgstr "Stream zoeken..."
+
+msgid "Searching…"
+msgstr "Zoeken…"
+
+msgid "Seconds after trigger"
+msgstr "Seconden na trigger"
+
+msgid "Seconds before trigger"
+msgstr "Seconden voor trigger"
+
+msgid "Security & shares"
+msgstr "Beveiliging & deelacties"
+
+#, python-format
+msgid "Seek repair is already running (%(status)s)."
+msgstr "Zoekreparatie loopt al (%(status)s)."
+
+msgid "Seek repair queued."
+msgstr "Zoekreparatie in wachtrij."
+
+msgid "Segment creation failed"
+msgstr "Segment maken mislukt"
+
+msgid "Select folders to unlock:"
+msgstr "Selecteer mappen om vrij te geven:"
+
+msgid "Self-hosted"
+msgstr "Zelf gehost"
+
+msgid "Send Discord message"
+msgstr "Discord-bericht versturen"
+
+msgid "September"
+msgstr "september"
+
+msgid "Server is loading the stream (Turbo, without viewer list)…"
+msgstr "Server laadt de stream (Turbo, zonder kijkerslijst)…"
+
+msgid "Server is loading the stream (without Twitch account)…"
+msgstr "Server laadt de stream (zonder Twitch-account)…"
+
+msgid "Server is loading the stream…"
+msgstr "Server laadt de stream…"
+
+msgid "Server-side encryption"
+msgstr "Versleuteling aan serverzijde"
+
+msgid "Set"
+msgstr "Instellen"
+
+#, python-format
+msgid "Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved."
+msgstr "Stel %(key)s (minimaal 16 tekens) of %(alt_key)s in voordat inloggegevens worden opgeslagen."
+
+msgid "Set end to current position"
+msgstr "Einde op huidige positie zetten"
+
+msgid "Set start to current position"
+msgstr "Start op huidige positie zetten"
+
+msgid "Settings"
+msgstr "Instellingen"
+
+msgid "Settings saved."
+msgstr "Instellingen opgeslagen."
+
+msgid "Share"
+msgstr "Delen"
+
+msgid "Share not found."
+msgstr "Deelactie niet gevonden."
+
+msgid "Share of period"
+msgstr "Aandeel in periode"
+
+msgid "Share revoked."
+msgstr "Deelactie ingetrokken."
+
+msgid "Sharing failed"
+msgstr "Delen mislukt"
+
+msgid "Sharing failed:"
+msgstr "Delen mislukt:"
+
+msgid "Short rules / Discord house rules. Part of the terms; accepted together with the consent below."
+msgstr "Korte regels / Discord-huisregels. Onderdeel van de voorwaarden; worden samen met de toestemming hieronder geaccepteerd."
+
+msgid "Shown in the navigation, sidebar and on streamer cards."
+msgstr "Wordt getoond in de navigatie, de zijbalk en op streamerkaarten."
+
+msgid "Sign in"
+msgstr "Inloggen"
+
+msgid "Size"
+msgstr "Grootte"
+
+msgid "Sound"
+msgstr "Geluid"
+
+msgid "Sound on"
+msgstr "Geluid aan"
+
+msgid "Source"
+msgstr "Bron"
+
+#, python-format
+msgid "Source %(name)s not found."
+msgstr "Bron %(name)s niet gevonden."
+
+msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "Verouderde vergrendeling verwijderd, transcriptie in de wachtrij van de worker geplaatst. Het resultaat verschijnt na afronding bij het volgende laden van de pagina."
+
+msgid "Start"
+msgstr "Start"
+
+msgid "Start HLS"
+msgstr "HLS starten"
+
+msgid "Start local cleanup"
+msgstr "Lokale opschoning starten"
+
+msgid "Start playback"
+msgstr "Afspelen"
+
+msgid "Start playback or move along the timeline to sync chat messages."
+msgstr "Start het afspelen of beweeg langs de tijdlijn om chatberichten te synchroniseren."
+
+msgid "Start sync"
+msgstr "Sync starten"
+
+msgid "Start time must be >= 0."
+msgstr "Starttijd moet >= 0 zijn."
+
+msgid "Starting"
+msgstr "Start op"
+
+msgid "Starting download..."
+msgstr "Download starten..."
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status, progress and actions of the most recently synced files. “Forget” only removes the database entry."
+msgstr "Status, voortgang en acties van de laatst gesynchroniseerde bestanden. “Vergeten” verwijdert alleen het database-item."
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "Stop"
+msgstr "Stoppen"
+
+msgid "Stop preview"
+msgstr "Voorbeeld stoppen"
+
+msgid "Stop recording"
+msgstr "Opname stoppen"
+
+msgid "Storage"
+msgstr "Opslag"
+
+msgid "Storage (free):"
+msgstr "Opslag (vrij):"
+
+msgid "Storage (total):"
+msgstr "Opslag (totaal):"
+
+#, python-format
+msgid "Storage critical: %(pct)s%% used, only %(free)s free."
+msgstr "Opslag kritiek: %(pct)s%% gebruikt, nog maar %(free)s vrij."
+
+msgid "Storage provider not found."
+msgstr "Opslagprovider niet gevonden."
+
+msgid "Storage providers"
+msgstr "Opslagproviders"
+
+#, python-format
+msgid "Storage: <strong>%(pct)s%%</strong>"
+msgstr "Opslag: <strong>%(pct)s%%</strong>"
+
+msgid "Stream & channel access"
+msgstr "Toegang tot streams & kanalen"
+
+msgid "Stream & folder access"
+msgstr "Toegang tot streams & mappen"
+
+msgid "Stream and VOD archive"
+msgstr "Stream- en VOD-archief"
+
+msgid "Stream channel"
+msgstr "Streamkanaal"
+
+msgid "Stream connection lost — reconnecting…"
+msgstr "Streamverbinding verbroken — opnieuw verbinden…"
+
+msgid "Stream is not starting — check the live status or reload the page."
+msgstr "Stream start niet — controleer de livestatus of laad de pagina opnieuw."
+
+msgid "Stream media error — reconnecting…"
+msgstr "Mediafout in stream — opnieuw verbinden…"
+
+msgid "Stream stopped — reconnecting…"
+msgstr "Stream gestopt — opnieuw verbinden…"
+
+msgid "StreamVault is temporarily unavailable due to maintenance. Please be patient — the site will be back soon."
+msgstr "StreamVault is tijdelijk niet beschikbaar wegens onderhoud. Even geduld — de site is snel terug."
+
+msgid "StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later."
+msgstr "StreamVault is tijdelijk niet beschikbaar wegens lopende werkzaamheden. Even geduld — de site is later weer beschikbaar."
+
+msgid "Streamer"
+msgstr "Streamer"
+
+msgid "Streamer & source management"
+msgstr "Beheer van streamers & bronnen"
+
+msgid "Streamer (optional)"
+msgstr "Streamer (optioneel)"
+
+msgid "Streamer / folder missing."
+msgstr "Streamer / map ontbreekt."
+
+msgid "Streamer is currently offline."
+msgstr "Streamer is momenteel offline."
+
+msgid "Streamer management"
+msgstr "Streamerbeheer"
+
+msgid "Streamer profile"
+msgstr "Streamerprofiel"
+
+msgid "Streamers, VODs & chat histories"
+msgstr "Streamers, VOD's & chatgeschiedenis"
+
+msgid "Subfolder"
+msgstr "Submap"
+
+msgid "Success"
+msgstr "Gelukt"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)"
+msgstr "Ondersteund: JPG, PNG, WEBP, GIF (aanbevolen: 1920x360 of 1200x300)"
+
+msgid "Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)"
+msgstr "Ondersteund: JPG, PNG, WEBP, GIF (vierkant aanbevolen, bijv. 300x300)"
+
+msgid "Switch to live only"
+msgstr "Overschakelen naar alleen live"
+
+msgid "Synced"
+msgstr "Gesynchroniseerd"
+
+msgid "System & recorder"
+msgstr "Systeem & recorder"
+
+msgid "System backup created successfully."
+msgstr "Systeemback-up aangemaakt."
+
+msgid "System backups"
+msgstr "Systeemback-ups"
+
+msgid "System group"
+msgstr "Systeemgroep"
+
+msgid "System group 'Viewer' was not found. Deletion cancelled."
+msgstr "Systeemgroep 'Viewer' niet gevonden. Verwijderen geannuleerd."
+
+#, python-format
+msgid "System groups (%(name)s) cannot be deleted."
+msgstr "Systeemgroepen (%(name)s) kunnen niet worden verwijderd."
+
+msgid "System quick status"
+msgstr "Snelle systeemstatus"
+
+msgid "System settings"
+msgstr "Systeeminstellingen"
+
+msgid "System status"
+msgstr "Systeemstatus"
+
+msgid "System telemetry"
+msgstr "Systeemtelemetrie"
+
+#, python-format
+msgid "Target already exists: %(path)s"
+msgstr "Doel bestaat al: %(path)s"
+
+msgid "Target archive folder (optional)"
+msgstr "Doelarchiefmap (optioneel)"
+
+msgid "Target folder ID (optional)"
+msgstr "Doelmap-ID (optioneel)"
+
+msgid "Target name already exists locally."
+msgstr "Doelnaam bestaat lokaal al."
+
+msgid "Task queue"
+msgstr "Takenwachtrij"
+
+msgid "Terms"
+msgstr "Voorwaarden"
+
+msgid "Terms & rules"
+msgstr "Voorwaarden & regels"
+
+#, python-format
+msgid "Terms (version %(terms)s) including house rules (%(rules)s) not yet accepted — approval only after consent on the website or on re-registration."
+msgstr "Voorwaarden (versie %(terms)s) inclusief huisregels (%(rules)s) nog niet geaccepteerd — goedkeuring pas na toestemming op de website of bij opnieuw registreren."
+
+msgid "Terms accepted. Continuing to the dashboard…"
+msgstr "Voorwaarden geaccepteerd. Door naar het dashboard…"
+
+msgid "Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms."
+msgstr "Gebruiksvoorwaarden en huisregels voor de besloten kring. Geen gebruiksrechten jegens rechthebbenden of platforms."
+
+msgid "Terms version outdated or not accepted. Acceptance required at /agb."
+msgstr "Versie van de voorwaarden verouderd of niet geaccepteerd. Acceptatie vereist op /agb."
+
+msgid "Terms version outdated — reload the page and accept again."
+msgstr "Versie van de voorwaarden verouderd — laad de pagina opnieuw en accepteer opnieuw."
+
+msgid "Test"
+msgstr "Testen"
+
+msgid "Thanks for your understanding. Authorized users can sign in via the login page."
+msgstr "Bedankt voor je begrip. Bevoegde gebruikers kunnen inloggen via de inlogpagina."
+
+msgid "The 'can_manage_users' permission cannot be removed from the Administrator group."
+msgstr "Het recht 'can_manage_users' kan niet worden verwijderd uit de groep Administrator."
+
+msgid "The OAuth link has expired. Please start again."
+msgstr "De OAuth-link is verlopen. Begin opnieuw."
+
+msgid "The VOD player and archive are currently under maintenance."
+msgstr "De VOD-speler en het archief zijn momenteel in onderhoud."
+
+msgid "The current password is incorrect."
+msgstr "Het huidige wachtwoord is onjuist."
+
+msgid "The default system admin cannot be deleted."
+msgstr "De standaard systeembeheerder kan niet worden verwijderd."
+
+msgid "The folder cannot be emptied while a recording is being written."
+msgstr "De map kan niet worden leeggemaakt terwijl er een opname wordt geschreven."
+
+msgid "The live stream area is currently under maintenance."
+msgstr "Het livestreamgedeelte is momenteel in onderhoud."
+
+msgid "The local file has already been removed. Please restore it first."
+msgstr "Het lokale bestand is al verwijderd. Herstel het eerst."
+
+msgid "The mobile version of StreamVault is currently under maintenance. Please use the desktop version."
+msgstr "De mobiele versie van StreamVault is momenteel in onderhoud. Gebruik de desktopversie."
+
+msgid "The name of system groups cannot be changed."
+msgstr "De naam van systeemgroepen kan niet worden gewijzigd."
+
+msgid "The new password must be at least 8 characters long."
+msgstr "Het nieuwe wachtwoord moet minimaal 8 tekens lang zijn."
+
+msgid "The new password must differ from the current password."
+msgstr "Het nieuwe wachtwoord moet verschillen van het huidige wachtwoord."
+
+msgid "The passwords do not match."
+msgstr "De wachtwoorden komen niet overeen."
+
+msgid "The provider did not return valid OAuth data."
+msgstr "De provider heeft geen geldige OAuth-gegevens teruggegeven."
+
+msgid "The provider name must be at most 80 characters long."
+msgstr "De providernaam mag maximaal 80 tekens lang zijn."
+
+msgid "The provider type cannot be changed while archive objects are assigned. Create a new provider instead."
+msgstr "Het providertype kan niet worden gewijzigd zolang er archiefobjecten zijn toegewezen. Maak in plaats daarvan een nieuwe provider aan."
+
+msgid "The recorder worker performs the sync. Unchanged files that were already uploaded are skipped."
+msgstr "De recorder-worker voert de sync uit. Ongewijzigde bestanden die al zijn geüpload, worden overgeslagen."
+
+msgid "The remote path must not be empty."
+msgstr "Het externe pad mag niet leeg zijn."
+
+msgid "The selected default provider does not exist."
+msgstr "De geselecteerde standaardprovider bestaat niet."
+
+msgid "The selected default provider is disabled. Enable it first or choose another provider."
+msgstr "De geselecteerde standaardprovider is uitgeschakeld. Schakel hem eerst in of kies een andere provider."
+
+msgid "The selected group does not exist."
+msgstr "De geselecteerde groep bestaat niet."
+
+msgid "The system administrator's password can only be changed via environment variables."
+msgstr "Het wachtwoord van de systeembeheerder kan alleen via omgevingsvariabelen worden gewijzigd."
+
+msgid "The video file could not be loaded or is still being transcoded."
+msgstr "Het videobestand kon niet worden geladen of wordt nog getranscodeerd."
+
+msgid "This admin user is protected and cannot be deleted."
+msgstr "Deze admingebruiker is beschermd en kan niet worden verwijderd."
+
+msgid "This admin user is protected."
+msgstr "Deze admingebruiker is beschermd."
+
+msgid "This channel is not live right now."
+msgstr "Dit kanaal is momenteel niet live."
+
+msgid "This file type is not allowed for security reasons."
+msgstr "Dit bestandstype is om veiligheidsredenen niet toegestaan."
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Time (UTC)"
+msgstr "Tijd (UTC)"
+
+msgid "Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer."
+msgstr "Tip: een gedeelde archiefmap combineert Twitch- en YouTube-streams van dezelfde streamer."
+
+msgid "Title & description"
+msgstr "Titel & beschrijving"
+
+msgid "Title & info"
+msgstr "Titel & info"
+
+msgid "Title (optional)"
+msgstr "Titel (optioneel)"
+
+msgid "Title as on YouTube"
+msgstr "Titel zoals op YouTube"
+
+#, python-format
+msgid "Today, %(time)s"
+msgstr "Vandaag, %(time)s"
+
+msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
+msgstr "Er worden momenteel te veel VOD's afgespeeld. Live is niet getroffen. Probeer het over een paar minuten opnieuw — er komt een plek vrij zodra iemand de speler sluit."
+
+msgid "Too many attempts. IP temporarily blocked. Please try again later."
+msgstr "Te veel pogingen. IP tijdelijk geblokkeerd. Probeer het later opnieuw."
+
+msgid "Top streams are currently unavailable. Use monitored channels or the search."
+msgstr "Topstreams zijn momenteel niet beschikbaar. Gebruik bewaakte kanalen of de zoekfunctie."
+
+msgid "Total in period"
+msgstr "Totaal in periode"
+
+msgid "Total recordings"
+msgstr "Totaal aantal opnames"
+
+msgid "Total runtime"
+msgstr "Totale speelduur"
+
+#, python-format
+msgid "Total: %(count)s registered accounts"
+msgstr "Totaal: %(count)s geregistreerde accounts"
+
+#, python-format
+msgid "Total: %(count)s user groups"
+msgstr "Totaal: %(count)s gebruikersgroepen"
+
+msgid "Traffic"
+msgstr "Verkeer"
+
+msgid "Traffic overview"
+msgstr "Verkeersoverzicht"
+
+#, python-format
+msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
+msgstr "Segment %(index)s/%(total)s transcriberen (%(percent)s%%)"
+
+msgid "Transcript"
+msgstr "Transcript"
+
+msgid "Transcript already exists"
+msgstr "Transcript bestaat al"
+
+msgid "Transcript already exists."
+msgstr "Transcript bestaat al."
+
+msgid "Transcript available"
+msgstr "Transcript beschikbaar"
+
+msgid "Transcript created"
+msgstr "Transcript gemaakt"
+
+msgid "Transcript finished"
+msgstr "Transcript voltooid"
+
+msgid "Transcript missing despite finished status"
+msgstr "Transcript ontbreekt ondanks voltooide status"
+
+msgid "Transcription cancelled"
+msgstr "Transcriptie geannuleerd"
+
+msgid "Transcription cancelled."
+msgstr "Transcriptie geannuleerd."
+
+msgid "Transcription failed"
+msgstr "Transcriptie mislukt"
+
+#, python-format
+msgid "Transcription failed: %(error)s"
+msgstr "Transcriptie mislukt: %(error)s"
+
+msgid "Transcription is already running"
+msgstr "Transcriptie loopt al"
+
+msgid "Transcription is already running. Please reload later."
+msgstr "Transcriptie loopt al. Laad later opnieuw."
+
+msgid "Transcription queued in the worker. The result appears on the next page load after completion."
+msgstr "Transcriptie in de wachtrij van de worker geplaatst. Het resultaat verschijnt na afronding bij het volgende laden van de pagina."
+
+msgid "Transcription running..."
+msgstr "Transcriptie bezig..."
+
+msgid "Transcription timed out"
+msgstr "Time-out bij transcriptie"
+
+msgid "Transfer new recordings and periodic archive syncs to the cloud."
+msgstr "Nieuwe opnames en periodieke archiefsyncs naar de cloud overzetten."
+
+msgid "Trim"
+msgstr "Bijsnijden"
+
+msgid "Twitch / default"
+msgstr "Twitch / standaard"
+
+msgid "Twitch badge library synchronized."
+msgstr "Twitch-badgebibliotheek gesynchroniseerd."
+
+msgid "Twitch channel name..."
+msgstr "Twitch-kanaalnaam..."
+
+msgid "Twitch live chat"
+msgstr "Twitch-livechat"
+
+msgid "Twitch live stream"
+msgstr "Twitch-livestream"
+
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
+msgstr "Twitch-naam (bijv. shroud) of YouTube-URL / @handle..."
+
+msgid "Twitch or YouTube supported"
+msgstr "Twitch of YouTube ondersteund"
+
+msgid "Twitch profile"
+msgstr "Twitch-profiel"
+
+msgid "Twitch profile banner"
+msgstr "Twitch-profielbanner"
+
+msgid "Twitch search failed."
+msgstr "Zoeken op Twitch mislukt."
+
+msgid "Twitch streams could not be loaded."
+msgstr "Twitch-streams konden niet worden geladen."
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Unchanged."
+msgstr "Ongewijzigd."
+
+msgid "Unknown"
+msgstr "Onbekend"
+
+msgid "Unknown error"
+msgstr "Onbekende fout"
+
+#, python-format
+msgid "Unknown storage provider: %(type)s"
+msgstr "Onbekende opslagprovider: %(type)s"
+
+msgid "Unmute"
+msgstr "Geluid aan"
+
+msgid "Updated"
+msgstr "Bijgewerkt"
+
+#, python-format
+msgid "Updated %(age)s"
+msgstr "Bijgewerkt %(age)s"
+
+msgid "Upload"
+msgstr "Uploaden"
+
+msgid "Upload automatically"
+msgstr "Automatisch uploaden"
+
+msgid "Upload new file"
+msgstr "Nieuw bestand uploaden"
+
+#, python-format
+msgid "Upload queued (task #%(task)s)."
+msgstr "Upload in wachtrij (taak #%(task)s)."
+
+msgid "Upload videos & media"
+msgstr "Video's & media uploaden"
+
+msgid "Usage rules"
+msgstr "Gebruiksregels"
+
+msgid "Used vault volume"
+msgstr "Gebruikt vault-volume"
+
+msgid "User"
+msgstr "Gebruiker"
+
+#, python-format
+msgid "User '%(username)s' already exists."
+msgstr "Gebruiker '%(username)s' bestaat al."
+
+#, python-format
+msgid "User '%(username)s' approved."
+msgstr "Gebruiker '%(username)s' goedgekeurd."
+
+#, python-format
+msgid "User '%(username)s' created successfully."
+msgstr "Gebruiker '%(username)s' aangemaakt."
+
+#, python-format
+msgid "User '%(username)s' has been deleted."
+msgstr "Gebruiker '%(username)s' is verwijderd."
+
+#, python-format
+msgid "User '%(username)s' not found."
+msgstr "Gebruiker '%(username)s' niet gevonden."
+
+#, python-format
+msgid "User '%(username)s' updated successfully."
+msgstr "Gebruiker '%(username)s' bijgewerkt."
+
+msgid "User accounts"
+msgstr "Gebruikersaccounts"
+
+msgid "User created"
+msgstr "Gebruiker aangemaakt"
+
+msgid "User deleted"
+msgstr "Gebruiker verwijderd"
+
+msgid "User deleted."
+msgstr "Gebruiker verwijderd."
+
+msgid "User group"
+msgstr "Gebruikersgroep"
+
+msgid "User groups & permissions"
+msgstr "Gebruikersgroepen & rechten"
+
+msgid "User management"
+msgstr "Gebruikersbeheer"
+
+msgid "User not found."
+msgstr "Gebruiker niet gevonden."
+
+msgid "User updated"
+msgstr "Gebruiker bijgewerkt"
+
+msgid "User updated."
+msgstr "Gebruiker bijgewerkt."
+
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#, python-format
+msgid "Username '%(username)s' is reserved."
+msgstr "Gebruikersnaam '%(username)s' is gereserveerd."
+
+msgid "Username is required."
+msgstr "Gebruikersnaam is verplicht."
+
+msgid "Username must be 3-32 alphanumeric characters (hyphens and underscores allowed)."
+msgstr "Gebruikersnaam moet uit 3-32 alfanumerieke tekens bestaan (koppeltekens en underscores toegestaan)."
+
+msgid "Users & groups"
+msgstr "Gebruikers & groepen"
+
+#, python-format
+msgid "Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = presence, bars = login/pages/video/chat per day."
+msgstr "Gebruikers A–Z · laatste %(days)s dagen (%(since)s – %(until)s). Heatmap = aanwezigheid, balken = login/pagina's/video/chat per dag."
+
+msgid "VOD access grants are currently only available for members."
+msgstr "VOD-toegang kan momenteel alleen aan leden worden toegekend."
+
+msgid "VOD archive"
+msgstr "VOD-archief"
+
+msgid "VOD page navigation"
+msgstr "VOD-paginanavigatie"
+
+msgid "VOD pagination"
+msgstr "VOD-paginering"
+
+#, python-format
+msgid "VOD recordings (%(count)s)"
+msgstr "VOD-opnames (%(count)s)"
+
+msgid "VOD_SECRET_KEY must be set to a strong value before credentials can be stored."
+msgstr "VOD_SECRET_KEY moet op een sterke waarde zijn ingesteld voordat inloggegevens kunnen worden opgeslagen."
+
+msgid "VODs are recorded to disk"
+msgstr "VOD's worden op schijf opgenomen"
+
+msgid "Verify TLS certificate"
+msgstr "TLS-certificaat verifiëren"
+
+msgid "Verify cloud copy before deletion"
+msgstr "Cloudkopie verifiëren voor verwijdering"
+
+msgid "Version"
+msgstr "Versie"
+
+msgid "Video"
+msgstr "Video"
+
+msgid "Video actions"
+msgstr "Videoacties"
+
+msgid "Video could not be deleted."
+msgstr "Video kon niet worden verwijderd."
+
+msgid "Video deleted."
+msgstr "Video verwijderd."
+
+msgid "Video player controls"
+msgstr "Bediening videospeler"
+
+msgid "Video upload"
+msgstr "Video-upload"
+
+msgid "View streams"
+msgstr "Streams bekijken"
+
+msgid "View streams & live chat"
+msgstr "Streams & livechat bekijken"
+
+msgid "Viewer"
+msgstr "Viewer"
+
+msgid "Viewers"
+msgstr "Kijkers"
+
+msgid "Visibility could not be saved."
+msgstr "Zichtbaarheid kon niet worden opgeslagen."
+
+msgid "Visibility: admins only."
+msgstr "Zichtbaarheid: alleen admins."
+
+msgid "Visibility: all users."
+msgstr "Zichtbaarheid: alle gebruikers."
+
+msgid "Visible to:"
+msgstr "Zichtbaar voor:"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
+msgstr "WAARSCHUWING: Wil je deze streamer en alle opnames definitief verwijderen?"
+
+msgid "WATCH LIVE"
+msgstr "LIVE KIJKEN"
+
+msgid "Waiting for server stream…"
+msgstr "Wachten op serverstream…"
+
+msgid "Warning"
+msgstr "Waarschuwing"
+
+msgid "Watch"
+msgstr "Bekijken"
+
+msgid "Watch latest video"
+msgstr "Nieuwste video bekijken"
+
+msgid "Watch now"
+msgstr "Nu bekijken"
+
+msgid "Watch stream directly"
+msgstr "Stream direct bekijken"
+
+msgid "We are working on the vault right now. Back in a moment."
+msgstr "We zijn op dit moment met de vault bezig. Zo terug."
+
+msgid "WebDAV base URL"
+msgstr "WebDAV-basis-URL"
+
+msgid "WebDAV base URL must be a valid http(s) URL."
+msgstr "WebDAV-basis-URL moet een geldige http(s)-URL zijn."
+
+msgid "WebDAV base URL must not contain a query or fragment."
+msgstr "WebDAV-basis-URL mag geen query of fragment bevatten."
+
+msgid "WebDAV base URL must not contain credentials; use the username and password fields."
+msgstr "WebDAV-basis-URL mag geen inloggegevens bevatten; gebruik de velden gebruikersnaam en wachtwoord."
+
+msgid "Webhook active."
+msgstr "Webhook actief."
+
+msgid "Webhook not configured."
+msgstr "Webhook niet geconfigureerd."
+
+msgid "Welcome back. Sign in with your credentials to access StreamVault."
+msgstr "Welkom terug. Log in met je gegevens om StreamVault te openen."
+
+msgid "Work in progress"
+msgstr "Werk in uitvoering"
+
+msgid "Yes (recommended)"
+msgstr "Ja (aanbevolen)"
+
+#, python-format
+msgid "Yesterday, %(time)s"
+msgstr "Gisteren, %(time)s"
+
+msgid "You can agree now."
+msgstr "Je kunt nu akkoord gaan."
+
+msgid "You cannot deactivate your own administrator account."
+msgstr "Je kunt je eigen beheerdersaccount niet deactiveren."
+
+msgid "You cannot delete your own account."
+msgstr "Je kunt je eigen account niet verwijderen."
+
+msgid "You cannot move yourself into a group without user management permissions."
+msgstr "Je kunt jezelf niet naar een groep zonder rechten voor gebruikersbeheer verplaatsen."
+
+#, python-format
+msgid "You have accepted version %(version)s."
+msgstr "Je hebt versie %(version)s geaccepteerd."
+
+msgid "Your IP has been temporarily blocked. Please try again later."
+msgstr "Je IP is tijdelijk geblokkeerd. Probeer het later opnieuw."
+
+msgid "Your browser does not support the video tag."
+msgstr "Je browser ondersteunt de video-tag niet."
+
+msgid "Zoom in"
+msgstr "Inzoomen"
+
+msgid "Zoom out"
+msgstr "Uitzoomen"
+
+msgid "according to the object database"
+msgstr "volgens de objectdatabase"
+
+msgid "active"
+msgstr "actief"
+
+msgid "available"
+msgstr "aanwezig"
+
+msgid "being created"
+msgstr "wordt aangemaakt"
+
+msgid "cancelled"
+msgstr "geannuleerd"
+
+msgid "disabled"
+msgstr "uitgeschakeld"
+
+msgid "done – please reload the page"
+msgstr "klaar – laad de pagina opnieuw"
+
+msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
+msgstr "drive.file = alleen bestanden die door StreamVault zijn aangemaakt (aanbevolen). Gebruik voor bestaande mappen zo nodig https://www.googleapis.com/auth/drive."
+
+msgid "e.g. Google Drive archive"
+msgstr "bijv. Google Drive-archief"
+
+msgid "e.g. VIP archive"
+msgstr "bijv. VIP-archief"
+
+msgid "e.g. alice, bob"
+msgstr "bijv. alice, bob"
+
+msgid "e.g. john_doe"
+msgstr "bijv. jan_jansen"
+
+msgid "e.g. montanablack88"
+msgstr "bijv. montanablack88"
+
+#, python-format
+msgid "effective from %(date)s"
+msgstr "geldig vanaf %(date)s"
+
+msgid "just now"
+msgstr "zojuist"
+
+#, python-format
+msgid "last seen %(when)s"
+msgstr "laatst gezien %(when)s"
+
+msgid "logged in"
+msgstr "ingelogd"
+
+msgid "max. 300s"
+msgstr "max. 300s"
+
+msgid "never"
+msgstr "nooit"
+
+msgid "not created"
+msgstr "niet aangemaakt"
+
+#, python-format
+msgid "today %(time)s"
+msgstr "vandaag %(time)s"
+
+msgid "unknown"
+msgstr "onbekend"
+
+msgid "user@example.com"
+msgstr "user@example.com"
+
+msgid "users"
+msgstr "gebruikers"
+
+msgid "viewers"
+msgstr "kijkers"
+
+msgid "yesterday"
+msgstr "gisteren"
+
+msgid "≥30 days quiet"
+msgstr "≥30 dagen stil"
+
+msgid "✓ CLIP SAVED"
+msgstr "✓ CLIP OPGESLAGEN"
+
+msgid "✕ CLIP FAILED"
+msgstr "✕ CLIP MISLUKT"
+
