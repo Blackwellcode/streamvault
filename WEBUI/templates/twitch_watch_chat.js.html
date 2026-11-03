@@ -209,15 +209,8 @@
           streamTitle.setAttribute('hidden', '');
         }
       }
-      const isTvClient = document.documentElement.classList.contains('is-tizen-tv') || /Tizen|SMART-TV/i.test(navigator.userAgent);
-      if (game) game.textContent = stream.game_name || (isTvClient ? 'Live Stream' : '—');
-      if (viewers) {
-        if (isTvClient) {
-          viewers.textContent = live ? (String(stream.viewer_count || 0) + ' Zuschauer') : 'Offline';
-        } else {
-          viewers.textContent = live ? String(stream.viewer_count || 0) : '—';
-        }
-      }
+      if (game) game.textContent = stream.game_name || '—';
+      if (viewers) viewers.textContent = live ? String(stream.viewer_count || 0) : '—';
       document.title = (live ? 'LIVE ' : '') + (stream.display_name || displayName) + ' · StreamVault';
     } catch (e) {}
   }

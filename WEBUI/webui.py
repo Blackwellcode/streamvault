@@ -7360,26 +7360,13 @@ def generate_csrf_token():
 app.jinja_env.globals["csrf_token"] = generate_csrf_token
 
 
-def is_tizen_tv():
-    try:
-        from flask import request
-        ua = request.headers.get("User-Agent", "")
-        if any(tok in ua for tok in ("Tizen", "SMART-TV", "SmartTV", "NetCast", "Web0S")):
-            return True
-        if request.args.get("tv") == "1":
-            return True
-    except (RuntimeError, Exception):
-        pass
-    return False
-
 @app.context_processor
 def inject_theme_context():
     from core import tube_auth
 
     theme = current_theme_key()
     role = current_user_role()
-    tv_flag = is_tizen_tv()
-    mobile_flag = False if tv_flag else is_mobile()
+    mobile_flag = is_mobile()
     rail_streamers = []
     if session.get("logged_in") and not mobile_flag:
         try:
@@ -7408,7 +7395,6 @@ def inject_theme_context():
         "can_access_vods": tube_auth.role_can_access_vods(role),
         "is_live_only": tube_auth.is_live_only(role),
         "role_label": tube_auth.role_label,
-        "is_tv": tv_flag,
         "is_mobile": mobile_flag,
         "mobile_live_enabled": mobile_live_enabled(),
         "streamers": rail_streamers,
@@ -7444,19 +7430,6 @@ def login():
         if maintenance_mode_enabled() and not current_user_is_admin():
             return redirect(url_for("maintenance"))
         return redirect(login_redirect_target())
-
-    # Smart TV Auto-Login Guard: Always silently re-authenticate Samsung TV as gatekeeper (anti-loop)
-    if request.method == "GET" and is_tizen_tv():
-        if "_tv_loop" not in request.args:
-            token_file = "/root/Streamrecorder/data/.tv_gatekeeper_token"
-            try:
-                with open(token_file, "r", encoding="utf-8") as tf:
-                    tv_token = tf.read().strip()
-            except Exception:
-                tv_token = ""
-            if tv_token:
-                nxt = request.args.get("next") or ""
-                return redirect(url_for("login_tv_auto", token=tv_token, next=nxt if is_safe_next(nxt) else None))
 
     if request.method == "POST":
         # SECURITY: Validate CSRF token on login (defense in depth; before_request also checks)
@@ -7521,45 +7494,6 @@ def login():
         log_login_attempt(ip, username, False)
         error = "Login fehlgeschlagen."
     return render_template_string(LOGIN_TEMPLATE, error=error)
-
-
-@app.route("/login/tv", methods=["GET"])
-@limiter.limit("20 per minute")
-def login_tv_auto():
-    token = (request.args.get("token") or "").strip()
-    token_file = "/root/Streamrecorder/data/.tv_gatekeeper_token"
-    try:
-        with open(token_file, "r", encoding="utf-8") as tf:
-            expected = tf.read().strip()
-    except Exception:
-        expected = ""
-    if not token or not expected or not secrets.compare_digest(token, expected):
-        logging.warning("Invalid TV token login attempt from %s", get_client_ip())
-        return redirect(url_for("login"))
-
-    users = load_users()
-    target_user = "gatekeeper_streamvault"
-    if target_user not in users or not users[target_user].get("active", True):
-        return redirect(url_for("login"))
-
-    role = users[target_user].get("role") or "admin"
-    session.clear()
-    now = time.time()
-    session.permanent = True
-    session["logged_in"] = True
-    session["user_role"] = role
-    session["username"] = target_user
-    session["login_time"] = now
-    session["last_active"] = now
-    session["_csrf_token"] = secrets.token_hex(16)
-    logging.info("TV auto-login succeeded for %s from %s", target_user, get_client_ip())
-    nxt = request.args.get("next")
-    if nxt and is_safe_next(nxt):
-        sep = "&" if "?" in nxt else "?"
-        if "_tv_loop=1" not in nxt:
-            nxt = nxt + sep + "_tv_loop=1"
-        return redirect(nxt)
-    return redirect(url_for("index"))
 
 
 @app.route("/logout", methods=["POST"])
@@ -9289,7 +9223,7 @@ def get_nebula_dashboard_media(streamers, live_channels):
             raw_vods = list(cached.get("recent_vods") or [])
             raw_clips = list(cached.get("recent_clips") or [])
             recent_vods = [v for v in raw_vods if can_view_streamer(v.get("streamer_name"))]
-            if not recent_vods and (current_user_is_admin() or is_tizen_tv()):
+            if not recent_vods and current_user_is_admin():
                 recent_vods = raw_vods
             recent_clips = [c for c in raw_clips if can_view_streamer(c.get("streamer_name"))]
             category_counts = dict(cached.get("category_counts") or {})
@@ -9306,7 +9240,7 @@ def get_nebula_dashboard_media(streamers, live_channels):
                 raw_vods = list(data.get("recent_vods") or [])
                 raw_clips = list(data.get("recent_clips") or [])
                 recent_vods = [v for v in raw_vods if can_view_streamer(v.get("streamer_name"))]
-                if not recent_vods and (current_user_is_admin() or is_tizen_tv()):
+                if not recent_vods and current_user_is_admin():
                     recent_vods = raw_vods
                 recent_clips = [c for c in raw_clips if can_view_streamer(c.get("streamer_name"))]
                 category_counts = dict(data.get("category_counts") or {})
@@ -10492,16 +10426,6 @@ def _pwa_icon_entries():
 
 def mobile_app_head_tags():
     sw_url = url_for("service_worker_js")
-    # Built outside the f-string: a backslash inside an f-string expression is
-    # only valid from Python 3.12 (PEP 701); Debian 12 / Ubuntu 22.04 ship 3.11/3.10.
-    tizen_tags = ""
-    if is_tizen_tv():
-        tizen_css = url_for("static", filename="css/tizen_tv.css", v=ASSET_VERSION)
-        tizen_js = url_for("static", filename="tizen_tv_nav.js", v=ASSET_VERSION)
-        tizen_tags = (
-            f'<link id="ns-tizen-tv-css" rel="stylesheet" href="{tizen_css}">\n'
-            f'    <script src="{tizen_js}" defer></script>'
-        )
     return f"""{PWA_HEAD_MARKER}
     <meta name="theme-color" content="{PWA_THEME_COLOR}">
     <meta name="color-scheme" content="dark">
@@ -10513,8 +10437,7 @@ def mobile_app_head_tags():
     <link rel="apple-touch-icon" sizes="180x180" href="{url_for('apple_touch_icon')}">
     <link rel="icon" type="image/png" sizes="192x192" href="{url_for('app_icon_png', size=192)}">
     <link rel="icon" type="image/png" sizes="512x512" href="{url_for('app_icon_png', size=512)}">
-    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var isTv=/Tizen|SMART-TV|SmartTV|NetCast|Web0S/i.test(navigator.userAgent)||location.search.indexOf("tv=1")!==-1;if(isTv){{document.documentElement.classList.add("is-tizen-tv");}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{if(isTv)return;var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
-    {tizen_tags}
+    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
     <script>
       (function() {{
         if ("serviceWorker" in navigator) {{
@@ -11953,7 +11876,7 @@ def twitch_watch(channel):
         use_hls_proxy = True
     elif proxy_arg in ("0", "false", "no", "off") or embed_arg in ("1", "true", "yes", "on"):
         use_hls_proxy = False
-    elif is_mobile() or wants_apple_airplay_player() or is_tizen_tv():
+    elif is_mobile() or wants_apple_airplay_player():
         use_hls_proxy = True
     elif config.LIVE_TWITCH_OAUTH_ENABLED:
         use_hls_proxy = True

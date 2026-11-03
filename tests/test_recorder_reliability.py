@@ -575,6 +575,32 @@ class LiveHlsRootTests(unittest.TestCase):
             self.assertEqual(live_watch_diag.ffmpeg_hls_pids(), {"alice": 4242})
 
 
+class SmartTvModeRemovedTests(unittest.TestCase):
+    """The deployment-specific Smart-TV auto-login must not come back."""
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import webui
+        webui.app.config.update(TESTING=True)
+        cls.client = webui.app.test_client()
+
+    def test_tv_login_route_is_gone(self):
+        self.assertEqual(self.client.get("/login/tv?token=x").status_code, 404)
+
+    def test_smart_tv_user_agent_gets_regular_login_form(self):
+        response = self.client.get(
+            "/login?tv=1",
+            headers={"User-Agent": "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0)"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('name="password"', response.get_data(as_text=True))
+
+    def test_maintenance_has_no_default_bypass_user(self):
+        from core import site_maintenance
+        self.assertEqual(site_maintenance.DEFAULT_BYPASS_USERS, [])
+        self.assertEqual(site_maintenance._default_state()["bypass_users"], [])
+
+
 class DiskSpaceGuardTests(IsolatedBaseTest):
     def test_disk_blocks_recording_on_nonexistent_dir_when_disk_full(self):
         from collections import namedtuple

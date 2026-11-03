@@ -226,7 +226,6 @@
   function initLowLatencyHlsPlayer(targetVideo, fallbackUrl) {
     dbg('info', 'init_ll_hls_fallback', { url: fallbackUrl });
     const hlsUrl = fallbackUrl || ('/live/' + encodeURIComponent(channelName) + '/stream.m3u8');
-    const isTv = document.body.classList.contains('is-tizen-tv') || /Tizen|SMART-TV|SmartTV/i.test(navigator.userAgent || '');
 
     if (window.Hls && Hls.isSupported()) {
       let net = 0;
@@ -239,7 +238,7 @@
         maxLiveSyncPlaybackRate: 1.1,
         maxBufferLength: 30,
         maxMaxBufferLength: 60,
-        enableWorker: (!isMobilePlayer && !isTv),
+        enableWorker: !isMobilePlayer,
       });
 
       hls.on(Hls.Events.MANIFEST_PARSED, function() {
@@ -296,8 +295,7 @@
 
     try {
       // 1. Primary: mpegts.js Ultra-Low-Latency Byte-Stream
-      const isTv = document.body.classList.contains('is-tizen-tv') || /Tizen|SMART-TV|SmartTV/i.test(navigator.userAgent || '');
-      const mseSupported = !isTv && window.mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
+      const mseSupported = window.mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
       const castWantsNative = window.StreamVaultCast && StreamVaultCast.preferNativeHls(video);
 
       if (mseSupported && !castWantsNative) {
@@ -345,7 +343,7 @@
         return;
       }
 
-      // 2. Fallback: Low-Latency HLS (iOS / Safari / native cast / Smart TV)
+      // 2. Fallback: Low-Latency HLS (iOS / Safari / native cast)
       initLowLatencyHlsPlayer(video, '/live/' + encodeURIComponent(channelName) + '/stream.m3u8');
 
     } catch (e) {
