@@ -642,6 +642,39 @@ class CurrentRecordingFailClosedTests(IsolatedBaseTest):
             self.assertTrue(worker._is_current_recording(str(channel), "a.mp4"))
 
 
+class LoadJsonTests(IsolatedBaseTest):
+    """A corrupt state file must survive instead of being overwritten by the default."""
+
+    @classmethod
+    def setUpClass(cls):
+        from WEBUI import webui
+        cls.webui = webui
+
+    def test_missing_file_returns_default(self):
+        self.assertEqual(self.webui.load_json(str(self.base / "nope.json"), {"d": 1}), {"d": 1})
+
+    def test_valid_file_is_loaded(self):
+        path = self.base / "ok.json"
+        path.write_text('{"a": 1}', encoding="utf-8")
+        self.assertEqual(self.webui.load_json(str(path), {}), {"a": 1})
+
+    def test_corrupt_file_is_moved_aside_not_lost(self):
+        path = self.base / "favorites.json"
+        path.write_text('["half', encoding="utf-8")
+        with self.assertLogs(level="ERROR"):
+            self.assertEqual(self.webui.load_json(str(path), []), [])
+        self.assertFalse(path.exists())
+        backups = list(self.base.glob("favorites.json.corrupt-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(encoding="utf-8"), '["half')
+
+    def test_unreadable_file_raises(self):
+        path = self.base / "dir.json"
+        path.mkdir()
+        with self.assertRaises(OSError):
+            self.webui.load_json(str(path), {})
+
+
 class LegalPagesTests(unittest.TestCase):
     """The shipped content/*.md must parse; /agb and /datenschutz returned 500 before."""
 

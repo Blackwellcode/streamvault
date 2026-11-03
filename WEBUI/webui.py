@@ -1047,10 +1047,26 @@ def ensure_dir(path):
 
 
 def load_json(path, default):
+    """Read a JSON state file; a missing file yields ``default``.
+
+    A corrupt file is moved aside as ``<path>.corrupt-<ts>`` before returning
+    ``default``. Callers save the value back later, so returning the default while
+    leaving the file in place would silently overwrite the only copy of the data.
+    Read errors other than "missing" are raised for the same reason.
+    """
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except FileNotFoundError:
+        return default
+    except ValueError as exc:  # json.JSONDecodeError, UnicodeDecodeError
+        backup = f"{path}.corrupt-{int(time.time())}"
+        try:
+            os.replace(path, backup)
+        except OSError as move_exc:
+            logging.error("Corrupt JSON %s (%s); could not move it aside: %s", path, exc, move_exc)
+            raise
+        logging.error("Corrupt JSON %s (%s); moved to %s", path, exc, backup)
         return default
 
 
