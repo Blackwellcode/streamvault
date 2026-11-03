@@ -1567,7 +1567,7 @@ body.page-index .stat-card:hover::before{ opacity: 1; }
       
       body.page-index .streamer-grid{
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
         gap: 24px;
       }
       
@@ -1864,7 +1864,7 @@ body.page-streamer *{ box-sizing: border-box; }
       
       body.page-streamer .video-grid{
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
         gap: 20px;
       }
       body.page-streamer .video-card{
@@ -2441,7 +2441,7 @@ body.page-files *{ box-sizing: border-box; }
       body.page-files .btn-primary:hover::after{ left: 100%; }
       
       
-      body.page-files .files-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+      body.page-files .files-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 20px; }
       
       body.page-files .file-card{
         background: var(--glass);
@@ -5180,7 +5180,7 @@ body.page-streamer .tab.active {
 }
 
 body.page-streamer .video-grid {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
   gap: 16px !important;
 }
 

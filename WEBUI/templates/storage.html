@@ -229,7 +229,7 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:16px;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap:12px; margin-top:16px;">
         <label class="storage-check">
           <input type="checkbox" name="auto_upload" value="1" {% if settings.auto_upload %}checked{% endif %}>
           <span><strong>Automatisch hochladen</strong><br><span class="help">Neue Aufnahmen und periodische Archiv-Syncs in die Cloud übertragen.</span></span>
