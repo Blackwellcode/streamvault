@@ -7,6 +7,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from typing import Iterable, Optional
 
+from flask_babel import gettext, lazy_gettext
+
 from core.storage.base import (
     ProgressCallback,
     ProviderField,
@@ -28,25 +30,25 @@ DAV = "{DAV:}"
 class WebDAVProvider(StorageProvider):
     type_id = "webdav"
     label = "WebDAV"
-    description = "Nextcloud, ownCloud, Hetzner Storage Box oder jeder WebDAV-Server mit App-Passwort."
+    description = lazy_gettext("Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password.")
     docs_url = "https://datatracker.ietf.org/doc/html/rfc4918"
     config_fields = (
         ProviderField(
             "base_url",
-            "WebDAV-Basis-URL",
+            lazy_gettext("WebDAV base URL"),
             required=True,
             placeholder="https://cloud.example.com/remote.php/dav/files/user/",
-            help="Muss auf einen beschreibbaren Ordner zeigen und mit / enden (wird automatisch ergänzt).",
+            help=lazy_gettext("Must point to a writable folder and end with / (added automatically)."),
         ),
-        ProviderField("username", "Benutzername", required=True),
-        ProviderField("password", "Passwort / App-Passwort", type="password", required=True, secret=True),
-        ProviderField("base_path", "Unterordner", default="StreamVault", placeholder="StreamVault"),
+        ProviderField("username", lazy_gettext("Username"), required=True),
+        ProviderField("password", lazy_gettext("Password / app password"), type="password", required=True, secret=True),
+        ProviderField("base_path", lazy_gettext("Subfolder"), default="StreamVault", placeholder="StreamVault"),
         ProviderField(
             "verify_ssl",
-            "TLS-Zertifikat prüfen",
+            lazy_gettext("Verify TLS certificate"),
             type="select",
             default="1",
-            choices=(("1", "Ja (empfohlen)"), ("0", "Nein (nur bei Self-Signed)")),
+            choices=(("1", lazy_gettext("Yes (recommended)")), ("0", lazy_gettext("No (self-signed only)"))),
         ),
     )
 
@@ -57,14 +59,14 @@ class WebDAVProvider(StorageProvider):
         if base:
             parsed = urllib.parse.urlparse(base)
             if parsed.scheme not in ("http", "https") or not parsed.netloc:
-                errors.append("WebDAV-Basis-URL muss eine gültige http(s)-URL sein.")
+                errors.append(gettext("WebDAV base URL must be a valid http(s) URL."))
             if parsed.username is not None or parsed.password is not None:
-                errors.append(
-                    "WebDAV-Basis-URL darf keine Zugangsdaten enthalten; "
-                    "nutze die Felder Benutzername und Passwort."
-                )
+                errors.append(gettext(
+                    "WebDAV base URL must not contain credentials; "
+                    "use the username and password fields."
+                ))
             if parsed.query or parsed.fragment:
-                errors.append("WebDAV-Basis-URL darf keine Query oder Fragment enthalten.")
+                errors.append(gettext("WebDAV base URL must not contain a query or fragment."))
         return errors
 
     def _base(self) -> str:

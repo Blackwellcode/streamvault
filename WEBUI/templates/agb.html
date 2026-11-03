@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>StreamVault · AGB</title>
+    <title>StreamVault · {{ _('Terms') }}</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
@@ -13,12 +13,12 @@
       <header class="agb-head">
         <div class="agb-brand">StreamVault</div>
         <h1>{{ terms_title }}</h1>
-        <p class="agb-sub">Nutzungsvertrag und Hausordnung für den Invite-only-Kreis. Kein Nutzungsrecht gegenüber Rechteinhabern oder Plattformen.</p>
+        <p class="agb-sub">{{ _('Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms.') }}</p>
         <div class="agb-meta">
-          Version <code>{{ terms_version }}</code>
-          {% if terms_effective_date %} · wirksam ab {{ terms_effective_date }}{% endif %}
-          {% if rules_version %} · Nutzungsregeln <code>{{ rules_version }}</code>{% endif %}
-          · <a href="{{ url_for('datenschutz_view') }}">Datenschutz</a>
+          {{ _('Version') }} <code>{{ terms_version }}</code>
+          {% if terms_effective_date %} · {{ _('effective from %(date)s', date=terms_effective_date) }}{% endif %}
+          {% if rules_version %} · {{ _('Usage rules') }} <code>{{ rules_version }}</code>{% endif %}
+          · <a href="{{ url_for('datenschutz_view') }}">{{ _('Privacy') }}</a>
         </div>
       </header>
 
@@ -26,17 +26,17 @@
       <div class="agb-alert">{{ error }}</div>
       {% endif %}
       {% if ok %}
-      <div class="agb-alert ok">AGB akzeptiert. Weiter zum Dashboard…</div>
+      <div class="agb-alert ok">{{ _('Terms accepted. Continuing to the dashboard…') }}</div>
       {% endif %}
 
-      <section class="agb-card agb-scroll" id="agbScroll" aria-label="AGB-Volltext" tabindex="0">
+      <section class="agb-card agb-scroll" id="agbScroll" aria-label="{{ _('Full terms text') }}" tabindex="0">
         <div class="agb-prose" id="agbProse">
           {{ terms_html|safe }}
         </div>
 
-        <section class="agb-anlage" id="hausordnung" aria-label="Anlage A Hausordnung">
-          <h2>Anlage A — {{ rules_title }}</h2>
-          <p class="agb-anlage-lead">Kurzregeln / Discord-Hausordnung. Bestandteil der AGB; mit der Zustimmung unten mitakzeptiert.</p>
+        <section class="agb-anlage" id="hausordnung" aria-label="{{ _('Appendix A house rules') }}">
+          <h2>{{ _('Appendix A — %(title)s', title=rules_title) }}</h2>
+          <p class="agb-anlage-lead">{{ _('Short rules / Discord house rules. Part of the terms; accepted together with the consent below.') }}</p>
           <ol class="agb-rules-list">
             {% for item in rules_items %}
             <li>{{ item|safe }}</li>
@@ -51,12 +51,12 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="terms_version" value="{{ terms_version }}">
         {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
-        <p class="agb-scroll-hint" id="agbScrollHint">Bitte zuerst den Text zu Ende scrollen.</p>
+        <p class="agb-scroll-hint" id="agbScrollHint">{{ _('Please scroll to the end of the text first.') }}</p>
         <label class="agb-check">
           <input type="checkbox" name="terms_accepted" value="1" id="agbCheck" required disabled>
-          <span>Ich habe die AGB (Version {{ terms_version }}) gelesen und akzeptiere sie. Verstöße können zum sofortigen Entzug des Zugangs führen.</span>
+          <span>{{ _('I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access.', version=terms_version) }}</span>
         </label>
-        <button type="submit" class="btn-primary" id="agbSubmit" disabled>AGB akzeptieren</button>
+        <button type="submit" class="btn-primary" id="agbSubmit" disabled>{{ _('Accept terms') }}</button>
       </form>
       <script>
         (function () {
@@ -73,7 +73,7 @@
             if (unlocked) return;
             unlocked = true;
             check.disabled = false;
-            if (hint) hint.textContent = 'Du kannst jetzt zustimmen.';
+            if (hint) hint.textContent = {{ _('You can agree now.')|tojson }};
           }
           function sync() {
             btn.disabled = !check.checked;
@@ -87,11 +87,12 @@
         })();
       </script>
       {% elif session.get('logged_in') %}
-      <p class="agb-done">Du hast Version <code>{{ accepted_version or terms_version }}</code> akzeptiert.</p>
-      <p><a class="btn-primary" href="{{ url_for('index') }}">Zum Dashboard</a></p>
+      {% set accepted_ver_html %}<code>{{ accepted_version or terms_version }}</code>{% endset %}
+      <p class="agb-done">{{ _('You have accepted version %(version)s.', version=accepted_ver_html) }}</p>
+      <p><a class="btn-primary" href="{{ url_for('index') }}">{{ _('Go to dashboard') }}</a></p>
       {% else %}
-      <p class="agb-done">Invite-only. AGB-Volltext nach Login.</p>
-      <p><a href="{{ url_for('login') }}">Zum Login</a></p>
+      <p class="agb-done">{{ _('Invite-only. Full terms text after sign-in.') }}</p>
+      <p><a href="{{ url_for('login') }}">{{ _('Go to sign-in') }}</a></p>
       {% endif %}
     </main>
   </body>

@@ -1517,14 +1517,14 @@ def site_maintenance_admin_context():
     }
 
 
-MOBILE_LIVE_DISABLED_MSG = (
-    "Mobile Live ist vorübergehend deaktiviert. Bitte Desktop oder die installierte App nutzen."
+MOBILE_LIVE_DISABLED_MSG = lazy_gettext(
+    "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
 )
 
 
 def redirect_mobile_live_disabled():
     """Send phones/tablets away from Live watch until mobile Live is repaired."""
-    return redirect(url_for("index", channels_msg=MOBILE_LIVE_DISABLED_MSG))
+    return redirect(url_for("index", channels_msg=str(MOBILE_LIVE_DISABLED_MSG)))
 
 
 def get_user_color(username):
@@ -2218,7 +2218,7 @@ def resolve_streamer_banner(streamer, archive_key, p_data, stream_info, twitch_l
         except Exception:
             v = 1
         clean_slug = secure_filename(archive_key) or secure_filename(streamer)
-        return url_for("streamer_banner_file", streamer=clean_slug, v=v), "Custom Datei"
+        return url_for("streamer_banner_file", streamer=clean_slug, v=v), gettext("Custom file")
 
     # Tier 2: Explicit custom banner URL
     custom_url = (p_data.get("custom_banner_url") or "").strip()
@@ -2228,7 +2228,7 @@ def resolve_streamer_banner(streamer, archive_key, p_data, stream_info, twitch_l
     # Tier 3: Twitch profile banner
     twitch_banner = (p_data.get("banner_url") or "").strip()
     if twitch_banner:
-        return twitch_banner, "Twitch Profilbanner"
+        return twitch_banner, gettext("Twitch profile banner")
 
     # Tier 4: Active live broadcast snapshot (ONLY when live/recording!)
     if twitch_live or online:
@@ -2240,11 +2240,11 @@ def resolve_streamer_banner(streamer, archive_key, p_data, stream_info, twitch_l
 
     # Tier 5: Dynamic Archive VOD Backdrop (Offline fallback)
     if files and len(files) > 0 and files[0].get("thumb_url"):
-        return files[0]["thumb_url"], "Archiv-Aufnahme (Neuestes VOD)"
+        return files[0]["thumb_url"], gettext("Archive recording (latest VOD)")
 
     archive_fallback = get_streamer_archive_fallback_banner(streamer)
     if archive_fallback:
-        return archive_fallback, "Archiv-Aufnahme (Neuestes VOD)"
+        return archive_fallback, gettext("Archive recording (latest VOD)")
 
     # Tier 6: None -> Pure CSS Cosmic Gradient
     return None, "Nebula Cosmic Gradient"
@@ -2311,9 +2311,9 @@ def resolve_streamer_avatar(streamer, archive_key=None, p_data=None):
             v = 1
         clean_slug = secure_filename(archive_key or streamer) or secure_filename(streamer)
         try:
-            return url_for("streamer_avatar_file", streamer=clean_slug, v=v), "Custom Datei"
+            return url_for("streamer_avatar_file", streamer=clean_slug, v=v), gettext("Custom file")
         except RuntimeError:
-            return f"/avatar/{clean_slug}?v={v}", "Custom Datei"
+            return f"/avatar/{clean_slug}?v={v}", gettext("Custom file")
 
     # Tier 2: Explicit custom avatar URL
     custom_url = (p_data.get("custom_avatar_url") or "").strip()
@@ -2323,9 +2323,9 @@ def resolve_streamer_avatar(streamer, archive_key=None, p_data=None):
     # Tier 3: Twitch profile image
     twitch_img = (p_data.get("url") or "").strip()
     if twitch_img:
-        return twitch_img, "Twitch Profil"
+        return twitch_img, gettext("Twitch profile")
 
-    return None, "Standard"
+    return None, gettext("Default")
 
 
 
@@ -2379,7 +2379,7 @@ def list_all_streamer_folders():
             "name": f,
             "display_name": archive_display_name(f),
             "is_stream_channel": is_stream,
-            "channel_type": "Stream-Kanal" if is_stream else "Archiv- / Medien-Ordner",
+            "channel_type": gettext("Stream channel") if is_stream else gettext("Archive / media folder"),
             "banner_preview": banner_preview,
             "source_type": source_type,
             "has_custom": bool(local_file or custom_url),
@@ -2870,7 +2870,7 @@ def twitch_badge_library_stats():
 def sync_twitch_badge_library(logins=None, *, force=False):
     """Download all Twitch global (+ optional channel) badges into local storage."""
     if not _TWITCH_BADGE_SYNC_LOCK.acquire(blocking=False):
-        return {"ok": False, "message": "Badge-Sync läuft bereits.", **twitch_badge_library_stats()}
+        return {"ok": False, "message": gettext("Badge sync is already running."), **twitch_badge_library_stats()}
     _TWITCH_BADGE_SYNC_STATE["running"] = True
     _TWITCH_BADGE_SYNC_STATE["error"] = ""
     started = time.time()
@@ -2884,7 +2884,7 @@ def sync_twitch_badge_library(logins=None, *, force=False):
             and stats.get("local_urls", 0) > 100
             and age < TWITCH_BADGE_LIBRARY_TTL_SEC
         ):
-            return {"ok": True, "message": "Badge-Bibliothek ist aktuell.", "skipped": True, **stats}
+            return {"ok": True, "message": gettext("Badge library is up to date."), "skipped": True, **stats}
 
         ensure_dir(TWITCH_BADGE_CACHE_DIR)
         ensure_dir(TWITCH_BADGE_ASSET_DIR)
@@ -2923,7 +2923,7 @@ def sync_twitch_badge_library(logins=None, *, force=False):
 
         badges = dedupe_twitch_badges(badges)
         if not badges:
-            _TWITCH_BADGE_SYNC_STATE["error"] = "Keine Badges von Twitch erhalten."
+            _TWITCH_BADGE_SYNC_STATE["error"] = gettext("No badges received from Twitch.")
             return {"ok": False, "message": _TWITCH_BADGE_SYNC_STATE["error"], **twitch_badge_library_stats()}
 
         # Prefetch missing images concurrently for 1x/2x/4x.
@@ -2989,7 +2989,7 @@ def sync_twitch_badge_library(logins=None, *, force=False):
         _TWITCH_BADGE_SYNC_STATE["running"] = False
         result = {
             "ok": True,
-            "message": "Twitch-Badge-Bibliothek synchronisiert.",
+            "message": gettext("Twitch badge library synchronized."),
             "downloaded": downloaded,
             "failed": failed,
             "jobs": len(download_jobs),
@@ -3684,20 +3684,20 @@ def remove_stale_transcript_lock(transcript_path, max_age=7200):
 
 def transcribe_media_file(file_path, transcript_path=None):
     if not file_path or not os.path.exists(file_path):
-        return False, "Datei nicht gefunden"
+        return False, gettext("File not found")
     if transcript_path is None:
         transcript_path = transcript_path_for_media(file_path)
     if os.path.exists(transcript_path):
         logging.info("Transcript already exists for %s", file_path)
-        set_transcript_status(transcript_path, "finished", 100, "Transkript vorhanden")
-        return True, "Transkript bereits vorhanden"
+        set_transcript_status(transcript_path, "finished", 100, gettext("Transcript available"))
+        return True, gettext("Transcript already exists")
 
     lock_path = transcript_lock_path(transcript_path)
     if os.path.exists(lock_path):
         if remove_stale_transcript_lock(transcript_path):
             logging.info("Removed stale transcript lock for %s", file_path)
         else:
-            return False, "Transkription läuft bereits"
+            return False, gettext("Transcription is already running")
 
     try:
         # create lock file and write PID so we can cancel the job later
@@ -3711,25 +3711,25 @@ def transcribe_media_file(file_path, transcript_path=None):
         finally:
             os.close(fd)
     except FileExistsError:
-        return False, "Transkription läuft bereits"
+        return False, gettext("Transcription is already running")
 
     tmpdir = tempfile.mkdtemp(prefix="transcribe_")
     try:
-        set_transcript_status(transcript_path, "running", 5, "Audio extrahieren...")
+        set_transcript_status(transcript_path, "running", 5, gettext("Extracting audio..."))
         ffmpeg = shutil.which("ffmpeg") or "ffmpeg"
         audio_path = os.path.join(tmpdir, "audio.wav")
         ffmpeg_cmd = [ffmpeg, "-y", "-i", file_path, "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", audio_path]
         result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=300)
         if result.returncode != 0 or not os.path.exists(audio_path):
-            err = result.stderr.strip() or "Fehler bei der Audio-Extraktion"
-            set_transcript_status(transcript_path, "error", 0, "Audio-Extraktion fehlgeschlagen", err)
+            err = result.stderr.strip() or gettext("Audio extraction error")
+            set_transcript_status(transcript_path, "error", 0, gettext("Audio extraction failed"), err)
             return False, err
 
         duration = get_media_duration(audio_path) or 0.0
         segment_length = 60 if duration > 180 else 30
         total_segments = max(1, math.ceil(duration / segment_length))
 
-        set_transcript_status(transcript_path, "running", 10, "Modell laden...")
+        set_transcript_status(transcript_path, "running", 10, gettext("Loading model..."))
         backend, model = load_transcribe_model()
 
         transcripts = []
@@ -3754,8 +3754,8 @@ def transcribe_media_file(file_path, transcript_path=None):
             ]
             seg_result = subprocess.run(seg_cmd, capture_output=True, text=True, timeout=180)
             if seg_result.returncode != 0 or not os.path.exists(segment_file):
-                err = seg_result.stderr.strip() or "Fehler beim Erzeugen des Audiosegments"
-                set_transcript_status(transcript_path, "error", 0, "Segment-Erstellung fehlgeschlagen", err)
+                err = seg_result.stderr.strip() or gettext("Error creating the audio segment")
+                set_transcript_status(transcript_path, "error", 0, gettext("Segment creation failed"), err)
                 return False, err
 
             text_seg = run_transcribe_audio(backend, model, segment_file)
@@ -3765,7 +3765,7 @@ def transcribe_media_file(file_path, transcript_path=None):
             seg_percent = int(((index + 1) / total_segments) * 85)
             percent = 5 + 5 + seg_percent
             percent = max(5, min(95, percent))
-            set_transcript_status(transcript_path, "running", percent, f"Transkribiere Segment {index + 1}/{total_segments} ({percent}%)")
+            set_transcript_status(transcript_path, "running", percent, gettext("Transcribing segment %(index)s/%(total)s (%(percent)s%%)", index=index + 1, total=total_segments, percent=percent))
 
             # Periodically persist a partial transcript so users see incremental output
             try:
@@ -3788,10 +3788,10 @@ def transcribe_media_file(file_path, transcript_path=None):
 
         transcript_text = "\n\n".join([t for t in transcripts if t])
         if not transcript_text:
-            set_transcript_status(transcript_path, "error", 0, "Keine Transkript-Ausgabe erhalten")
-            return False, "Keine Transkript-Ausgabe erhalten"
+            set_transcript_status(transcript_path, "error", 0, gettext("No transcript output received"))
+            return False, gettext("No transcript output received")
 
-        set_transcript_status(transcript_path, "running", 95, "Transkript speichern...")
+        set_transcript_status(transcript_path, "running", 95, gettext("Saving transcript..."))
         os.makedirs(os.path.dirname(transcript_path) or '.', exist_ok=True)
         tmp_final = f"{transcript_path}.tmp"
         try:
@@ -3807,21 +3807,21 @@ def transcribe_media_file(file_path, transcript_path=None):
                     os.remove(partial)
             except Exception:
                 pass
-            set_transcript_status(transcript_path, "finished", 100, "Transkript fertig")
+            set_transcript_status(transcript_path, "finished", 100, gettext("Transcript finished"))
             logging.info("Transcription finished: %s", transcript_path)
-            return True, "Transkript erstellt"
+            return True, gettext("Transcript created")
         except Exception as exc:
-            set_transcript_status(transcript_path, "error", 0, "Transkript speichern fehlgeschlagen", str(exc))
-            return False, f"Transkript speichern fehlgeschlagen: {exc}"
+            set_transcript_status(transcript_path, "error", 0, gettext("Saving transcript failed"), str(exc))
+            return False, gettext("Saving transcript failed: %(error)s", error=exc)
     except subprocess.TimeoutExpired:
-        err = "Transkription Timeout"
+        err = gettext("Transcription timed out")
         set_transcript_status(transcript_path, "error", 0, err)
         return False, err
     except Exception as exc:
         err = str(exc)
-        set_transcript_status(transcript_path, "error", 0, "Transkription fehlgeschlagen", err)
+        set_transcript_status(transcript_path, "error", 0, gettext("Transcription failed"), err)
         logging.error("Transcription failed for %s: %s", file_path, exc)
-        return False, f"Transkription fehlgeschlagen: {exc}"
+        return False, gettext("Transcription failed: %(error)s", error=exc)
     finally:
         try:
             if os.path.exists(lock_path):
@@ -3997,7 +3997,7 @@ def resolve_vod_clip_source(streamer, filename):
         "input_path": None,
         "http_headers": None,
         "source": None,
-        "error": "Aufnahme nicht verfügbar.",
+        "error": gettext("Recording not available."),
     }
 
 
@@ -4066,7 +4066,7 @@ def enforce_vod_watch_slot(streamer="", filename=""):
         resp.status_code = 429
         resp.headers["Retry-After"] = str(retry_after)
         return resp
-    resp = Response(result.get("message") or vod_watch_slots.BUSY_MESSAGE, status=429, mimetype="text/plain; charset=utf-8")
+    resp = Response(result.get("message") or str(vod_watch_slots.BUSY_MESSAGE), status=429, mimetype="text/plain; charset=utf-8")
     resp.headers["Retry-After"] = str(retry_after)
     resp.headers["X-StreamVault-Vod-Slot"] = "full"
     return resp
@@ -4087,7 +4087,7 @@ def vod_slot_client_config(streamer, filename, *, enabled=None):
         "heartbeat_sec": limits["heartbeat_sec"],
         "pause_grace_sec": limits["pause_grace_sec"],
         "csrf_token": generate_csrf_token(),
-        "message": vod_watch_slots.BUSY_MESSAGE,
+        "message": str(vod_watch_slots.BUSY_MESSAGE),
     }
 
 
@@ -4201,7 +4201,7 @@ class DL_Logger:
             clean = msg.replace("[download] ", "").strip()
             set_download_status(self.streamer, "running", clean)
         elif any(x in msg for x in ['[Merger]', '[Fixup]', '[ffmpeg]', 'Merging formats']):
-            set_download_status(self.streamer, "running", "Verarbeite Video (kann dauern)...")
+            set_download_status(self.streamer, "running", gettext("Processing video (this may take a while)..."))
     def debug(self, msg):
         self._handle_msg(msg)
     def info(self, msg):
@@ -4217,7 +4217,7 @@ def run_vod_download_task(streamer):
         return
     os.makedirs(safe_dir, exist_ok=True)
     
-    set_download_status(streamer, "running", "Starte Download...")
+    set_download_status(streamer, "running", gettext("Starting download..."))
     
     last_update = [0]
     def progress_hook(d):
@@ -4227,9 +4227,9 @@ def run_vod_download_task(streamer):
             # Update sofort bei 100% oder alle 2 Sekunden
             if "100%" in p or now - last_update[0] >= 2:
                 last_update[0] = now
-                set_download_status(streamer, "running", f"Lade... {p}")
+                set_download_status(streamer, "running", gettext("Downloading... %(percent)s", percent=p))
         elif d['status'] == 'finished':
-            set_download_status(streamer, "running", "Verarbeite Video...")
+            set_download_status(streamer, "running", gettext("Processing video..."))
 
     channel_url = f"https://www.twitch.tv/{streamer}/videos?filter=archives&sort=time"
     
@@ -4247,10 +4247,10 @@ def run_vod_download_task(streamer):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([channel_url])
-        set_download_status(streamer, "finished", "Download abgeschlossen.")
+        set_download_status(streamer, "finished", gettext("Download complete."))
         logging.info(f"Finished background VOD download for {streamer}.")
     except Exception as e:
-        set_download_status(streamer, "error", f"Fehler: {e!s}")
+        set_download_status(streamer, "error", gettext("Error: %(error)s", error=str(e)))
         logging.error(f"Error in background VOD download for {streamer}: {e}")
 
 STREAMER_CACHE = {"ts": 0, "data": [], "token": 0}
@@ -4696,25 +4696,25 @@ def recording_health_rows(streamers=None, limit=12, active_only=False):
         recorder_state = str(status_info.get("state") or "").lower()
         if active_info:
             status = "recording"
-            status_label = "Aufnahme"
+            status_label = gettext("Recording")
         elif recorder_state == "starting":
             status = "starting"
-            status_label = "Startet"
+            status_label = gettext("Starting")
         elif recorder_state == "offline":
             status = "offline"
-            status_label = "Offline"
+            status_label = gettext("Offline")
         elif recorder_state == "error":
             status = "error"
-            status_label = "Fehler"
+            status_label = gettext("Error")
         elif raw_info:
             status = "stale"
-            status_label = "Prüfen"
+            status_label = gettext("Check")
         elif name in live_channels:
             status = "watching"
-            status_label = "Live-Watch"
+            status_label = gettext("Live watch")
         else:
             status = "idle"
-            status_label = "Bereit"
+            status_label = gettext("Ready")
         if active_only and status != "recording":
             continue
         twitch_login = meta.get("twitch_login") or twitch_api.normalize_login(name)
@@ -4766,7 +4766,7 @@ def recent_task_error_rows(limit=12):
         rows.append({
             "type": task.get("type") or "-",
             "status": status or "failed",
-            "error": error or "Unbekannter Fehler",
+            "error": error or gettext("Unknown error"),
             "age": format_age_short(updated) if updated else "-",
             "updated_at": float(updated or 0),
         })
@@ -5138,9 +5138,9 @@ def compact_duration(seconds):
     return f"{minutes}m"
 
 
-GERMAN_MONTHS = [
-    "Januar", "Februar", "März", "April", "Mai", "Juni",
-    "Juli", "August", "September", "Oktober", "November", "Dezember",
+MONTH_NAMES = [
+    lazy_gettext("January"), lazy_gettext("February"), lazy_gettext("March"), lazy_gettext("April"), lazy_gettext("May"), lazy_gettext("June"),
+    lazy_gettext("July"), lazy_gettext("August"), lazy_gettext("September"), lazy_gettext("October"), lazy_gettext("November"), lazy_gettext("December"),
 ]
 
 
@@ -5166,12 +5166,12 @@ def dashboard_time_label(value):
     now = datetime.now()
     title = dt.strftime("%d.%m.%Y %H:%M:%S")
     if dt.date() == now.date():
-        return f"Heute, {dt:%H:%M}", title
+        return gettext("Today, %(time)s", time=dt.strftime("%H:%M")), title
     if dt.date() == (now - timedelta(days=1)).date():
-        return f"Gestern, {dt:%H:%M}", title
+        return gettext("Yesterday, %(time)s", time=dt.strftime("%H:%M")), title
     if dt.year == now.year:
-        month = GERMAN_MONTHS[dt.month - 1]
-        return f"{dt.day}. {month}, {dt:%H:%M}", title
+        month = MONTH_NAMES[dt.month - 1]
+        return gettext("%(month)s %(day)s, %(time)s", month=month, day=dt.day, time=dt.strftime("%H:%M")), title
     return dt.strftime("%d.%m.%Y, %H:%M"), title
 
 
@@ -5207,13 +5207,13 @@ def dashboard_context(streamers, live_channels, storage, storage_alert=None):
     active_filename = str((active_info or {}).get("filename") or "").strip()
     active_started = (active_info or {}).get("start_ts")
     recorder_state = "recording" if active_info else "ready"
-    recorder_label = "Aufnahme läuft" if active_info else "Bereit"
-    recorder_detail = active_name if active_name else "Keine aktiven Streams"
+    recorder_label = gettext("Recording in progress") if active_info else gettext("Ready")
+    recorder_detail = active_name if active_name else gettext("No active streams")
     storage_pct = float(storage.get("pct") or 0)
     storage_state = "critical" if storage_pct >= 90 else ("warning" if storage_pct >= 80 else "ok")
     if storage_alert and storage_alert.get("critical"):
         storage_state = "critical"
-    storage_state_label = {"ok": "OK", "warning": "Warnung", "critical": "Kritisch"}.get(storage_state, "OK")
+    storage_state_label = {"ok": gettext("OK"), "warning": gettext("Warning"), "critical": gettext("Critical")}.get(storage_state, gettext("OK"))
     return {
         "vod_count": vod_count,
         "recorder_state": recorder_state,
@@ -6249,7 +6249,7 @@ def vod_seek_profile(file_path):
             profile["container"] = "fragmented-mp4"
     except Exception as exc:
         logging.warning("Could not inspect MP4 seek profile for %s: %s", file_path, exc)
-        profile["error"] = "MP4-Pruefung nicht moeglich"
+        profile["error"] = gettext("MP4 check not possible")
     return profile
 
 
@@ -6277,7 +6277,7 @@ def enqueue_vod_remux(streamer, filename, reencode_audio=False):
     existing = active_vod_remux_task(streamer, filename)
     if existing:
         status = existing.get("status") or "pending"
-        return False, f"Seek-Reparatur laeuft bereits ({status})."
+        return False, gettext("Seek repair is already running (%(status)s).", status=status)
     database.add_task(
         "remux_vod",
         {
@@ -6286,7 +6286,7 @@ def enqueue_vod_remux(streamer, filename, reencode_audio=False):
             "reencode_audio": bool(reencode_audio),
         },
     )
-    return True, "Seek-Reparatur in die Warteschlange gestellt."
+    return True, gettext("Seek repair queued.")
 
 
 def format_age_short(ts):
@@ -6318,7 +6318,7 @@ def task_payload_label(task_type, payload):
     if payload.get("filename"):
         candidates.append(os.path.basename(str(payload.get("filename"))))
     if task_type == "remux_all":
-        return "Alle VODs"
+        return gettext("All VODs")
     return " / ".join(candidates[:2])
 
 
@@ -6329,7 +6329,7 @@ def task_queue_summary(limit=30):
         rows = database.list_tasks(limit=limit)
     except Exception as exc:
         logging.error("Could not load task queue: %s", exc)
-        return {"counts": counts, "tasks": [], "total_active": 0, "error": "Queue nicht lesbar"}
+        return {"counts": counts, "tasks": [], "total_active": 0, "error": gettext("Queue not readable")}
 
     for row in rows:
         status = str(row.get("status") or "pending")
@@ -6745,7 +6745,7 @@ def _rename_local_path(src, dest):
     if not os.path.exists(src):
         return False
     if os.path.exists(dest):
-        raise OSError(f"Ziel existiert bereits: {dest}")
+        raise OSError(gettext("Target already exists: %(path)s", path=dest))
     parent = os.path.dirname(dest)
     if parent:
         os.makedirs(parent, exist_ok=True)
@@ -6776,7 +6776,7 @@ def update_vod_info_fields(streamer, filename, *, title=None, description=None):
     """Admin-editable display title + description in metadata.json."""
     filename = os.path.basename(str(filename or ""))
     if not streamer or not filename:
-        return False, "Ungueltige Datei."
+        return False, gettext("Invalid file.")
     metadata = get_metadata_cache()
     key = f"{streamer}/{filename}"
     record = metadata.setdefault(key, {})
@@ -6787,7 +6787,7 @@ def update_vod_info_fields(streamer, filename, *, title=None, description=None):
         record["description"] = clean_vod_description(description)
     save_metadata_cache(metadata)
     _VOD_LIST_CACHE.pop(streamer, None)
-    return True, "Gespeichert."
+    return True, gettext("Saved.")
 
 
 def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
@@ -6796,22 +6796,22 @@ def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
     old_name = os.path.basename(str(old_filename or "").strip())
     new_name = normalize_vod_rename_filename(new_filename, old_name)
     if not streamer or not old_name or not new_name:
-        return False, "Ungueltiger Dateiname.", old_name
+        return False, gettext("Invalid file name."), old_name
     if new_name == old_name:
-        return True, "Unveraendert.", new_name
+        return True, gettext("Unchanged."), new_name
 
     if resolve_media_path(streamer, new_name, route):
-        return False, "Zielname existiert bereits lokal.", old_name
+        return False, gettext("Target name already exists locally."), old_name
 
     old_path = resolve_media_path(streamer, old_name, route)
     if not old_path:
-        return False, "Datei lokal nicht gefunden.", old_name
+        return False, gettext("File not found locally."), old_name
 
     new_path = os.path.join(os.path.dirname(old_path), new_name)
     try:
         _rename_local_path(old_path, new_path)
     except OSError as exc:
-        return False, f"Lokales Umbennen fehlgeschlagen: {exc}", old_name
+        return False, gettext("Local rename failed: %(error)s", error=exc), old_name
     for sidecar in sidecar_metadata_candidates(old_path):
         if not os.path.isfile(sidecar):
             continue
@@ -6868,7 +6868,7 @@ def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
     except Exception:
         pass
 
-    return True, "Umbenannt.", new_name
+    return True, gettext("Renamed."), new_name
 
 
 def start_hls_generate(input_path, hls_dir, lock_path):
@@ -7035,9 +7035,9 @@ def _path_exempt_from_maintenance(path: str) -> bool:
 
 
 def _maintenance_response(custom_message: str | None = None):
-    msg = custom_message or (
-        "StreamVault ist wegen Wartungsarbeiten vorübergehend nicht verfügbar. "
-        "Bitte hab etwas Geduld — die Seite ist bald wieder da."
+    msg = custom_message or gettext(
+        "StreamVault is temporarily unavailable due to maintenance. "
+        "Please be patient — the site will be back soon."
     )
     if _request_wants_json_response():
         return jsonify(
@@ -7071,9 +7071,9 @@ def _terms_required_response():
                 "ok": False,
                 "error": "terms_acceptance_required",
                 "terms_version": tube_terms.current_version(),
-                "message": (
-                    "AGB-Version veraltet oder nicht akzeptiert. "
-                    "Zustimmung unter /agb erforderlich."
+                "message": gettext(
+                    "Terms version outdated or not accepted. "
+                    "Acceptance required at /agb."
                 ),
             }
         ), 400
@@ -7133,7 +7133,7 @@ def _accept_terms_from_request():
     if not accepted:
         if _request_wants_json_response():
             return jsonify({"ok": False, "error": "terms_not_accepted"}), 400
-        return redirect(url_for("agb_view", error="Zustimmung erforderlich."))
+        return redirect(url_for("agb_view", error=gettext("Consent required.")))
     if version != tube_terms.current_version():
         if _request_wants_json_response():
             return jsonify(
@@ -7146,7 +7146,7 @@ def _accept_terms_from_request():
         return redirect(
             url_for(
                 "agb_view",
-                error="AGB-Version veraltet — Seite neu laden und erneut akzeptieren.",
+                error=gettext("Terms version outdated — reload the page and accept again."),
             )
         )
     name = current_username()
@@ -7291,7 +7291,7 @@ def csrf_protect():
         and not current_user_bypasses_maintenance()
         and not _path_exempt_from_maintenance(request.path)
     ):
-        return _maintenance_response("Die mobile Version von StreamVault wird aktuell gewartet. Bitte nutze die Desktop-Version.")
+        return _maintenance_response(gettext("The mobile version of StreamVault is currently under maintenance. Please use the desktop version."))
     # Token-auth TTS / alert overlay APIs (OBS browser source) — not session CSRF.
     # Twitch EventSub webhooks authenticate via HMAC signature, not CSRF.
     if (
@@ -7400,7 +7400,7 @@ def login():
     if is_banned(ip):
         return render_template_string(
             LOGIN_TEMPLATE,
-            error="Ihre IP wurde vorübergehend gesperrt. Bitte später erneut versuchen.",
+            error=gettext("Your IP has been temporarily blocked. Please try again later."),
         )
 
     # Already authenticated (e.g. duplicate submit after session rotation).
@@ -7425,7 +7425,7 @@ def login():
             logging.warning(f"LOGIN RATELIMIT EXCEEDED: {ip}")
             ban_ip(ip)  # temporary lockout via LOGIN_BAN_TTL_SEC
             log_login_attempt(ip, username, False)
-            error = "Zu viele Versuche. IP vorübergehend gesperrt. Bitte später erneut versuchen."
+            error = gettext("Too many attempts. IP temporarily blocked. Please try again later.")
             return render_template_string(LOGIN_TEMPLATE, error=error)
 
         role = authenticate_user(username, password)
@@ -7470,7 +7470,7 @@ def login():
         logging.warning(f"LOGIN FAILED: {ip} (user: {username})")
         add_login_attempt(ip)
         log_login_attempt(ip, username, False)
-        error = "Login fehlgeschlagen."
+        error = gettext("Login failed.")
     return render_template_string(LOGIN_TEMPLATE, error=error)
 
 
@@ -7583,7 +7583,7 @@ def admin_view():
         )
     except Exception as e:
         logging.error(f"Admin panel error: {e!s}", exc_info=True)
-        return "Fehler beim Laden des Admin-Panels. Bitte versuchen Sie es später erneut.", 500
+        return gettext("Error loading the admin panel. Please try again later."), 500
 
 
 @app.route("/admin/traffic")
@@ -7613,7 +7613,7 @@ def admin_traffic_view():
         )
     except Exception as exc:
         logging.error("Admin traffic error: %s", exc, exc_info=True)
-        return "Fehler beim Laden der Traffic-Übersicht.", 500
+        return gettext("Error loading the traffic overview."), 500
 
 
 # ============ CLOUD STORAGE (Google Drive, S3, Dropbox, OneDrive, WebDAV) ============
@@ -7665,7 +7665,7 @@ def admin_storage_view():
         )
     except Exception as exc:
         logging.error("Admin storage error: %s", _storage_error(exc))
-        return "Fehler beim Laden der Cloud-Speicher-Verwaltung.", 500
+        return gettext("Error loading cloud storage management."), 500
 
 
 @app.route("/admin/storage/settings", methods=["POST"])
@@ -7687,7 +7687,7 @@ def admin_storage_settings():
     }
     try:
         svc.save_settings(values)
-        return _storage_redirect(msg="Einstellungen gespeichert.")
+        return _storage_redirect(msg=gettext("Settings saved."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7715,7 +7715,7 @@ def admin_storage_provider_add():
             enabled=request.form.get("enabled") == "1",
         )
         return _storage_redirect(
-            msg=f"Anbieter #{provider_id} angelegt. Bitte Verbindung testen."
+            msg=gettext("Provider #%(id)s created. Please test the connection.", id=provider_id)
         )
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
@@ -7731,7 +7731,7 @@ def admin_storage_provider_update(provider_id):
     try:
         row = svc.get_provider_record(provider_id)
         if not row:
-            raise ValueError("Anbieter nicht gefunden.")
+            raise ValueError(gettext("Provider not found."))
         cls = get_provider_class(row["provider_type"])
         values = {}
         for field in cls.config_fields:
@@ -7742,7 +7742,7 @@ def admin_storage_provider_update(provider_id):
             values=values,
             enabled=request.form.get("enabled") == "1",
         )
-        return _storage_redirect(msg=f"Anbieter #{provider_id} gespeichert.")
+        return _storage_redirect(msg=gettext("Provider #%(id)s saved.", id=provider_id))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7755,7 +7755,7 @@ def admin_storage_provider_delete(provider_id):
     try:
         svc.delete_provider(provider_id)
         return _storage_redirect(
-            msg=f"Anbieter #{provider_id} entfernt. Cloud-Dateien bleiben erhalten."
+            msg=gettext("Provider #%(id)s removed. Cloud files are kept.", id=provider_id)
         )
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
@@ -7782,7 +7782,7 @@ def admin_storage_provider_check(provider_id):
     svc = _storage_service()
     try:
         task_id = svc.enqueue_check(provider_id)
-        return _storage_redirect(msg=f"Verbindungstest eingeordnet (Task #{task_id}).")
+        return _storage_redirect(msg=gettext("Connection test queued (task #%(task)s).", task=task_id))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7804,12 +7804,12 @@ def admin_storage_oauth_start(provider_id):
 def storage_oauth_callback():
     svc = _storage_service()
     if request.args.get("error"):
-        return _storage_redirect(error=f"Anbieter meldete: {request.args.get('error')}")
+        return _storage_redirect(error=gettext("Provider reported: %(error)s", error=request.args.get("error")))
     try:
         provider_id = svc.verify_oauth_state(request.args.get("state", ""))
         code = str(request.args.get("code") or "").strip()
         if not code:
-            raise ValueError("OAuth-Code fehlt.")
+            raise ValueError(gettext("OAuth code is missing."))
         svc.oauth_complete(provider_id, code, _storage_redirect_uri())
         result = svc.test_provider(provider_id)
         if result.get("ok"):
@@ -7829,8 +7829,8 @@ def admin_storage_sync():
         streamer = str(request.form.get("streamer") or "").strip() or None
         task_id = svc.enqueue_sync(provider_id, streamer)
         if task_id:
-            return _storage_redirect(msg=f"Cloud-Sync eingeordnet (Task #{task_id}).")
-        return _storage_redirect(msg="Es läuft bereits ein Cloud-Sync.")
+            return _storage_redirect(msg=gettext("Cloud sync queued (task #%(task)s).", task=task_id))
+        return _storage_redirect(msg=gettext("A cloud sync is already running."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7844,8 +7844,8 @@ def admin_storage_cleanup():
         provider_id = request.form.get("provider_id") or None
         task_id = svc.enqueue_cleanup(provider_id)
         if task_id:
-            return _storage_redirect(msg=f"Aufräumung eingeordnet (Task #{task_id}).")
-        return _storage_redirect(msg="Es läuft bereits eine Aufräumung.")
+            return _storage_redirect(msg=gettext("Cleanup queued (task #%(task)s).", task=task_id))
+        return _storage_redirect(msg=gettext("A cleanup is already running."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7858,15 +7858,15 @@ def admin_storage_object_upload(object_id):
     try:
         obj = database.get_storage_object(object_id)
         if not obj:
-            raise ValueError("Archiv-Objekt nicht gefunden.")
+            raise ValueError(gettext("Archive object not found."))
         if obj.get("local_deleted_at"):
-            raise ValueError("Die lokale Datei wurde bereits entfernt. Bitte zuerst wiederherstellen.")
+            raise ValueError(gettext("The local file has already been removed. Please restore it first."))
         result = svc.enqueue_upload(
             obj["local_path"], obj["provider_id"], force=True
         )
         if result.get("task_id"):
-            return _storage_redirect(msg=f"Upload eingeordnet (Task #{result['task_id']}).")
-        return _storage_redirect(msg="Es läuft bereits ein Upload für diese Datei.")
+            return _storage_redirect(msg=gettext("Upload queued (task #%(task)s).", task=result["task_id"]))
+        return _storage_redirect(msg=gettext("An upload for this file is already running."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7879,8 +7879,8 @@ def admin_storage_object_restore(object_id):
     try:
         task_id = svc.enqueue_restore(object_id)
         if task_id:
-            return _storage_redirect(msg=f"Wiederherstellung eingeordnet (Task #{task_id}).")
-        return _storage_redirect(msg="Es läuft bereits eine Wiederherstellung.")
+            return _storage_redirect(msg=gettext("Restore queued (task #%(task)s).", task=task_id))
+        return _storage_redirect(msg=gettext("A restore is already running."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7893,8 +7893,8 @@ def admin_storage_object_delete_remote(object_id):
     try:
         task_id = svc.enqueue_delete(object_id)
         if task_id:
-            return _storage_redirect(msg=f"Cloud-Löschung eingeordnet (Task #{task_id}).")
-        return _storage_redirect(msg="Es läuft bereits eine Cloud-Löschung.")
+            return _storage_redirect(msg=gettext("Cloud deletion queued (task #%(task)s).", task=task_id))
+        return _storage_redirect(msg=gettext("A cloud deletion is already running."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7920,9 +7920,9 @@ def admin_storage_object_forget(object_id):
     try:
         if database.delete_storage_object(object_id):
             return _storage_redirect(
-                msg=f"Objekt #{object_id} aus der Datenbank entfernt. Dateien bleiben erhalten."
+                msg=gettext("Object #%(id)s removed from the database. Files are kept.", id=object_id)
             )
-        return _storage_redirect(error="Archiv-Objekt nicht gefunden.")
+        return _storage_redirect(error=gettext("Archive object not found."))
     except Exception as exc:
         return _storage_redirect(error=_storage_error(exc))
 
@@ -7944,9 +7944,9 @@ def admin_ban_ip(ip):
 def admin_remux_all():
     try:
         database.add_task("remux_all", {"reencode_audio": True})
-        return redirect(url_for("admin_view", msg="Remux-Job gestartet. Fortschritt im Admin-Panel."))
+        return redirect(url_for("admin_view", msg=gettext("Remux job started. Progress is shown in the admin panel.")))
     except Exception as e:
-        return redirect(url_for("admin_view", error=f"Remux-Job konnte nicht gestartet werden: {e}"))
+        return redirect(url_for("admin_view", error=gettext("Remux job could not be started: %(error)s", error=e)))
 
 
 @app.route("/streamer/<streamer>/visibility", methods=["POST"])
@@ -7964,19 +7964,19 @@ def streamer_visibility_update(streamer):
         save_profiles(profiles)
         bust_media_cache()
         STREAMER_CACHE["ts"] = 0
-        label = "nur Admins" if vis == "admin" else "alle Nutzer"
-        return redirect(url_for("streamer_view", streamer=archive, msg=f"Sichtbarkeit: {label}."))
+        visibility_msg = gettext("Visibility: admins only.") if vis == "admin" else gettext("Visibility: all users.")
+        return redirect(url_for("streamer_view", streamer=archive, msg=visibility_msg))
     except Exception as exc:
         logging.error("Sichtbarkeit fehlgeschlagen: %s", exc)
-        return redirect(url_for("streamer_view", streamer=archive, msg="Sichtbarkeit konnte nicht gespeichert werden."))
+        return redirect(url_for("streamer_view", streamer=archive, msg=gettext("Visibility could not be saved.")))
 
 
 @app.route("/admin/share/revoke/<token>", methods=["POST"])
 @admin_required
 def admin_share_revoke(token):
     if revoke_share(token):
-        return redirect(url_for("admin_view", msg="Freigabe widerrufen."))
-    return redirect(url_for("admin_view", error="Freigabe nicht gefunden."))
+        return redirect(url_for("admin_view", msg=gettext("Share revoked.")))
+    return redirect(url_for("admin_view", error=gettext("Share not found.")))
 
 
 @app.route("/admin/chat", methods=["GET", "POST"])
@@ -8317,19 +8317,19 @@ def admin_user_add():
     MIN_PASSWORD_LENGTH = tube_auth.MIN_PASSWORD_LENGTH
 
     if not username:
-        return redirect(url_for("admin_view", error="Username ist erforderlich."))
+        return redirect(url_for("admin_view", error=gettext("Username is required.")))
 
     if not VALID_USERNAME.match(username):
-        return redirect(url_for("admin_view", error="Username muss 3-32 alphanumerische Zeichen sein (Bindestriche und Unterstriche erlaubt)."))
+        return redirect(url_for("admin_view", error=gettext("Username must be 3-32 alphanumeric characters (hyphens and underscores allowed).")))
 
     if username.lower() in RESERVED_USERNAMES:
-        return redirect(url_for("admin_view", error=f"Username '{username}' ist reserviert."))
+        return redirect(url_for("admin_view", error=gettext("Username '%(username)s' is reserved.", username=username)))
 
     if not password:
-        return redirect(url_for("admin_view", error="Passwort ist erforderlich."))
+        return redirect(url_for("admin_view", error=gettext("Password is required.")))
 
     if len(password) < MIN_PASSWORD_LENGTH:
-        return redirect(url_for("admin_view", error=f"Passwort muss mindestens {MIN_PASSWORD_LENGTH} Zeichen lang sein."))
+        return redirect(url_for("admin_view", error=gettext("Password must be at least %(min)s characters long.", min=MIN_PASSWORD_LENGTH)))
 
     role = tube_auth.normalize_role(role, default="viewer")
     if role not in VALID_ROLES:
@@ -8337,15 +8337,15 @@ def admin_user_add():
 
     users = load_users()
     if any(u.lower() == username.lower() for u in users):
-        return redirect(url_for("admin_view", error=f"Benutzer '{username}' existiert bereits."))
+        return redirect(url_for("admin_view", error=gettext("User '%(username)s' already exists.", username=username)))
 
     try:
         save_user(username, generate_password_hash(password), role=role, created_via="admin")
         logging.info(f"New user created: {username} (role: {role}) by {session.get('username')}")
-        return redirect(url_for("admin_view", msg=f"Benutzer '{username}' erfolgreich erstellt."))
+        return redirect(url_for("admin_view", msg=gettext("User '%(username)s' created successfully.", username=username)))
     except Exception as e:
         logging.error(f"Failed to create user {username}: {e}")
-        return redirect(url_for("admin_view", error="Fehler beim Erstellen des Benutzers."))
+        return redirect(url_for("admin_view", error=gettext("Error creating the user.")))
 
 @app.route("/admin/users/update/<username>", methods=["POST"])
 @admin_required
@@ -8367,18 +8367,18 @@ def admin_user_update(username):
     
     # SECURITY: Validate password if provided
     if new_pass and len(new_pass) < tube_auth.MIN_PASSWORD_LENGTH:
-        return redirect(url_for("admin_view", error="Passwort muss mindestens 8 Zeichen lang sein."))
+        return redirect(url_for("admin_view", error=gettext("Password must be at least %(min)s characters long.", min=tube_auth.MIN_PASSWORD_LENGTH)))
     
     users = load_users()
     # Case-insensitive lookup for username key
     matched = next((u for u in users if u.lower() == username.lower()), None)
     if not matched:
-        return redirect(url_for("admin_view", error=f"Benutzer '{username}' nicht gefunden."))
+        return redirect(url_for("admin_view", error=gettext("User '%(username)s' not found.", username=username)))
     username = matched
     
     # Self-lockout protection
     if username.lower() == (session.get("username") or "").lower() and not active:
-        return redirect(url_for("admin_view", error="Sie können Ihr eigenes Administratorkonto nicht deaktivieren."))
+        return redirect(url_for("admin_view", error=gettext("You cannot deactivate your own administrator account.")))
 
     # Protect config admin user
     if username.lower() == config.VOD_USER.lower():
@@ -8395,7 +8395,7 @@ def admin_user_update(username):
     if new_name and new_name != username:
         # Rename: Check if target exists
         if any(u.lower() == new_name.lower() for u in users if u != username):
-            return redirect(url_for("admin_view", error=f"Benutzer '{new_name}' existiert bereits."))
+            return redirect(url_for("admin_view", error=gettext("User '%(username)s' already exists.", username=new_name)))
 
         # Delete old, create new — preserve Discord binding
         delete_user(username)
@@ -8415,7 +8415,7 @@ def admin_user_update(username):
         save_user(username, pw_hash, active=active, role=role)
         logging.info(f"User updated: {username} by {session.get('username')}")
     
-    return redirect(url_for("admin_view", msg="Benutzer aktualisiert."))
+    return redirect(url_for("admin_view", msg=gettext("User updated.")))
 
 
 @app.route("/admin/users/delete/<username>", methods=["POST"])
@@ -8423,12 +8423,12 @@ def admin_user_update(username):
 @limiter.limit("20 per hour")  # SECURITY: Rate limit user deletion (strict)
 def admin_user_delete(username):
     if username.lower() == (session.get("username") or "").lower():
-        return redirect(url_for("admin_view", error="Sie können Ihr eigenes Konto nicht löschen."))
+        return redirect(url_for("admin_view", error=gettext("You cannot delete your own account.")))
     if username.lower() == config.VOD_USER.lower():
-        return redirect(url_for("admin_view", error="Dieser Admin-User ist geschuetzt und kann nicht geloescht werden."))
+        return redirect(url_for("admin_view", error=gettext("This admin user is protected and cannot be deleted.")))
     delete_user(username)
     delete_user_settings(username)
-    return redirect(url_for("admin_view", msg="Benutzer geloescht."))
+    return redirect(url_for("admin_view", msg=gettext("User deleted.")))
 
 
 # ==============================================================================
@@ -8531,27 +8531,27 @@ def api_admin_user_create():
     active = bool(data.get("active", True))
 
     if not username:
-        return jsonify({"ok": False, "error": "Benutzername ist erforderlich."}), 400
+        return jsonify({"ok": False, "error": gettext("Username is required.")}), 400
     if not tube_auth.USERNAME_RE.match(username):
-        return jsonify({"ok": False, "error": "Ungültiger Benutzername (3-32 Zeichen, Buchstaben, Zahlen, _ und -)."}), 400
+        return jsonify({"ok": False, "error": gettext("Invalid username (3-32 characters: letters, numbers, _ and -).")}), 400
     if username.lower() in tube_auth.RESERVED_USERNAMES:
-        return jsonify({"ok": False, "error": f"Benutzername '{username}' ist reserviert."}), 400
+        return jsonify({"ok": False, "error": gettext("Username '%(username)s' is reserved.", username=username)}), 400
     if not password or len(password) < tube_auth.MIN_PASSWORD_LENGTH:
-        return jsonify({"ok": False, "error": f"Passwort muss mindestens {tube_auth.MIN_PASSWORD_LENGTH} Zeichen lang sein."}), 400
+        return jsonify({"ok": False, "error": gettext("Password must be at least %(min)s characters long.", min=tube_auth.MIN_PASSWORD_LENGTH)}), 400
 
     existing = database.get_user(username)
     if existing:
-        return jsonify({"ok": False, "error": f"Benutzer '{username}' existiert bereits."}), 409
+        return jsonify({"ok": False, "error": gettext("User '%(username)s' already exists.", username=username)}), 409
 
     if group_id is not None:
         try:
             group_id = int(group_id)
             group = database.get_user_group(group_id)
             if not group:
-                return jsonify({"ok": False, "error": "Ausgewählte Gruppe existiert nicht."}), 400
+                return jsonify({"ok": False, "error": gettext("The selected group does not exist.")}), 400
             role = "admin" if group.get("permissions", {}).get("can_manage_users") else "viewer"
         except (TypeError, ValueError):
-            return jsonify({"ok": False, "error": "Ungültige Gruppen-ID."}), 400
+            return jsonify({"ok": False, "error": gettext("Invalid group ID.")}), 400
     else:
         group_id = 3
         role = "viewer" 
@@ -8562,7 +8562,7 @@ def api_admin_user_create():
 
     return jsonify({
         "ok": True,
-        "msg": f"Benutzer '{username}' erfolgreich erstellt.",
+        "msg": gettext("User '%(username)s' created successfully.", username=username),
         "user": {
             "username": username,
             "email": email,
@@ -8583,7 +8583,7 @@ def api_admin_user_update(username):
     data = request.get_json(silent=True) or request.form.to_dict()
     user = database.get_user(username)
     if not user:
-        return jsonify({"ok": False, "error": f"Benutzer '{username}' nicht gefunden."}), 404
+        return jsonify({"ok": False, "error": gettext("User '%(username)s' not found.", username=username)}), 404
 
     current_uname = (session.get("username") or "").lower()
     is_self = (username.lower() == current_uname)
@@ -8597,7 +8597,7 @@ def api_admin_user_update(username):
 
     if is_self:
         if not active:
-            return jsonify({"ok": False, "error": "Sie können Ihr eigenes Administratorkonto nicht deaktivieren."}), 400
+            return jsonify({"ok": False, "error": gettext("You cannot deactivate your own administrator account.")}), 400
 
     role = user.get("role") or "viewer"
     if group_id is not None:
@@ -8605,13 +8605,13 @@ def api_admin_user_update(username):
             group_id = int(group_id)
             group = database.get_user_group(group_id)
             if not group:
-                return jsonify({"ok": False, "error": "Ausgewählte Gruppe existiert nicht."}), 400
+                return jsonify({"ok": False, "error": gettext("The selected group does not exist.")}), 400
             if is_self and not bool(group.get("permissions", {}).get("can_manage_users")):
-                return jsonify({"ok": False, "error": "Sie können sich nicht in eine Gruppe ohne Benutzerverwaltungs-Rechte verschieben."}), 400
+                return jsonify({"ok": False, "error": gettext("You cannot move yourself into a group without user management permissions.")}), 400
             database.set_user_group(username, group_id)
             role = "admin" if group.get("permissions", {}).get("can_manage_users") else "viewer"
         except (TypeError, ValueError):
-            return jsonify({"ok": False, "error": "Ungültige Gruppen-ID."}), 400
+            return jsonify({"ok": False, "error": gettext("Invalid group ID.")}), 400
 
     if is_env_admin:
         role = "admin"
@@ -8620,7 +8620,7 @@ def api_admin_user_update(username):
 
     if new_pass:
         if len(new_pass) < tube_auth.MIN_PASSWORD_LENGTH:
-            return jsonify({"ok": False, "error": f"Passwort muss mindestens {tube_auth.MIN_PASSWORD_LENGTH} Zeichen lang sein."}), 400
+            return jsonify({"ok": False, "error": gettext("Password must be at least %(min)s characters long.", min=tube_auth.MIN_PASSWORD_LENGTH)}), 400
         database.set_user_password(username, generate_password_hash(new_pass))
 
     database.set_user_active(username, active)
@@ -8629,9 +8629,9 @@ def api_admin_user_update(username):
 
     if new_name and new_name.lower() != username.lower():
         if not tube_auth.USERNAME_RE.match(new_name):
-            return jsonify({"ok": False, "error": "Ungültiger neuer Benutzername."}), 400
+            return jsonify({"ok": False, "error": gettext("Invalid new username.")}), 400
         if database.get_user(new_name):
-            return jsonify({"ok": False, "error": f"Benutzer '{new_name}' existiert bereits."}), 409
+            return jsonify({"ok": False, "error": gettext("User '%(username)s' already exists.", username=new_name)}), 409
         pw_hash = (database.get_user(username) or {}).get("password_hash")
         database.delete_user(username)
         save_user(
@@ -8649,7 +8649,7 @@ def api_admin_user_update(username):
         username = new_name
 
     logging.info(f"API: User updated: {username} by {session.get('username')}")
-    return jsonify({"ok": True, "msg": f"Benutzer '{username}' erfolgreich aktualisiert."})
+    return jsonify({"ok": True, "msg": gettext("User '%(username)s' updated successfully.", username=username)})
 
 
 @app.route("/api/admin/users/<username>", methods=["DELETE"])
@@ -8659,18 +8659,18 @@ def api_admin_user_update(username):
 def api_admin_user_delete(username):
     current_uname = (session.get("username") or "").lower()
     if username.lower() == current_uname:
-        return jsonify({"ok": False, "error": "Sie können Ihr eigenes Konto nicht löschen."}), 400
+        return jsonify({"ok": False, "error": gettext("You cannot delete your own account.")}), 400
     if username.lower() == config.VOD_USER.lower():
-        return jsonify({"ok": False, "error": "Der Standard-System-Admin kann nicht gelöscht werden."}), 400
+        return jsonify({"ok": False, "error": gettext("The default system admin cannot be deleted.")}), 400
 
     user = database.get_user(username)
     if not user:
-        return jsonify({"ok": False, "error": f"Benutzer '{username}' nicht gefunden."}), 404
+        return jsonify({"ok": False, "error": gettext("User '%(username)s' not found.", username=username)}), 404
 
     database.delete_user(username)
     delete_user_settings(username)
     logging.info(f"API: User deleted: {username} by {session.get('username')}")
-    return jsonify({"ok": True, "msg": f"Benutzer '{username}' wurde gelöscht."})
+    return jsonify({"ok": True, "msg": gettext("User '%(username)s' has been deleted.", username=username)})
 
 
 @app.route("/api/user/change-password", methods=["POST"])
@@ -8682,33 +8682,33 @@ def api_user_change_password():
     new_pass = str(data.get("new_password") or "").strip()
 
     if not current_pass:
-        return jsonify({"ok": False, "error": "Bitte aktuelles Passwort angeben."}), 400
+        return jsonify({"ok": False, "error": gettext("Please enter your current password.")}), 400
     if not new_pass or len(new_pass) < 8:
-        return jsonify({"ok": False, "error": "Das neue Passwort muss mindestens 8 Zeichen lang sein."}), 400
+        return jsonify({"ok": False, "error": gettext("The new password must be at least 8 characters long.")}), 400
     if current_pass == new_pass:
-        return jsonify({"ok": False, "error": "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden."}), 400
+        return jsonify({"ok": False, "error": gettext("The new password must differ from the current password.")}), 400
 
     username = session.get("username")
     if not username:
-        return jsonify({"ok": False, "error": "Nicht authentifiziert."}), 401
+        return jsonify({"ok": False, "error": gettext("Not authenticated.")}), 401
 
     if config.VOD_USER and username.lower() == str(config.VOD_USER).lower():
         if config.VOD_PASS and current_pass != config.VOD_PASS:
-            return jsonify({"ok": False, "error": "Das aktuelle Passwort ist nicht korrekt."}), 400
-        return jsonify({"ok": False, "error": "Das Passwort des System-Administrators kann nur ?ber Umgebungsvariablen ge?ndert werden."}), 403
+            return jsonify({"ok": False, "error": gettext("The current password is incorrect.")}), 400
+        return jsonify({"ok": False, "error": gettext("The system administrator's password can only be changed via environment variables.")}), 403
 
     user_row = database.get_user(username)
     if not user_row:
-        return jsonify({"ok": False, "error": "Benutzer nicht gefunden."}), 404
+        return jsonify({"ok": False, "error": gettext("User not found.")}), 404
 
     pw_hash = user_row.get("password_hash") or ""
     if not check_password_hash(pw_hash, current_pass):
-        return jsonify({"ok": False, "error": "Das aktuelle Passwort ist nicht korrekt."}), 400
+        return jsonify({"ok": False, "error": gettext("The current password is incorrect.")}), 400
 
     new_hash = generate_password_hash(new_pass)
     database.set_user_password(username, new_hash)
     logging.info(f"API: User '{username}' successfully changed their password.")
-    return jsonify({"ok": True, "msg": "Passwort wurde erfolgreich ge?ndert."})
+    return jsonify({"ok": True, "msg": gettext("Password changed successfully.")})
 
 
 @app.route("/api/admin/groups", methods=["GET"])
@@ -8736,18 +8736,18 @@ def api_admin_group_create():
     permissions = data.get("permissions") or {}
 
     if not (2 <= len(name) <= 50):
-        return jsonify({"ok": False, "error": "Gruppenname muss zwischen 2 und 50 Zeichen lang sein."}), 400
+        return jsonify({"ok": False, "error": gettext("Group name must be between 2 and 50 characters long.")}), 400
 
     try:
         new_id = database.create_user_group(name, description, permissions)
         group = database.get_user_group(new_id)
         logging.info(f"API: User group created: '{name}' (ID: {new_id}) by {session.get('username')}")
-        return jsonify({"ok": True, "msg": f"Gruppe '{name}' erfolgreich angelegt.", "group": group}), 201
+        return jsonify({"ok": True, "msg": gettext("Group '%(name)s' created successfully.", name=name), "group": group}), 201
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception:
         logging.exception("Failed to create group")
-        return jsonify({"ok": False, "error": "Interner Serverfehler beim Anlegen der Gruppe."}), 500
+        return jsonify({"ok": False, "error": gettext("Internal server error while creating the group.")}), 500
 
 
 @app.route("/api/admin/groups/<int:group_id>", methods=["PUT"])
@@ -8764,12 +8764,12 @@ def api_admin_group_update(group_id):
         database.update_user_group(group_id, name, description, permissions)
         group = database.get_user_group(group_id)
         logging.info(f"API: User group updated: ID {group_id} by {session.get('username')}")
-        return jsonify({"ok": True, "msg": f"Gruppe '{name}' erfolgreich aktualisiert.", "group": group})
+        return jsonify({"ok": True, "msg": gettext("Group '%(name)s' updated successfully.", name=name), "group": group})
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception:
         logging.exception("Failed to update group")
-        return jsonify({"ok": False, "error": "Interner Serverfehler beim Aktualisieren der Gruppe."}), 500
+        return jsonify({"ok": False, "error": gettext("Internal server error while updating the group.")}), 500
 
 
 @app.route("/api/admin/groups/<int:group_id>", methods=["DELETE"])
@@ -8782,13 +8782,13 @@ def api_admin_group_delete(group_id):
         logging.info(f"API: User group deleted: ID {group_id} by {session.get('username')}")
         return jsonify({
             "ok": True,
-            "msg": "Gruppe erfolgreich gelöscht. Bestehende Mitglieder wurden in die Gruppe 'Viewer' verschoben."
+            "msg": gettext("Group deleted successfully. Existing members were moved to the 'Viewer' group.")
         })
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception:
         logging.exception("Failed to delete group")
-        return jsonify({"ok": False, "error": "Interner Serverfehler beim Löschen der Gruppe."}), 500
+        return jsonify({"ok": False, "error": gettext("Internal server error while deleting the group.")}), 500
 
 
 
@@ -8839,21 +8839,21 @@ def admin_vod_access_role(role=None):
         default=tube_auth.MEMBER_ROLE,
     )
     if role_key != tube_auth.MEMBER_ROLE:
-        return redirect(url_for("admin_view", error="VOD-Freigaben derzeit nur fuer Member."))
+        return redirect(url_for("admin_view", error=gettext("VOD access grants are currently only available for members.")))
     action = str(request.form.get("action") or "save").strip().lower()
     if action == "add":
         slug = database.add_role_vod_access(role_key, request.form.get("streamer_add"))
         if not slug:
-            return redirect(url_for("admin_view", error="Ungueltiger Ordner-Slug."))
-        return redirect(url_for("admin_view", msg=f"Rollen-Freigabe '{slug}' hinzugefuegt."))
+            return redirect(url_for("admin_view", error=gettext("Invalid folder slug.")))
+        return redirect(url_for("admin_view", msg=gettext("Role access '%(slug)s' added.", slug=slug)))
     if action == "remove":
         slug = database._normalize_vod_access_slug(request.form.get("streamer"))
         if not slug or not database.remove_role_vod_access(role_key, slug):
-            return redirect(url_for("admin_view", error="Rollen-Freigabe nicht gefunden."))
-        return redirect(url_for("admin_view", msg=f"Rollen-Freigabe '{slug}' entfernt."))
+            return redirect(url_for("admin_view", error=gettext("Role access grant not found.")))
+        return redirect(url_for("admin_view", msg=gettext("Role access '%(slug)s' removed.", slug=slug)))
     streamers = _parse_vod_access_form_streamers()
     database.set_role_vod_access(role_key, streamers)
-    return redirect(url_for("admin_view", msg="Member VOD-Freigaben gespeichert."))
+    return redirect(url_for("admin_view", msg=gettext("Member VOD access saved.")))
 
 
 @app.route("/admin/users/approve/<username>", methods=["POST"])
@@ -8869,7 +8869,7 @@ def admin_user_approve(username):
             row.get("username"),
             session.get("username"),
         )
-        return redirect(url_for("admin_view", msg=f"Benutzer '{row.get('username')}' freigeschaltet."))
+        return redirect(url_for("admin_view", msg=gettext("User '%(username)s' approved.", username=row.get("username"))))
     except ValueError as exc:
         return redirect(url_for("admin_view", error=str(exc)))
 
@@ -8881,7 +8881,7 @@ def admin_user_deny(username):
     from core import tube_auth
 
     if username.lower() == config.VOD_USER.lower():
-        return redirect(url_for("admin_view", error="Dieser Admin-User ist geschuetzt."))
+        return redirect(url_for("admin_view", error=gettext("This admin user is protected.")))
     try:
         row = tube_auth.deny_username(username, delete=True)
         delete_user_settings(row.get("username") or username)
@@ -8890,7 +8890,7 @@ def admin_user_deny(username):
             row.get("username"),
             session.get("username"),
         )
-        return redirect(url_for("admin_view", msg=f"Antrag '{row.get('username')}' abgelehnt und geloescht."))
+        return redirect(url_for("admin_view", msg=gettext("Request '%(username)s' denied and deleted.", username=row.get("username"))))
     except ValueError as exc:
         return redirect(url_for("admin_view", error=str(exc)))
 
@@ -8904,7 +8904,7 @@ def channels_add():
     )
     channel = source.get("name") if source else None
     if not channel:
-        return redirect(url_for("channels_view", channels_msg="Ungueltiger Channel-Name."))
+        return redirect(url_for("channels_view", channels_msg=gettext("Invalid channel name.")))
 
     # Mode: 'record' (default: full recording) vs 'live_only' (notify + live stream only)
     mode = str(request.form.get("mode") or "record").strip().lower()
@@ -8925,14 +8925,14 @@ def channels_add():
     )
     STREAMER_CACHE["ts"] = 0
 
-    mode_label = "Vollmodus: Aufnahme + Live + Discord" if is_record else "Live-Only: Live-Stream + Discord (Keine Aufnahme)"
+    mode_label = gettext("Full mode: recording + live + Discord") if is_record else gettext("Live only: live stream + Discord (no recording)")
     if is_new:
         if source.get("platform") == "youtube":
-            msg = f"{channel} als YouTube-Quelle hinzugefuegt ({mode_label})."
+            msg = gettext("%(channel)s added as a YouTube source (%(mode)s).", channel=channel, mode=mode_label)
         else:
-            msg = f"{channel} hinzugefuegt ({mode_label})."
+            msg = gettext("%(channel)s added (%(mode)s).", channel=channel, mode=mode_label)
     else:
-        msg = f"{channel} Modus aktualisiert auf: {mode_label}."
+        msg = gettext("%(channel)s mode updated to: %(mode)s.", channel=channel, mode=mode_label)
 
     return redirect(url_for("channels_view", channels_msg=msg))
 
@@ -8944,8 +8944,8 @@ def channels_remove(channel):
     if name in channels:
         remove_channel_db(name)
         STREAMER_CACHE["ts"] = 0
-        return redirect(url_for("channels_view", channels_msg=f"{name} entfernt."))
-    return redirect(url_for("channels_view", channels_msg="Channel nicht gefunden."))
+        return redirect(url_for("channels_view", channels_msg=gettext("%(name)s removed.", name=name)))
+    return redirect(url_for("channels_view", channels_msg=gettext("Channel not found.")))
 
 @app.route("/live/watch", methods=["POST"])
 @login_required
@@ -8955,7 +8955,7 @@ def live_watch():
         return redirect_mobile_live_disabled()
     channel = twitch_api.normalize_login(request.form.get("channel"))
     if not channel:
-        return redirect(url_for("index", channels_msg="Ungueltiger Twitch-Kanal."))
+        return redirect(url_for("index", channels_msg=gettext("Invalid Twitch channel.")))
     # Members may only open live channels from their VOD allowlist.
     from core import tube_auth
 
@@ -8968,7 +8968,7 @@ def live_watch():
         add_live_channel(channel)
     except Exception:
         app.logger.exception("Could not enable live proxy for %s", channel)
-        return redirect(url_for("index", channels_msg="Live-Start fehlgeschlagen."))
+        return redirect(url_for("index", channels_msg=gettext("Live start failed.")))
     return redirect(url_for("twitch_watch", channel=channel))
 
 @app.route("/live/viewers/<streamer>")
@@ -9000,7 +9000,7 @@ def channels_restart():
             timeout=60,
         )
         if result.returncode == 0:
-            msg = "Recorder & Worker neu gestartet."
+            msg = gettext("Recorder & worker restarted.")
         else:
             # Fallback for non-grouped program names.
             result = subprocess.run(
@@ -9010,9 +9010,9 @@ def channels_restart():
                 text=True,
                 timeout=60,
             )
-            msg = "Recorder & Worker neu gestartet." if result.returncode == 0 else "Neustart fehlgeschlagen."
+            msg = gettext("Recorder & worker restarted.") if result.returncode == 0 else gettext("Restart failed.")
     except Exception:
-        msg = "Neustart fehlgeschlagen."
+        msg = gettext("Restart failed.")
     return redirect(url_for("channels_view", channels_msg=msg))
 
 
@@ -9021,7 +9021,7 @@ def channels_restart():
 def live_control_start(streamer):
     channel = normalize_channel_name(streamer)
     if not channel:
-        return redirect(url_for("streamer_view", streamer=streamer, live_msg="Ungueltiger Channel."))
+        return redirect(url_for("streamer_view", streamer=streamer, live_msg=gettext("Invalid channel.")))
     add_live_channel(channel)
     return redirect(url_for("live_view", streamer=channel))
 
@@ -9031,11 +9031,11 @@ def live_control_start(streamer):
 def live_control_stop(streamer):
     channel = normalize_channel_name(streamer)
     if not channel:
-        return redirect(url_for("channels_view", channels_msg="Ungueltiger Channel."))
+        return redirect(url_for("channels_view", channels_msg=gettext("Invalid channel.")))
     remove_live_channel(channel)
     # Wir löschen HLS nicht sofort, damit andere Viewer nicht unterbrochen werden, 
     # der Livebot räumt auf, wenn der Prozess stoppt.
-    return redirect(url_for("channels_view", channels_msg="Live gestoppt."))
+    return redirect(url_for("channels_view", channels_msg=gettext("Live stopped.")))
 
 
 _DASHBOARD_MEDIA_CACHE = {}
@@ -9692,7 +9692,7 @@ def streamer_view(streamer):
 @admin_required
 def streamer_download_all(streamer):
     threading.Thread(target=run_vod_download_task, args=(streamer,)).start()
-    return redirect(url_for("streamer_view", streamer=streamer, msg="Download aller VODs im Hintergrund gestartet."))
+    return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Download of all VODs started in the background.")))
 
 
 
@@ -9729,7 +9729,7 @@ def api_global_search():
 @login_required
 def vod_view(streamer, filename):
     if maintenance_mode_enabled("vod") and not current_user_bypasses_maintenance():
-        return _maintenance_response("Der VOD-Player und das Archiv werden aktuell gewartet.")
+        return _maintenance_response(gettext("The VOD player and archive are currently under maintenance."))
     canonical = archive_name_for(streamer)
     normalized = normalize_channel_name(streamer) or str(streamer or "").strip()
     if canonical and normalized and canonical != normalized:
@@ -9776,11 +9776,11 @@ def vod_view(streamer, filename):
         transcript_path = transcript_path_for_media(file_path)
         transcript_status = load_transcript_status(transcript_path)
         if transcript_text and (not transcript_status or transcript_status.get("state") != "finished"):
-            transcript_status = {"state": "finished", "percent": 100, "message": "Transkript fertig", "error": None}
+            transcript_status = {"state": "finished", "percent": 100, "message": gettext("Transcript finished"), "error": None}
         elif transcript_status is None:
             lock_path = transcript_lock_path(transcript_path)
             if os.path.exists(lock_path):
-                transcript_status = {"state": "running", "percent": 0, "message": "Transkription läuft...", "error": None}
+                transcript_status = {"state": "running", "percent": 0, "message": gettext("Transcription running..."), "error": None}
 
         # If no final transcript yet, but a partial exists, show it in the UI
         if not transcript_text:
@@ -9878,11 +9878,11 @@ def vod_transcribe_status(streamer, filename):
     if not status:
         lock_path = transcript_lock_path(transcript_path)
         if os.path.exists(lock_path):
-            status = {"state": "running", "percent": 0, "message": "Transkription läuft...", "error": None}
+            status = {"state": "running", "percent": 0, "message": gettext("Transcription running..."), "error": None}
         else:
-            status = {"state": "idle", "percent": 0, "message": "Keine Transkription aktiv", "error": None}
+            status = {"state": "idle", "percent": 0, "message": gettext("No transcription active"), "error": None}
     if status.get("state") == "finished" and not os.path.exists(transcript_path):
-        status = {"state": "error", "percent": status.get("percent", 0), "message": "Transkript fehlt trotz fertigem Status", "error": None}
+        status = {"state": "error", "percent": status.get("percent", 0), "message": gettext("Transcript missing despite finished status"), "error": None}
     return jsonify(status)
 
 
@@ -9895,7 +9895,7 @@ def vod_transcribe_cancel(streamer, filename):
     transcript_path = transcript_path_for_media(file_path)
     lock_path = transcript_lock_path(transcript_path)
     if not os.path.exists(lock_path):
-        msg = "Keine laufende Transkription gefunden."
+        msg = gettext("No running transcription found.")
         return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
     # Try to read PID from lock and terminate process group
@@ -9926,11 +9926,11 @@ def vod_transcribe_cancel(streamer, filename):
             os.remove(lock_path)
         except Exception:
             pass
-        set_transcript_status(transcript_path, "error", 0, "Transkription abgebrochen", "abgebrochen")
-        msg = "Transkription abgebrochen."
+        set_transcript_status(transcript_path, "error", 0, gettext("Transcription cancelled"), gettext("cancelled"))
+        msg = gettext("Transcription cancelled.")
     except Exception as exc:
         logging.exception("Could not cancel transcribe: %s", exc)
-        msg = "Fehler beim Abbrechen der Transkription"
+        msg = gettext("Error cancelling the transcription")
     return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
 
@@ -9943,25 +9943,25 @@ def vod_transcribe(streamer, filename):
     transcript_path = transcript_path_for_media(file_path)
     lock_path = transcript_lock_path(transcript_path)
     if os.path.exists(transcript_path):
-        msg = "Transkript ist bereits vorhanden."
+        msg = gettext("Transcript already exists.")
     elif os.path.exists(lock_path):
         if remove_stale_transcript_lock(transcript_path, max_age=7200):
             logging.info("Removed stale transcript lock before restart: %s", lock_path)
             try:
                 database.add_task('transcribe', {'media': file_path, 'transcript': transcript_path})
-                msg = "Stale Lock entfernt, Transkription in die Worker-Warteschlange gestellt. Ergebnis erscheint nach Abschluss beim nächsten Laden."
+                msg = gettext("Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion.")
             except Exception as exc:
                 logging.exception("Could not enqueue transcribe task: %s", exc)
-                msg = "Fehler beim Einreihen der Transkription"
+                msg = gettext("Error queuing the transcription")
         else:
-            msg = "Transkription läuft bereits. Bitte später erneut laden."
+            msg = gettext("Transcription is already running. Please reload later.")
     else:
         try:
             database.add_task('transcribe', {'media': file_path, 'transcript': transcript_path})
-            msg = "Transkription zur Ausführung in die Worker-Warteschlange gestellt. Ergebnis erscheint nach Abschluss beim nächsten Laden."
+            msg = gettext("Transcription queued in the worker. The result appears on the next page load after completion.")
         except Exception as exc:
             logging.exception("Could not enqueue transcribe task: %s", exc)
-            msg = "Fehler beim Einreihen der Transkription"
+            msg = gettext("Error queuing the transcription")
     return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
 
@@ -10518,10 +10518,10 @@ def inject_mobile_app_head(response):
 def web_manifest():
     manifest = {
         "id": "/",
-        "lang": "de",
+        "lang": ui_i18n.LOCALES[ui_i18n.current_locale_id()][0],
         "name": "StreamVault",
         "short_name": "StreamVault",
-        "description": "Private Video- und Stream-Archiv-Konsole.",
+        "description": gettext("Private video and stream archive console."),
         "start_url": url_for("index"),
         "scope": "/",
         "display": "standalone",
@@ -10565,7 +10565,7 @@ self.addEventListener("activate", function(e) {
 @app.route("/offline")
 def offline_page():
     html = """<!doctype html>
-<html lang="de">
+<html lang="__SV_LANG__">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10581,10 +10581,13 @@ def offline_page():
   <body>
     <main>
       <h1>StreamVault</h1>
-      <p>Keine Verbindung. Sobald das Gerät wieder online ist, lädt die App die Seite normal weiter.</p>
+      <p>__SV_OFFLINE_TEXT__</p>
     </main>
   </body>
 </html>"""
+    offline_text = gettext("No connection. As soon as the device is back online, the app continues loading the page normally.")
+    html = html.replace("__SV_LANG__", ui_i18n.LOCALES[ui_i18n.current_locale_id()][0])
+    html = html.replace("__SV_OFFLINE_TEXT__", str(escape(offline_text)))
     response = Response(html, mimetype="text/html")
     response.headers["Cache-Control"] = "public, max-age=86400"
     return response
@@ -10689,7 +10692,7 @@ def vod_delete(streamer, filename):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return Response(json.dumps({"success": success}), 200, mimetype="application/json")
         
-    msg = "Video geloescht." if success else "Video konnte nicht geloescht werden."
+    msg = gettext("Video deleted.") if success else gettext("Video could not be deleted.")
     return redirect(url_for("streamer_view", streamer=streamer, msg=msg))
 
 
@@ -10741,7 +10744,7 @@ def clip_delete(streamer, filename):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return Response(json.dumps({"success": success}), 200, mimetype="application/json")
 
-    msg = "Clip geloescht." if success else "Clip konnte nicht geloescht werden."
+    msg = gettext("Clip deleted.") if success else gettext("Clip could not be deleted.")
     return redirect(url_for("streamer_view", streamer=streamer, msg=msg))
 
 
@@ -10766,7 +10769,7 @@ def clip_rename(streamer, filename):
 @admin_required
 def clip_discord_upload(streamer, filename):
     return Response(
-        json.dumps({"ok": False, "message": "Discord-Integration nicht aktiv"}),
+        json.dumps({"ok": False, "message": gettext("Discord integration not active")}),
         400,
         mimetype="application/json",
     )
@@ -11026,7 +11029,7 @@ def admin_badges_sync():
     )
     # Kick off in background so the admin UI stays responsive for full library syncs.
     if _TWITCH_BADGE_SYNC_STATE.get("running"):
-        return jsonify({"ok": False, "message": "Badge-Sync läuft bereits.", **twitch_badge_library_stats()})
+        return jsonify({"ok": False, "message": gettext("Badge sync is already running."), **twitch_badge_library_stats()})
 
     def _runner():
         try:
@@ -11037,7 +11040,7 @@ def admin_badges_sync():
     threading.Thread(target=_runner, name="twitch-badge-sync-admin", daemon=True).start()
     return jsonify({
         "ok": True,
-        "message": "Badge-Sync gestartet.",
+        "message": gettext("Badge sync started."),
         "force": force,
         **twitch_badge_library_stats(),
     })
@@ -11222,29 +11225,29 @@ def clip_vod(streamer, filename):
         abort(404)
     source = resolve_vod_clip_source(streamer, filename)
     if not source.get("ok"):
-        err = source.get("error") or "Aufnahme nicht verfügbar."
+        err = source.get("error") or gettext("Recording not available.")
         return respond(False, err, status=404)
     try:
         start_sec = parse_time_to_seconds(request.form.get("start", "0"))
         duration_sec = float(request.form.get("duration", "0"))
     except Exception:
-        err = "Ungültige Zeitangabe."
+        err = gettext("Invalid time value.")
         return respond(False, err, status=400)
     if not math.isfinite(start_sec) or not math.isfinite(duration_sec):
-        err = "Ungültige Zeitangabe."
+        err = gettext("Invalid time value.")
         return respond(False, err, status=400)
     if start_sec < 0:
-        err = "Startzeit muss >= 0 sein."
+        err = gettext("Start time must be >= 0.")
         return respond(False, err, status=400)
     if duration_sec <= 0:
-        err = "Dauer muss > 0 sein."
+        err = gettext("Duration must be > 0.")
         return respond(False, err, status=400)
     if duration_sec > clip_engine.MAX_DURATION_SEC:
         duration_sec = float(clip_engine.MAX_DURATION_SEC)
     label = request.form.get("clip_name", "")
     archive_dir = streamer_dir(streamer)
     if not archive_dir:
-        err = "Clip-Pfad ungültig."
+        err = gettext("Invalid clip path.")
         return respond(False, err, status=400)
 
     # Cloud/remote sources: queue so the request does not block on network + encode.
@@ -11263,14 +11266,14 @@ def clip_vod(streamer, filename):
         if wants_json:
             return respond(job.get("status") != "error", job.get("message") or "", job=job)
         if job.get("status") == "done" and job.get("clip_filename"):
-            return respond(True, "Clip erstellt.", clip_filename=job["clip_filename"])
+            return respond(True, gettext("Clip created."), clip_filename=job["clip_filename"])
         if job.get("status") == "error":
-            return respond(False, job.get("message") or "Clip fehlgeschlagen.", status=500)
-        return respond(True, "Clip wird erstellt...")
+            return respond(False, job.get("message") or gettext("Clip failed."), status=500)
+        return respond(True, gettext("Creating clip…"))
 
     output_path = clip_output_path(streamer, filename, start_sec, duration_sec, label)
     if not output_path:
-        err = "Clip-Pfad ungültig."
+        err = gettext("Invalid clip path.")
         return respond(False, err, status=400)
     ok = clip_engine.extract_vod_range(
         source["input_path"],
@@ -11280,9 +11283,9 @@ def clip_vod(streamer, filename):
         http_headers=source.get("http_headers"),
     )
     if ok and os.path.isfile(output_path) and os.path.getsize(output_path) > 1024:
-        msg = "Clip erstellt."
+        msg = gettext("Clip created.")
         return respond(True, msg, clip_filename=os.path.basename(output_path))
-    err = "Clip fehlgeschlagen."
+    err = gettext("Clip failed.")
     return respond(False, err, status=500)
 
 
@@ -11330,19 +11333,19 @@ def clip_live(streamer):
     try:
         duration_sec = float(request.form.get("duration", "0"))
     except Exception:
-        return respond(False, "Ungültige Zeitangabe.", status=400)
+        return respond(False, gettext("Invalid time value."), status=400)
 
     # Check if start is provided (Editor Mode) or None (Quick Mode)
     start_val = request.form.get("start")
     try:
         start_sec = float(start_val) if start_val is not None and start_val != "" else None
     except Exception:
-        return respond(False, "Ungültige Zeitangabe.", status=400)
+        return respond(False, gettext("Invalid time value."), status=400)
 
     if start_sec is not None and (not math.isfinite(start_sec) or start_sec < 0):
-        return respond(False, "Startzeit muss >= 0 sein.", status=400)
+        return respond(False, gettext("Start time must be >= 0."), status=400)
     if not math.isfinite(duration_sec):
-        return respond(False, "Ungültige Zeitangabe.", status=400)
+        return respond(False, gettext("Invalid time value."), status=400)
     if duration_sec <= 0:
         duration_sec = 60
     if duration_sec > clip_engine.MAX_DURATION_SEC:
@@ -11350,7 +11353,7 @@ def clip_live(streamer):
 
     archive_dir = streamer_dir(output_streamer)
     if not archive_dir:
-        return respond(False, "Clip-Pfad ungültig.", status=400)
+        return respond(False, gettext("Invalid clip path."), status=400)
 
     try:
         add_live_channel(live_key)
@@ -11363,7 +11366,7 @@ def clip_live(streamer):
     has_playlist = bool(playlist and os.path.isfile(playlist))
     has_recording = bool(recording and os.path.isfile(recording))
     if not has_playlist and not has_recording:
-        return respond(False, "Live-Stream nicht verfügbar.", status=404)
+        return respond(False, gettext("Live stream not available."), status=404)
 
     label = request.form.get("clip_name", "")
     job = clip_engine.enqueue_live_range(
@@ -11378,10 +11381,10 @@ def clip_live(streamer):
     if wants_json:
         return respond(job.get("status") != "error", job.get("message") or "", job=job)
     if job.get("status") == "done" and job.get("clip_filename"):
-        return respond(True, "Live-Clip erstellt.", clip_filename=job["clip_filename"])
+        return respond(True, gettext("Live clip created."), clip_filename=job["clip_filename"])
     if job.get("status") == "error":
-        return respond(False, job.get("message") or "Clip fehlgeschlagen.", status=500)
-    return respond(True, "Clip wird erstellt...")
+        return respond(False, job.get("message") or gettext("Clip failed."), status=500)
+    return respond(True, gettext("Creating clip…"))
 
 
 def _clip_job_payload(job):
@@ -11403,20 +11406,20 @@ def clip_instant(streamer):
     title = request.form.get("title") or request.form.get("clip_name") or ""
     archive_dir = streamer_dir(output_streamer)
     if not archive_dir:
-        payload = {"ok": False, "status": "error", "message": "Clip-Pfad ungültig."}
+        payload = {"ok": False, "status": "error", "message": gettext("Invalid clip path.")}
         return Response(json.dumps(payload), status=400, mimetype="application/json")
 
     if source == "vod":
         filename = request.form.get("filename") or ""
         if os.path.basename(filename) != filename or not filename.endswith(".mp4"):
-            payload = {"ok": False, "status": "error", "message": "Aufnahme nicht verfügbar."}
+            payload = {"ok": False, "status": "error", "message": gettext("Recording not available.")}
             return Response(json.dumps(payload), status=404, mimetype="application/json")
         clip_source = resolve_vod_clip_source(output_streamer, filename)
         if not clip_source.get("ok"):
             payload = {
                 "ok": False,
                 "status": "error",
-                "message": clip_source.get("error") or "Aufnahme nicht verfügbar.",
+                "message": clip_source.get("error") or gettext("Recording not available."),
             }
             return Response(json.dumps(payload), status=404, mimetype="application/json")
         try:
@@ -11470,7 +11473,7 @@ def clip_instant(streamer):
 def clip_job(job_id):
     job = clip_engine.get_job(job_id)
     if not job:
-        payload = {"ok": False, "status": "error", "message": "Clip-Auftrag nicht gefunden."}
+        payload = {"ok": False, "status": "error", "message": gettext("Clip job not found.")}
         return Response(json.dumps(payload), status=404, mimetype="application/json")
     return Response(json.dumps(_clip_job_payload(job)), status=200, mimetype="application/json")
 
@@ -11487,7 +11490,7 @@ def admin_clip_settings():
     })
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return Response(json.dumps({"ok": True, "settings": saved}), mimetype="application/json")
-    return redirect(url_for("admin_view", msg="Clip-Einstellungen gespeichert."))
+    return redirect(url_for("admin_view", msg=gettext("Clip settings saved.")))
 
 
 @app.route("/admin/maintenance", methods=["POST"])
@@ -11510,10 +11513,10 @@ def admin_maintenance():
             bypass_users=bypass_list,
             updated_by=current_username(),
         )
-        return redirect(url_for("admin_view", msg="Bereichs-Wartung und Ausnahme-Nutzer erfolgreich gespeichert."))
+        return redirect(url_for("admin_view", msg=gettext("Area maintenance and exempt users saved successfully.")))
 
     if action not in ("enable", "disable"):
-        return redirect(url_for("admin_view", error="Ungueltige Wartungs-Aktion."))
+        return redirect(url_for("admin_view", error=gettext("Invalid maintenance action.")))
 
     want_enabled = action == "enable"
     notify = request.form.get("notify_discord") == "1"
@@ -11525,24 +11528,24 @@ def admin_maintenance():
     )
     if want_enabled:
         if result.get("discord_ok") is True:
-            msg = "Wartungsmodus aktiv. Discord-Hinweis wurde gesendet."
+            msg = gettext("Maintenance mode active. Discord notice was sent.")
         elif result.get("discord_ok") is False:
-            msg = (
-                "Wartungsmodus aktiv, aber Discord-Hinweis fehlgeschlagen: "
-                + (result.get("discord_error") or "unbekannt")
+            msg = gettext(
+                "Maintenance mode active, but the Discord notice failed: %(error)s",
+                error=result.get("discord_error") or gettext("unknown"),
             )
         else:
-            msg = "Wartungsmodus aktiv."
+            msg = gettext("Maintenance mode active.")
     else:
         if result.get("discord_ok") is True:
-            msg = "Wartungsmodus beendet. Discord-Hinweis (wieder verfügbar) wurde gesendet."
+            msg = gettext("Maintenance mode ended. Discord notice (available again) was sent.")
         elif result.get("discord_ok") is False:
-            msg = (
-                "Wartungsmodus beendet, aber Discord-Hinweis fehlgeschlagen: "
-                + (result.get("discord_error") or "unbekannt")
+            msg = gettext(
+                "Maintenance mode ended, but the Discord notice failed: %(error)s",
+                error=result.get("discord_error") or gettext("unknown"),
             )
         else:
-            msg = "Wartungsmodus beendet. Die Seite ist wieder fuer alle freigegeben."
+            msg = gettext("Maintenance mode ended. The site is available to everyone again.")
     return redirect(url_for("admin_view", msg=msg))
 
 
@@ -11751,7 +11754,7 @@ def api_live_ready(streamer):
 @login_required
 def twitch_watch(channel):
     if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
-        return _maintenance_response("Der Live-Stream-Bereich wird aktuell gewartet.")
+        return _maintenance_response(gettext("The live stream area is currently under maintenance."))
     if is_mobile() and not mobile_live_enabled():
         return redirect_mobile_live_disabled()
     login = twitch_api.normalize_login(channel)
@@ -11933,7 +11936,7 @@ def api_twitch_stream(login):
 @login_required
 def live_view(streamer):
     if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
-        return _maintenance_response("Der Live-Stream-Bereich wird aktuell gewartet.")
+        return _maintenance_response(gettext("The live stream area is currently under maintenance."))
     channel = normalize_channel_name(streamer) or twitch_api.normalize_login(streamer) or streamer
     abort_hidden_streamer(channel)
     if is_mobile() and not mobile_live_enabled():
@@ -12144,7 +12147,7 @@ def files_upload():
     if file:
         filename = secure_filename(file.filename)
         if not is_allowed_resource_upload(filename):
-            return redirect(url_for('index', error='Dieser Dateityp ist aus Sicherheitsgruenden nicht erlaubt.'))
+            return redirect(url_for('index', error=gettext("This file type is not allowed for security reasons.")))
         file.save(os.path.join(config.FILES_DIR, filename))
         
         title = request.form.get("title", "").strip()
@@ -12156,7 +12159,7 @@ def files_upload():
         res["files"][filename] = {"title": title or filename, "desc": desc}
         save_resources(res)
         
-    return redirect(url_for('index', msg='Datei wurde hochgeladen.'))
+    return redirect(url_for('index', msg=gettext("File was uploaded.")))
 
 @app.route("/files/download/<path:filename>")
 @admin_required
@@ -12555,8 +12558,8 @@ def stop_recording_route(streamer):
     if stopped <= 0:
         stopped = database.stop_recording(streamer)
     flash(
-        f"Aufnahme gestoppt: {stopped} Quelle(n) für {archive} deaktiviert. "
-        "Der Prozess wird beim nächsten Check beendet.",
+        gettext("Recording stopped: %(count)s source(s) for %(archive)s disabled. "
+        "The process will be terminated at the next check.", count=stopped, archive=archive),
         "success",
     )
     return redirect(url_for('streamer_view', streamer=archive))
@@ -12567,23 +12570,23 @@ def stop_recording_route(streamer):
 def source_record_toggle(channel):
     name = normalize_channel_name(channel) or str(channel or "").strip()
     if not name:
-        flash("Ungültige Quelle.", "error")
+        flash(gettext("Invalid source."), "error")
         return redirect(url_for("index"))
     raw = str(request.form.get("enabled", "")).strip().lower()
     enabled = raw in ("1", "true", "yes", "on")
     ok = database.set_channel_record(name, enabled)
     archive = archive_name_for(name) or name
-    mode_text = "Aufnahme aktiviert (Vollmodus)" if enabled else "Aufnahme deaktiviert (Nur Live & Discord)"
+    mode_text = gettext("Recording enabled (full mode)") if enabled else gettext("Recording disabled (live & Discord only)")
     ref = request.referrer or ""
     if "/channels" in ref:
         return redirect(url_for("channels_view", channels_msg=f"{name}: {mode_text}."))
     if ok:
         flash(
-            f"Aufnahme für Quelle {name} {'aktiviert' if enabled else 'deaktiviert'}.",
+            gettext("Recording enabled for source %(name)s.", name=name) if enabled else gettext("Recording disabled for source %(name)s.", name=name),
             "success",
         )
     else:
-        flash(f"Quelle {name} nicht gefunden.", "error")
+        flash(gettext("Source %(name)s not found.", name=name), "error")
     return redirect(url_for("streamer_view", streamer=archive))
 
 def _direct_child_dir(parent, child_name):
@@ -12618,14 +12621,14 @@ def empty_folder_route(streamer):
     archive = archive_name_for(streamer) or normalize_channel_name(streamer) or streamer
     folder_path = _direct_child_dir(config.BASE_DIR, archive)
     if not folder_path:
-        msg = "Ordner nicht gefunden oder ungültig."
+        msg = gettext("Folder not found or invalid.")
         return redirect(url_for('index', channels_msg=msg))
 
     if _folder_has_active_media(folder_path) or current_recording_info(archive) is not None:
         return redirect(url_for(
             'streamer_view',
             streamer=archive,
-            msg="Ordner kann nicht geleert werden, solange eine Aufnahme aktiv geschrieben wird.",
+            msg=gettext("The folder cannot be emptied while a recording is being written."),
         ))
 
     extra_paths = []
@@ -12643,7 +12646,7 @@ def empty_folder_route(streamer):
     _VOD_LIST_CACHE.pop(archive, None)
     _VOD_LIST_CACHE.pop(streamer, None)
     STREAMER_CACHE["ts"] = 0
-    return redirect(url_for('streamer_view', streamer=archive, msg="Ordner wird im Hintergrund geleert."))
+    return redirect(url_for('streamer_view', streamer=archive, msg=gettext("Folder is being emptied in the background.")))
 
 @app.route('/delete_folder/<streamer>', methods=['POST'])
 @admin_required
@@ -12717,7 +12720,7 @@ def delete_folder_route(streamer):
             ]
             STREAMER_CACHE["ts"] = 0
             return redirect(url_for("index"))
-        msg = "Ordner nicht gefunden oder ungültig."
+        msg = gettext("Folder not found or invalid.")
         return redirect(url_for('index', channels_msg=msg))
 
 # Ensure baseline users exist (runs on import for Gunicorn). The standalone
@@ -12785,7 +12788,7 @@ def streamer_banner_update(streamer):
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Banner auf Standard zurückgesetzt."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Banner reset to default.")))
 
     file = request.files.get("banner_file")
     if file and file.filename:
@@ -12793,7 +12796,7 @@ def streamer_banner_update(streamer):
         _, ext = os.path.splitext(filename)
         ext = ext.lower()
         if ext not in exts:
-            return redirect(url_for("streamer_view", streamer=streamer, error="Ungültiges Bildformat (erlaubt: JPG, PNG, WEBP, GIF)."))
+            return redirect(url_for("streamer_view", streamer=streamer, error=gettext("Invalid image format (allowed: JPG, PNG, WEBP, GIF).")))
         for e in exts:
             target = os.path.join(banners_dir, f"{clean_slug}{e}")
             if os.path.isfile(target):
@@ -12807,7 +12810,7 @@ def streamer_banner_update(streamer):
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Banner-Grafik erfolgreich hochgeladen."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Banner image uploaded successfully.")))
 
     custom_url = request.form.get("custom_banner_url", "").strip()
     if custom_url:
@@ -12822,13 +12825,13 @@ def streamer_banner_update(streamer):
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Banner-URL erfolgreich gespeichert."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Custom banner URL saved successfully.")))
     elif "custom_banner_url" in request.form:
         entry.pop("custom_banner_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Banner entfernt."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Custom banner removed.")))
 
     return redirect(url_for("streamer_view", streamer=streamer))
 
@@ -12838,7 +12841,7 @@ def streamer_banner_update(streamer):
 def admin_banner_update():
     streamer = request.form.get("streamer", "").strip()
     if not streamer:
-        return redirect(url_for("admin_view", tab="banners", error="Streamer / Ordner fehlt."))
+        return redirect(url_for("admin_view", tab="banners", error=gettext("Streamer / folder missing.")))
     archive_key = archive_name_for(streamer) or streamer
     clean_slug = secure_filename(archive_key) or secure_filename(streamer)
     action = request.form.get("action", "save").strip().lower()
@@ -12863,7 +12866,7 @@ def admin_banner_update():
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("admin_view", tab="banners", msg=f"Banner für {streamer} auf Standard zurückgesetzt."))
+        return redirect(url_for("admin_view", tab="banners", msg=gettext("Banner for %(streamer)s reset to default.", streamer=streamer)))
 
     file = request.files.get("banner_file")
     if file and file.filename:
@@ -12871,7 +12874,7 @@ def admin_banner_update():
         _, ext = os.path.splitext(filename)
         ext = ext.lower()
         if ext not in exts:
-            return redirect(url_for("admin_view", tab="banners", error="Ungültiges Bildformat (erlaubt: JPG, PNG, WEBP, GIF)."))
+            return redirect(url_for("admin_view", tab="banners", error=gettext("Invalid image format (allowed: JPG, PNG, WEBP, GIF).")))
         for e in exts:
             target = os.path.join(banners_dir, f"{clean_slug}{e}")
             if os.path.isfile(target):
@@ -12885,7 +12888,7 @@ def admin_banner_update():
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("admin_view", tab="banners", msg=f"Banner-Grafik für {streamer} erfolgreich hochgeladen."))
+        return redirect(url_for("admin_view", tab="banners", msg=gettext("Banner image for %(streamer)s uploaded successfully.", streamer=streamer)))
 
     custom_url = request.form.get("custom_banner_url", "").strip()
     if custom_url:
@@ -12900,13 +12903,13 @@ def admin_banner_update():
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("admin_view", tab="banners", msg=f"Banner-URL für {streamer} gespeichert."))
+        return redirect(url_for("admin_view", tab="banners", msg=gettext("Banner URL for %(streamer)s saved.", streamer=streamer)))
     elif "custom_banner_url" in request.form:
         entry.pop("custom_banner_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("admin_view", tab="banners", msg=f"Custom Banner für {streamer} entfernt."))
+        return redirect(url_for("admin_view", tab="banners", msg=gettext("Custom banner for %(streamer)s removed.", streamer=streamer)))
 
     return redirect(url_for("admin_view", tab="banners"))
 
@@ -12932,19 +12935,19 @@ def admin_backup_create():
     if not script_path or not os.path.isfile(script_path):
         return redirect(url_for(
             "admin_view", tab="backups",
-            error="Kein Backup-Skript konfiguriert (VOD_BACKUP_SCRIPT).",
+            error=gettext("No backup script configured (VOD_BACKUP_SCRIPT)."),
         ))
     try:
         res = subprocess.run(["bash", script_path], capture_output=True, text=True, timeout=120)
         if res.returncode == 0:
             bust_media_cache()
-            return redirect(url_for("admin_view", tab="backups", msg="System-Backup erfolgreich erstellt."))
+            return redirect(url_for("admin_view", tab="backups", msg=gettext("System backup created successfully.")))
         else:
             logging.error("Backup script failed: %s", res.stderr)
-            return redirect(url_for("admin_view", tab="backups", error=f"Backup-Fehler: {res.stderr[:100]}"))
+            return redirect(url_for("admin_view", tab="backups", error=gettext("Backup error: %(error)s", error=res.stderr[:100])))
     except Exception as exc:
         logging.error("Backup execution failed: %s", exc)
-        return redirect(url_for("admin_view", tab="backups", error=f"Backup-Fehler: {str(exc)[:100]}"))
+        return redirect(url_for("admin_view", tab="backups", error=gettext("Backup error: %(error)s", error=str(exc)[:100])))
 
 
 @app.route("/admin/backups/delete/<filename>", methods=["POST"])
@@ -12963,8 +12966,8 @@ def admin_backup_delete(filename):
             logging.error("Could not delete backup %s: %s", local_path, exc)
     if deleted:
         bust_media_cache()
-        return redirect(url_for("admin_view", tab="backups", msg=f"Backup {clean} erfolgreich gelöscht."))
-    return redirect(url_for("admin_view", tab="backups", error=f"Backup {clean} konnte nicht gelöscht werden."))
+        return redirect(url_for("admin_view", tab="backups", msg=gettext("Backup %(name)s deleted.", name=clean)))
+    return redirect(url_for("admin_view", tab="backups", error=gettext("Backup %(name)s could not be deleted.", name=clean)))
 
 
 @app.route("/avatar/<streamer>")
@@ -13010,7 +13013,7 @@ def streamer_avatar_update(streamer):
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Profilbild auf Standard zurückgesetzt."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Profile picture reset to default.")))
 
     file = request.files.get("avatar_file")
     if file and file.filename:
@@ -13018,7 +13021,7 @@ def streamer_avatar_update(streamer):
         _, ext = os.path.splitext(filename)
         ext = ext.lower()
         if ext not in exts:
-            return redirect(url_for("streamer_view", streamer=streamer, error="Ungültiges Bildformat (erlaubt: JPG, PNG, WEBP, GIF)."))
+            return redirect(url_for("streamer_view", streamer=streamer, error=gettext("Invalid image format (allowed: JPG, PNG, WEBP, GIF).")))
         for e in exts:
             target = os.path.join(avatars_dir, f"{clean_slug}{e}")
             if os.path.isfile(target):
@@ -13032,7 +13035,7 @@ def streamer_avatar_update(streamer):
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Profilbild erfolgreich hochgeladen."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Profile picture uploaded successfully.")))
 
     custom_url = request.form.get("custom_avatar_url", "").strip()
     if custom_url:
@@ -13047,13 +13050,13 @@ def streamer_avatar_update(streamer):
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Profilbild-URL erfolgreich gespeichert."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Custom profile picture URL saved successfully.")))
     elif "custom_avatar_url" in request.form:
         entry.pop("custom_avatar_url", None)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
-        return redirect(url_for("streamer_view", streamer=streamer, msg="Custom Profilbild entfernt."))
+        return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Custom profile picture removed.")))
 
     return redirect(url_for("streamer_view", streamer=streamer))
 

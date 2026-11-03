@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>StreamVault · Regeln</title>
+    <title>StreamVault · {{ _('Rules') }}</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
@@ -13,18 +13,18 @@
       <header class="regeln-head">
         <div class="regeln-brand">StreamVault</div>
         <h1>{{ rules_title }}</h1>
-        <p class="regeln-sub">Hausordnung für den Invite-only-Kreis. Kein „offiziell“-Framing — nur verbindliche Nutzungsregeln.</p>
-        <div class="regeln-meta">Version <code>{{ rules_version }}</code></div>
+        <p class="regeln-sub">{{ _('House rules for the invite-only circle. No “official” framing — just binding terms of use.') }}</p>
+        <div class="regeln-meta">{{ _('Version') }} <code>{{ rules_version }}</code></div>
       </header>
 
       {% if error %}
       <div class="regeln-alert">{{ error }}</div>
       {% endif %}
       {% if ok %}
-      <div class="regeln-alert ok">Regeln akzeptiert. Weiter zum Dashboard…</div>
+      <div class="regeln-alert ok">{{ _('Rules accepted. Continuing to the dashboard…') }}</div>
       {% endif %}
 
-      <section class="regeln-card" aria-label="Regeltext">
+      <section class="regeln-card" aria-label="{{ _('Rules text') }}">
         <ol class="regeln-list" id="regelnList">
           {% for item in rules_items %}
           <li>{{ item|safe }}</li>
@@ -39,9 +39,9 @@
         <input type="hidden" name="rules_version" value="{{ rules_version }}">
         <label class="regeln-check">
           <input type="checkbox" name="rules_accepted" value="1" id="regelnCheck" required>
-          <span>Ich habe die StreamVault-Regeln gelesen und akzeptiere sie. Ich weiß, dass Verstöße zum sofortigen Entzug des Zugangs führen.</span>
+          <span>{{ _('I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access.') }}</span>
         </label>
-        <button type="submit" class="btn-primary" id="regelnSubmit" disabled>Regeln akzeptieren</button>
+        <button type="submit" class="btn-primary" id="regelnSubmit" disabled>{{ _('Accept rules') }}</button>
       </form>
       <script>
         (function () {
@@ -54,11 +54,11 @@
         })();
       </script>
       {% elif session.get('logged_in') %}
-      <p class="regeln-done">Du hast Version <code>{{ accepted_version or rules_version }}</code> akzeptiert.</p>
-      <p><a class="btn-primary" href="{{ url_for('index') }}">Zum Dashboard</a></p>
+      <p class="regeln-done">{% set accepted_code %}<code>{{ accepted_version or rules_version }}</code>{% endset %}{{ _('You have accepted version %(version)s.', version=accepted_code) }}</p>
+      <p><a class="btn-primary" href="{{ url_for('index') }}">{{ _('Go to dashboard') }}</a></p>
       {% else %}
-      <p class="regeln-done">Registrierung über Discord · Zustimmung dort mit <code>AKZEPTIERE</code>.</p>
-      <p><a href="{{ url_for('login') }}">Zum Login</a></p>
+      <p class="regeln-done">{{ _('Registration via Discord · accept there with %(keyword)s.', keyword='<code>AKZEPTIERE</code>'|safe) }}</p>
+      <p><a href="{{ url_for('login') }}">{{ _('Go to sign in') }}</a></p>
       {% endif %}
     </main>
   </body>

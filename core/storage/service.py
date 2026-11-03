@@ -17,6 +17,8 @@ from typing import Optional
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
+from flask_babel import gettext
+
 from core import config, database
 from core.mp4_utils import is_transient_media_filename
 
@@ -199,12 +201,12 @@ def save_settings(values: dict) -> dict:
         if provider_id is not None:
             row = database.get_storage_provider(provider_id)
             if not row:
-                raise StorageConfigError("Der ausgewählte Standard-Anbieter existiert nicht.")
+                raise StorageConfigError(gettext("The selected default provider does not exist."))
             if not row.get("enabled"):
-                raise StorageConfigError(
-                    "Der ausgewählte Standard-Anbieter ist deaktiviert. "
-                    "Aktiviere ihn zuerst oder wähle einen anderen Anbieter."
-                )
+                raise StorageConfigError(gettext(
+                    "The selected default provider is disabled. "
+                    "Enable it first or choose another provider."
+                ))
         settings["default_provider_id"] = provider_id
     database.set_system_state(SETTINGS_KEY, settings)
     return settings
@@ -240,9 +242,9 @@ def _public_provider(row: dict) -> dict:
     row = dict(row or {})
     cls = PROVIDER_CLASSES.get(str(row.get("provider_type") or "").strip().lower())
     cfg = row.get("config") if isinstance(row.get("config"), dict) else {}
-    row["type_label"] = cls.label if cls else str(row.get("provider_type") or "")
+    row["type_label"] = str(cls.label) if cls else str(row.get("provider_type") or "")
     row["oauth_supported"] = bool(getattr(cls, "oauth_supported", False))
-    row["oauth_label"] = getattr(cls, "oauth_label", "Konto verbinden")
+    row["oauth_label"] = str(getattr(cls, "oauth_label", "") or gettext("Connect account"))
     row["docs_url"] = getattr(cls, "docs_url", "")
     row["config"] = cls.public_config(cfg) if cls else {}
     row["config_set"] = bool(cfg)
@@ -285,7 +287,7 @@ def _validate_provider_paths(cls, values: dict) -> dict:
             try:
                 merged["base_path"] = normalize_remote_path(base)
             except StorageConfigError as exc:
-                raise StorageConfigError(f"Ungültiger Unterordner: {exc}") from exc
+                raise StorageConfigError(gettext("Invalid subfolder: %(error)s", error=exc)) from exc
         else:
             merged["base_path"] = ""
     return merged
@@ -297,7 +299,7 @@ def _config_errors(cls, values: dict) -> list[str]:
         # OAuth providers are allowed to be saved before the account is linked.
         oauth_secret_keys = {"refresh_token", "access_token"}
         labels = {
-            f"{field.label} fehlt."
+            gettext("%(field)s is missing.", field=field.label)
             for field in cls.config_fields
             if field.key in oauth_secret_keys
         }
@@ -308,9 +310,9 @@ def _config_errors(cls, values: dict) -> list[str]:
 def _clean_name(name: str) -> str:
     value = str(name or "").strip()
     if not value:
-        raise StorageConfigError("Bitte einen Namen für den Speicher-Anbieter angeben.")
+        raise StorageConfigError(gettext("Please enter a name for the storage provider."))
     if len(value) > 80:
-        raise StorageConfigError("Der Anbietername darf höchstens 80 Zeichen lang sein.")
+        raise StorageConfigError(gettext("The provider name must be at most 80 characters long."))
     return value
 
 
@@ -320,15 +322,15 @@ def _ensure_unique_name(name: str, *, exclude_id=None):
         if row["id"] == exclude_id:
             continue
         if str(row.get("name") or "").strip().lower() == wanted:
-            raise StorageConfigError(f"Ein Anbieter mit dem Namen '{name}' existiert bereits.")
+            raise StorageConfigError(gettext("A provider named '%(name)s' already exists.", name=name))
 
 
 def create_provider(name: str, provider_type: str, values: dict, *, enabled=True) -> int:
     if not encryption_ready():
-        raise StorageConfigError(
-            "VOD_SECRET_KEY muss auf einen starken Wert gesetzt sein, bevor "
-            "Zugangsdaten gespeichert werden können."
-        )
+        raise StorageConfigError(gettext(
+            "VOD_SECRET_KEY must be set to a strong value before "
+            "credentials can be stored."
+        ))
     name = _clean_name(name)
     _ensure_unique_name(name)
     cls = get_provider_class(provider_type)
@@ -355,17 +357,17 @@ def update_provider(
 ) -> dict:
     existing = get_provider_record(provider_id)
     if not existing:
-        raise StorageConfigError("Speicher-Anbieter nicht gefunden.")
+        raise StorageConfigError(gettext("Storage provider not found."))
     new_type = str(provider_type or existing["provider_type"]).strip().lower()
     cls = get_provider_class(new_type)
     type_changed = new_type != str(existing["provider_type"]).strip().lower()
     if type_changed and database.list_storage_objects(
         provider_id=provider_id, limit=1
     ):
-        raise StorageConfigError(
-            "Der Anbieter-Typ kann nicht geändert werden, solange Archiv-Objekte "
-            "zugeordnet sind. Lege stattdessen einen neuen Anbieter an."
-        )
+        raise StorageConfigError(gettext(
+            "The provider type cannot be changed while archive objects "
+            "are assigned. Create a new provider instead."
+        ))
     current = {} if type_changed else dict(existing.get("config") or {})
     if type_changed:
         current = cls.default_config()
@@ -478,7 +480,7 @@ def build_provider(row: dict):
 def test_provider(provider_id: int) -> dict:
     row = get_provider_record(provider_id)
     if not row:
-        raise StorageConfigError("Speicher-Anbieter nicht gefunden.")
+        raise StorageConfigError(gettext("Storage provider not found."))
     if row.get("config_error"):
         message = row["config_error"]
         database.set_storage_provider_check(provider_id, False, message)
@@ -522,27 +524,27 @@ def verify_oauth_state(state: str) -> int:
     try:
         payload = _oauth_serializer().loads(str(state or ""), max_age=OAUTH_MAX_AGE)
     except SignatureExpired as exc:
-        raise StorageConfigError("Der OAuth-Link ist abgelaufen. Bitte erneut starten.") from exc
+        raise StorageConfigError(gettext("The OAuth link has expired. Please start again.")) from exc
     except (BadSignature, TypeError, ValueError) as exc:
-        raise StorageConfigError("Ungültiger OAuth-Status.") from exc
+        raise StorageConfigError(gettext("Invalid OAuth state.")) from exc
     if not isinstance(payload, dict):
-        raise StorageConfigError("Ungültiger OAuth-Status.")
+        raise StorageConfigError(gettext("Invalid OAuth state."))
     provider_id = _clean_provider_id(payload.get("pid"))
     if not provider_id:
-        raise StorageConfigError("Ungültiger OAuth-Status.")
+        raise StorageConfigError(gettext("Invalid OAuth state."))
     return provider_id
 
 
 def oauth_authorize_url(provider_id: int, redirect_uri: str) -> str:
     row = get_provider_record(provider_id)
     if not row:
-        raise StorageConfigError("Speicher-Anbieter nicht gefunden.")
+        raise StorageConfigError(gettext("Storage provider not found."))
     cls = get_provider_class(row["provider_type"])
     if not cls.oauth_supported:
-        raise StorageConfigError(f"{cls.label} unterstützt OAuth nicht.")
+        raise StorageConfigError(gettext("%(provider)s does not support OAuth.", provider=cls.label))
     if not cls.oauth_ready(row.get("config") or {}):
         raise StorageConfigError(
-            "Bitte zuerst Client-ID und Client-Secret speichern, dann verbinden."
+            gettext("Please save the client ID and client secret first, then connect.")
         )
     state = make_oauth_state(provider_id)
     return cls.oauth_authorize_url(row.get("config") or {}, redirect_uri, state)
@@ -551,14 +553,14 @@ def oauth_authorize_url(provider_id: int, redirect_uri: str) -> str:
 def oauth_complete(provider_id: int, code: str, redirect_uri: str) -> dict:
     row = get_provider_record(provider_id)
     if not row:
-        raise StorageConfigError("Speicher-Anbieter nicht gefunden.")
+        raise StorageConfigError(gettext("Storage provider not found."))
     cls = get_provider_class(row["provider_type"])
     if not cls.oauth_supported:
-        raise StorageConfigError(f"{cls.label} unterstützt OAuth nicht.")
+        raise StorageConfigError(gettext("%(provider)s does not support OAuth.", provider=cls.label))
     values = dict(row.get("config") or {})
     received = cls.oauth_exchange_code(values, code, redirect_uri)
     if not isinstance(received, dict):
-        raise StorageError("Der Anbieter lieferte keine gültigen OAuth-Daten.")
+        raise StorageError(gettext("The provider did not return valid OAuth data."))
     values.update({key: value for key, value in received.items() if value})
     database.update_storage_provider(
         provider_id, config=encrypt_config(values)
@@ -664,7 +666,7 @@ def _streamer_name(value: str) -> str:
         or os.path.splitdrive(name)[0]
         or any(ord(ch) < 32 for ch in name)
     ):
-        raise StorageConfigError("Ungültiger Streamer-Name.")
+        raise StorageConfigError(gettext("Invalid streamer name."))
     return name
 
 

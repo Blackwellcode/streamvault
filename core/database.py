@@ -8,6 +8,8 @@ logger = logging.getLogger("database")
 from functools import wraps
 from contextlib import contextmanager
 
+from flask_babel import gettext
+
 from core import config
 from core.config import DB_FILE, LEGACY_CHANNELS_FILE, LEGACY_LIVE_CHANNEL_FILE
 
@@ -1970,10 +1972,10 @@ def create_user_group(
 ) -> int:
     name = str(name or "").strip()
     if not (2 <= len(name) <= 50):
-        raise ValueError("Gruppenname muss zwischen 2 und 50 Zeichen lang sein.")
+        raise ValueError(gettext("Group name must be between 2 and 50 characters long."))
     existing = get_user_group_by_name(name)
     if existing:
-        raise ValueError(f"Eine Gruppe mit dem Namen '{name}' existiert bereits.")
+        raise ValueError(gettext("A group named '%(name)s' already exists.", name=name))
 
     default_perms = {
         "can_view_streams": True,
@@ -2017,24 +2019,24 @@ def update_user_group(
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.") from None
+        raise ValueError(gettext("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError("Gruppe nicht gefunden.")
+        raise ValueError(gettext("Group not found."))
 
     name_clean = str(name or "").strip()
     if not (2 <= len(name_clean) <= 50):
-        raise ValueError("Gruppenname muss zwischen 2 und 50 Zeichen lang sein.")
+        raise ValueError(gettext("Group name must be between 2 and 50 characters long."))
 
     # System group name protection
     if group["is_system"] and group["name"].lower() != name_clean.lower():
-        raise ValueError("Der Name von Systemgruppen kann nicht geändert werden.")
+        raise ValueError(gettext("The name of system groups cannot be changed."))
 
     # Check duplicate name if name changed
     if group["name"].lower() != name_clean.lower():
         duplicate = get_user_group_by_name(name_clean)
         if duplicate and duplicate["id"] != gid:
-            raise ValueError(f"Eine Gruppe mit dem Namen '{name_clean}' existiert bereits.")
+            raise ValueError(gettext("A group named '%(name)s' already exists.", name=name_clean))
 
     merged_perms = _normalize_group_permissions(group["permissions"])
     if permissions is not None:
@@ -2047,7 +2049,7 @@ def update_user_group(
     # Lockout protection: Administrator group cannot lose can_manage_users
     if group["name"] == "Administrator" and group["is_system"]:
         if not merged_perms.get("can_manage_users"):
-            raise ValueError("Das Recht 'can_manage_users' darf der Administrator-Gruppe nicht entzogen werden.")
+            raise ValueError(gettext("The 'can_manage_users' permission cannot be removed from the Administrator group."))
 
     now = time.time()
     conn = get_db()
@@ -2070,16 +2072,16 @@ def delete_user_group(group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.") from None
+        raise ValueError(gettext("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError("Gruppe nicht gefunden.")
+        raise ValueError(gettext("Group not found."))
     if group["is_system"]:
-        raise ValueError(f"Systemgruppen ({group['name']}) dürfen nicht gelöscht werden.")
+        raise ValueError(gettext("System groups (%(name)s) cannot be deleted.", name=group["name"]))
 
     viewer_group = get_user_group_by_name("Viewer")
     if not viewer_group:
-        raise ValueError("Systemgruppe 'Viewer' wurde nicht gefunden. Löschung abgebrochen.")
+        raise ValueError(gettext("System group 'Viewer' was not found. Deletion cancelled."))
 
     now = time.time()
     conn = get_db()
@@ -2104,10 +2106,10 @@ def set_user_group(username: str, group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError("Ungültige Gruppen-ID.") from None
+        raise ValueError(gettext("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError("Gruppe nicht gefunden.")
+        raise ValueError(gettext("Group not found."))
 
     now = time.time()
     conn = get_db()

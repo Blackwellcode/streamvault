@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -15,20 +15,20 @@
     <div class="main twitch-live-main">
       <header class="twitch-live-header">
         <div>
-          <h1 class="page-title">Live</h1>
-          <p class="page-subtitle">Twitch-Streams in StreamVault entdecken und ansehen</p>
+          <h1 class="page-title">{{ _('Live') }}</h1>
+          <p class="page-subtitle">{{ _('Discover and watch Twitch streams in StreamVault') }}</p>
         </div>
         <div class="twitch-live-search">
-          <label class="sr-only" for="twitchSearchInput">Streamer suchen</label>
-          <input id="twitchSearchInput" type="search" placeholder="Streamer oder Kanal suchen…" autocomplete="off" enterkeyhint="search">
-          <button type="button" id="twitchSearchBtn" class="btn-primary">Suchen</button>
+          <label class="sr-only" for="twitchSearchInput">{{ _('Search streamers') }}</label>
+          <input id="twitchSearchInput" type="search" placeholder="{{ _('Search streamer or channel…') }}" autocomplete="off" enterkeyhint="search">
+          <button type="button" id="twitchSearchBtn" class="btn-primary">{{ _('Search') }}</button>
         </div>
       </header>
 
       <section class="twitch-section" aria-labelledby="monitoredHeading">
         <div class="twitch-section-head">
-          <h2 id="monitoredHeading">Überwacht</h2>
-          <span class="twitch-section-meta" id="monitoredMeta">{{ monitored_live_count }} live</span>
+          <h2 id="monitoredHeading">{{ _('Monitored') }}</h2>
+          <span class="twitch-section-meta" id="monitoredMeta">{{ _('%(count)s live', count=monitored_live_count) }}</span>
         </div>
         <div class="twitch-stream-grid" id="monitoredGrid">
           {% for s in monitored %}
@@ -36,37 +36,37 @@
             <div class="twitch-thumb-wrap">
               {% if s.is_live %}
               <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
-              <span class="twitch-live-pill">LIVE</span>
+              <span class="twitch-live-pill">{{ _('LIVE') }}</span>
               <span class="twitch-viewers">{{ s.viewer_count }}</span>
               {% else %}
-              <div class="twitch-thumb-offline">Offline</div>
+              <div class="twitch-thumb-offline">{{ _('Offline') }}</div>
               {% endif %}
             </div>
             <div class="twitch-card-body">
               <strong class="twitch-card-title">{{ s.display_name or s.login }}</strong>
-              <span class="twitch-card-meta">{{ s.title or (s.game_name if s.is_live else 'Nicht live') }}</span>
+              <span class="twitch-card-meta">{{ s.title or (s.game_name if s.is_live else _('Not live')) }}</span>
               {% if s.game_name and s.is_live %}<span class="twitch-card-game">{{ s.game_name }}</span>{% endif %}
             </div>
           </a>
           {% else %}
-          <div class="twitch-empty">Keine überwachten Twitch-Kanäle. Füge Streamer unter Streamer hinzu.</div>
+          <div class="twitch-empty">{{ _('No monitored Twitch channels. Add streamers under Streamers.') }}</div>
           {% endfor %}
         </div>
       </section>
 
       <section class="twitch-section" aria-labelledby="discoverHeading">
         <div class="twitch-section-head">
-          <h2 id="discoverHeading">Entdecken</h2>
+          <h2 id="discoverHeading">{{ _('Discover') }}</h2>
           <div class="twitch-chip-row" id="categoryChips">
-            <button type="button" class="twitch-chip active" data-game-id="">Alle</button>
+            <button type="button" class="twitch-chip active" data-game-id="">{{ _('All') }}</button>
             {% for cat in category_suggestions %}
             <button type="button" class="twitch-chip" data-game-id="{{ cat.id }}">{{ cat.name }}</button>
             {% endfor %}
           </div>
         </div>
         <div class="twitch-category-search">
-          <label class="sr-only" for="categorySearchInput">Kategorie suchen</label>
-          <input id="categorySearchInput" type="search" placeholder="Kategorie / Game suchen…" autocomplete="off">
+          <label class="sr-only" for="categorySearchInput">{{ _('Search category') }}</label>
+          <input id="categorySearchInput" type="search" placeholder="{{ _('Search category / game…') }}" autocomplete="off">
         </div>
         <div id="discoverStatus" class="twitch-status" hidden></div>
         <div class="twitch-stream-grid" id="discoverGrid">
@@ -74,7 +74,7 @@
           <a class="twitch-stream-card is-live" href="{{ url_for('twitch_watch', channel=s.login) }}" data-login="{{ s.login }}">
             <div class="twitch-thumb-wrap">
               <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
-              <span class="twitch-live-pill">LIVE</span>
+              <span class="twitch-live-pill">{{ _('LIVE') }}</span>
               <span class="twitch-viewers">{{ s.viewer_count }}</span>
             </div>
             <div class="twitch-card-body">
@@ -91,17 +91,17 @@
 
       <section class="twitch-section" aria-labelledby="searchHeading" id="searchSection" hidden>
         <div class="twitch-section-head">
-          <h2 id="searchHeading">Suchergebnisse</h2>
+          <h2 id="searchHeading">{{ _('Search results') }}</h2>
         </div>
         <div class="twitch-stream-grid" id="searchGrid"></div>
       </section>
 
       <section class="twitch-section" aria-labelledby="recentHeading">
         <div class="twitch-section-head">
-          <h2 id="recentHeading">Zuletzt angesehen</h2>
+          <h2 id="recentHeading">{{ _('Recently watched') }}</h2>
         </div>
         <div class="twitch-stream-grid" id="recentGrid">
-          <div class="twitch-empty">Noch keine zuletzt angesehenen Streams.</div>
+          <div class="twitch-empty">{{ _('No recently watched streams yet.') }}</div>
         </div>
       </section>
     </div>
@@ -130,7 +130,7 @@
         const thumb = live
           ? `<img src="${escapeHtml(s.thumbnail_url || '')}" alt="" loading="lazy" decoding="async" width="640" height="360"><span class="twitch-live-pill">LIVE</span><span class="twitch-viewers">${escapeHtml(s.viewer_count || 0)}</span>`
           : `<div class="twitch-thumb-offline">Offline</div>`;
-        const meta = live ? escapeHtml(s.title || s.game_name || '') : 'Nicht live';
+        const meta = live ? escapeHtml(s.title || s.game_name || '') : {{ _('Not live')|tojson }};
         const game = (live && s.game_name) ? `<span class="twitch-card-game">${escapeHtml(s.game_name)}</span>` : '';
         return `<a class="twitch-stream-card ${live ? 'is-live' : ''}" href="${watchUrl(s.login)}" data-login="${escapeHtml(s.login)}">
           <div class="twitch-thumb-wrap">${thumb}</div>
@@ -145,7 +145,7 @@
       function renderGrid(el, items, emptyText) {
         if (!el) return;
         if (!items || !items.length) {
-          el.innerHTML = `<div class="twitch-empty">${escapeHtml(emptyText || 'Keine Streams')}</div>`;
+          el.innerHTML = `<div class="twitch-empty">${escapeHtml(emptyText || {{ _('No streams')|tojson }})}</div>`;
           return;
         }
         el.innerHTML = items.map(cardHtml).join('');
@@ -164,11 +164,11 @@
           display_name: login,
           is_live: true,
           thumbnail_url: `https://static-cdn.jtvnw.net/previews-ttv/live_user_${login}-640x360.jpg`,
-          title: 'Zuletzt angesehen',
+          title: {{ _('Recently watched')|tojson }},
           viewer_count: '',
           game_name: ''
         }));
-        renderGrid(document.getElementById('recentGrid'), items, 'Noch keine zuletzt angesehenen Streams.');
+        renderGrid(document.getElementById('recentGrid'), items, {{ _('No recently watched streams yet.')|tojson }});
       }
 
       async function refreshMonitored() {
@@ -177,10 +177,10 @@
           if (!res.ok) return;
           const data = await res.json();
           const streams = data.streams || [];
-          renderGrid(document.getElementById('monitoredGrid'), streams, 'Keine überwachten Twitch-Kanäle.');
+          renderGrid(document.getElementById('monitoredGrid'), streams, {{ _('No monitored Twitch channels.')|tojson }});
           const liveCount = streams.filter((s) => s.is_live).length;
           const meta = document.getElementById('monitoredMeta');
-          if (meta) meta.textContent = liveCount + ' live';
+          if (meta) meta.textContent = {{ _('%(count)s live', count='__COUNT__')|tojson }}.replace('__COUNT__', liveCount);
         } catch (e) {}
       }
 
@@ -189,7 +189,7 @@
         const grid = document.getElementById('discoverGrid');
         if (status) {
           status.hidden = false;
-          status.textContent = 'Lade Streams…';
+          status.textContent = {{ _('Loading streams…')|tojson }};
           status.className = 'twitch-status';
         }
         try {
@@ -204,21 +204,21 @@
               const monData = await mon.json();
               const live = (monData.streams || []).filter((s) => s.is_live);
               if (status) status.hidden = true;
-              renderGrid(grid, live, 'Keine Live-Streams unter den Überwachten. Nutze die Suche.');
+              renderGrid(grid, live, {{ _('No live streams among the monitored channels. Use the search.')|tojson }});
               return;
             } catch (e2) {
               if (status) {
-                status.textContent = data.message || 'Fehler beim Laden.';
+                status.textContent = data.message || {{ _('Error while loading.')|tojson }};
                 status.className = 'twitch-status error';
               }
               return;
             }
           }
           if (status) status.hidden = true;
-          renderGrid(grid, data.streams || [], 'Aktuell keine Discovery-Streams.');
+          renderGrid(grid, data.streams || [], {{ _('No discovery streams right now.')|tojson }});
         } catch (e) {
           if (status) {
-            status.textContent = 'Netzwerkfehler beim Laden der Streams.';
+            status.textContent = {{ _('Network error while loading streams.')|tojson }};
             status.className = 'twitch-status error';
           }
         }
@@ -233,7 +233,7 @@
           return;
         }
         if (section) section.hidden = false;
-        grid.innerHTML = '<div class="twitch-status">Suche…</div>';
+        grid.innerHTML = '<div class="twitch-status">' + {{ _('Searching…')|tojson }} + '</div>';
         try {
           const url = new URL(apiSearch, window.location.origin);
           url.searchParams.set('q', q);
@@ -249,9 +249,9 @@
             game_name: c.game_name || '',
             viewer_count: 0
           }));
-          renderGrid(grid, live.concat(offline), 'Keine Treffer.');
+          renderGrid(grid, live.concat(offline), {{ _('No results.')|tojson }});
         } catch (e) {
-          grid.innerHTML = '<div class="twitch-status error">Suche fehlgeschlagen.</div>';
+          grid.innerHTML = '<div class="twitch-status error">' + {{ _('Search failed.')|tojson }} + '</div>';
         }
       }
 
@@ -266,7 +266,7 @@
           const row = document.getElementById('categoryChips');
           if (!row || !data.ok) return;
           const cats = (data.categories || []).slice(0, 8);
-          row.innerHTML = '<button type="button" class="twitch-chip" data-game-id="">Alle</button>' +
+          row.innerHTML = '<button type="button" class="twitch-chip" data-game-id="">' + {{ _('All')|tojson }} + '</button>' +
             cats.map((c) => `<button type="button" class="twitch-chip" data-game-id="${escapeHtml(c.id)}">${escapeHtml(c.name)}</button>`).join('');
         } catch (e) {}
       }

@@ -9,6 +9,8 @@ import time
 import urllib.parse
 from typing import Iterable, Optional
 
+from flask_babel import gettext, lazy_gettext
+
 from core.storage.base import (
     ProgressCallback,
     ProviderField,
@@ -33,18 +35,18 @@ SIMPLE_UPLOAD_MAX = 140 * 1024 * 1024
 class DropboxProvider(StorageProvider):
     type_id = "dropbox"
     label = "Dropbox"
-    description = "Dropbox mit OAuth 2.0, Refresh Token und großen Upload-Sessions."
+    description = lazy_gettext("Dropbox with OAuth 2.0, refresh token and large upload sessions.")
     oauth_supported = True
-    oauth_label = "Mit Dropbox verbinden"
+    oauth_label = lazy_gettext("Connect with Dropbox")
     docs_url = "https://www.dropbox.com/developers/documentation/http/documentation"
     config_fields = (
         ProviderField("app_key", "App Key", placeholder="Dropbox App Console → App Key"),
         ProviderField("app_secret", "App Secret", type="password", secret=True),
         ProviderField("refresh_token", "Refresh Token", type="password", secret=True,
-                      help="Wird beim Verbinden automatisch gespeichert."),
+                      help=lazy_gettext("Saved automatically when connecting.")),
         ProviderField("access_token", "Access Token (Alternative)", type="password", secret=True,
-                      help="Nur nötig, wenn kein Refresh Token verwendet wird."),
-        ProviderField("base_path", "Unterordner", default="StreamVault", placeholder="StreamVault"),
+                      help=lazy_gettext("Only needed if no refresh token is used.")),
+        ProviderField("base_path", lazy_gettext("Subfolder"), default="StreamVault", placeholder="StreamVault"),
     )
 
     def __init__(self, config: dict):
@@ -60,7 +62,7 @@ class DropboxProvider(StorageProvider):
         errors = []
         for key, label in (("app_key", "App Key"), ("app_secret", "App Secret"), ("refresh_token", "Refresh Token")):
             if require_secrets and not str(cfg.get(key) or "").strip():
-                errors.append(f"{label} fehlt.")
+                errors.append(gettext("%(field)s is missing.", field=label))
         return errors
 
     @classmethod

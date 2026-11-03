@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,19 +10,19 @@
   <body class="page-hls {{ theme_class }} ns-platform">
     <header>
       <div style="display: flex; gap: 10px; align-items: center;">
-        <a href="{{ url_for('index') }}">Home</a> <span style="color:var(--muted)">/</span>
-        <a href="{{ url_for('vod_view', streamer=streamer, filename=filename) }}">Zurueck</a> <span style="color:var(--muted)">/</span> HLS {{ filename }}
+        <a href="{{ url_for('index') }}">{{ _('Home') }}</a> <span style="color:var(--muted)">/</span>
+        <a href="{{ url_for('vod_view', streamer=streamer, filename=filename) }}">{{ _('Back') }}</a> <span style="color:var(--muted)">/</span> HLS {{ filename }}
       </div>
-      <a href="{{ url_for('download', streamer=streamer, filename=filename) }}" {% if not downloads_enabled %}hidden{% endif %}>Download</a>
+      <a href="{{ url_for('download', streamer=streamer, filename=filename) }}" {% if not downloads_enabled %}hidden{% endif %}>{{ _('Download') }}</a>
     </header>
     {% if not ready %}
       <div class="note">
-        HLS wird erstellt. Bitte Seite in ein paar Minuten neu laden.
+        {{ _('HLS is being created. Please reload the page in a few minutes.') }}
       </div>
       <div class="note">
         <form method="post" action="{{ url_for('hls_generate', streamer=streamer, filename=filename) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit">HLS jetzt erzeugen</button>
+          <button type="submit">{{ _('Generate HLS now') }}</button>
         </form>
       </div>
     {% else %}
@@ -38,8 +38,9 @@
           data-media-artwork="{{ url_for('app_icon_png', size=512) }}"
         ></video>
       </div>
-      <div class="note">HLS startet schneller bei sehr grossen Dateien.</div>
+      <div class="note">{{ _('HLS starts faster for very large files.') }}</div>
       <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+      {% include 'components/js_i18n.html' %}
       <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
       <script>
@@ -84,7 +85,7 @@
               return;
             }
             hls.destroy();
-            video.outerHTML = '<div class="note">HLS konnte nicht wiederhergestellt werden.</div>';
+            video.outerHTML = '<div class="note">' + {{ _('HLS could not be recovered.')|tojson }} + '</div>';
           });
           hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
             if (hls.audioTracks && hls.audioTracks.length) {
@@ -94,7 +95,7 @@
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.src = src;
         } else {
-          video.outerHTML = '<div class="note">HLS wird von diesem Browser nicht unterstuetzt.</div>';
+          video.outerHTML = '<div class="note">' + {{ _('HLS is not supported by this browser.')|tojson }} + '</div>';
         }
       </script>
     {% endif %}

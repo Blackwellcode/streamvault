@@ -26,14 +26,16 @@ import time
 _CLAIM_CACHE = {}  # (holder.lower(), streamer, filename) -> (stamp, active)
 _CLAIM_LOCK = threading.Lock()
 
+from flask_babel import lazy_gettext
+
 from core import config
 from core import database
 
 BUSY_CODE = "vod_slots_full"
-BUSY_MESSAGE = (
-    "Gerade laufen zu viele VODs. Live ist davon nicht betroffen. "
-    "Versuch es in ein paar Minuten nochmal — der Platz wird frei, "
-    "sobald jemand den Player schließt."
+BUSY_MESSAGE = lazy_gettext(
+    "Too many VODs are playing right now. Live is not affected. "
+    "Try again in a few minutes — a slot frees up "
+    "as soon as someone closes the player."
 )
 
 
@@ -79,7 +81,7 @@ def _payload(ok, *, holder="", active=0, reason="", retry_after=0):
     data = {
         "ok": bool(ok),
         "code": "" if ok else (reason or BUSY_CODE),
-        "message": "" if ok else BUSY_MESSAGE,
+        "message": "" if ok else str(BUSY_MESSAGE),
         "active": int(active),
         "holder": holder,
         "retry_after": int(retry_after or (0 if ok else limits["stale_sec"])),

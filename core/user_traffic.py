@@ -8,6 +8,8 @@ import time
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
+from flask_babel import gettext
+
 from core import database
 
 _LOG = logging.getLogger("user_traffic")
@@ -114,21 +116,21 @@ def format_when(ts, *, now=None):
     except (TypeError, ValueError):
         stamp = 0
     if stamp <= 0:
-        return "nie"
+        return gettext("never")
     current = time.time() if now is None else float(now)
     delta = max(0, int(current - stamp))
     if delta < 120:
-        return "gerade eben"
+        return gettext("just now")
     if delta < 3600:
-        return f"vor {delta // 60} Min."
+        return gettext("%(minutes)s min ago", minutes=delta // 60)
     local = datetime.fromtimestamp(stamp, _tz())
     today = datetime.fromtimestamp(current, _tz()).date()
     if local.date() == today:
-        return f"heute {local.strftime('%H:%M')}"
+        return gettext("today %(time)s", time=local.strftime("%H:%M"))
     if local.date() == today - timedelta(days=1):
-        return "gestern"
+        return gettext("yesterday")
     if delta < 14 * 86400:
-        return f"vor {delta // 86400} Tagen"
+        return gettext("%(days)s days ago", days=delta // 86400)
     return local.strftime("%d.%m.%Y")
 
 
@@ -205,12 +207,12 @@ def _chart_bars(series, plot_height=84):
                 "level": _heat_level(total, peak),
                 "total": total,
                 "title": (
-                    f"{day_label}: keine Nutzung"
+                    gettext("%(day)s: no activity", day=day_label)
                     if total <= 0
                     else (
-                        f"{day_label}: {total} "
-                        f"(Login {item['logins']}, Seiten {item['pages']}, "
-                        f"Video {item['media']}, Chat {item['chats']})"
+                        gettext("%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)", day=day_label, total=total, logins=item["logins"], pages=item["pages"], media=item["media"], chats=item["chats"])
+                        
+                        
                     )
                 ),
             }
@@ -226,7 +228,7 @@ def _chart_bars(series, plot_height=84):
                     "x": x,
                     "w": bar_w,
                     "label": day_label,
-                    "title": f"{day_label}: keine Nutzung",
+                    "title": gettext("%(day)s: no activity", day=day_label),
                     "stacks": [],
                     "total": 0,
                 }
@@ -255,9 +257,9 @@ def _chart_bars(series, plot_height=84):
                 "w": bar_w,
                 "label": day_label,
                 "title": (
-                    f"{day_label}: {total} "
-                    f"(Login {item['logins']}, Seiten {item['pages']}, "
-                    f"Video {item['media']}, Chat {item['chats']})"
+                    gettext("%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)", day=day_label, total=total, logins=item["logins"], pages=item["pages"], media=item["media"], chats=item["chats"])
+                    
+                    
                 ),
                 "stacks": stacks,
                 "total": total,

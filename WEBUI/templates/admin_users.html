@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 
-{% block title %}Benutzer & Gruppen — StreamVault{% endblock %}
-{% block page_title %}Benutzer & Gruppen{% endblock %}
-{% block page_subtitle %}Dynamische Benutzerkonten- und Gruppenverwaltung mit granularer Stream- & Rechte-Steuerung{% endblock %}
+{% block title %}{{ _('Users & groups') }} — StreamVault{% endblock %}
+{% block page_title %}{{ _('Users & groups') }}{% endblock %}
+{% block page_subtitle %}{{ _('Dynamic user account and group management with granular stream and permission control') }}{% endblock %}
 
 {% block header_actions %}
   <button type="button" class="ns-btn ns-btn-primary" onclick="openModal('modal-add-user')">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-    Neuer Benutzer
+    {{ _('New user') }}
   </button>
   <button type="button" class="ns-btn ns-btn-secondary" onclick="openModal('modal-add-group')">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    Neue Gruppe
+    {{ _('New group') }}
   </button>
   <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    System Settings
+    {{ _('System settings') }}
   </a>
 {% endblock %}
 
@@ -88,12 +88,12 @@
   <div class="rbac-nav-tabs">
     <button type="button" class="rbac-tab-btn is-active" id="tab-btn-users" onclick="switchRbacTab('users')">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Benutzerkonten
+      {{ _('User accounts') }}
       <span class="rbac-tab-badge" id="badge-users-count">{{ users|length }}</span>
     </button>
     <button type="button" class="rbac-tab-btn" id="tab-btn-groups" onclick="switchRbacTab('groups')">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17v-4"/><path d="M9 9h.01"/><path d="M15 17v-8"/><path d="M15 9h.01"/></svg>
-      Benutzergruppen & Rechte
+      {{ _('User groups & permissions') }}
       <span class="rbac-tab-badge" id="badge-groups-count">{{ groups|length }}</span>
     </button>
   </div>
@@ -102,10 +102,10 @@
   <section id="section-users" class="rbac-tab-section">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
       <div style="flex: 1; max-width: 360px;">
-        <input type="text" id="users-search-input" class="rbac-input" placeholder="Benutzer, E-Mail oder Gruppe suchen..." oninput="filterUsersTable()" style="width: 100%;">
+        <input type="text" id="users-search-input" class="rbac-input" placeholder="{{ _('Search user, email or group...') }}" oninput="filterUsersTable()" style="width: 100%;">
       </div>
       <div style="font-size: 12px; color: var(--ns-text-muted);">
-        Insgesamt <span style="color: #FFF; font-weight: 600;">{{ users|length }}</span> registrierte Konten
+        {% set users_total %}<span style="color: #FFF; font-weight: 600;">{{ users|length }}</span>{% endset %}{{ _('Total: %(count)s registered accounts', count=users_total) }}
       </div>
     </div>
 
@@ -113,12 +113,12 @@
       <table class="rbac-table" id="table-users">
         <thead>
           <tr>
-            <th>Benutzer</th>
-            <th>E-Mail</th>
-            <th>Benutzergruppe</th>
-            <th>Status</th>
-            <th>Zuletzt Aktiv</th>
-            <th style="text-align: right;">Aktionen</th>
+            <th>{{ _('User') }}</th>
+            <th>{{ _('Email') }}</th>
+            <th>{{ _('User group') }}</th>
+            <th>{{ _('Status') }}</th>
+            <th>{{ _('Last active') }}</th>
+            <th style="text-align: right;">{{ _('Actions') }}</th>
           </tr>
         </thead>
         <tbody id="users-tbody">
@@ -159,27 +159,27 @@
             </td>
             <td>
               {% if u.active %}
-              <span class="rbac-badge rbac-badge-active">Aktiv</span>
+              <span class="rbac-badge rbac-badge-active">{{ _('Active') }}</span>
               {% else %}
-              <span class="rbac-badge rbac-badge-inactive">Gesperrt</span>
+              <span class="rbac-badge rbac-badge-inactive">{{ _('Blocked') }}</span>
               {% endif %}
             </td>
             <td style="color: var(--ns-text-muted); font-size: 12px; white-space: nowrap;">
               {% if u.last_seen_at %}
-              aktiv
+              {{ _('active') }}
               {% elif u.last_login_at %}
-              eingeloggt
+              {{ _('logged in') }}
               {% else %}
-              Nie
+              {{ _('Never') }}
               {% endif %}
             </td>
             <td style="text-align: right;">
               <div class="rbac-actions" style="justify-content: flex-end;">
-                <button type="button" class="rbac-btn-icon" title="Benutzer bearbeiten" onclick="openEditUserModal('{{ u.username }}', '{{ u.email }}', {{ u.group_id or 3 }}, {{ 1 if u.active else 0 }})">
+                <button type="button" class="rbac-btn-icon" title="{{ _('Edit user') }}" onclick="openEditUserModal('{{ u.username }}', '{{ u.email }}', {{ u.group_id or 3 }}, {{ 1 if u.active else 0 }})">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 {% if not u.is_system_admin and u.username.lower() != (current_username or '').lower() %}
-                <button type="button" class="rbac-btn-icon danger" title="Benutzer löschen" onclick="openDeleteUserModal('{{ u.username }}')">
+                <button type="button" class="rbac-btn-icon danger" title="{{ _('Delete user') }}" onclick="openDeleteUserModal('{{ u.username }}')">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
                 {% endif %}
@@ -196,10 +196,10 @@
   <section id="section-groups" class="rbac-tab-section" style="display: none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
       <div style="font-size: 13px; color: var(--ns-text-secondary);">
-        Konfigurieren Sie dynamische Berechtigungen für Streams, Videoarchiv und Kanal-Zugriff.
+        {{ _('Configure dynamic permissions for streams, the video archive and channel access.') }}
       </div>
       <div style="font-size: 12px; color: var(--ns-text-muted);">
-        Insgesamt <span style="color: #FFF; font-weight: 600;">{{ groups|length }}</span> Benutzergruppen
+        {% set groups_total %}<span style="color: #FFF; font-weight: 600;">{{ groups|length }}</span>{% endset %}{{ _('Total: %(count)s user groups', count=groups_total) }}
       </div>
     </div>
 
@@ -207,12 +207,12 @@
       <table class="rbac-table" id="table-groups">
         <thead>
           <tr>
-            <th>Gruppe</th>
-            <th>Typ</th>
-            <th>Mitglieder</th>
-            <th>Stream- & Kanal-Zugriff</th>
-            <th>Funktionsrechte</th>
-            <th style="text-align: right;">Aktionen</th>
+            <th>{{ _('Group') }}</th>
+            <th>{{ _('Type') }}</th>
+            <th>{{ _('Members') }}</th>
+            <th>{{ _('Stream & channel access') }}</th>
+            <th>{{ _('Feature permissions') }}</th>
+            <th style="text-align: right;">{{ _('Actions') }}</th>
           </tr>
         </thead>
         <tbody id="groups-tbody">
@@ -226,14 +226,14 @@
             </td>
             <td>
               {% if g.is_system %}
-              <span class="rbac-badge rbac-badge-system">Systemgruppe</span>
+              <span class="rbac-badge rbac-badge-system">{{ _('System group') }}</span>
               {% else %}
-              <span class="rbac-badge rbac-badge-custom-grp">Benutzerdefiniert</span>
+              <span class="rbac-badge rbac-badge-custom-grp">{{ _('Custom') }}</span>
               {% endif %}
             </td>
             <td>
               <span style="font-weight: 600; color: #FFF;">{{ g.member_count or 0 }}</span>
-              <span style="color: var(--ns-text-muted); font-size: 11px;"> Benutzer</span>
+              <span style="color: var(--ns-text-muted); font-size: 11px;"> {{ _('users') }}</span>
             </td>
             <td>
               {% if g.permissions.access_all_channels %}
@@ -241,22 +241,22 @@
                 <div style="display:flex; flex-direction:column; gap:4px;">
                   <span class="rbac-chip rbac-chip-channel-all">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    Alle Streams (+ Auto-Neu)
+                    {{ _('All streams (+ auto-new)') }}
                   </span>
                   <span style="font-size:11px; color:#F04458; font-weight:500;">
-                    Gesperrt ({{ g.permissions.disabled_channels|length }}): {{ g.permissions.disabled_channels|join(', ') }}
+                    {{ _('Blocked (%(count)s): %(list)s', count=g.permissions.disabled_channels|length, list=g.permissions.disabled_channels|join(', ')) }}
                   </span>
                 </div>
                 {% else %}
                 <span class="rbac-chip rbac-chip-channel-all">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                  Alle Streams (+ Auto-Neu)
+                  {{ _('All streams (+ auto-new)') }}
                 </span>
                 {% endif %}
               {% else %}
                 <div style="display:flex; flex-direction:column; gap:4px;">
                   <span class="rbac-chip rbac-chip-channel-custom">
-                    {{ (g.permissions.allowed_channels or [])|length }} Ordner erlaubt
+                    {{ ngettext('%(num)d folder allowed', '%(num)d folders allowed', (g.permissions.allowed_channels or [])|length) }}
                   </span>
                   {% if g.permissions.allowed_channels %}
                   <span style="font-size:11px; color:var(--ns-text-muted);">
@@ -268,20 +268,20 @@
             </td>
             <td>
               <div class="rbac-perm-chips">
-                <span class="rbac-chip {% if g.permissions.can_view_streams %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Streams ansehen</span>
-                <span class="rbac-chip {% if g.permissions.can_download_archive %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Archiv-Download</span>
-                <span class="rbac-chip {% if g.permissions.can_upload_videos %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Video-Upload</span>
-                <span class="rbac-chip {% if g.permissions.can_delete_videos %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Videos löschen</span>
-                <span class="rbac-chip {% if g.permissions.can_manage_users %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">Benutzerverwaltung</span>
+                <span class="rbac-chip {% if g.permissions.can_view_streams %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">{{ _('View streams') }}</span>
+                <span class="rbac-chip {% if g.permissions.can_download_archive %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">{{ _('Archive download') }}</span>
+                <span class="rbac-chip {% if g.permissions.can_upload_videos %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">{{ _('Video upload') }}</span>
+                <span class="rbac-chip {% if g.permissions.can_delete_videos %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">{{ _('Delete videos') }}</span>
+                <span class="rbac-chip {% if g.permissions.can_manage_users %}rbac-chip-on{% else %}rbac-chip-off{% endif %}">{{ _('User management') }}</span>
               </div>
             </td>
             <td style="text-align: right;">
               <div class="rbac-actions" style="justify-content: flex-end;">
-                <button type="button" class="rbac-btn-icon" title="Gruppe bearbeiten" onclick='openEditGroupModal({{ g.id }}, {{ g.name|tojson }}, {{ (g.description or "")|tojson }}, {{ 1 if g.is_system else 0 }}, {{ g.permissions|tojson }})'>
+                <button type="button" class="rbac-btn-icon" title="{{ _('Edit group') }}" onclick='openEditGroupModal({{ g.id }}, {{ g.name|tojson }}, {{ (g.description or "")|tojson }}, {{ 1 if g.is_system else 0 }}, {{ g.permissions|tojson }})'>
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 {% if not g.is_system %}
-                <button type="button" class="rbac-btn-icon danger" title="Gruppe löschen" onclick="openDeleteGroupModal({{ g.id }}, '{{ g.name }}')">
+                <button type="button" class="rbac-btn-icon danger" title="{{ _('Delete group') }}" onclick="openDeleteGroupModal({{ g.id }}, '{{ g.name }}')">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
                 {% endif %}
@@ -297,25 +297,25 @@
 <div id="modal-add-user" class="rbac-modal-backdrop">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>Neuen Benutzer erstellen</h3>
+      <h3>{{ _('Create new user') }}</h3>
       <button type="button" class="rbac-modal-close" onclick="closeModal('modal-add-user')">&times;</button>
     </div>
     <form id="form-add-user" onsubmit="handleAddUser(event)">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>Benutzername *</label>
-          <input type="text" id="add-user-name" class="rbac-input" required minlength="3" maxlength="32" placeholder="z.B. max_mustermann">
+          <label>{{ _('Username') }} *</label>
+          <input type="text" id="add-user-name" class="rbac-input" required minlength="3" maxlength="32" placeholder="{{ _('e.g. john_doe') }}">
         </div>
         <div class="rbac-form-group">
-          <label>E-Mail-Adresse (Optional)</label>
-          <input type="email" id="add-user-email" class="rbac-input" placeholder="benutzer@streamvault.de">
+          <label>{{ _('Email address (optional)') }}</label>
+          <input type="email" id="add-user-email" class="rbac-input" placeholder="{{ _('user@example.com') }}">
         </div>
         <div class="rbac-form-group">
-          <label>Initiales Passwort *</label>
-          <input type="password" id="add-user-pass" class="rbac-input" required minlength="8" placeholder="Mindestens 8 Zeichen">
+          <label>{{ _('Initial password') }} *</label>
+          <input type="password" id="add-user-pass" class="rbac-input" required minlength="8" placeholder="{{ _('At least 8 characters') }}">
         </div>
         <div class="rbac-form-group">
-          <label>Benutzergruppe *</label>
+          <label>{{ _('User group') }} *</label>
           <select id="add-user-group" class="rbac-select">
             {% for g in groups %}
             <option value="{{ g.id }}" {% if g.name == 'Viewer' %}selected{% endif %}>{{ g.name }}</option>
@@ -325,13 +325,13 @@
         <div class="rbac-form-group">
           <label class="rbac-checkbox-label">
             <input type="checkbox" id="add-user-active" checked>
-            <span>Konto sofort aktivieren</span>
+            <span>{{ _('Activate account immediately') }}</span>
           </label>
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-user')">Abbrechen</button>
-        <button type="submit" class="ns-btn ns-btn-primary">Benutzer anlegen</button>
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-user')">{{ _('Cancel') }}</button>
+        <button type="submit" class="ns-btn ns-btn-primary">{{ _('Create user') }}</button>
       </div>
     </form>
   </div>
@@ -341,26 +341,26 @@
 <div id="modal-edit-user" class="rbac-modal-backdrop">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>Benutzer bearbeiten</h3>
+      <h3>{{ _('Edit user') }}</h3>
       <button type="button" class="rbac-modal-close" onclick="closeModal('modal-edit-user')">&times;</button>
     </div>
     <form id="form-edit-user" onsubmit="handleEditUser(event)">
       <input type="hidden" id="edit-user-original">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>Benutzername</label>
+          <label>{{ _('Username') }}</label>
           <input type="text" id="edit-user-name" class="rbac-input" required minlength="3" maxlength="32">
         </div>
         <div class="rbac-form-group">
-          <label>E-Mail-Adresse</label>
-          <input type="email" id="edit-user-email" class="rbac-input" placeholder="benutzer@streamvault.de">
+          <label>{{ _('Email address') }}</label>
+          <input type="email" id="edit-user-email" class="rbac-input" placeholder="{{ _('user@example.com') }}">
         </div>
         <div class="rbac-form-group">
-          <label>Neues Passwort (leer lassen für keine Änderung)</label>
-          <input type="password" id="edit-user-pass" class="rbac-input" minlength="8" placeholder="Neues Passwort...">
+          <label>{{ _('New password (leave empty to keep unchanged)') }}</label>
+          <input type="password" id="edit-user-pass" class="rbac-input" minlength="8" placeholder="{{ _('New password...') }}">
         </div>
         <div class="rbac-form-group">
-          <label>Benutzergruppe</label>
+          <label>{{ _('User group') }}</label>
           <select id="edit-user-group" class="rbac-select">
             {% for g in groups %}
             <option value="{{ g.id }}">{{ g.name }}</option>
@@ -370,13 +370,13 @@
         <div class="rbac-form-group">
           <label class="rbac-checkbox-label">
             <input type="checkbox" id="edit-user-active">
-            <span>Konto aktiv (Zugriff erlaubt)</span>
+            <span>{{ _('Account active (access allowed)') }}</span>
           </label>
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-user')">Abbrechen</button>
-        <button type="submit" class="ns-btn ns-btn-primary">Änderungen speichern</button>
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-user')">{{ _('Cancel') }}</button>
+        <button type="submit" class="ns-btn ns-btn-primary">{{ _('Save changes') }}</button>
       </div>
     </form>
   </div>
@@ -386,22 +386,22 @@
 <div id="modal-delete-user" class="rbac-modal-backdrop">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>Benutzer löschen</h3>
+      <h3>{{ _('Delete user') }}</h3>
       <button type="button" class="rbac-modal-close" onclick="closeModal('modal-delete-user')">&times;</button>
     </div>
     <form id="form-delete-user" onsubmit="handleDeleteUser(event)">
       <input type="hidden" id="delete-user-name">
       <div class="rbac-modal-body">
         <p style="margin: 0; color: var(--ns-text-primary);">
-          Möchten Sie den Benutzer <strong id="delete-user-display" style="color: #F04458;"></strong> wirklich unwiderruflich löschen?
+          {% set delete_user_target %}<strong id="delete-user-display" style="color: #F04458;"></strong>{% endset %}{{ _('Do you really want to permanently delete the user %(name)s?', name=delete_user_target) }}
         </p>
         <p style="margin: 0; font-size: 12px; color: var(--ns-text-muted);">
-          Alle gespeicherten Einstellungen dieses Kontos werden vollständig gelöscht.
+          {{ _('All saved settings of this account will be deleted completely.') }}
         </p>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-user')">Abbrechen</button>
-        <button type="submit" class="ns-btn ns-btn-danger">Endgültig löschen</button>
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-user')">{{ _('Cancel') }}</button>
+        <button type="submit" class="ns-btn ns-btn-danger">{{ _('Delete permanently') }}</button>
       </div>
     </form>
   </div>
@@ -411,40 +411,40 @@
 <div id="modal-add-group" class="rbac-modal-backdrop">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>Neue Benutzergruppe erstellen</h3>
+      <h3>{{ _('Create new user group') }}</h3>
       <button type="button" class="rbac-modal-close" onclick="closeModal('modal-add-group')">&times;</button>
     </div>
     <form id="form-add-group" onsubmit="handleAddGroup(event)">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>Gruppenname *</label>
-          <input type="text" id="add-group-name" class="rbac-input" required minlength="2" maxlength="50" placeholder="z.B. VIP-Archiv">
+          <label>{{ _('Group name') }} *</label>
+          <input type="text" id="add-group-name" class="rbac-input" required minlength="2" maxlength="50" placeholder="{{ _('e.g. VIP archive') }}">
         </div>
         <div class="rbac-form-group">
-          <label>Beschreibung</label>
-          <input type="text" id="add-group-desc" class="rbac-input" placeholder="Zweck dieser Benutzergruppe...">
+          <label>{{ _('Description') }}</label>
+          <input type="text" id="add-group-desc" class="rbac-input" placeholder="{{ _('Purpose of this user group...') }}">
         </div>
 
         <!-- Stream- & Ordner-Zugriff -->
         <div class="rbac-form-group">
-          <label>Stream- & Ordner-Zugriff</label>
+          <label>{{ _('Stream & folder access') }}</label>
           <div style="background: var(--ns-bg-canvas); padding: 14px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; flex-direction: column; gap: 10px;">
             <label class="rbac-checkbox-label" style="font-weight: 600; color: #FFF;">
               <input type="checkbox" id="add-group-access-all" checked onchange="updateChannelMode('add')">
-              <span>Zukünftig neue Streams & Ordner automatisch freischalten</span>
+              <span>{{ _('Automatically unlock future streams & folders') }}</span>
             </label>
             <div id="add-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
-              Aktiv: Neue Streams werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten / sperren.
+              {{ _('Active: new streams are unlocked automatically. Below you can disable / block individual folders.') }}
             </div>
 
             <div id="add-group-channels-box" style="border-top: 1px solid var(--ns-border-subtle); padding-top: 10px; margin-top: 4px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div id="add-channel-title" style="font-size: 11px; font-weight: 700; color: #BB78FF; text-transform: uppercase;">
-                  Einzelne Ordner abschalten / freischalten:
+                  {{ _('Disable / enable individual folders:') }}
                 </div>
                 <div style="display: flex; gap: 6px;">
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', true)">Alle an</button>
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', false)">Alle aus</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', true)">{{ _('All on') }}</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', false)">{{ _('All off') }}</button>
                 </div>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.3); border-radius: var(--ns-radius-sm);">
@@ -461,34 +461,34 @@
 
         <!-- Funktionsrechte -->
         <div class="rbac-form-group">
-          <label>Funktionsrechte</label>
+          <label>{{ _('Feature permissions') }}</label>
           <div class="rbac-checkbox-list">
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="add-perm-view-streams" checked>
-              <span>Streams & Livechat ansehen (can_view_streams)</span>
+              <span>{{ _('View streams & live chat') }} (can_view_streams)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="add-perm-download-archive">
-              <span>Archiv & VODs herunterladen (can_download_archive)</span>
+              <span>{{ _('Download archive & VODs') }} (can_download_archive)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="add-perm-upload-videos">
-              <span>Videos & Medien hochladen (can_upload_videos)</span>
+              <span>{{ _('Upload videos & media') }} (can_upload_videos)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="add-perm-delete-videos">
-              <span>Videos & Aufnahmen löschen (can_delete_videos)</span>
+              <span>{{ _('Delete videos & recordings') }} (can_delete_videos)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="add-perm-manage-users">
-              <span>Benutzer & Gruppen verwalten (can_manage_users)</span>
+              <span>{{ _('Manage users & groups') }} (can_manage_users)</span>
             </label>
           </div>
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-group')">Abbrechen</button>
-        <button type="submit" class="ns-btn ns-btn-primary">Gruppe anlegen</button>
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-group')">{{ _('Cancel') }}</button>
+        <button type="submit" class="ns-btn ns-btn-primary">{{ _('Create group') }}</button>
       </div>
     </form>
   </div>
@@ -498,7 +498,7 @@
 <div id="modal-edit-group" class="rbac-modal-backdrop">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>Gruppe & Berechtigungen bearbeiten</h3>
+      <h3>{{ _('Edit group & permissions') }}</h3>
       <button type="button" class="rbac-modal-close" onclick="closeModal('modal-edit-group')">&times;</button>
     </div>
     <form id="form-edit-group" onsubmit="handleEditGroup(event)">
@@ -506,34 +506,34 @@
       <input type="hidden" id="edit-group-is-system">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>Gruppenname</label>
+          <label>{{ _('Group name') }}</label>
           <input type="text" id="edit-group-name" class="rbac-input" required minlength="2" maxlength="50">
         </div>
         <div class="rbac-form-group">
-          <label>Beschreibung</label>
+          <label>{{ _('Description') }}</label>
           <input type="text" id="edit-group-desc" class="rbac-input">
         </div>
 
         <!-- Stream- & Ordner-Zugriff -->
         <div class="rbac-form-group">
-          <label>Stream- & Ordner-Zugriff</label>
+          <label>{{ _('Stream & folder access') }}</label>
           <div style="background: var(--ns-bg-canvas); padding: 14px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; flex-direction: column; gap: 10px;">
             <label class="rbac-checkbox-label" style="font-weight: 600; color: #FFF;">
               <input type="checkbox" id="edit-group-access-all" onchange="updateChannelMode('edit')">
-              <span>Zukünftig neue Streams & Ordner automatisch freischalten</span>
+              <span>{{ _('Automatically unlock future streams & folders') }}</span>
             </label>
             <div id="edit-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
-              Aktiv: Neue Streams werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten / sperren.
+              {{ _('Active: new streams are unlocked automatically. Below you can disable / block individual folders.') }}
             </div>
 
             <div id="edit-group-channels-box" style="border-top: 1px solid var(--ns-border-subtle); padding-top: 10px; margin-top: 4px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div id="edit-channel-title" style="font-size: 11px; font-weight: 700; color: #BB78FF; text-transform: uppercase;">
-                  Einzelne Ordner abschalten / freischalten:
+                  {{ _('Disable / enable individual folders:') }}
                 </div>
                 <div style="display: flex; gap: 6px;">
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', true)">Alle an</button>
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', false)">Alle aus</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', true)">{{ _('All on') }}</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', false)">{{ _('All off') }}</button>
                 </div>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.3); border-radius: var(--ns-radius-sm);">
@@ -550,34 +550,34 @@
 
         <!-- Funktionsrechte -->
         <div class="rbac-form-group">
-          <label>Funktionsrechte</label>
+          <label>{{ _('Feature permissions') }}</label>
           <div class="rbac-checkbox-list">
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="edit-perm-view-streams">
-              <span>Streams & Livechat ansehen (can_view_streams)</span>
+              <span>{{ _('View streams & live chat') }} (can_view_streams)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="edit-perm-download-archive">
-              <span>Archiv & VODs herunterladen (can_download_archive)</span>
+              <span>{{ _('Download archive & VODs') }} (can_download_archive)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="edit-perm-upload-videos">
-              <span>Videos & Medien hochladen (can_upload_videos)</span>
+              <span>{{ _('Upload videos & media') }} (can_upload_videos)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="edit-perm-delete-videos">
-              <span>Videos & Aufnahmen löschen (can_delete_videos)</span>
+              <span>{{ _('Delete videos & recordings') }} (can_delete_videos)</span>
             </label>
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="edit-perm-manage-users">
-              <span>Benutzer & Gruppen verwalten (can_manage_users)</span>
+              <span>{{ _('Manage users & groups') }} (can_manage_users)</span>
             </label>
           </div>
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-group')">Abbrechen</button>
-        <button type="submit" class="ns-btn ns-btn-primary">Gruppe speichern</button>
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-group')">{{ _('Cancel') }}</button>
+        <button type="submit" class="ns-btn ns-btn-primary">{{ _('Save group') }}</button>
       </div>
     </form>
   </div>
@@ -587,22 +587,22 @@
 <div id="modal-delete-group" class="rbac-modal-backdrop">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>Benutzergruppe löschen</h3>
+      <h3>{{ _('Delete user group') }}</h3>
       <button type="button" class="rbac-modal-close" onclick="closeModal('modal-delete-group')">&times;</button>
     </div>
     <form id="form-delete-group" onsubmit="handleDeleteGroup(event)">
       <input type="hidden" id="delete-group-id">
       <div class="rbac-modal-body">
         <p style="margin: 0; color: var(--ns-text-primary);">
-          Möchten Sie die Gruppe <strong id="delete-group-display" style="color: #F04458;"></strong> wirklich löschen?
+          {% set delete_group_target %}<strong id="delete-group-display" style="color: #F04458;"></strong>{% endset %}{{ _('Do you really want to delete the group %(name)s?', name=delete_group_target) }}
         </p>
         <div style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.3); border-radius: var(--ns-radius-md); padding: 12px; font-size: 12px; color: #A2AEC8;">
-          <strong style="color: #FFF;">Sicherheits-Migration:</strong> Bestehende Mitglieder dieser Gruppe werden automatisch der Standardgruppe <strong>Viewer</strong> zugewiesen.
+          <strong style="color: #FFF;">{{ _('Safety migration:') }}</strong> {{ _('Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>.') }}
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-group')">Abbrechen</button>
-        <button type="submit" class="ns-btn ns-btn-danger">Gruppe löschen</button>
+        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-group')">{{ _('Cancel') }}</button>
+        <button type="submit" class="ns-btn ns-btn-danger">{{ _('Delete group') }}</button>
       </div>
     </form>
   </div>
@@ -653,11 +653,11 @@
     const hint = document.getElementById(`${prefix}-channel-hint`);
     const title = document.getElementById(`${prefix}-channel-title`);
     if (accessAll) {
-      if (hint) hint.textContent = 'Aktiv: Neue Streams & Ordner werden automatisch freigeschaltet. Unten können Sie gezielt einzelne Ordner abschalten (Haken entfernen).';
-      if (title) title.textContent = 'Einzelne Ordner abschalten / sperren:';
+      if (hint) hint.textContent = {{ _('Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them).')|tojson }};
+      if (title) title.textContent = {{ _('Disable / block individual folders:')|tojson }};
     } else {
-      if (hint) hint.textContent = 'Inaktiv: Neue Streams bleiben gesperrt. Nur unten aktivierte Ordner (Haken gesetzt) sind freigeschaltet.';
-      if (title) title.textContent = 'Freizuschaltende Ordner auswählen:';
+      if (hint) hint.textContent = {{ _('Inactive: new streams stay blocked. Only folders checked below are unlocked.')|tojson }};
+      if (title) title.textContent = {{ _('Select folders to unlock:')|tojson }};
     }
   }
 
@@ -722,8 +722,8 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Erstellen des Benutzers');
-      showToast(data.msg || 'Benutzer erfolgreich angelegt');
+      if (!res.ok || !data.ok) throw new Error(data.error || {{ _('Error creating user')|tojson }});
+      showToast(data.msg || {{ _('User created')|tojson }});
       closeModal('modal-add-user');
       setTimeout(() => location.reload(), 600);
     } catch (err) {
@@ -749,8 +749,8 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Aktualisieren des Benutzers');
-      showToast(data.msg || 'Benutzer erfolgreich aktualisiert');
+      if (!res.ok || !data.ok) throw new Error(data.error || {{ _('Error updating user')|tojson }});
+      showToast(data.msg || {{ _('User updated')|tojson }});
       closeModal('modal-edit-user');
       setTimeout(() => location.reload(), 600);
     } catch (err) {
@@ -767,8 +767,8 @@
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Löschen des Benutzers');
-      showToast(data.msg || 'Benutzer erfolgreich gelöscht');
+      if (!res.ok || !data.ok) throw new Error(data.error || {{ _('Error deleting user')|tojson }});
+      showToast(data.msg || {{ _('User deleted')|tojson }});
       closeModal('modal-delete-user');
       setTimeout(() => location.reload(), 600);
     } catch (err) {
@@ -867,8 +867,8 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Anlegen der Gruppe');
-      showToast(data.msg || 'Gruppe erfolgreich angelegt');
+      if (!res.ok || !data.ok) throw new Error(data.error || {{ _('Error creating group')|tojson }});
+      showToast(data.msg || {{ _('Group created')|tojson }});
       closeModal('modal-add-group');
       setTimeout(() => location.reload(), 600);
     } catch (err) {
@@ -921,8 +921,8 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Speichern der Gruppe');
-      showToast(data.msg || 'Gruppe erfolgreich gespeichert');
+      if (!res.ok || !data.ok) throw new Error(data.error || {{ _('Error saving group')|tojson }});
+      showToast(data.msg || {{ _('Group saved')|tojson }});
       closeModal('modal-edit-group');
       setTimeout(() => location.reload(), 600);
     } catch (err) {
@@ -939,8 +939,8 @@
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN }
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Fehler beim Löschen der Gruppe');
-      showToast(data.msg || 'Gruppe erfolgreich gelöscht');
+      if (!res.ok || !data.ok) throw new Error(data.error || {{ _('Error deleting group')|tojson }});
+      showToast(data.msg || {{ _('Group deleted')|tojson }});
       closeModal('modal-delete-group');
       setTimeout(() => location.reload(), 600);
     } catch (err) {

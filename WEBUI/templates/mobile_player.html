@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -10,12 +10,12 @@
 <body class="page-mobile-player landscape-chat-open {{ theme_class }} ns-platform">
   <div class="video-container">
     <div class="overlay-header">
-      <a href="{{ back_url }}" class="back-btn" aria-label="Zurück"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
+      <a href="{{ back_url }}" class="back-btn" aria-label="{{ _('Back') }}"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
       <div class="overlay-header-meta">
         <span class="overlay-stream-name">{{ display_name or streamer }}</span>
       </div>
       <div class="overlay-header-actions">
-        <button type="button" class="mobile-landscape-chat-toggle" id="landscapeChatToggle" aria-label="Chat ausklappen" aria-pressed="false" title="Chat ausklappen">
+        <button type="button" class="mobile-landscape-chat-toggle" id="landscapeChatToggle" aria-label="{{ _('Expand chat') }}" aria-pressed="false" title="{{ _('Expand chat') }}">
           <span class="landscape-chat-toggle-closed-content">
             <svg class="landscape-chat-pill-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -23,13 +23,13 @@
             <svg class="landscape-chat-pill-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            <span class="landscape-chat-pill-text">Chat</span>
+            <span class="landscape-chat-pill-text">{{ _('Chat') }}</span>
           </span>
           <span class="landscape-chat-toggle-open-content">
             <svg class="landscape-chat-collapse-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-            <span class="landscape-chat-collapse-text">Vollbild</span>
+            <span class="landscape-chat-collapse-text">{{ _('Fullscreen') }}</span>
           </span>
           <svg class="landscape-chat-icon landscape-chat-icon-expand" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
             <path d="M19 4v16"/><path d="M14 12H5"/><path d="M9 8l-4 4 4 4"/>
@@ -57,7 +57,7 @@
     {% if not is_live %}
     <div id="vodSlotBusy" class="vod-slot-busy" hidden>
       <div class="vod-slot-busy-card">
-        <strong>VOD gerade voll</strong>
+        <strong>{{ _('All VOD slots are in use') }}</strong>
         <p data-slot-message>{{ vod_slot.message if vod_slot else '' }}</p>
       </div>
     </div>
@@ -67,7 +67,7 @@
   <div class="mobile-vod-details">
     <div class="vod-details-main">
       <div class="vod-title-cluster">
-        <a href="{{ back_url or url_for('index') }}" class="mobile-portrait-back-btn" aria-label="Zurück zur Übersicht" title="Zurück">
+        <a href="{{ back_url or url_for('index') }}" class="mobile-portrait-back-btn" aria-label="{{ _('Back to overview') }}" title="{{ _('Back') }}">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
@@ -75,7 +75,7 @@
         </a>
         <div class="vod-kicker">
           {% if is_live %}
-          <span class="twitch-live-pill">LIVE</span>
+          <span class="twitch-live-pill">{{ _('LIVE') }}</span>
           {% endif %}
         </div>
         <h1 class="vod-display-title">{{ display_name or streamer }}</h1>
@@ -87,12 +87,12 @@
     </div>
     <div class="vod-details-side">
       <dl class="vod-facts">
-        <div><dt>Spiel</dt><dd>{{ vod_category or '—' }}</dd></div>
-        <div><dt>Zuschauer</dt><dd>{% if vod_viewer_count_str %}{{ vod_viewer_count_str }}{% else %}—{% endif %}</dd></div>
+        <div><dt>{{ _('Game') }}</dt><dd>{{ vod_category or '—' }}</dd></div>
+        <div><dt>{{ _('Viewers') }}</dt><dd>{% if vod_viewer_count_str %}{{ vod_viewer_count_str }}{% else %}—{% endif %}</dd></div>
       </dl>
     </div>
-    <div class="vod-file-actions" aria-label="Aktionen">
-      <button type="button" class="vod-inline-tool mobile-action-btn" id="livePlayPauseBtn" aria-label="Wiedergabe pausieren" title="Wiedergabe pausieren">
+    <div class="vod-file-actions" aria-label="{{ _('Actions') }}">
+      <button type="button" class="vod-inline-tool mobile-action-btn" id="livePlayPauseBtn" aria-label="{{ _('Pause playback') }}" title="{{ _('Pause playback') }}">
         <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
           <rect x="6" y="4" width="4" height="16" rx="1"></rect>
           <rect x="14" y="4" width="4" height="16" rx="1"></rect>
@@ -100,10 +100,10 @@
         <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none">
           <polygon points="6 4 20 12 6 20 6 4"></polygon>
         </svg>
-        <span class="btn-label">Pause</span>
+        <span class="btn-label">{{ _('Pause') }}</span>
       </button>
 
-      <button type="button" class="vod-inline-tool mobile-action-btn" id="liveMuteBtn" aria-label="Stummschalten" title="Stummschalten">
+      <button type="button" class="vod-inline-tool mobile-action-btn" id="liveMuteBtn" aria-label="{{ _('Mute') }}" title="{{ _('Mute') }}">
         <svg class="icon-unmute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -113,7 +113,7 @@
           <line x1="23" y1="9" x2="17" y2="15"></line>
           <line x1="17" y1="9" x2="23" y2="15"></line>
         </svg>
-        <span class="btn-label">Ton</span>
+        <span class="btn-label">{{ _('Sound') }}</span>
       </button>
 
       
@@ -125,17 +125,18 @@
   <!-- CHAT REPLAY (TV PARITY: NO COMMENTS ON MOBILE) -->
   <div class="chat-container chat-panel-tabs">
     <div class="twitch-mobile-chat-head chat-tabs-head">
-      <div class="chat-tab-row" role="tablist" aria-label="Chat Replay">
-        <button type="button" class="chat-tab is-active" data-chat-tab="chat" role="tab" aria-selected="true" aria-controls="chatPaneChat" id="chatTabChat">Chat Replay</button>
+      <div class="chat-tab-row" role="tablist" aria-label="{{ _('Chat replay') }}">
+        <button type="button" class="chat-tab is-active" data-chat-tab="chat" role="tab" aria-selected="true" aria-controls="chatPaneChat" id="chatTabChat">{{ _('Chat replay') }}</button>
       </div>
     </div>
 
     <div id="chatPaneChat" class="chat-tab-pane" data-chat-pane="chat" role="tabpanel" aria-labelledby="chatTabChat">
-      <div id="chatEmpty" class="twitch-chat-empty compact">{% if chat_url %}Chat wird geladen…{% else %}Kein aufgezeichneter Chat für dieses VOD vorhanden.{% endif %}</div>
+      <div id="chatEmpty" class="twitch-chat-empty compact">{% if chat_url %}{{ _('Loading chat…') }}{% else %}{{ _('No recorded chat is available for this VOD.') }}{% endif %}</div>
       <div id="chatList" class="chat-list"></div>
     </div>
   </div>
 
+  {% include 'components/js_i18n.html' %}
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1" defer></script>
   <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}" defer></script>
   <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}" defer></script>
@@ -589,12 +590,12 @@
         const data = await res.json();
         if(data.ok && data.url) {
           await navigator.clipboard.writeText(data.url);
-          alert('Link kopiert: ' + data.url);
+          alert({{ _('Link copied:')|tojson }} + ' ' + data.url);
         } else {
-          alert('Fehler beim Teilen: ' + (data.message || 'Unbekannter Fehler'));
+          alert({{ _('Sharing failed:')|tojson }} + ' ' + (data.message || {{ _('Unknown error')|tojson }}));
         }
       } catch(e) {
-        alert('Fehler: ' + e);
+        alert({{ _('Error:')|tojson }} + ' ' + e);
       } finally {
         btn.style.opacity = '1';
       }

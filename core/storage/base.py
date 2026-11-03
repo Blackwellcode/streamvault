@@ -15,6 +15,8 @@ import re
 from dataclasses import dataclass
 from typing import Callable, Iterable, Iterator, Optional
 
+from flask_babel import gettext, lazy_gettext
+
 
 class StorageError(RuntimeError):
     """A provider/configuration error with optional retry semantics."""
@@ -60,14 +62,14 @@ class ProviderField:
     def as_dict(self) -> dict:
         return {
             "key": self.key,
-            "label": self.label,
+            "label": str(self.label),
             "type": self.type,
             "required": self.required,
             "secret": self.secret,
-            "placeholder": self.placeholder,
-            "help": self.help,
+            "placeholder": str(self.placeholder),
+            "help": str(self.help),
             "default": self.default,
-            "choices": [{"value": value, "label": label} for value, label in self.choices],
+            "choices": [{"value": value, "label": str(label)} for value, label in self.choices],
         }
 
 
@@ -87,18 +89,18 @@ def normalize_remote_path(path: str) -> str:
     """Normalise a POSIX-style remote path and reject traversal attempts."""
     raw = str(path or "").replace("\\", "/").strip()
     if "\x00" in raw:
-        raise StorageConfigError("Ungültiger Pfad (Nullbyte).")
+        raise StorageConfigError(gettext("Invalid path (null byte)."))
     parts = []
     for part in raw.split("/"):
         if part in ("", "."):
             continue
         if part == "..":
-            raise StorageConfigError("Ungültiger Pfad (Pfad-Traversal).")
+            raise StorageConfigError(gettext("Invalid path (path traversal)."))
         if any(ord(ch) < 32 for ch in part):
-            raise StorageConfigError("Ungültiger Pfad (Steuerzeichen).")
+            raise StorageConfigError(gettext("Invalid path (control characters)."))
         parts.append(part)
     if not parts:
-        raise StorageConfigError("Der Remote-Pfad darf nicht leer sein.")
+        raise StorageConfigError(gettext("The remote path must not be empty."))
     return "/".join(parts)
 
 
@@ -191,7 +193,7 @@ class StorageProvider:
     description = ""
     config_fields: tuple[ProviderField, ...] = ()
     oauth_supported = False
-    oauth_label = "Konto verbinden"
+    oauth_label = lazy_gettext("Connect account")
     docs_url = ""
 
     def __init__(self, config: dict):
@@ -235,7 +237,7 @@ class StorageProvider:
                 continue
             value = values.get(field.key)
             if value is None or str(value).strip() == "":
-                errors.append(f"{field.label} fehlt.")
+                errors.append(gettext("%(field)s is missing.", field=field.label))
         return errors
 
     @classmethod
@@ -334,11 +336,11 @@ class StorageProvider:
 
     @classmethod
     def oauth_authorize_url(cls, config: dict, redirect_uri: str, state: str) -> str:
-        raise StorageConfigError(f"{cls.label} unterstützt OAuth nicht.")
+        raise StorageConfigError(gettext("%(provider)s does not support OAuth.", provider=cls.label))
 
     @classmethod
     def oauth_exchange_code(cls, config: dict, code: str, redirect_uri: str) -> dict:
-        raise StorageConfigError(f"{cls.label} unterstützt OAuth nicht.")
+        raise StorageConfigError(gettext("%(provider)s does not support OAuth.", provider=cls.label))
 
 
 _SECRET_PATTERNS = (

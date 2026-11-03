@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>StreamVault · Wartungsarbeiten</title>
+    <title>StreamVault · {{ _('Maintenance') }}</title>
     <meta name="robots" content="noindex,nofollow">
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
@@ -44,10 +44,10 @@
             alt=""
             decoding="async"
           >
-          <span class="eyebrow">Work in Progress</span>
+          <span class="eyebrow">{{ _('Work in progress') }}</span>
         </div>
         <h1>StreamVault</h1>
-        <p class="subtitle">Wir bauen gerade am Vault. Gleich geht’s weiter.</p>
+        <p class="subtitle">{{ _('We are working on the vault right now. Back in a moment.') }}</p>
       </section>
 
       <section class="login-panel maintenance-panel">
@@ -61,21 +61,21 @@
             alt=""
             decoding="async"
           >
-          <span>Wartungsarbeiten</span>
+          <span>{{ _('Maintenance') }}</span>
         </div>
         <p class="maintenance-badge">WIP</p>
-        <h2 class="maintenance-title">Gleich wieder da</h2>
+        <h2 class="maintenance-title">{{ _('Back shortly') }}</h2>
         <p class="maintenance-text">
-          {{ maintenance_message or "StreamVault ist wegen aktueller Arbeiten vorübergehend nicht erreichbar. Bitte hab etwas Geduld — die Seite ist später wieder verfügbar." }}
+          {{ maintenance_message or _('StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later.') }}
         </p>
         <p class="maintenance-note">
-          Danke fürs Verständnis. Berechtigte Benutzer können sich über den Login anmelden.
+          {{ _('Thanks for your understanding. Authorized users can sign in via the login page.') }}
         </p>
         <p class="maintenance-actions">
           {% if session.logged_in %}
-          <a class="maintenance-login-link" href="{{ url_for('index') }}">Zurück zum Dashboard</a>
+          <a class="maintenance-login-link" href="{{ url_for('index') }}">{{ _('Back to dashboard') }}</a>
           {% else %}
-          <a class="maintenance-login-link" href="{{ url_for('login') }}">Zum Login</a>
+          <a class="maintenance-login-link" href="{{ url_for('login') }}">{{ _('Go to login') }}</a>
           {% endif %}
         </p>
       </section>

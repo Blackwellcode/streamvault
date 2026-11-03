@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="{{ html_lang }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -19,9 +19,9 @@
             {% if use_hls_proxy %}
             <div id="proxyWait" class="twitch-proxy-wait is-visible" aria-live="polite">
               <div class="twitch-proxy-wait-card">
-                <strong>Live über Server</strong>
-                <p id="proxyWaitText">{% if live_oauth_enabled %}Server lädt Stream (Turbo, ohne Viewer-Liste)…{% else %}Server lädt Stream (ohne Twitch-Account)…{% endif %}</p>
-                <p id="proxyStatus" class="twitch-proxy-status">Verbinden…</p>
+                <strong>{{ _('Live via server') }}</strong>
+                <p id="proxyWaitText">{% if live_oauth_enabled %}{{ _('Server is loading the stream (Turbo, without viewer list)…') }}{% else %}{{ _('Server is loading the stream (without Twitch account)…') }}{% endif %}</p>
+                <p id="proxyStatus" class="twitch-proxy-status">{{ _('Connecting…') }}</p>
               </div>
             </div>
             <video
@@ -41,7 +41,7 @@
             {% else %}
             <iframe
               src="{{ player_url }}"
-              title="LIVE {{ display_name }} (ohne Twitch-Login)"
+              title="{{ _('LIVE %(name)s (without Twitch login)', name=display_name) }}"
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowfullscreen
               credentialless
@@ -53,8 +53,8 @@
           <section class="vod-details" aria-labelledby="watchTitle">
             <div class="vod-details-main">
               <div class="vod-kicker">
-                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>LIVE</span>
-                {% if monitored and not is_mobile %}<span class="twitch-monitored-pill">Überwacht</span>{% endif %}
+                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('LIVE') }}</span>
+                {% if monitored and not is_mobile %}<span class="twitch-monitored-pill">{{ _('Monitored') }}</span>{% endif %}
                 <span class="platform-badge platform-twitch">TW</span>
               </div>
               <h1 id="watchTitle" class="vod-display-title">{{ title or display_name }}</h1>
@@ -62,17 +62,17 @@
             </div>
             <div class="vod-details-side">
               <dl class="vod-facts">
-                <div><dt>Spiel</dt><dd id="watchGame">{{ game_name or '—' }}</dd></div>
-                <div><dt>Zuschauer</dt><dd id="watchViewers">{% if is_live %}{{ viewer_count }}{% else %}—{% endif %}</dd></div>
+                <div><dt>{{ _('Game') }}</dt><dd id="watchGame">{{ game_name or '—' }}</dd></div>
+                <div><dt>{{ _('Viewers') }}</dt><dd id="watchViewers">{% if is_live %}{{ viewer_count }}{% else %}—{% endif %}</dd></div>
               </dl>
-              <div class="vod-file-actions" aria-label="Aktionen">
+              <div class="vod-file-actions" aria-label="{{ _('Actions') }}">
                 <button
                   type="button"
                   id="btnInstantClip"
                   class="vod-inline-tool"
                   data-clip-source="live"
                   data-instant-url="{{ url_for('clip_instant', streamer=proxy_key or channel) }}"
-                >Clip</button>
+                >{{ _('Clip') }}</button>
                 <a
                   href="{{ url_for('editor_live_view', streamer=proxy_key or channel) }}"
                   id="btnOpenEditor"
@@ -81,15 +81,15 @@
                   data-clip-action="{{ url_for('clip_live', streamer=proxy_key or channel) }}"
                   data-clip-streamer="{{ archive_name or proxy_key or channel }}"
                   data-media-url="{{ hls_playlist_url }}"
-                >Zuschneiden</a>
+                >{{ _('Trim') }}</a>
                 {% if archive_name %}
-                <a class="vod-inline-tool" href="{{ url_for('streamer_view', streamer=archive_name) }}">Archiv</a>
+                <a class="vod-inline-tool" href="{{ url_for('streamer_view', streamer=archive_name) }}">{{ _('Archive') }}</a>
                 {% endif %}
                 <a class="vod-inline-tool" href="https://twitch.tv/{{ channel }}" target="_blank" rel="noopener">Twitch</a>
               </div>
             </div>
             {% if switcher and switcher|length > 1 %}
-            <nav class="twitch-switcher" aria-label="Live-Kanäle">
+            <nav class="twitch-switcher" aria-label="{{ _('Live channels') }}">
               <div class="twitch-switcher-list" id="switcherList">
                 {% for s in switcher %}
                 <a class="twitch-switcher-item {% if s.login == channel %}active{% endif %}" href="{{ url_for('twitch_watch', channel=s.login) }}">
@@ -103,20 +103,21 @@
           </section>
 
           <div class="twitch-offline-banner" id="offlineBanner" {% if is_live %}hidden{% endif %}>
-            Dieser Kanal ist gerade nicht live.
+            {{ _('This channel is not live right now.') }}
           </div>
         </div>
 
         <aside class="chat-panel">
           <div class="chat-header">
-            <span>Twitch Live Chat</span>
-            <button id="chatAutoToggle" class="chat-toggle" type="button">Auto</button>
+            <span>{{ _('Twitch live chat') }}</span>
+            <button id="chatAutoToggle" class="chat-toggle" type="button">{{ _('Auto') }}</button>
           </div>
-          <div id="chatEmpty" class="twitch-chat-empty">Chat wird geladen…</div>
+          <div id="chatEmpty" class="twitch-chat-empty">{{ _('Loading chat…') }}</div>
           <div id="chatList" class="chat-list"></div>
         </aside>
       </div>
     </div>
+{% include 'components/js_i18n.html' %}
 <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
 <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
 

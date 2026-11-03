@@ -1,4 +1,5 @@
 (function () {
+  var svT = window.svT || function (s) { return s; };
   var STORAGE_KEY = "streamvault_vod_debug";
   var UI_KEY = "streamvault_vod_debug_ui";
   var MAX_EVENTS = 500;
@@ -228,18 +229,12 @@
     var minutes = Math.max(15, Math.ceil((retryAfter || 3600) / 60));
     var existing = document.getElementById("vodQuotaToast");
     if (existing) {
-      existing.textContent = "Drive-Quota aktiv — nicht erneut Play drücken (verlängert die Sperre). "
-        + "Zurückspulen in den schon geladenen Teil, oder ca. "
-        + minutes
-        + " Min. warten.";
+      existing.textContent = svT("Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min.").replace("%(minutes)s", minutes);
       return;
     }
     var el = document.createElement("div");
     el.id = "vodQuotaToast";
-    el.textContent = "Drive-Quota aktiv — nicht erneut Play drücken (verlängert die Sperre). "
-      + "Zurückspulen in den schon geladenen Teil, oder ca. "
-      + minutes
-      + " Min. warten.";
+    el.textContent = svT("Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min.").replace("%(minutes)s", minutes);
     el.style.cssText = "position:fixed;left:50%;bottom:72px;transform:translateX(-50%);z-index:99998;max-width:min(520px,92vw);padding:10px 14px;border-radius:10px;background:rgba(120,20,20,.94);color:#fff;font:13px/1.4 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.4)";
     document.documentElement.appendChild(el);
     window.setTimeout(function () {

@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}Cloud-Speicher — StreamVault{% endblock %}
-{% block page_title %}Cloud-Speicher{% endblock %}
-{% block page_subtitle %}VOD-Archiv automatisch oder manuell in externe Speicher auslagern{% endblock %}
+{% block title %}{{ _('Cloud storage') }} — StreamVault{% endblock %}
+{% block page_title %}{{ _('Cloud storage') }}{% endblock %}
+{% block page_subtitle %}{{ _('Offload the VOD archive to external storage automatically or manually') }}{% endblock %}
 
 {% block header_actions %}
   <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    Systemsteuerung
+    {{ _('Control panel') }}
   </a>
   <button type="button" class="ns-btn ns-btn-primary" onclick="openStorageModal('modal-add-provider')">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Anbieter hinzufügen
+    {{ _('Add provider') }}
   </button>
 {% endblock %}
 
@@ -90,42 +90,41 @@
   {% if error %}<div class="storage-alert err">{{ error }}</div>{% endif %}
   {% if not encryption_ready %}
   <div class="storage-alert warn">
-    <strong>Verschlüsselung nicht bereit.</strong>
-    Setze <code>VOD_SECRET_KEY</code> (mindestens 16 Zeichen) oder
-    <code>STORAGE_ENCRYPTION_KEY</code>, bevor Zugangsdaten gespeichert werden.
+    <strong>{{ _('Encryption not ready.') }}</strong>
+    {{ _('Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved.', key='<code>VOD_SECRET_KEY</code>'|safe, alt_key='<code>STORAGE_ENCRYPTION_KEY</code>'|safe) }}
   </div>
   {% endif %}
 
   <div class="storage-stats">
     <div class="storage-stat">
-      <div class="label">Anbieter</div>
+      <div class="label">{{ _('Providers') }}</div>
       <div class="value">{{ providers|length }}</div>
-      <div class="sub">{{ providers|selectattr('enabled')|list|length }} aktiv</div>
+      <div class="sub">{{ _('%(count)s active', count=providers|selectattr('enabled')|list|length) }}</div>
     </div>
     <div class="storage-stat">
-      <div class="label">Archiv-Objekte</div>
+      <div class="label">{{ _('Archive objects') }}</div>
       <div class="value">{{ summary.total }}</div>
-      <div class="sub">{{ summary.statuses.get('uploaded', {}).get('count', 0) }} in der Cloud</div>
+      <div class="sub">{{ _('%(count)s in the cloud', count=summary.statuses.get('uploaded', {}).get('count', 0)) }}</div>
     </div>
     <div class="storage-stat">
-      <div class="label">Cloud-Volumen</div>
+      <div class="label">{{ _('Cloud volume') }}</div>
       <div class="value">{{ format_bytes(summary.bytes) }}</div>
-      <div class="sub">laut Objekt-Datenbank</div>
+      <div class="sub">{{ _('according to the object database') }}</div>
     </div>
     <div class="storage-stat">
-      <div class="label">Standard-Ziel</div>
+      <div class="label">{{ _('Default target') }}</div>
       <div class="value" style="font-size:16px;">{{ default_provider.name if default_provider else '–' }}</div>
-      <div class="sub">{{ default_provider.type_label if default_provider else 'Kein Anbieter aktiv' }}</div>
+      <div class="sub">{{ default_provider.type_label if default_provider else _('No active provider') }}</div>
     </div>
   </div>
 
   <section class="storage-panel">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
       <div>
-        <h3>Speicher-Anbieter</h3>
-        <p class="hint">Google Drive, S3-kompatible Dienste, Dropbox, OneDrive und WebDAV. Zugangsdaten werden AES-GCM-verschlüsselt gespeichert.</p>
+        <h3>{{ _('Storage providers') }}</h3>
+        <p class="hint">{{ _('Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption.') }}</p>
       </div>
-      <button type="button" class="storage-btn primary" onclick="openStorageModal('modal-add-provider')">+ Anbieter</button>
+      <button type="button" class="storage-btn primary" onclick="openStorageModal('modal-add-provider')">+ {{ _('Provider') }}</button>
     </div>
 
     {% if providers %}
@@ -138,17 +137,17 @@
             <div class="storage-badges" style="margin-top:7px;">
               <span class="storage-badge type">{{ p.type_label or p.provider_type }}</span>
               {% if p.id == settings.default_provider_id or (not settings.default_provider_id and default_provider and p.id == default_provider.id) %}
-              <span class="storage-badge default">Standard</span>
+              <span class="storage-badge default">{{ _('Default') }}</span>
               {% endif %}
               {% if p.enabled %}
-              <span class="storage-badge enabled">Aktiv</span>
+              <span class="storage-badge enabled">{{ _('Active') }}</span>
               {% else %}
-              <span class="storage-badge disabled">Deaktiviert</span>
+              <span class="storage-badge disabled">{{ _('Disabled') }}</span>
               {% endif %}
               {% if p.last_check_ok %}
-              <span class="storage-badge ok">Verbindung OK</span>
+              <span class="storage-badge ok">{{ _('Connection OK') }}</span>
               {% elif p.last_check_ok is sameas false %}
-              <span class="storage-badge err">Verbindung fehlerhaft</span>
+              <span class="storage-badge err">{{ _('Connection failed') }}</span>
               {% endif %}
             </div>
           </div>
@@ -158,29 +157,29 @@
           {% if p.config_error %}
           <div style="color:#FF8A98;">{{ p.config_error }}</div>
           {% else %}
-          <div><strong>Basis:</strong> {{ p.config.get('base_path') or '–' }}</div>
-          {% if p.config.get('folder_id') %}<div><strong>Ordner-ID:</strong> {{ p.config.get('folder_id') }}</div>{% endif %}
+          <div><strong>{{ _('Base:') }}</strong> {{ p.config.get('base_path') or '–' }}</div>
+          {% if p.config.get('folder_id') %}<div><strong>{{ _('Folder ID:') }}</strong> {{ p.config.get('folder_id') }}</div>{% endif %}
           {% if p.config.get('bucket') %}<div><strong>Bucket:</strong> {{ p.config.get('bucket') }}</div>{% endif %}
-          {% if p.config.get('endpoint_url') %}<div><strong>Endpunkt:</strong> {{ p.config.get('endpoint_url') }}</div>{% endif %}
+          {% if p.config.get('endpoint_url') %}<div><strong>{{ _('Endpoint:') }}</strong> {{ p.config.get('endpoint_url') }}</div>{% endif %}
           {% if p.config.get('base_url') %}<div><strong>URL:</strong> {{ p.config.get('base_url') }}</div>{% endif %}
-          {% if p.last_check_at %}<div><strong>Letzter Test:</strong> {{ format_ts(p.last_check_at) }}</div>{% endif %}
-          {% if p.last_check_message %}<div><strong>Status:</strong> {{ p.last_check_message }}</div>{% endif %}
-          {% if p.last_error %}<div style="color:#FF8A98;"><strong>Fehler:</strong> {{ p.last_error }}</div>{% endif %}
+          {% if p.last_check_at %}<div><strong>{{ _('Last test:') }}</strong> {{ format_ts(p.last_check_at) }}</div>{% endif %}
+          {% if p.last_check_message %}<div><strong>{{ _('Status:') }}</strong> {{ p.last_check_message }}</div>{% endif %}
+          {% if p.last_error %}<div style="color:#FF8A98;"><strong>{{ _('Error:') }}</strong> {{ p.last_error }}</div>{% endif %}
           {% endif %}
         </div>
 
         <div class="storage-actions">
           <form method="post" action="{{ url_for('admin_storage_provider_test', provider_id=p.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="storage-btn">Testen</button>
+            <button type="submit" class="storage-btn">{{ _('Test') }}</button>
           </form>
           {% if p.oauth_supported %}
           <a class="storage-btn" href="{{ url_for('admin_storage_oauth_start', provider_id=p.id) }}">{{ p.oauth_label }}</a>
           {% endif %}
-          <button type="button" class="storage-btn" data-update-url="{{ url_for('admin_storage_provider_update', provider_id=p.id) }}" onclick="openEditProvider({{ p.id }}, this.dataset.updateUrl)">Bearbeiten</button>
-          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" onsubmit="return confirm('Anbieter wirklich entfernen? Die Cloud-Dateien bleiben erhalten.');">
+          <button type="button" class="storage-btn" data-update-url="{{ url_for('admin_storage_provider_update', provider_id=p.id) }}" onclick="openEditProvider({{ p.id }}, this.dataset.updateUrl)">{{ _('Edit') }}</button>
+          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" onsubmit='return confirm({{ _("Really remove the provider? The cloud files are kept.")|tojson }});'>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="storage-btn danger">Entfernen</button>
+            <button type="submit" class="storage-btn danger">{{ _('Remove') }}</button>
           </form>
         </div>
       </article>
@@ -188,43 +187,43 @@
     </div>
     {% else %}
     <div class="storage-empty">
-      Noch kein Cloud-Speicher eingerichtet. Lege einen Anbieter an oder nutze die Konsole:
+      {{ _('No cloud storage configured yet. Add a provider or use the console:') }}
       <code>streamvault storage add --type google_drive --name "Mein Drive"</code>
     </div>
     {% endif %}
   </section>
 
   <section class="storage-panel">
-    <h3>Automatisierung &amp; Aufbewahrung</h3>
-    <p class="hint">Standardmäßig wird nichts automatisch hochgeladen oder gelöscht. Aktiviere die Funktionen bewusst.</p>
+    <h3>{{ _('Automation & retention') }}</h3>
+    <p class="hint">{{ _('By default nothing is uploaded or deleted automatically. Enable these features deliberately.') }}</p>
     <form method="post" action="{{ url_for('admin_storage_settings') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-form-grid">
         <div class="storage-field">
-          <label>Standard-Anbieter</label>
+          <label>{{ _('Default provider') }}</label>
           <select name="default_provider_id">
-            <option value="">Automatisch (erster aktiver)</option>
+            <option value="">{{ _('Automatic (first active)') }}</option>
             {% for p in providers if p.enabled %}
             <option value="{{ p.id }}" {% if settings.default_provider_id == p.id %}selected{% endif %}>{{ p.name }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="storage-field">
-          <label>Lokale Aufbewahrung (Tage)</label>
+          <label>{{ _('Local retention (days)') }}</label>
           <input type="number" min="0" max="3650" name="local_retention_days" value="{{ settings.local_retention_days }}">
-          <span class="help">0 = sofort löschen, sobald die Cloud-Kopie verifiziert ist.</span>
+          <span class="help">{{ _('0 = delete immediately once the cloud copy is verified.') }}</span>
         </div>
         <div class="storage-field">
-          <label>Auto-Sync-Intervall (Minuten)</label>
+          <label>{{ _('Auto-sync interval (minutes)') }}</label>
           <input type="number" min="0" max="10080" name="auto_sync_interval_minutes" value="{{ settings.auto_sync_interval_minutes }}">
-          <span class="help">0 = kein automatischer Sync. Wird nur bei aktivem Auto-Upload genutzt.</span>
+          <span class="help">{{ _('0 = no automatic sync. Only used when auto-upload is enabled.') }}</span>
         </div>
         <div class="storage-field">
-          <label>Aufräum-Intervall (Minuten)</label>
+          <label>{{ _('Cleanup interval (minutes)') }}</label>
           <input type="number" min="0" max="10080" name="cleanup_interval_minutes" value="{{ settings.cleanup_interval_minutes }}">
         </div>
         <div class="storage-field">
-          <label>Max. Dateien pro Sync</label>
+          <label>{{ _('Max. files per sync') }}</label>
           <input type="number" min="1" max="5000" name="max_sync_files" value="{{ settings.max_sync_files }}">
         </div>
       </div>
@@ -232,71 +231,71 @@
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap:12px; margin-top:16px;">
         <label class="storage-check">
           <input type="checkbox" name="auto_upload" value="1" {% if settings.auto_upload %}checked{% endif %}>
-          <span><strong>Automatisch hochladen</strong><br><span class="help">Neue Aufnahmen und periodische Archiv-Syncs in die Cloud übertragen.</span></span>
+          <span><strong>{{ _('Upload automatically') }}</strong><br><span class="help">{{ _('Transfer new recordings and periodic archive syncs to the cloud.') }}</span></span>
         </label>
         <label class="storage-check">
           <input type="checkbox" name="delete_local_after_upload" value="1" {% if settings.delete_local_after_upload %}checked{% endif %}>
-          <span><strong>Lokale Kopien nach Aufbewahrung löschen</strong><br><span class="help">Erst nach erfolgreichem Upload und optionaler Cloud-Verifikation.</span></span>
+          <span><strong>{{ _('Delete local copies after retention') }}</strong><br><span class="help">{{ _('Only after a successful upload and optional cloud verification.') }}</span></span>
         </label>
         <label class="storage-check">
           <input type="checkbox" name="verify_before_local_delete" value="1" {% if settings.verify_before_local_delete %}checked{% endif %}>
-          <span><strong>Cloud-Kopie vor Löschung verifizieren</strong><br><span class="help">Empfohlen. Verhindert Datenverlust bei unvollständigen Uploads.</span></span>
+          <span><strong>{{ _('Verify cloud copy before deletion') }}</strong><br><span class="help">{{ _('Recommended. Prevents data loss from incomplete uploads.') }}</span></span>
         </label>
         <label class="storage-check">
           <input type="checkbox" name="include_chat_logs" value="1" {% if settings.include_chat_logs %}checked{% endif %}>
-          <span><strong>Chat-Logs mitsichern</strong><br><span class="help">Überträgt zusätzlich <code>chat_logs/*.jsonl</code>.</span></span>
+          <span><strong>{{ _('Back up chat logs too') }}</strong><br><span class="help">{{ _('Also transfers %(path)s.', path='<code>chat_logs/*.jsonl</code>'|safe) }}</span></span>
         </label>
         <label class="storage-check">
           <input type="checkbox" name="include_thumbnails" value="1" {% if settings.include_thumbnails %}checked{% endif %}>
-          <span><strong>Thumbnails mitsichern</strong><br><span class="help">Überträgt zusätzlich Vorschaubilder aus <code>.thumbs</code>.</span></span>
+          <span><strong>{{ _('Back up thumbnails too') }}</strong><br><span class="help">{{ _('Also transfers preview images from %(path)s.', path='<code>.thumbs</code>'|safe) }}</span></span>
         </label>
       </div>
 
       <div style="display:flex; justify-content:flex-end; margin-top:16px;">
-        <button type="submit" class="storage-btn primary">Einstellungen speichern</button>
+        <button type="submit" class="storage-btn primary">{{ _('Save settings') }}</button>
       </div>
     </form>
   </section>
 
   <section class="storage-panel">
-    <h3>Manueller Sync</h3>
-    <p class="hint">Der Recorder-Worker führt den Abgleich aus. Bereits hochgeladene unveränderte Dateien werden übersprungen.</p>
+    <h3>{{ _('Manual sync') }}</h3>
+    <p class="hint">{{ _('The recorder worker performs the sync. Unchanged files that were already uploaded are skipped.') }}</p>
     <form method="post" action="{{ url_for('admin_storage_sync') }}" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-field" style="min-width:220px;">
-        <label>Anbieter</label>
+        <label>{{ _('Provider') }}</label>
         <select name="provider_id">
-          <option value="">Standard</option>
+          <option value="">{{ _('Default') }}</option>
           {% for p in providers if p.enabled %}
           <option value="{{ p.id }}">{{ p.name }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="storage-field" style="min-width:220px;">
-        <label>Streamer (optional)</label>
-        <input type="text" name="streamer" placeholder="z. B. montanablack88">
+        <label>{{ _('Streamer (optional)') }}</label>
+        <input type="text" name="streamer" placeholder="{{ _('e.g. montanablack88') }}">
       </div>
-      <button type="submit" class="storage-btn primary">Sync starten</button>
-      <button type="submit" class="storage-btn" formaction="{{ url_for('admin_storage_cleanup') }}">Lokale Aufräumung starten</button>
+      <button type="submit" class="storage-btn primary">{{ _('Start sync') }}</button>
+      <button type="submit" class="storage-btn" formaction="{{ url_for('admin_storage_cleanup') }}">{{ _('Start local cleanup') }}</button>
     </form>
   </section>
 
   <section class="storage-panel">
-    <h3>Archiv-Objekte</h3>
-    <p class="hint">Status, Fortschritt und Aktionen der zuletzt synchronisierten Dateien. „Vergessen“ entfernt nur den Datenbankeintrag.</p>
+    <h3>{{ _('Archive objects') }}</h3>
+    <p class="hint">{{ _('Status, progress and actions of the most recently synced files. “Forget” only removes the database entry.') }}</p>
     {% if objects %}
     <div class="storage-table-wrap">
       <table class="storage-table">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Status</th>
-            <th>Datei</th>
-            <th>Anbieter</th>
-            <th>Größe</th>
-            <th>Lokal</th>
-            <th>Aktualisiert</th>
-            <th>Aktionen</th>
+            <th>{{ _('Status') }}</th>
+            <th>{{ _('File') }}</th>
+            <th>{{ _('Provider') }}</th>
+            <th>{{ _('Size') }}</th>
+            <th>{{ _('Local') }}</th>
+            <th>{{ _('Updated') }}</th>
+            <th>{{ _('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -315,37 +314,37 @@
             </td>
             <td>{{ provider_names.get(o.provider_id, '–') }}</td>
             <td>{{ format_bytes(o.remote_size or o.local_size) }}</td>
-            <td>{% if o.local_exists and not o.local_deleted_at %}<span class="storage-badge enabled">Vorhanden</span>{% else %}<span class="storage-badge disabled">Nur Cloud</span>{% endif %}</td>
+            <td>{% if o.local_exists and not o.local_deleted_at %}<span class="storage-badge enabled">{{ _('Present') }}</span>{% else %}<span class="storage-badge disabled">{{ _('Cloud only') }}</span>{% endif %}</td>
             <td>{{ format_ts(o.updated_at) }}</td>
             <td>
               <div class="actions">
                 {% if o.local_exists and not o.local_deleted_at and o.status != 'uploading' %}
                 <form method="post" action="{{ url_for('admin_storage_object_upload', object_id=o.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="storage-btn">Upload</button>
+                  <button type="submit" class="storage-btn">{{ _('Upload') }}</button>
                 </form>
                 {% endif %}
                 {% if o.status in ('uploaded','restored') and o.local_exists and not o.local_deleted_at %}
-                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" onsubmit="return confirm('Lokale Datei wirklich löschen? Die Cloud-Kopie bleibt erhalten.');">
+                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" onsubmit='return confirm({{ _("Really delete the local file? The cloud copy is kept.")|tojson }});'>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="storage-btn danger">Lokal löschen</button>
+                  <button type="submit" class="storage-btn danger">{{ _('Delete locally') }}</button>
                 </form>
                 {% endif %}
                 {% if o.status in ('uploaded','restored') and not o.local_exists and not o.remote_deleted_at %}
                 <form method="post" action="{{ url_for('admin_storage_object_restore', object_id=o.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="storage-btn">Wiederherstellen</button>
+                  <button type="submit" class="storage-btn">{{ _('Restore') }}</button>
                 </form>
                 {% endif %}
                 {% if not o.remote_deleted_at and not o.local_deleted_at and o.local_exists and o.status in ('uploaded','restored') %}
-                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" onsubmit="return confirm('Cloud-Datei wirklich löschen? Eine lokale Kopie bleibt erhalten.');">
+                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" onsubmit='return confirm({{ _("Really delete the cloud file? A local copy is kept.")|tojson }});'>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="storage-btn danger">Cloud löschen</button>
+                  <button type="submit" class="storage-btn danger">{{ _('Delete from cloud') }}</button>
                 </form>
                 {% endif %}
-                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" onsubmit="return confirm('Nur den Datenbankeintrag entfernen?');">
+                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" onsubmit='return confirm({{ _("Remove only the database entry?")|tojson }});'>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="storage-btn">Vergessen</button>
+                  <button type="submit" class="storage-btn">{{ _('Forget') }}</button>
                 </form>
               </div>
             </td>
@@ -355,16 +354,16 @@
       </table>
     </div>
     {% else %}
-    <div class="storage-empty">Noch keine Archiv-Objekte. Starte einen Sync oder lade eine Aufnahme hoch.</div>
+    <div class="storage-empty">{{ _('No archive objects yet. Start a sync or upload a recording.') }}</div>
     {% endif %}
   </section>
 
   <section class="storage-panel">
-    <h3>OAuth-Hinweis</h3>
+    <h3>{{ _('OAuth note') }}</h3>
     <p class="hint" style="margin-bottom:0;">
-      Für Google Drive, Dropbox und OneDrive muss diese Callback-URL beim Anbieter registriert sein:
+      {{ _('For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:') }}
       <code style="word-break:break-all;">{{ oauth_redirect_uri }}</code><br>
-      Setze bei Bedarf <code>VOD_PUBLIC_BASE</code> auf deine öffentliche HTTPS-Adresse, damit die URL exakt passt.
+      {{ _('If needed, set %(var)s to your public HTTPS address so the URL matches exactly.', var='<code>VOD_PUBLIC_BASE</code>'|safe) }}
     </p>
   </section>
 </div>
@@ -372,14 +371,14 @@
 <div class="storage-modal-backdrop" id="modal-add-provider">
   <div class="storage-modal">
     <div class="storage-modal-head">
-      <h3>Anbieter hinzufügen</h3>
+      <h3>{{ _('Add provider') }}</h3>
       <button type="button" class="storage-close" onclick="closeStorageModal('modal-add-provider')">&times;</button>
     </div>
     <form method="post" action="{{ url_for('admin_storage_provider_add') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-modal-body">
         <div class="storage-field">
-          <label>Anbieter-Typ</label>
+          <label>{{ _('Provider type') }}</label>
           <select id="add-provider-type" name="provider_type" onchange="renderAddFields()">
             {% for entry in catalog %}
             <option value="{{ entry.type_id }}">{{ entry.label }}</option>
@@ -388,18 +387,18 @@
           <span class="help" id="add-provider-description"></span>
         </div>
         <div class="storage-field">
-          <label>Anzeigename</label>
-          <input type="text" name="name" required maxlength="80" placeholder="z. B. Google Drive Archiv">
+          <label>{{ _('Display name') }}</label>
+          <input type="text" name="name" required maxlength="80" placeholder="{{ _('e.g. Google Drive archive') }}">
         </div>
         <div id="add-provider-fields" class="storage-form-grid"></div>
         <label class="storage-check">
           <input type="checkbox" name="enabled" value="1" checked>
-          <span><strong>Sofort aktivieren</strong></span>
+          <span><strong>{{ _('Enable immediately') }}</strong></span>
         </label>
       </div>
       <div class="storage-modal-foot">
-        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-add-provider')">Abbrechen</button>
-        <button type="submit" class="storage-btn primary">Anlegen</button>
+        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-add-provider')">{{ _('Cancel') }}</button>
+        <button type="submit" class="storage-btn primary">{{ _('Create') }}</button>
       </div>
     </form>
   </div>
@@ -408,25 +407,25 @@
 <div class="storage-modal-backdrop" id="modal-edit-provider">
   <div class="storage-modal">
     <div class="storage-modal-head">
-      <h3>Anbieter bearbeiten</h3>
+      <h3>{{ _('Edit provider') }}</h3>
       <button type="button" class="storage-close" onclick="closeStorageModal('modal-edit-provider')">&times;</button>
     </div>
     <form method="post" id="edit-provider-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-modal-body">
         <div class="storage-field">
-          <label>Anzeigename</label>
+          <label>{{ _('Display name') }}</label>
           <input type="text" name="name" id="edit-provider-name" required maxlength="80">
         </div>
         <div id="edit-provider-fields" class="storage-form-grid"></div>
         <label class="storage-check">
           <input type="checkbox" name="enabled" id="edit-provider-enabled" value="1">
-          <span><strong>Aktiviert</strong></span>
+          <span><strong>{{ _('Enabled') }}</strong></span>
         </label>
       </div>
       <div class="storage-modal-foot">
-        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-edit-provider')">Abbrechen</button>
-        <button type="submit" class="storage-btn primary">Speichern</button>
+        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-edit-provider')">{{ _('Cancel') }}</button>
+        <button type="submit" class="storage-btn primary">{{ _('Save') }}</button>
       </div>
     </form>
   </div>
@@ -478,11 +477,11 @@
       input += '</select>';
     } else {
       const type = field.type === 'password' || field.secret ? 'password' : (field.type === 'number' ? 'number' : 'text');
-      const placeholder = field.secret && setFlag ? 'Gespeichert – leer lassen zum Behalten' : (field.placeholder || '');
+      const placeholder = field.secret && setFlag ? {{ _('Saved – leave empty to keep')|tojson }} : (field.placeholder || '');
       input = '<input id="' + id + '" type="' + escapeHtml(type) + '" name="cfg_' + key + '" value="' + (field.secret ? '' : escapeHtml(value)) + '" placeholder="' + escapeHtml(placeholder) + '" autocomplete="' + (field.secret ? 'new-password' : 'off') + '"' + (field.required && !field.secret ? ' required' : '') + '>';
     }
     let help = field.help || '';
-    if (field.secret && setFlag) help = (help ? help + ' ' : '') + 'Ein gespeicherter Wert bleibt erhalten, wenn das Feld leer bleibt.';
+    if (field.secret && setFlag) help = (help ? help + ' ' : '') + {{ _('A saved value is kept if the field is left empty.')|tojson }};
     return '<div class="storage-field"><label>' + escapeHtml(field.label) + (field.required ? ' *' : '') + '</label>' + input + (help ? '<span class="help">' + escapeHtml(help) + '</span>' : '') + '</div>';
   }
 

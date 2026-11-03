@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Streamer Management — StreamVault{% endblock %}
-{% block page_title %}Streamer & Quellen Management{% endblock %}
-{% block page_subtitle %}Aufnahmekanäle konfigurieren und Archiv-Zuordnungen verwalten{% endblock %}
+{% block title %}{{ _('Streamer management') }} — StreamVault{% endblock %}
+{% block page_title %}{{ _('Streamer & source management') }}{% endblock %}
+{% block page_subtitle %}{{ _('Configure recording channels and manage archive assignments') }}{% endblock %}
 
 {% block header_actions %}
   <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    Optionen
+    {{ _('Options') }}
   </a>
   <a href="{{ url_for('index') }}" class="ns-btn ns-btn-secondary">
-    Dashboard
+    {{ _('Dashboard') }}
   </a>
 {% endblock %}
 
@@ -18,40 +18,40 @@
   <!-- Add Channel Panel -->
   <section class="ns-card-panel" style="margin-bottom: 28px;">
     <div class="ns-panel-head">
-      <h2>Neuen Kanal hinzufügen</h2>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">Twitch oder YouTube Support</span>
+      <h2>{{ _('Add new channel') }}</h2>
+      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Twitch or YouTube supported') }}</span>
     </div>
 
     <form method="post" action="{{ url_for('channels_add') }}" style="display: flex; flex-direction: column; gap: 14px;">
       <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex: 2; min-width: min(260px, 100%);">
-          <input name="channel" placeholder="Twitch-Name (z.B. shroud) oder YouTube-URL / @Handle..." required class="ns-input-field" style="width: 100%;">
+          <input name="channel" placeholder="{{ _('Twitch name (e.g. shroud) or YouTube URL / @handle...') }}" required class="ns-input-field" style="width: 100%;">
         </div>
         <div style="flex: 1; min-width: 200px;">
-          <input name="archive_name" placeholder="Ziel-Archivordner (optional)" class="ns-input-field" style="width: 100%;">
+          <input name="archive_name" placeholder="{{ _('Target archive folder (optional)') }}" class="ns-input-field" style="width: 100%;">
         </div>
         <button type="submit" class="ns-btn ns-btn-primary" style="white-space: nowrap;">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Kanal hinzufügen
+          {{ _('Add channel') }}
         </button>
       </div>
 
       <!-- Betriebsmodus Auswahl -->
       <div style="background: rgba(11, 18, 32, 0.65); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-        <span style="font-size: 12px; font-weight: 700; color: #BB78FF;">BETRIEBSMODUS:</span>
+        <span style="font-size: 12px; font-weight: 700; color: #BB78FF;">{{ _('OPERATING MODE:') }}</span>
         <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #FFF; cursor: pointer; margin: 0;">
           <input type="radio" name="mode" value="record" checked style="accent-color: #BB78FF; cursor: pointer;">
-          <span>🔴 <strong>Vollmodus:</strong> Aufnahme + Live-Stream & Discord-Benachrichtigung</span>
+          <span>🔴 <strong>{{ _('Full mode:') }}</strong> {{ _('Recording + live stream & Discord notification') }}</span>
         </label>
         <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A2AEC8; cursor: pointer; margin: 0;">
           <input type="radio" name="mode" value="live_only" style="accent-color: #48D6A2; cursor: pointer;">
-          <span>📡 <strong>Nur Live & Discord:</strong> Benachrichtigung + Live-Stream (Keine Aufnahme)</span>
+          <span>📡 <strong>{{ _('Live & Discord only:') }}</strong> {{ _('Notification + live stream (no recording)') }}</span>
         </label>
       </div>
     </form>
     <p style="margin: 10px 0 0; font-size: 12px; color: var(--ns-text-muted);">
-      Tipp: Ein gemeinsamer Archivordner fasst Twitch- und YouTube-Streams desselben Streamers zusammen.
+      {{ _('Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer.') }}
     </p>
 
     {% if channels_msg %}
@@ -64,8 +64,8 @@
   <!-- Channel Groups & Configured Sources -->
   <section>
     <div class="ns-section-header">
-      <h2>Konfigurierte Streamer & Quellen</h2>
-      <span style="font-size: 12px; color: var(--ns-text-muted);">Aktive Überwachung durch den Recorder-Core</span>
+      <h2>{{ _('Configured streamers & sources') }}</h2>
+      <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Actively monitored by the recorder core') }}</span>
     </div>
 
     {% if channel_groups %}
@@ -73,8 +73,8 @@
       {% for archive, configs in channel_groups.items() %}
       <div class="ns-card-panel" style="padding: 16px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--ns-border-subtle); padding-bottom: 8px;">
-          <strong style="font-size: 15px; color: var(--ns-text-primary); font-family: var(--ns-font-mono);">Archiv: {{ archive }}</strong>
-          <span style="font-size: 11px; color: var(--ns-text-muted);">{{ configs|length }} Quelle(n)</span>
+          <strong style="font-size: 15px; color: var(--ns-text-primary); font-family: var(--ns-font-mono);">{{ _('Archive: %(name)s', name=archive) }}</strong>
+          <span style="font-size: 11px; color: var(--ns-text-muted);">{{ ngettext('%(num)d source', '%(num)d sources', configs|length) }}</span>
         </div>
 
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -90,32 +90,32 @@
 
             <!-- Mode Badge & Quick Toggle -->
             {% if c.record %}
-            <span style="font-size: 10px; font-weight: 700; color: #F04458; background: rgba(240,68,88,0.15); border: 1px solid rgba(240,68,88,0.3); padding: 2px 6px; border-radius: 4px;" title="VODs werden auf Festplatte aufgezeichnet">
-              🔴 AUFNAHME
+            <span style="font-size: 10px; font-weight: 700; color: #F04458; background: rgba(240,68,88,0.15); border: 1px solid rgba(240,68,88,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('VODs are recorded to disk') }}">
+              🔴 {{ _('RECORDING') }}
             </span>
             <form method="post" action="{{ url_for('source_record_toggle', channel=c.name) }}" style="margin: 0;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="enabled" value="0">
-              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 7px; font-size: 10px;" title="Aufnahme deaktivieren (nur noch Live & Discord)">
-                Auf Live umschalten
+              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 7px; font-size: 10px;" title="{{ _('Disable recording (live & Discord only)') }}">
+                {{ _('Switch to live only') }}
               </button>
             </form>
             {% else %}
-            <span style="font-size: 10px; font-weight: 700; color: #48D6A2; background: rgba(72,214,162,0.15); border: 1px solid rgba(72,214,162,0.3); padding: 2px 6px; border-radius: 4px;" title="Nur Live-Stream und Discord-Alerts, keine Festplattenaufnahme">
-              📡 NUR LIVE & DISCORD
+            <span style="font-size: 10px; font-weight: 700; color: #48D6A2; background: rgba(72,214,162,0.15); border: 1px solid rgba(72,214,162,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('Live stream and Discord alerts only, no disk recording') }}">
+              📡 {{ _('LIVE & DISCORD ONLY') }}
             </span>
             <form method="post" action="{{ url_for('source_record_toggle', channel=c.name) }}" style="margin: 0;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="enabled" value="1">
-              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 7px; font-size: 10px;" title="Aufnahme für diesen Kanal aktivieren">
-                Aufnahme aktivieren
+              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 7px; font-size: 10px;" title="{{ _('Enable recording for this channel') }}">
+                {{ _('Enable recording') }}
               </button>
             </form>
             {% endif %}
 
             <form method="post" action="{{ url_for('channels_remove', channel=c.name) }}" style="margin: 0; display: flex; align-items: center;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="ns-action-btn-mini" style="width: 22px; height: 22px; color: #ef4444; border: none; background: transparent; cursor: pointer;" title="Kanal entfernen" onclick="return confirm('Kanal {{ c.name }} wirklich entfernen?');">
+              <button type="submit" class="ns-action-btn-mini" style="width: 22px; height: 22px; color: #ef4444; border: none; background: transparent; cursor: pointer;" title="{{ _('Remove channel') }}" onclick='return confirm({{ _("Really remove channel %(name)s?", name=c.name|safe)|tojson }});'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </form>
@@ -136,7 +136,7 @@
           {% endif %}
           <form method="post" action="{{ url_for('channels_remove', channel=c) }}" style="margin: 0;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="ns-action-btn-mini" style="width: 22px; height: 22px; color: #ef4444; border: none; background: transparent; cursor: pointer;" title="Entfernen" onclick="return confirm('Kanal {{ c }} entfernen?');">
+            <button type="submit" class="ns-action-btn-mini" style="width: 22px; height: 22px; color: #ef4444; border: none; background: transparent; cursor: pointer;" title="{{ _('Remove') }}" onclick='return confirm({{ _("Remove channel %(name)s?", name=c|safe)|tojson }});'>
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </form>
@@ -146,7 +146,7 @@
     </div>
     {% else %}
     <div class="ns-card-panel" style="text-align: center; padding: 32px; color: var(--ns-text-muted);">
-      Keine aktiven Überwachungskanäle vorhanden.
+      {{ _('No monitored channels configured.') }}
     </div>
     {% endif %}
   </section>

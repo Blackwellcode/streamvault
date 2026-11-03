@@ -132,7 +132,7 @@
       chatPolls += 1;
       if (!Array.isArray(data) || !data.length) {
         if (chatEmpty && !chatEmpty.hidden && chatPolls >= 2 && renderedChatKeys.size === 0) {
-          chatEmpty.textContent = 'Kein Live-Chat verfügbar. Chat erscheint, wenn StreamVault den Stream aufnimmt.';
+          chatEmpty.textContent = {{ _('No live chat available. Chat appears when StreamVault records the stream.')|tojson }};
         }
         return;
       }

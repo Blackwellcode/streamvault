@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+  var svT = window.svT || function (s) { return s; };
 
   const nativeIdPattern = /^[A-Za-z0-9_-]{1,64}$/;
   const badgePartPattern = /^[A-Za-z0-9_-]{1,64}$/;
@@ -463,8 +464,9 @@
     if (!reward || typeof reward !== 'object') return '';
     const title = String(reward.title || 'Channel Points').trim() || 'Channel Points';
     const cost = Number(reward.cost);
-    let html = '<span class="chat-redeem-badge">Punkte</span> ';
-    html += `<span class="chat-redeem-title">„${escapeHtml(title)}“ eingelöst</span>`;
+    let html = '<span class="chat-redeem-badge">' + escapeHtml(svT('Points')) + '</span> ';
+    const redeemed = escapeHtml(svT('Redeemed “%(title)s”')).replace('%(title)s', () => escapeHtml(title));
+    html += `<span class="chat-redeem-title">${redeemed}</span>`;
     if (Number.isFinite(cost) && cost > 0) {
       html += ` <span class="chat-redeem-cost">${escapeHtml(String(cost))}</span>`;
     }
