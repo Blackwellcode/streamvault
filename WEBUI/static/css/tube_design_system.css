@@ -4280,12 +4280,21 @@ aside.ns-command-rail *::after,
   margin-bottom: 14px;
 }
 
-.nebula-login-h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #FFF;
+/* Legacy `body.page-login h1` rules in style.css force 42–78px with !important;
+   the card heading must stay inside the 440px login card. */
+body.page-login .nebula-login-h1 {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: #FFF !important;
   margin: 0 0 6px 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.01em !important;
+  text-shadow: none !important;
+  overflow-wrap: anywhere;
+}
+
+body.page-login .nebula-login-h1::after {
+  content: none !important;
 }
 
 .nebula-login-sub {

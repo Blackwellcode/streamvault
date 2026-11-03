@@ -713,6 +713,21 @@ class DeploymentNeutralDefaultsTests(IsolatedBaseTest):
         self.assertIn("VOD_BACKUP_SCRIPT", urllib.parse.unquote(response.headers["Location"]))
 
 
+class AssetVersionTests(IsolatedBaseTest):
+    """?v= must change whenever a static file changes, without a manual bump."""
+
+    def test_version_follows_static_files(self):
+        from WEBUI import webui
+        static = self.base / "static"
+        (static / "css").mkdir(parents=True)
+        style = static / "css" / "app.css"
+        style.write_text("h1{font-size:24px}", encoding="utf-8")
+        first = webui._compute_asset_version(str(static))
+        self.assertEqual(first, webui._compute_asset_version(str(static)))
+        style.write_text("h1{font-size:28px;}", encoding="utf-8")
+        self.assertNotEqual(first, webui._compute_asset_version(str(static)))
+
+
 class LoadJsonTests(IsolatedBaseTest):
     """A corrupt state file must survive instead of being overwritten by the default."""
 
@@ -746,10 +761,11 @@ class LoadJsonTests(IsolatedBaseTest):
             self.webui.load_json(str(path), {})
 
 
-class LegalPagesTests(unittest.TestCase):
+class LegalPagesTests(IsolatedBaseTest):
     """The shipped content/*.md must parse; /agb and /datenschutz returned 500 before."""
 
     def setUp(self):
+        super().setUp()  # own database, so the admin session below resolves
         # tube_terms resolves its paths from config.APP_DIR at import time; another
         # test may have imported it while APP_DIR pointed at a temp dir.
         from core import tube_terms
@@ -769,6 +785,7 @@ class LegalPagesTests(unittest.TestCase):
 
     def test_legal_pages_render(self):
         from WEBUI import webui
+        webui.ensure_admin_user()
         webui.app.config.update(TESTING=True)
         client = webui.app.test_client()
         with client.session_transaction() as sess:

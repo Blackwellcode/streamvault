@@ -2,6 +2,7 @@
 
 import bisect
 import glob
+import hashlib
 import ipaddress
 import json
 import logging
@@ -245,7 +246,30 @@ THEME_OPTIONS = [
     {"key": "ocean", "name": "Ocean Blue"},
 ]
 VALID_THEME_KEYS = {theme["key"] for theme in THEME_OPTIONS}
-ASSET_VERSION = "20261024-instant-launch"
+def _compute_asset_version(static_dir):
+    """Cache-busting token for ?v= on static URLs, derived from the shipped files.
+
+    Any edited, added or removed file under WEBUI/static changes the token, so
+    browsers fetch new CSS/JS after an update without a manual version bump.
+    """
+    digest = hashlib.sha1()
+    for root, dirs, files in os.walk(static_dir):
+        dirs.sort()
+        for name in sorted(files):
+            path = os.path.join(root, name)
+            try:
+                st = os.stat(path)
+            except OSError as exc:
+                logging.warning("Asset version: cannot stat %s: %s", path, exc)
+                continue
+            rel = os.path.relpath(path, static_dir).replace(os.sep, "/")
+            digest.update(f"{rel}:{st.st_size}:{st.st_mtime_ns};".encode("utf-8"))
+    return digest.hexdigest()[:12]
+
+
+ASSET_VERSION = os.environ.get("VOD_ASSET_VERSION", "").strip() or _compute_asset_version(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+)
 UI_FONTS_HREF = (
     "https://fonts.googleapis.com/css2?"
     "family=IBM+Plex+Mono:wght@400;500;600&"
