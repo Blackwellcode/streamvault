@@ -601,6 +601,28 @@ class SmartTvModeRemovedTests(unittest.TestCase):
         self.assertEqual(site_maintenance._default_state()["bypass_users"], [])
 
 
+class LegalPagesTests(unittest.TestCase):
+    """The shipped content/*.md must parse; /agb and /datenschutz returned 500 before."""
+
+    def test_shipped_documents_parse(self):
+        from core import tube_terms
+        self.assertTrue(tube_terms.load_document(force=True)["terms_version"])
+        self.assertTrue(tube_terms.load_privacy_document(force=True)["privacy_version"])
+        self.assertIn("privacy_url", tube_terms.terms_web_context(site_url=""))
+
+    def test_legal_pages_render(self):
+        from WEBUI import webui
+        webui.app.config.update(TESTING=True)
+        client = webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        for path in ("/agb", "/datenschutz"):
+            with self.subTest(path=path):
+                self.assertEqual(client.get(path).status_code, 200)
+
+
 class ClientIpTests(unittest.TestCase):
     """Rate limits and bans key on get_client_ip(); it must not be spoofable."""
 

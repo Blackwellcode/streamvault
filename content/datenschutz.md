@@ -1,4 +1,8 @@
-# Datenschutzerklärung
+---
+privacyVersion: 2026-11-03-v1
+effectiveDate: 2026-11-03
+title: Datenschutzerklärung – StreamVault
+---
 
 ## 1. Erhebung und Speicherung von Daten
 Bei der Nutzung dieses Systems werden Zugriffsdaten (IP-Adresse, Zeitpunkt des Abrufs, aufgerufene Seiten) zur Gewährleistung der Systemsicherheit und des störungsfreien Betriebs in lokalen Protokolldateien erfasst.
