@@ -376,7 +376,8 @@ body.page-admin .task-queue-panel {
 
 .task-queue-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Four across where they fit; long translated labels wrap to two rows on phones. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 96px), 1fr));
   gap: 8px;
   margin: 16px 0;
 }
