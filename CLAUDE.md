@@ -31,7 +31,7 @@ pip install -r requirements.txt
 ### Running Tests
 The test suite uses Python's standard `unittest` discovery:
 ```bash
-# Run entire test suite (all 126 tests)
+# Run entire test suite (all 167 tests)
 python -m unittest discover -s tests -p "test_*.py" -v
 
 # Run specific test modules
@@ -46,6 +46,9 @@ python -m unittest tests.test_recorder_reliability.DiskSpaceGuardTests.test_disk
 ### Syntax & Compilation Verification
 Always verify Python syntax before committing:
 ```bash
+# Lint (config in pyproject.toml; CI runs the same check)
+ruff check .
+
 # Single file
 python -m py_compile recorder/Streamrecorder.py
 
@@ -103,7 +106,7 @@ nachtsilo-hub/
 ├── scripts/
 │   └── streamvault_vps.sh      # VPS deploy/rollback + Linux validation (supervisor, X-Accel, HLS RAM disk)
 └── tests/
-    ├── test_recorder_reliability.py  # 33 tests: process reaping, locking, folder safety, supervisor parsing
+    ├── test_recorder_reliability.py  # 74 tests: process reaping, locking, folder safety, health, client IP, regressions
     └── test_storage.py               # 93 tests: crypto, providers, retention, error masking
 ```
 
