@@ -831,6 +831,23 @@ class LegalPagesTests(IsolatedBaseTest):
         self.assertTrue(tube_terms.load_privacy_document(force=True)["privacy_version"])
         self.assertIn("privacy_url", tube_terms.terms_web_context(site_url=""))
 
+    def test_english_translations_match_binding_versions(self):
+        from core import tube_rules, tube_terms
+        content = Path(__file__).resolve().parents[1] / "content"
+        with mock.patch.object(tube_terms, "AGB_PATH", str(content / "agb.md")), \
+                mock.patch.object(tube_terms, "PRIVACY_PATH", str(content / "datenschutz.md")):
+            de_terms = tube_terms.load_document(force=True)
+            en_terms = tube_terms.load_document(lang="en")
+            self.assertEqual(en_terms["terms_version"], de_terms["terms_version"])
+            self.assertNotEqual(en_terms["body_md"], de_terms["body_md"])
+            de_priv = tube_terms.load_privacy_document(force=True)
+            fr_priv = tube_terms.load_privacy_document(lang="fr")  # non-German -> English
+            self.assertEqual(fr_priv["privacy_version"], de_priv["privacy_version"])
+            self.assertIn("Privacy", fr_priv["title"])
+        self.assertEqual(len(tube_rules.RULES_EN["items"]), len(tube_rules.RULES_ITEMS))
+        for phrase in ("AKZEPTIERE", "accept"):
+            tube_rules.validate_accept_input(phrase)  # both languages' phrases are valid
+
     def test_legal_pages_render(self):
         from WEBUI import webui
         webui.ensure_admin_user()
