@@ -3482,7 +3482,7 @@ msgstr ""
 msgid "e.g. john_doe"
 msgstr ""
 
-msgid "e.g. montanablack88"
+msgid "e.g. channel_name"
 msgstr ""
 
 #, python-format

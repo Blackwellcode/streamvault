@@ -2,7 +2,7 @@
 
 Usage:
     python -m core.storage.cli list
-    python -m core.storage.cli add --type google_drive --name "Mein Drive"
+    python -m core.storage.cli add --type google_drive --name "My Drive"
     python -m core.storage.cli test 1
     python -m core.storage.cli sync
     python -m core.storage.cli upload /pfad/zum/video.mp4
@@ -87,7 +87,7 @@ def _cmd_list(args):
         return 0
     if not rows:
         _print("Keine Cloud-Speicher konfiguriert.")
-        _print("Anlegen: python -m core.storage.cli add --type google_drive --name 'Mein Drive'")
+        _print("Anlegen: python -m core.storage.cli add --type google_drive --name 'My Drive'")
         return 0
     settings = service.get_settings()
     default_id = settings.get("default_provider_id")

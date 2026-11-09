@@ -273,8 +273,10 @@
           </a>
           <div class="ns-video-subline">
             <span>{{ f.date_str }}</span>
+            {% if f.size_str %}
             <span>•</span>
             <span>{{ f.size_str }}</span>
+            {% endif %}
             {% if f.category %}
             <span>•</span>
             <span style="color: #BB78FF;">{{ _('Game: %(category)s', category=f.category) }}</span>

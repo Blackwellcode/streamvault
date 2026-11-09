@@ -3356,8 +3356,8 @@ msgstr "예: alice, bob"
 msgid "e.g. john_doe"
 msgstr "예: hong_gildong"
 
-msgid "e.g. montanablack88"
-msgstr "예: montanablack88"
+msgid "e.g. channel_name"
+msgstr "예: channel_name"
 
 #, python-format
 msgid "effective from %(date)s"
