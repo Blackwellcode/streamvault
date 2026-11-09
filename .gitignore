@@ -63,3 +63,4 @@ Thumbs.db
 *.swp
 *.bak
 *.bak_*
+/demo-data/
