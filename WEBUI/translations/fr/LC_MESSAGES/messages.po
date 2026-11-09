@@ -3362,8 +3362,8 @@ msgstr "ex. alice, bob"
 msgid "e.g. john_doe"
 msgstr "ex. jean_dupont"
 
-msgid "e.g. montanablack88"
-msgstr "ex. montanablack88"
+msgid "e.g. channel_name"
+msgstr "ex. channel_name"
 
 #, python-format
 msgid "effective from %(date)s"

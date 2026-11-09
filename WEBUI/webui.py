@@ -1829,9 +1829,11 @@ def format_bytes(num_bytes):
 
 def storage_info():
     try:
-        st = os.statvfs(BASE_DIR)
-        total = st.f_frsize * st.f_blocks
-        free = st.f_frsize * st.f_bavail
+        # shutil.disk_usage works on every platform; free is the space available
+        # to unprivileged users (statvfs f_bavail on POSIX).
+        usage = shutil.disk_usage(BASE_DIR)
+        total = usage.total
+        free = usage.free
         used = total - free
         pct = (used / total) * 100 if total else 0
         return {
@@ -1842,7 +1844,8 @@ def storage_info():
             "total_str": format_bytes(total),
             "free_str": format_bytes(free),
         }
-    except Exception:
+    except OSError as exc:
+        logging.warning("Storage info unavailable for %s: %s", BASE_DIR, exc)
         return {
             "total": 0,
             "free": 0,

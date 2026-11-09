@@ -776,6 +776,49 @@ class AssetVersionTests(IsolatedBaseTest):
         self.assertNotEqual(first, webui._compute_asset_version(str(static)))
 
 
+class StorageInfoTests(IsolatedBaseTest):
+    """Disk usage must work on every platform and log when it cannot be read."""
+
+    def test_reports_real_disk_values(self):
+        from WEBUI import webui
+        with mock.patch.object(webui, "BASE_DIR", str(self.base)):
+            info = webui.storage_info()
+        self.assertGreater(info["total"], 0)
+        self.assertNotEqual(info["free_str"], "N/A")
+
+    def test_unreadable_path_is_logged(self):
+        from WEBUI import webui
+        missing = str(self.base / "does-not-exist")
+        with mock.patch.object(webui, "BASE_DIR", missing), self.assertLogs(level="WARNING"):
+            info = webui.storage_info()
+        self.assertEqual(info["total_str"], "N/A")
+
+
+class DemoSeedTests(IsolatedBaseTest):
+    """The demo seeder must never write into an existing, unrelated archive."""
+
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+        path = Path(__file__).resolve().parents[1] / "scripts" / "demo_seed.py"
+        spec = importlib.util.spec_from_file_location("demo_seed", path)
+        cls.demo_seed = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.demo_seed)
+
+    def test_refuses_non_empty_foreign_directory(self):
+        (self.base / "realchannel").mkdir()
+        with self.assertRaises(SystemExit):
+            self.demo_seed.check_target(str(self.base))
+
+    def test_accepts_empty_and_own_directory(self):
+        self.demo_seed.check_target(str(self.base / "fresh"))
+        own = self.base / "own"
+        own.mkdir()
+        (own / self.demo_seed.MARKER_FILE).write_text("x", encoding="utf-8")
+        (own / "pixelharbor").mkdir()
+        self.demo_seed.check_target(str(own))
+
+
 class LoadJsonTests(IsolatedBaseTest):
     """A corrupt state file must survive instead of being overwritten by the default."""
 

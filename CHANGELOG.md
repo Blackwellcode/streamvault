@@ -44,8 +44,18 @@ All notable changes to this project are documented here. The format follows
   tabs and tables.
 - Browsers kept stale CSS/JS after updates; static URLs now carry a version
   derived from the shipped files.
+- Storage figures showed "N/A" on non-Linux hosts and swallowed errors
+  silently; they now use `shutil.disk_usage` and log failures.
+- The VOD chat panel was always labelled "Twitch Chat", untranslated, also
+  for YouTube recordings.
+- The sidebar language switcher was cut off to "A…"; it now shows a globe and
+  the language code.
+- Channel pages showed a stray separator when a recording had no size.
 
 ### Added
 
 - GitHub Actions CI (Python 3.10–3.12, ruff, unit tests, shell syntax),
   Dependabot, contribution and security guidelines.
+- Web UI in 12 languages, chosen from the browser language or the switcher.
+- `scripts/demo_seed.py` creates a sample archive for trying StreamVault
+  without recording anything.

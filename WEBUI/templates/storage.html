@@ -188,7 +188,7 @@
     {% else %}
     <div class="storage-empty">
       {{ _('No cloud storage configured yet. Add a provider or use the console:') }}
-      <code>streamvault storage add --type google_drive --name "Mein Drive"</code>
+      <code>streamvault storage add --type google_drive --name "My Drive"</code>
     </div>
     {% endif %}
   </section>
@@ -273,7 +273,7 @@
       </div>
       <div class="storage-field" style="min-width:220px;">
         <label>{{ _('Streamer (optional)') }}</label>
-        <input type="text" name="streamer" placeholder="{{ _('e.g. montanablack88') }}">
+        <input type="text" name="streamer" placeholder="{{ _('e.g. channel_name') }}">
       </div>
       <button type="submit" class="storage-btn primary">{{ _('Start sync') }}</button>
       <button type="submit" class="storage-btn" formaction="{{ url_for('admin_storage_cleanup') }}">{{ _('Start local cleanup') }}</button>
