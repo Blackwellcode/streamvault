@@ -29,9 +29,9 @@ review; corrections are very welcome (see [CONTRIBUTING.md](CONTRIBUTING.md#tran
 | :---: | :---: |
 | ![Dashboard](docs/screenshots/dashboard.png) | ![VOD player](docs/screenshots/vod_player.png) |
 
-| Channel archive | Users and groups |
+| Channel archive | Cloud storage |
 | :---: | :---: |
-| ![Channel archive](docs/screenshots/streamer_hub.png) | ![User management](docs/screenshots/admin_users.png) |
+| ![Channel archive](docs/screenshots/streamer_hub.png) | ![Cloud storage](docs/screenshots/cloud_storage.png) |
 
 | System status | Phone layout |
 | :---: | :---: |
@@ -76,6 +76,26 @@ flowchart LR
 ```
 
 Three services run side by side: `recorder`, `worker` and `webui`.
+
+## Try it locally
+
+You can look around without recording anything. `scripts/demo_seed.py`
+renders a few short sample recordings with chat (FFmpeg test sources, no
+third-party content) into an empty directory:
+
+```bash
+git clone https://github.com/Blackwellcode/streamvault.git && cd streamvault
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+python scripts/demo_seed.py --base-dir ./demo-data
+VOD_BASE_DIR=./demo-data VOD_USE_X_ACCEL=false \
+VOD_USER=admin VOD_PASS='choose-a-password' \
+VOD_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')" \
+python -m WEBUI.webui --host 127.0.0.1 --port 8080
+```
+
+Requires FFmpeg on the `PATH`. Open `http://127.0.0.1:8080` and sign in with
+the `VOD_USER` and `VOD_PASS` values from the command.
 
 ## Installation
 
@@ -140,7 +160,7 @@ The full list with explanations is in [.env.example](.env.example).
 
 ## Cloud storage
 
-Add providers in the web UI (**Systemsteuerung → Cloud-Speicher**) or on the
+Add providers in the web UI (**Options → Cloud storage**) or on the
 command line:
 
 ```bash
