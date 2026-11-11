@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-11 18:23+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
@@ -144,6 +144,64 @@ msgstr "%(num)s gün"
 #, python-format
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s OAuth desteklemiyor."
+
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "%(user)s, Prime aboneliğinden Seviye %(tier)s aboneliğine geçti!"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "%(user)s, %(charity)s için %(amount)s bağışladı!"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "%(user)s, %(recipient)s adlı kullanıcıya %(months)s aylık Seviye %(tier)s hediye etti!"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "%(user)s, %(recipient)s adlı kullanıcıya Seviye %(tier)s abonelik hediye etti!"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "%(user)s, %(other)s tarafından hediye edilen aboneliği sürdürüyor!"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "%(user)s topluluğa %(num)d adet Seviye %(tier)s abonelik hediye ediyor!"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s burada yeni. Merhaba deyin!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "%(user)s, %(other)s tarafından gelen hediyeyi %(recipient)s adlı kullanıcıya aktarıyor!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "%(user)s, %(other)s tarafından gelen hediyeyi topluluğa aktarıyor!"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "%(user)s, %(num)d izleyiciyle baskın yapıyor!"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "%(user)s yeni bir %(bits)s Bits rozeti kazandı!"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s, Seviye %(tier)s ile abone oldu."
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s, Prime ile abone oldu."
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "%(user)s art arda %(num)s yayın izledi ve bir izleme serisi başlattı!"
 
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = bulut kopyası doğrulanır doğrulanmaz hemen sil."
@@ -286,8 +344,14 @@ msgstr "%(path)s de aktarılır."
 msgid "Also transfers preview images from %(path)s."
 msgstr "%(path)s içindeki önizleme görselleri de aktarılır."
 
+msgid "An anonymous user"
+msgstr "Anonim bir kullanıcı"
+
 msgid "An upload for this file is already running."
 msgstr "Bu dosya için zaten bir yükleme çalışıyor."
+
+msgid "Announcement"
+msgstr "Duyuru"
 
 msgid "Anonymous"
 msgstr "Anonim"
@@ -545,6 +609,9 @@ msgstr "Sohbet geçmişi: %(user)s"
 
 msgid "Chat messages"
 msgstr "Sohbet mesajları"
+
+msgid "Chat notice"
+msgstr "Sohbet bildirimi"
 
 msgid "Chat replay"
 msgstr "Sohbet tekrarı"
@@ -1161,6 +1228,9 @@ msgstr "Sohbeti filtrele..."
 
 msgid "First"
 msgstr "İlk"
+
+msgid "First message"
+msgstr "İlk mesaj"
 
 msgid "First page"
 msgstr "İlk sayfa"
@@ -1997,6 +2067,10 @@ msgstr "Sayfalama"
 msgid "Pagination (top)"
 msgstr "Sayfalama (üst)"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "%(months)s ay peşin ödendi."
+
 msgid "Password"
 msgstr "Şifre"
 
@@ -2317,6 +2391,10 @@ msgid "Repeat password"
 msgstr "Şifreyi tekrarla"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "@%(user)s kullanıcısına yanıt: %(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "'%(username)s' talebi reddedildi ve silindi."
 
@@ -2571,6 +2649,9 @@ msgstr "Oturum aç"
 
 msgid "Size"
 msgstr "Boyut"
+
+msgid "Someone"
+msgstr "Birisi"
 
 msgid "Sound"
 msgstr "Ses"
@@ -2871,6 +2952,19 @@ msgstr "Sistem yöneticisinin şifresi yalnızca ortam değişkenleriyle değiş
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "Video dosyası yüklenemedi veya hâlâ dönüştürülüyor."
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "Kanalda toplam %(num)d abonelik hediye etti!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "%(months)s aydır abone!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "%(months)s aydır abone, şu anda %(streak)s aylık seri!"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "Bu yönetici kullanıcı korumalıdır ve silinemez."
@@ -3326,6 +3420,9 @@ msgstr "nesne veritabanına göre"
 msgid "active"
 msgstr "etkin"
 
+msgid "an anonymous user"
+msgstr "anonim bir kullanıcı"
+
 msgid "available"
 msgstr "mevcut"
 
@@ -3353,11 +3450,11 @@ msgstr "ör. VIP arşivi"
 msgid "e.g. alice, bob"
 msgstr "ör. alice, bob"
 
-msgid "e.g. john_doe"
-msgstr "ör. john_doe"
-
 msgid "e.g. channel_name"
 msgstr "ör. channel_name"
+
+msgid "e.g. john_doe"
+msgstr "ör. john_doe"
 
 #, python-format
 msgid "effective from %(date)s"
@@ -3381,6 +3478,9 @@ msgstr "hiçbir zaman"
 
 msgid "not created"
 msgstr "oluşturulmadı"
+
+msgid "someone"
+msgstr "birisi"
 
 #, python-format
 msgid "today %(time)s"

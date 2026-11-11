@@ -717,10 +717,11 @@
         if (textNeedle) {
           const rewardTitle = item.reward && item.reward.title ? item.reward.title : '';
           const eventType = item.event && item.event.type ? item.event.type : '';
-          const haystack = `${item.user || ''} ${item.msg || ''} ${rewardTitle} ${eventType}`.toLowerCase();
+          const eventText = item.event && item.event.text ? item.event.text : '';
+          const haystack = `${item.user || ''} ${item.msg || ''} ${rewardTitle} ${eventType} ${eventText}`.toLowerCase();
           if (!haystack.includes(textNeedle)) return false;
         }
-        // Keep moderation / channel-point system lines visible under badge filters.
+        // Keep moderation / sub / raid / channel-point system lines visible under badge filters.
         if (item.event || item.reward) {
           return true;
         }
@@ -791,6 +792,7 @@
             line.querySelector('.chat-user').textContent = (m.user || '') + (m.reward ? ' ' : ': ');
           }
           line.querySelector('.chat-msg').innerHTML = processMsg(m);
+          window.StreamVaultChat.decorateLine(line, m);
           const _es = document.getElementById("chatEmptyState");
           if (_es) _es.remove();
           chatList.appendChild(line);
@@ -895,8 +897,7 @@
           if (Array.isArray(data)) {
             data.forEach(item => {
               const rewardId = item.reward && item.reward.id ? item.reward.id : '';
-              const eventType = item.event && item.event.type ? item.event.type : '';
-              const eventPart = eventType ? ('event|' + eventType + '|') : '';
+              const eventPart = window.StreamVaultChat.chatEventKey(item);
               const rewardPart = rewardId ? ('reward|' + rewardId + '|') : '';
               const key = item.rel + '|' + item.user + '|' + eventPart + rewardPart + (item.msg || '');
               if (!seenChatKeys.has(key)) {

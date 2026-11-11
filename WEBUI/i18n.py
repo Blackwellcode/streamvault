@@ -93,6 +93,8 @@ def N_(text):
 JS_MESSAGES = (
     N_("Points"),
     N_("Redeemed “%(title)s”"),
+    N_("Replying to @%(user)s: %(msg)s"),
+    N_("First message"),
     N_("Page %(page)s / %(pages)s (%(count)s VODs)"),
     N_("Page %(page)s of %(pages)s"),
     N_("%(count)s VODs in quick access"),

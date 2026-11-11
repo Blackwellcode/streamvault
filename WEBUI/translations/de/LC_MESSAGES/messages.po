@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-11 18:23+0100\n"
 "PO-Revision-Date: 2026-11-03 19:25+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -151,6 +151,66 @@ msgstr "%(num)s Tage"
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s unterstützt OAuth nicht."
 
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "%(user)s ist von einem Prime-Sub auf ein Tier-%(tier)s-Sub umgestiegen!"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "%(user)s hat %(amount)s an %(charity)s gespendet!"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "%(user)s hat %(recipient)s %(months)s Monate Tier %(tier)s geschenkt!"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "%(user)s hat %(recipient)s ein Tier-%(tier)s-Sub geschenkt!"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "%(user)s verlängert das geschenkte Sub von %(other)s!"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "%(user)s verschenkt %(num)d Tier-%(tier)s-Sub an die Community!"
+msgstr[1] "%(user)s verschenkt %(num)d Tier-%(tier)s-Subs an die Community!"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s ist neu hier. Sag Hallo!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "%(user)s gibt das Geschenk von %(other)s an %(recipient)s weiter!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "%(user)s gibt das Geschenk von %(other)s an die Community weiter!"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "%(user)s raidet mit %(num)d Zuschauer!"
+msgstr[1] "%(user)s raidet mit %(num)d Zuschauern!"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "%(user)s hat ein neues %(bits)s-Bits-Abzeichen erhalten!"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s hat mit Tier %(tier)s abonniert."
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s hat mit Prime abonniert."
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "%(user)s hat %(num)s Streams in Folge geschaut und eine Watch-Streak gestartet!"
+
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = sofort löschen, sobald die Cloud-Kopie verifiziert ist."
 
@@ -292,8 +352,14 @@ msgstr "Überträgt zusätzlich %(path)s."
 msgid "Also transfers preview images from %(path)s."
 msgstr "Überträgt zusätzlich Vorschaubilder aus %(path)s."
 
+msgid "An anonymous user"
+msgstr "Ein anonymer Nutzer"
+
 msgid "An upload for this file is already running."
 msgstr "Es läuft bereits ein Upload für diese Datei."
+
+msgid "Announcement"
+msgstr "Ankündigung"
 
 msgid "Anonymous"
 msgstr "Anonym"
@@ -551,6 +617,9 @@ msgstr "Chatverlauf: %(user)s"
 
 msgid "Chat messages"
 msgstr "Chat-Nachrichten"
+
+msgid "Chat notice"
+msgstr "Chat-Hinweis"
 
 msgid "Chat replay"
 msgstr "Chat Replay"
@@ -1167,6 +1236,9 @@ msgstr "Chat filtern..."
 
 msgid "First"
 msgstr "Erste"
+
+msgid "First message"
+msgstr "Erste Nachricht"
 
 msgid "First page"
 msgstr "Erste Seite"
@@ -2003,6 +2075,10 @@ msgstr "Seiten-Navigation"
 msgid "Pagination (top)"
 msgstr "Seiten-Navigation (Oben)"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "Für %(months)s Monate im Voraus bezahlt."
+
 msgid "Password"
 msgstr "Passwort"
 
@@ -2323,6 +2399,10 @@ msgid "Repeat password"
 msgstr "Passwort wiederholen"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "Antwort an @%(user)s: %(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "Antrag '%(username)s' abgelehnt und gelöscht."
 
@@ -2577,6 +2657,9 @@ msgstr "Anmelden"
 
 msgid "Size"
 msgstr "Größe"
+
+msgid "Someone"
+msgstr "Jemand"
 
 msgid "Sound"
 msgstr "Ton"
@@ -2877,6 +2960,20 @@ msgstr "Das Passwort des System-Administrators kann nur über Umgebungsvariablen
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "Die Videodatei konnte nicht geladen werden oder wird aktuell noch transkodiert."
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "Insgesamt %(num)d Sub in diesem Kanal verschenkt!"
+msgstr[1] "Insgesamt %(num)d Subs in diesem Kanal verschenkt!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "Abonniert seit %(months)s Monaten!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "Abonniert seit %(months)s Monaten, aktuell %(streak)s Monate in Folge!"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "Dieser Admin-User ist geschützt und kann nicht gelöscht werden."
@@ -3332,6 +3429,9 @@ msgstr "laut Objekt-Datenbank"
 msgid "active"
 msgstr "aktiv"
 
+msgid "an anonymous user"
+msgstr "einem anonymen Nutzer"
+
 msgid "available"
 msgstr "vorhanden"
 
@@ -3359,11 +3459,11 @@ msgstr "z.B. VIP-Archiv"
 msgid "e.g. alice, bob"
 msgstr "z.B. alice, bob"
 
-msgid "e.g. john_doe"
-msgstr "z.B. max_mustermann"
-
 msgid "e.g. channel_name"
 msgstr "z. B. channel_name"
+
+msgid "e.g. john_doe"
+msgstr "z.B. max_mustermann"
 
 #, python-format
 msgid "effective from %(date)s"
@@ -3387,6 +3487,9 @@ msgstr "nie"
 
 msgid "not created"
 msgstr "nicht erstellt"
+
+msgid "someone"
+msgstr "jemandem"
 
 #, python-format
 msgid "today %(time)s"

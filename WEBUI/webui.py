@@ -60,7 +60,7 @@ from werkzeug.utils import safe_join, secure_filename
 
 # `_` is used as a throwaway name throughout this module, so translations use the
 # full names (both are extracted by pybabel by default).
-from flask_babel import gettext, lazy_gettext
+from flask_babel import gettext, lazy_gettext, ngettext
 from recorder import chat_events
 from recorder import clip_engine
 from WEBUI import i18n as ui_i18n
@@ -6153,6 +6153,151 @@ def chat_event_from_row(data):
     return chat_events.sanitize_event(data.get("event") if isinstance(data, dict) else None)
 
 
+def chat_meta_from_row(data):
+    return chat_events.sanitize_meta(data.get("meta") if isinstance(data, dict) else None)
+
+
+_NOTICE_TIERS = {"1000": "1", "2000": "2", "3000": "3"}
+
+
+def _notice_tier(event):
+    return _NOTICE_TIERS.get(str(event.get("plan") or ""), "1")
+
+
+def _notice_gift_total(event):
+    total = event.get("sender_count")
+    if not total:
+        return ""
+    return ngettext(
+        "They've gifted %(num)d sub in the channel!",
+        "They've gifted %(num)d subs in the channel!",
+        total,
+    )
+
+
+def format_notice_text(event, user):
+    """Twitch-style headline for a USERNOTICE chat event in the request's language."""
+    if not isinstance(event, dict) or event.get("type") != "notice":
+        return ""
+    kind = str(event.get("kind") or "")
+    name = str(user or "").strip() or gettext("Someone")
+    anon_subject = gettext("An anonymous user")
+    anon_object = gettext("an anonymous user")
+    if event.get("anon"):
+        name = anon_subject
+    text = ""
+    extra = []
+    if kind in ("sub", "resub"):
+        if event.get("plan") == "Prime":
+            text = gettext("%(user)s subscribed with Prime.", user=name)
+        else:
+            text = gettext("%(user)s subscribed at Tier %(tier)s.", user=name, tier=_notice_tier(event))
+        months = event.get("months") or 0
+        streak = event.get("streak") or 0
+        if months > 1 and streak > 0:
+            extra.append(gettext(
+                "They've subscribed for %(months)s months, currently on a %(streak)s month streak!",
+                months=months,
+                streak=streak,
+            ))
+        elif months > 1:
+            extra.append(gettext("They've subscribed for %(months)s months!", months=months))
+        if (event.get("multimonth") or 0) > 1:
+            extra.append(gettext("Paid for %(months)s months in advance.", months=event.get("multimonth")))
+    elif kind in ("subgift", "anonsubgift"):
+        recipient = event.get("recipient") or gettext("someone")
+        gift_months = event.get("gift_months") or 0
+        if gift_months > 1:
+            text = gettext(
+                "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!",
+                user=name,
+                months=gift_months,
+                tier=_notice_tier(event),
+                recipient=recipient,
+            )
+        else:
+            text = gettext(
+                "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!",
+                user=name,
+                tier=_notice_tier(event),
+                recipient=recipient,
+            )
+        total = _notice_gift_total(event)
+        if total:
+            extra.append(total)
+    elif kind in ("submysterygift", "anonsubmysterygift"):
+        count = event.get("count") or 1
+        text = ngettext(
+            "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!",
+            "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!",
+            count,
+            user=name,
+            tier=_notice_tier(event),
+        )
+        total = _notice_gift_total(event)
+        if total:
+            extra.append(total)
+    elif kind in ("giftpaidupgrade", "anongiftpaidupgrade"):
+        text = gettext(
+            "%(user)s is continuing the gift sub they got from %(other)s!",
+            user=name,
+            other=event.get("other") or anon_object,
+        )
+    elif kind == "primepaidupgrade":
+        text = gettext(
+            "%(user)s converted from a Prime sub to a Tier %(tier)s sub!",
+            user=name,
+            tier=_notice_tier(event),
+        )
+    elif kind == "standardpayforward":
+        text = gettext(
+            "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!",
+            user=name,
+            other=event.get("other") or anon_object,
+            recipient=event.get("recipient") or gettext("someone"),
+        )
+    elif kind == "communitypayforward":
+        text = gettext(
+            "%(user)s is paying forward the gift they got from %(other)s to the community!",
+            user=name,
+            other=event.get("other") or anon_object,
+        )
+    elif kind == "raid":
+        text = ngettext(
+            "%(user)s is raiding with %(num)d viewer!",
+            "%(user)s is raiding with %(num)d viewers!",
+            event.get("count") or 0,
+            user=name,
+        )
+    elif kind == "bitsbadgetier" and event.get("count"):
+        text = gettext(
+            "%(user)s just earned a new %(bits)s Bits badge!",
+            user=name,
+            bits=f"{event.get('count'):,}",
+        )
+    elif kind == "announcement":
+        text = gettext("Announcement")
+    elif kind == "ritual":
+        text = gettext("%(user)s is new here. Say hello!", user=name)
+    elif kind == "viewermilestone" and event.get("other") == "watch-streak" and event.get("count"):
+        text = gettext(
+            "%(user)s watched %(num)s consecutive streams and sparked a watch streak!",
+            user=name,
+            num=event.get("count"),
+        )
+    elif kind == "charitydonation" and event.get("charity") and event.get("amount"):
+        text = gettext(
+            "%(user)s donated %(amount)s to %(charity)s!",
+            user=name,
+            amount=event.get("amount"),
+            charity=event.get("charity"),
+        )
+    if not text:
+        # Unknown or incomplete kinds: Twitch's own system text is the best fallback.
+        return str(event.get("system") or "") or gettext("Chat notice")
+    return " ".join([text, *extra])
+
+
 def chat_item_from_row(data, *, time_key):
     """Build a sanitized chat API item. time_key is 't' (live) or 'rel' (vod)."""
     if not isinstance(data, dict):
@@ -6169,7 +6314,8 @@ def chat_item_from_row(data, *, time_key):
     msg_key = " ".join(msg.split())
     reward = chat_reward_from_row(data)
     event = chat_event_from_row(data)
-    if event and not msg_key:
+    is_notice = bool(event) and event.get("type") == "notice"
+    if event and not is_notice and not msg_key:
         msg = chat_events.format_moderation_message(
             event.get("type"),
             user,
@@ -6181,8 +6327,17 @@ def chat_item_from_row(data, *, time_key):
     item = {time_key: time_val, "user": user, "msg": msg}
     if reward:
         item["reward"] = reward
+    notice_text = ""
+    if is_notice:
+        notice_text = format_notice_text(event, user)
+        # Twitch's raw system-msg stays server-side; the client gets the localized text.
+        event = {k: v for k, v in event.items() if k != "system"}
+        event["text"] = notice_text
     if event:
         item["event"] = event
+    meta = chat_meta_from_row(data)
+    if meta:
+        item["meta"] = meta
     emotes = chat_emotes_from_row(data)
     if emotes:
         item["emotes"] = emotes
@@ -6193,7 +6348,11 @@ def chat_item_from_row(data, *, time_key):
     if color:
         item["color"] = color
     dedupe_token = msg_key
-    if event:
+    if is_notice:
+        # kind + text keep e.g. several gift subs from one gifter to different
+        # recipients apart in the ~1.25 s duplicate window.
+        dedupe_token = f"notice|{event.get('kind')}|{user}|{notice_text}|{msg_key}"
+    elif event:
         dedupe_token = (
             f"event|{event.get('type')}|{event.get('seconds') or ''}|"
             f"{user}|{msg_key}"
@@ -10874,6 +11033,36 @@ def public_download(token):
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
+def chat_items_from_chunk_file(chunk_file):
+    """Sanitized, de-duplicated VOD chat items for one static chat chunk."""
+    try:
+        with open(chunk_file, "r", encoding="utf-8") as handle:
+            rows = json.load(handle)
+    except (OSError, ValueError) as exc:
+        logging.warning("Chat chunk unreadable %s: %s", chunk_file, exc)
+        return []
+    if not isinstance(rows, list):
+        return []
+    items = []
+    seen = set()
+    recent = {}
+    for data in rows:
+        parsed = chat_item_from_row(data, time_key="rel")
+        if not parsed:
+            continue
+        item, dedupe_token, rel_val, user = parsed
+        key = f"{rel_val}|{user}|{dedupe_token}"
+        close_key = f"{user}|{dedupe_token}"
+        if key in seen:
+            continue
+        if close_key in recent and abs(rel_val - recent[close_key]) < 1.25:
+            continue
+        recent[close_key] = rel_val
+        seen.add(key)
+        items.append(item)
+    return items
+
+
 @app.route("/chat/vod/<streamer>/<filename>")
 @login_required
 def chat_vod(streamer, filename):
@@ -10896,8 +11085,15 @@ def chat_vod(streamer, filename):
         )
         if not chunk_file or not os.path.isfile(chunk_file):
             return Response("[]", 200, mimetype="application/json")
-        resp = send_file(chunk_file, mimetype="application/json")
-        resp.headers["Cache-Control"] = "public, max-age=86400, immutable"
+        # Chunks hold raw log rows: run them through the same allowlist as the
+        # range API (no raw tags or system-msg to the client, localized notice text).
+        resp = Response(
+            json.dumps(chat_items_from_chunk_file(chunk_file), ensure_ascii=False),
+            200,
+            mimetype="application/json",
+        )
+        resp.headers["Cache-Control"] = "private, max-age=600"
+        resp.headers["Vary"] = "Cookie, Accept-Language"
         return resp
 
     if request.args.get("meta") == "1":

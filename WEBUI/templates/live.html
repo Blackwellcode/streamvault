@@ -413,8 +413,7 @@
 	        function chatContentKey(item) {
 	          const rewardId = item && item.reward && item.reward.id ? item.reward.id : '';
 	          const rewardTitle = item && item.reward && item.reward.title ? item.reward.title : '';
-	          const eventType = item && item.event && item.event.type ? item.event.type : '';
-	          const eventPart = eventType ? ('event|' + eventType + '|') : '';
+	          const eventPart = window.StreamVaultChat.chatEventKey(item);
 	          const rewardPart = rewardId || rewardTitle ? ('reward|' + rewardId + '|' + rewardTitle + '|') : '';
 	          return String(item.user || '').trim() + '|' + eventPart + rewardPart + String(item.msg || '').trim().replace(/\s+/g, ' ');
 	        }
@@ -452,6 +451,7 @@
             line.querySelector('.chat-user').textContent = (item.user || '') + (item.reward ? ' ' : ': ');
           }
           line.querySelector('.chat-msg').innerHTML = processMsg(item);
+          window.StreamVaultChat.decorateLine(line, item);
           chatList.appendChild(line);
         }
 

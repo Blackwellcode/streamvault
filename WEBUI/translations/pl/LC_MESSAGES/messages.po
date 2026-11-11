@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-11 18:23+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pl\n"
@@ -157,6 +157,68 @@ msgstr "Dni: %(num)s"
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s nie obsługuje OAuth."
 
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "%(user)s zmienia subskrypcję Prime na subskrypcję poziomu %(tier)s!"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "%(user)s wpłaca %(amount)s na rzecz %(charity)s!"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "%(user)s funduje %(months)s mies. subskrypcji poziomu %(tier)s dla %(recipient)s!"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "%(user)s funduje subskrypcję poziomu %(tier)s dla %(recipient)s!"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "%(user)s kontynuuje subskrypcję otrzymaną w prezencie od %(other)s!"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "%(user)s funduje %(num)d subskrypcję poziomu %(tier)s dla społeczności!"
+msgstr[1] "%(user)s funduje %(num)d subskrypcje poziomu %(tier)s dla społeczności!"
+msgstr[2] "%(user)s funduje %(num)d subskrypcji poziomu %(tier)s dla społeczności!"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s pojawia się tu pierwszy raz. Przywitaj się!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "%(user)s przekazuje dalej prezent od %(other)s dla %(recipient)s!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "%(user)s przekazuje dalej prezent od %(other)s społeczności!"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "%(user)s robi raid z %(num)d widzem!"
+msgstr[1] "%(user)s robi raid z %(num)d widzami!"
+msgstr[2] "%(user)s robi raid z %(num)d widzami!"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "%(user)s zdobywa nową odznakę %(bits)s Bits!"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s subskrybuje na poziomie %(tier)s."
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s subskrybuje z Prime."
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "%(user)s ogląda już %(num)s transmisji z rzędu i rozpoczyna serię oglądania!"
+
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = usuń natychmiast po zweryfikowaniu kopii w chmurze."
 
@@ -298,8 +360,14 @@ msgstr "Przenosi również %(path)s."
 msgid "Also transfers preview images from %(path)s."
 msgstr "Przenosi również miniatury z %(path)s."
 
+msgid "An anonymous user"
+msgstr "Anonimowy użytkownik"
+
 msgid "An upload for this file is already running."
 msgstr "Przesyłanie tego pliku już trwa."
+
+msgid "Announcement"
+msgstr "Ogłoszenie"
 
 msgid "Anonymous"
 msgstr "Anonim"
@@ -557,6 +625,9 @@ msgstr "Historia czatu: %(user)s"
 
 msgid "Chat messages"
 msgstr "Wiadomości czatu"
+
+msgid "Chat notice"
+msgstr "Powiadomienie czatu"
 
 msgid "Chat replay"
 msgstr "Powtórka czatu"
@@ -1173,6 +1244,9 @@ msgstr "Filtruj czat..."
 
 msgid "First"
 msgstr "Pierwsza"
+
+msgid "First message"
+msgstr "Pierwsza wiadomość"
 
 msgid "First page"
 msgstr "Pierwsza strona"
@@ -2009,6 +2083,10 @@ msgstr "Paginacja"
 msgid "Pagination (top)"
 msgstr "Paginacja (góra)"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "Opłacone z góry na %(months)s mies."
+
 msgid "Password"
 msgstr "Hasło"
 
@@ -2329,6 +2407,10 @@ msgid "Repeat password"
 msgstr "Powtórz hasło"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "Odpowiedź do @%(user)s: %(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "Wniosek '%(username)s' odrzucono i usunięto."
 
@@ -2583,6 +2665,9 @@ msgstr "Zaloguj się"
 
 msgid "Size"
 msgstr "Rozmiar"
+
+msgid "Someone"
+msgstr "Ktoś"
 
 msgid "Sound"
 msgstr "Dźwięk"
@@ -2883,6 +2968,21 @@ msgstr "Hasło administratora systemu można zmienić tylko przez zmienne środo
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "Nie udało się wczytać pliku wideo lub jest on jeszcze transkodowany."
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "Łącznie %(num)d podarowana subskrypcja na kanale!"
+msgstr[1] "Łącznie %(num)d podarowane subskrypcje na kanale!"
+msgstr[2] "Łącznie %(num)d podarowanych subskrypcji na kanale!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "Subskrybuje od %(months)s mies.!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "Subskrybuje od %(months)s mies., obecna seria: %(streak)s mies.!"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "Ten administrator jest chroniony i nie można go usunąć."
@@ -3338,6 +3438,9 @@ msgstr "według bazy obiektów"
 msgid "active"
 msgstr "aktywne"
 
+msgid "an anonymous user"
+msgstr "anonimowego użytkownika"
+
 msgid "available"
 msgstr "dostępne"
 
@@ -3365,11 +3468,11 @@ msgstr "np. archiwum VIP"
 msgid "e.g. alice, bob"
 msgstr "np. alice, bob"
 
-msgid "e.g. john_doe"
-msgstr "np. jan_kowalski"
-
 msgid "e.g. channel_name"
 msgstr "np. channel_name"
+
+msgid "e.g. john_doe"
+msgstr "np. jan_kowalski"
 
 #, python-format
 msgid "effective from %(date)s"
@@ -3393,6 +3496,9 @@ msgstr "nigdy"
 
 msgid "not created"
 msgstr "nie utworzono"
+
+msgid "someone"
+msgstr "kogoś"
 
 #, python-format
 msgid "today %(time)s"

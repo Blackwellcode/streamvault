@@ -9901,6 +9901,156 @@ body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
   font-weight: 650 !important;
 }
 
+/* --- Twitch-style chat: USERNOTICE (subs, gifts, raids, announcements) --- */
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-notice {
+  padding: 6px 8px !important;
+  margin: 4px 0 !important;
+  border-left: 4px solid #9147ff !important;
+  border-radius: 0 !important;
+  background: rgba(145, 71, 255, 0.14) !important;
+  color: var(--tube-text, #efeff1) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-notice .chat-text {
+  display: block !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-blue {
+  border-image: linear-gradient(#00d6d6, #9146ff) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-green {
+  border-image: linear-gradient(#00db84, #57bee6) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-orange {
+  border-image: linear-gradient(#ffb31a, #e0e000) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-purple,
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-primary {
+  border-image: linear-gradient(#9146ff, #ff75e6) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-icon {
+  flex: none !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-top: 1px !important;
+  fill: #bf94ff !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-icon-bits {
+  fill: #9c3ee8 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-body {
+  display: block !important;
+  margin-top: 4px !important;
+  font-weight: 400 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-user {
+  font-weight: 700 !important;
+}
+
+/* --- PRIVMSG decorations: highlight, first message, reply, cheer, power-ups --- */
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-highlight {
+  padding: 6px 8px !important;
+  margin: 4px 0 !important;
+  border-left: 4px solid #755ebc !important;
+  border-radius: 0 !important;
+  background: rgba(117, 94, 188, 0.38) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-first {
+  padding: 6px 8px !important;
+  margin: 4px 0 !important;
+  border-left: 4px solid #bf94ff !important;
+  border-radius: 0 !important;
+  background: rgba(191, 148, 255, 0.1) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-context {
+  display: block !important;
+  overflow: hidden !important;
+  margin-bottom: 2px !important;
+  color: var(--tube-muted, #adadb8) !important;
+  font-size: 0.86em !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-context-first {
+  color: #bf94ff !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-icon {
+  width: 1.15em !important;
+  height: 1.15em !important;
+  fill: currentColor !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-1 { color: #979797 !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-100 { color: #9c3ee8 !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-1000 { color: #1db2a5 !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-5000 { color: #0099fe !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-10000 { color: #f43021 !important; }
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-power-gigantified .chat-emote:last-of-type {
+  height: 4.5em !important;
+  max-width: 16em !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-power-animated {
+  padding: 6px 8px !important;
+  margin: 4px 0 !important;
+  border-radius: 6px !important;
+  background: linear-gradient(90deg, rgba(145, 71, 255, 0.35), rgba(255, 117, 230, 0.25)) !important;
+}
+
 body:is(.page-vod,.page-live,.page-mobile-player) .chat-emote {
   display: inline-block;
   width: auto;

@@ -92,6 +92,29 @@
       color: #94a3b8;
       font-size: 13px;
     }
+    /* Twitch-style USERNOTICE rows (subs, gifts, raids, announcements). */
+    .chat-row.chat-line-notice {
+      border-left: 4px solid #9147ff;
+      background: rgba(145, 71, 255, 0.28);
+    }
+    .chat-row.chat-line-announce-blue { border-image: linear-gradient(#00d6d6, #9146ff) 1; }
+    .chat-row.chat-line-announce-green { border-image: linear-gradient(#00db84, #57bee6) 1; }
+    .chat-row.chat-line-announce-orange { border-image: linear-gradient(#ffb31a, #e0e000) 1; }
+    .chat-row.chat-line-announce-purple,
+    .chat-row.chat-line-announce-primary { border-image: linear-gradient(#9146ff, #ff75e6) 1; }
+    .chat-row.chat-line-highlight { border-left: 4px solid #755ebc; background: rgba(117, 94, 188, 0.55); }
+    .chat-notice-head { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+    .chat-notice-icon { width: 16px; height: 16px; flex: none; fill: #bf94ff; }
+    .chat-notice-body { display: block; margin-top: 2px; }
+    .chat-notice-user { font-weight: 700; }
+    .chat-cheer { display: inline-flex; align-items: center; gap: 2px; font-weight: 800; }
+    .chat-cheer-icon { width: 1em; height: 1em; fill: currentColor; }
+    .chat-cheer-tier-1 { color: #979797; }
+    .chat-cheer-tier-100 { color: #9c3ee8; }
+    .chat-cheer-tier-1000 { color: #1db2a5; }
+    .chat-cheer-tier-5000 { color: #0099fe; }
+    .chat-cheer-tier-10000 { color: #f43021; }
+    .chat-context { display: block; font-size: 12px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
 </head>
 <body>
@@ -119,26 +142,32 @@
 
       function renderMessage(item) {
         const row = document.createElement("div");
-        row.className = "chat-row";
+        const lineClass = window.StreamVaultChat && window.StreamVaultChat.chatLineClassName
+          ? window.StreamVaultChat.chatLineClassName(item).replace(/^chat-line\b/, "")
+          : "";
+        row.className = "chat-row" + lineClass;
+        // System lines (mod actions, subs, raids, ...) render their own header.
+        const isEvent = !!(item.event && item.event.type);
 
         // Badges
-        if (Array.isArray(item.badges) && item.badges.length > 0 && window.StreamVaultChat && window.StreamVaultChat.renderBadgesHtml) {
+        if (!isEvent && Array.isArray(item.badges) && item.badges.length > 0 && window.StreamVaultChat && window.StreamVaultChat.renderBadgesHtml) {
           const badgeSpan = document.createElement("span");
           badgeSpan.className = "chat-badges";
-          badgeSpan.innerHTML = window.StreamVaultChat.renderBadgesHtml(item.badges);
+          badgeSpan.innerHTML = window.StreamVaultChat.renderBadgesHtml(item);
           row.appendChild(badgeSpan);
         }
 
         // Author
-        const author = document.createElement("span");
-        author.className = "chat-author";
-        author.textContent = (item.user || {{ _('Anonymous')|tojson }}) + ":";
-        if (window.StreamVaultChat && window.StreamVaultChat.userColor) {
-          author.style.color = window.StreamVaultChat.userColor(item.user || "", item.color);
-        } else if (item.color) {
-          author.style.color = item.color;
+        if (!isEvent) {
+          const author = document.createElement("span");
+          author.className = "chat-author";
+          author.textContent = (item.user || {{ _('Anonymous')|tojson }}) + ":";
+          const authorColor = window.StreamVaultChat && window.StreamVaultChat.userColor
+            ? window.StreamVaultChat.userColor(item.color)
+            : "";
+          if (authorColor) author.style.color = authorColor;
+          row.appendChild(author);
         }
-        row.appendChild(author);
 
         // Body
         const body = document.createElement("span");
@@ -149,6 +178,9 @@
           body.textContent = item.msg || "";
         }
         row.appendChild(body);
+        if (window.StreamVaultChat && window.StreamVaultChat.decorateLine) {
+          window.StreamVaultChat.decorateLine(row, item);
+        }
 
         listEl.appendChild(row);
 
@@ -176,7 +208,10 @@
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {
               for (const item of data) {
-                const key = (item.t || "") + "|" + (item.user || "") + "|" + (item.msg || "");
+                const eventKey = window.StreamVaultChat && window.StreamVaultChat.chatEventKey
+                  ? window.StreamVaultChat.chatEventKey(item)
+                  : "";
+                const key = (item.t || "") + "|" + (item.user || "") + "|" + eventKey + (item.msg || "");
                 if (seenIds.has(key)) continue;
                 seenIds.add(key);
                 if (seenIds.size > 200) {

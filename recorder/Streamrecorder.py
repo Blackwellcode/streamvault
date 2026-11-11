@@ -2090,7 +2090,7 @@ def chat_process(source_channel, chat_text_file):
     # Persistente File-Handles um Open/Close Overhead zu minimieren
     handles = {'live': None, 'session': None, 'session_path': None}
 
-    def append_chat_log(username, message, emotes=None, badges=None, color=None, reward=None, event=None):
+    def append_chat_log(username, message, emotes=None, badges=None, color=None, reward=None, event=None, meta=None):
         now = time.time()
         entry_base = {"user": username or "", "msg": message or ""}
         if emotes:
@@ -2113,6 +2113,9 @@ def chat_process(source_channel, chat_text_file):
         clean_event = chat_events.sanitize_event(event)
         if clean_event:
             entry_base["event"] = clean_event
+        clean_meta = chat_events.sanitize_meta(meta)
+        if clean_meta:
+            entry_base["meta"] = clean_meta
         
         try:
             # 1. Live Log (WebUI)
@@ -2215,9 +2218,10 @@ def chat_process(source_channel, chat_text_file):
                             last_ping = time.time()
                         while '\r\n' in buffer:
                             line, buffer = buffer.split('\r\n', 1)
-                            if line.startswith('PING'):
+                            irc_cmd = chat_events.irc_command(line)
+                            if irc_cmd == 'PING':
                                 sock.sendall(b"PONG :tmi.twitch.tv\r\n")
-                            elif 'CLEARCHAT #' in line:
+                            elif irc_cmd == 'CLEARCHAT':
                                 irc_tags, command_line = parse_irc_tags(line)
                                 parsed_event = chat_events.parse_clearchat(irc_tags, command_line)
                                 if parsed_event:
@@ -2235,7 +2239,7 @@ def chat_process(source_channel, chat_text_file):
                                             source_channel,
                                             chat_exc,
                                         )
-                            elif 'CLEARMSG #' in line:
+                            elif irc_cmd == 'CLEARMSG':
                                 irc_tags, command_line = parse_irc_tags(line)
                                 parsed_event = chat_events.parse_clearmsg(irc_tags, command_line)
                                 if parsed_event:
@@ -2253,7 +2257,30 @@ def chat_process(source_channel, chat_text_file):
                                             source_channel,
                                             chat_exc,
                                         )
-                            elif 'PRIVMSG' in line:
+                            elif irc_cmd == 'USERNOTICE':
+                                parsed = process_twitch_message(line)
+                                notice_text, emotes, badges, color = parsed[1:5]
+                                irc_tags = parsed[5] if len(parsed) > 5 else {}
+                                notice = chat_events.parse_usernotice(irc_tags, notice_text)
+                                if notice:
+                                    refresh_recording_info()
+                                    try:
+                                        append_chat_log(
+                                            notice.get("user") or "",
+                                            notice.get("msg") or "",
+                                            emotes if notice.get("msg") else None,
+                                            badges,
+                                            color,
+                                            event=notice.get("event"),
+                                        )
+                                        msg_count += 1
+                                    except Exception as chat_exc:
+                                        logger.error(
+                                            "[%s] USERNOTICE-Log fehlgeschlagen: %s",
+                                            source_channel,
+                                            chat_exc,
+                                        )
+                            elif irc_cmd == 'PRIVMSG':
                                 parsed = process_twitch_message(line)
                                 username, message, emotes, badges, color = parsed[:5]
                                 irc_tags = parsed[5] if len(parsed) > 5 else {}
@@ -2335,6 +2362,7 @@ def chat_process(source_channel, chat_text_file):
                                                 badges,
                                                 color,
                                                 reward=reward_meta,
+                                                meta=chat_events.parse_privmsg_meta(irc_tags),
                                             )
                                     except Exception as chat_exc:
                                         logger.error(

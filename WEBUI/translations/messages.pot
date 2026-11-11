@@ -1,15 +1,14 @@
-# Translations template for StreamVault.
-# Copyright (C) 2026 StreamVault contributors
-# This file is distributed under the same license as the StreamVault
-# project.
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: StreamVault VERSION\n"
+"Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-11 18:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -150,6 +149,70 @@ msgstr ""
 
 #, python-format
 msgid "%(provider)s does not support OAuth."
+msgstr ""
+
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(user)s is paying forward the gift they got from %(other)s to "
+"%(recipient)s!"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(user)s is paying forward the gift they got from %(other)s to the "
+"community!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr ""
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr ""
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
 msgstr ""
 
 msgid "0 = delete immediately once the cloud copy is verified."
@@ -301,7 +364,13 @@ msgstr ""
 msgid "Also transfers preview images from %(path)s."
 msgstr ""
 
+msgid "An anonymous user"
+msgstr ""
+
 msgid "An upload for this file is already running."
+msgstr ""
+
+msgid "Announcement"
 msgstr ""
 
 msgid "Anonymous"
@@ -565,6 +634,9 @@ msgid "Chat history: %(user)s"
 msgstr ""
 
 msgid "Chat messages"
+msgstr ""
+
+msgid "Chat notice"
 msgstr ""
 
 msgid "Chat replay"
@@ -1191,6 +1263,9 @@ msgid "Filter chat..."
 msgstr ""
 
 msgid "First"
+msgstr ""
+
+msgid "First message"
 msgstr ""
 
 msgid "First page"
@@ -2067,6 +2142,10 @@ msgstr ""
 msgid "Pagination (top)"
 msgstr ""
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr ""
+
 msgid "Password"
 msgstr ""
 
@@ -2389,6 +2468,10 @@ msgid "Repeat password"
 msgstr ""
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr ""
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr ""
 
@@ -2649,6 +2732,9 @@ msgid "Sign in"
 msgstr ""
 
 msgid "Size"
+msgstr ""
+
+msgid "Someone"
 msgstr ""
 
 msgid "Sound"
@@ -2976,6 +3062,22 @@ msgid ""
 msgstr ""
 
 msgid "The video file could not be loaded or is still being transcoded."
+msgstr ""
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr ""
+
+#, python-format
+msgid ""
+"They've subscribed for %(months)s months, currently on a %(streak)s month"
+" streak!"
 msgstr ""
 
 msgid "This admin user is protected and cannot be deleted."
@@ -3450,6 +3552,9 @@ msgstr ""
 msgid "active"
 msgstr ""
 
+msgid "an anonymous user"
+msgstr ""
+
 msgid "available"
 msgstr ""
 
@@ -3479,10 +3584,10 @@ msgstr ""
 msgid "e.g. alice, bob"
 msgstr ""
 
-msgid "e.g. john_doe"
+msgid "e.g. channel_name"
 msgstr ""
 
-msgid "e.g. channel_name"
+msgid "e.g. john_doe"
 msgstr ""
 
 #, python-format
@@ -3506,6 +3611,9 @@ msgid "never"
 msgstr ""
 
 msgid "not created"
+msgstr ""
+
+msgid "someone"
 msgstr ""
 
 #, python-format
