@@ -22,6 +22,17 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 REDIS_DB = int(os.environ.get("REDIS_DB", "0"))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
 
+
+def _legacy_retry():
+    """Retry policy of redis-py 5: one immediate retry, on timeouts only."""
+    import socket
+
+    from redis.backoff import NoBackoff
+    from redis.exceptions import TimeoutError as RedisTimeoutError
+    from redis.retry import Retry
+
+    return Retry(NoBackoff(), 1, supported_errors=(RedisTimeoutError, socket.timeout))
+
 KEY_PREFIX = "streamvault:"
 TASK_QUEUE_KEY = f"{KEY_PREFIX}tasks:pending"
 TASK_INFLIGHT_KEY = f"{KEY_PREFIX}tasks:inflight"
@@ -45,8 +56,6 @@ def get_redis():
     _LAST_CONNECT_TRY = now
     try:
         import redis
-        from redis.backoff import ExponentialBackoff
-        from redis.retry import Retry
         pool = redis.ConnectionPool(
             host=REDIS_HOST,
             port=REDIS_PORT,
@@ -55,10 +64,11 @@ def get_redis():
             socket_timeout=3.0,
             socket_connect_timeout=3.0,
             retry_on_timeout=True,
-            # redis-py 8 changed the defaults (RESP3, retries on connect). Pin both so an
-            # unreachable Redis still falls back to local mode quickly and older
-            # servers keep working.
-            retry=Retry(ExponentialBackoff(cap=0.5, base=0.1), 0),
+            # redis-py 8 changed the defaults: RESP3, and connection errors are
+            # retried too. Pin the redis-py 5 behaviour: RESP2 for older servers,
+            # one retry on timeouts only, so an unreachable Redis still falls
+            # back to local mode after a single connect attempt.
+            retry=_legacy_retry(),
             protocol=2,
             max_connections=50,
             decode_responses=True,
