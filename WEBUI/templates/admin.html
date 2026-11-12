@@ -23,7 +23,7 @@
         padding: 16px 24px !important;
         overflow: hidden !important;
       }
-      @media (max-width: 1024px) {
+      @media (max-width: 768px) {
         body.page-admin.ns-platform .main {
           margin-left: 0 !important;
           max-width: 100% !important;
@@ -238,9 +238,10 @@
     </style>
   </head>
   <body class="page-admin {{ theme_class }} ns-platform">
+    <a class="sv-skip-link" href="#main-content">{{ _('Skip to content') }}</a>
     {% include 'components/sidebar.html' %}
 
-    <div class="main">
+    <main class="main" id="main-content" tabindex="-1">
       <!-- Legacy: Discord-Member VOD-Freigaben gesamte Rolle Discord-Member -->
       <div class="ns-options-shell">
         <header class="ns-options-topbar">
@@ -261,8 +262,8 @@
           </div>
         </header>
 
-        {% if msg %}<div class="alert alert-success" style="margin:0;">{{ msg }}</div>{% endif %}
-        {% if error %}<div class="alert alert-error" style="margin:0;">{{ error }}</div>{% endif %}
+        {% if msg %}<div class="alert alert-success" role="status" style="margin:0;">{{ msg }}</div>{% endif %}
+        {% if error %}<div class="alert alert-error" role="alert" style="margin:0;">{{ error }}</div>{% endif %}
         {% if storage_alert and storage_alert.critical %}
         <div class="alert alert-error" style="margin:0;">
           {{ _('Storage critical: %(pct)s%% used, only %(free)s free.', pct=storage_alert.used_pct, free=storage_alert.free_str) }}
@@ -271,24 +272,27 @@
         {% endif %}
 
         <div class="admin-tabs" role="tablist" aria-label="{{ _('Option sections') }}">
-          <button type="button" class="admin-tab-btn active" role="tab" aria-selected="true" aria-controls="tab-system" onclick="switchAdminTab(event, 'tab-system')">{{ _('System & recorder') }}</button>
-          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-settings" onclick="switchAdminTab(event, 'tab-settings')">{{ _('Settings') }}</button>
-          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-security" onclick="switchAdminTab(event, 'tab-security')">{{ _('Security & shares') }}</button>
-          <button type="button" class="admin-tab-btn" role="tab" aria-selected="false" aria-controls="tab-backups" onclick="switchAdminTab(event, 'tab-backups')">{{ _('System backups') }}</button>
+          <button type="button" class="admin-tab-btn active" role="tab" id="tabbtn-system" aria-selected="true" aria-controls="tab-system" data-admin-tab="tab-system">{{ _('System & recorder') }}</button>
+          <button type="button" class="admin-tab-btn" role="tab" id="tabbtn-settings" aria-selected="false" aria-controls="tab-settings" data-admin-tab="tab-settings" tabindex="-1">{{ _('Settings') }}</button>
+          <button type="button" class="admin-tab-btn" role="tab" id="tabbtn-security" aria-selected="false" aria-controls="tab-security" data-admin-tab="tab-security" tabindex="-1">{{ _('Security & shares') }}</button>
+          <button type="button" class="admin-tab-btn" role="tab" id="tabbtn-backups" aria-selected="false" aria-controls="tab-backups" data-admin-tab="tab-backups" tabindex="-1">{{ _('System backups') }}</button>
         </div>
 
         <div class="ns-options-stage">
           <!-- TAB 1: System & Recorder -->
-          <div class="grid admin-tab-content active" id="tab-system" role="tabpanel">
+          <div class="grid admin-tab-content active" id="tab-system" role="tabpanel" aria-labelledby="tabbtn-system" tabindex="0">
+            <h2 class="sr-only">{{ _('System & recorder') }}</h2>
             <div class="panel">
               <h3>{{ _('System status') }}</h3>
               <div class="stat-row"><span>{{ _('Load average (1m / 5m):') }}</span> <span class="stat-val">{{ sys_load[0] }} / {{ sys_load[1] }}</span></div>
               <div class="stat-row"><span>{{ _('Storage (total):') }}</span> <span class="stat-val">{{ storage.total_str }}</span></div>
               <div class="stat-row"><span>{{ _('Storage (free):') }}</span> <span class="stat-val">{{ storage.free_str }}</span></div>
               <div style="margin-top: 14px;">
-                <form method="post" action="{{ url_for('channels_restart') }}" style="margin:0;">
+                <form method="post" action="{{ url_for('channels_restart') }}" style="margin:0;"
+                      data-confirm="{{ _('Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds.') }}"
+                      data-confirm-ok="{{ _('Restart services') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn-primary" style="width:100%; background:#334155; color:#F3F6FF;">{{ _('Restart services') }}</button>
+                  <button type="submit" class="sv-btn sv-btn--secondary" style="width:100%;">{{ _('Restart services') }}</button>
                 </form>
               </div>
             </div>
@@ -364,7 +368,8 @@
           </div>
 
           <!-- TAB 2: Einstellungen & Cloud -->
-          <div class="grid admin-tab-content" id="tab-settings" role="tabpanel">
+          <div class="grid admin-tab-content" id="tab-settings" role="tabpanel" aria-labelledby="tabbtn-settings" tabindex="0">
+            <h2 class="sr-only">{{ _('Settings') }}</h2>
             <div class="panel">
               <h3>{{ _('Maintenance mode & area control') }}</h3>
               <p class="muted" style="margin:0 0 10px; font-size:12px;">
@@ -400,14 +405,16 @@
                   </button>
                 </form>
                 {% else %}
-                <form method="post" action="{{ url_for('admin_maintenance') }}" style="margin: 0;">
+                <form method="post" action="{{ url_for('admin_maintenance') }}" style="margin: 0;"
+                      data-confirm="{{ _('Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it.') }}"
+                      data-confirm-ok="{{ _('Enable maintenance mode') }}" data-confirm-danger>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="action" value="enable">
                   <label class="stat-row" style="gap:8px; margin-bottom:8px; font-size: 12px;">
                     <span>{{ _('Send Discord message') }}</span>
                     <input type="checkbox" name="notify_discord" value="1" checked>
                   </label>
-                  <button type="submit" class="btn-primary" style="width:100%; background: rgba(239,68,68,0.2); color:#fca5a5; border:1px solid rgba(239,68,68,0.4);">
+                  <button type="submit" class="sv-btn sv-btn--danger-outline" style="width:100%;">
                     {{ _('Enable maintenance mode') }}
                   </button>
                 </form>
@@ -431,8 +438,8 @@
                     <input type="checkbox" name="scope_mobile" value="1" {% if maintenance.scopes.mobile %}checked{% endif %}>
                   </label>
                 </div>
-                <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Allowlist (comma-separated):') }}</label>
-                <input type="text" name="bypass_users" value="{{ maintenance.bypass_users_str }}" placeholder="{{ _('e.g. alice, bob') }}" style="width:100%; margin-bottom: 10px; box-sizing:border-box;">
+                <label for="bypassUsers" style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Allowlist (comma-separated):') }}</label>
+                <input type="text" id="bypassUsers" name="bypass_users" value="{{ maintenance.bypass_users_str }}" placeholder="{{ _('e.g. alice, bob') }}" style="width:100%; margin-bottom: 10px; box-sizing:border-box;">
                 <button type="submit" class="btn-primary" style="width:100%; background: #4D63FF; color: white;">
                   {{ _('Save area maintenance') }}
                 </button>
@@ -475,7 +482,8 @@
           </div>
 
           <!-- TAB 3: Sicherheit & Freigaben -->
-          <div class="grid admin-tab-content" id="tab-security" role="tabpanel">
+          <div class="grid admin-tab-content" id="tab-security" role="tabpanel" aria-labelledby="tabbtn-security" tabindex="0">
+            <h2 class="sr-only">{{ _('Security & shares') }}</h2>
             <div class="panel full-width">
               <div class="muted" style="font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <span>{{ _('Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member.') }}</span>
@@ -504,7 +512,7 @@
                       <td>{{ share.expires }}</td>
                       <td><a href="{{ share.url }}" target="_blank" rel="noopener">{{ _('Open') }}</a></td>
                       <td>
-                        <form method="post" action="{{ url_for('admin_share_revoke', token=share.token) }}" onsubmit='return confirm({{ _("Really revoke this share?")|tojson }});' style="margin:0;">
+                        <form method="post" action="{{ url_for('admin_share_revoke', token=share.token) }}" data-confirm="{{ _('Revoke this share? The link stops working immediately.') }}" data-confirm-ok="{{ _('Revoke') }}" data-confirm-danger style="margin:0;">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                           <button type="submit" class="btn-danger">{{ _('Revoke') }}</button>
                         </form>
@@ -576,7 +584,8 @@
           </div>
 
           <!-- TAB 4: System-Backups -->
-          <div class="grid admin-tab-content" id="tab-backups" role="tabpanel">
+          <div class="grid admin-tab-content" id="tab-backups" role="tabpanel" aria-labelledby="tabbtn-backups" tabindex="0">
+            <h2 class="sr-only">{{ _('System backups') }}</h2>
             <div class="panel full-width">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div>
@@ -614,9 +623,9 @@
                       <td style="padding: 10px; text-align: right;">
                         <div style="display: inline-flex; gap: 6px;">
                           <a href="{{ url_for('admin_backup_download', filename=b.filename) }}" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 12px; text-decoration: none;">{{ _('Download') }}</a>
-                          <form method="post" action="{{ url_for('admin_backup_delete', filename=b.filename) }}" style="display: inline; margin: 0;">
+                          <form method="post" action="{{ url_for('admin_backup_delete', filename=b.filename) }}" style="display: inline; margin: 0;" data-confirm="{{ _('Delete backup %(name)s? This cannot be undone.', name=b.filename) }}" data-confirm-ok="{{ _('Delete') }}" data-confirm-danger>
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn-danger" style="padding: 4px 10px; font-size: 12px;" onclick='return confirm({{ _("Really delete backup %(name)s?", name=b.filename|safe)|tojson }})'>{{ _('Delete') }}</button>
+                            <button type="submit" class="btn-danger" style="padding: 4px 10px; font-size: 12px;">{{ _('Delete') }}</button>
                           </form>
                         </div>
                       </td>
@@ -633,9 +642,9 @@
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       function switchAdminTab(evt, tabId) {
         if (evt) evt.preventDefault();
         var tabContents = document.getElementsByClassName("admin-tab-content");
@@ -646,26 +655,33 @@
         for (var j = 0; j < tabbtns.length; j++) {
           tabbtns[j].classList.remove("active");
           tabbtns[j].setAttribute("aria-selected", "false");
+          tabbtns[j].setAttribute("tabindex", "-1");
         }
         var target = document.getElementById(tabId);
         if (target) target.classList.add("active");
-        var btn = document.querySelector(".admin-tab-btn[onclick*='" + tabId + "']");
+        var btn = document.querySelector('.admin-tab-btn[data-admin-tab="' + tabId + '"]');
         if (btn) {
           btn.classList.add("active");
           btn.setAttribute("aria-selected", "true");
+          btn.removeAttribute("tabindex");
         }
         try { sessionStorage.setItem('active_admin_tab', tabId); } catch(e) {}
       }
       document.addEventListener("DOMContentLoaded", function() {
         var tabList = document.querySelector(".admin-tabs");
         if (tabList) {
+          tabList.addEventListener("click", function(e) {
+            var b = e.target.closest("[data-admin-tab]");
+            if (b) switchAdminTab(e, b.getAttribute("data-admin-tab"));
+          });
           tabList.addEventListener("keydown", function(e) {
-            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
             var tabs = Array.prototype.slice.call(tabList.querySelectorAll(".admin-tab-btn"));
             var idx = tabs.indexOf(document.activeElement);
             if (idx === -1) return;
             e.preventDefault();
-            var next = tabs[(idx + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+            var next = e.key === "Home" ? tabs[0] : e.key === "End" ? tabs[tabs.length - 1]
+              : tabs[(idx + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
             if (next) {
               next.focus();
               next.click();
