@@ -322,15 +322,26 @@ class ChatApiTests(unittest.TestCase):
         webui.app.config.update(TESTING=True)
 
     def setUp(self):
-        from core import config
+        from core import config, database
+
+        # Own database per test: WEBUI.webui runs init_db() only on first import,
+        # which may have happened inside another module's patched temp base.
+        self._tmp = tempfile.TemporaryDirectory(prefix="streamvault-chat-api-")
+        self.addCleanup(self._tmp.cleanup)
+        for patcher in (
+            mock.patch.dict(os.environ, {"VOD_BASE_DIR": self._tmp.name}),
+            mock.patch.object(config, "BASE_DIR", self._tmp.name),
+            mock.patch.object(config, "DB_FILE", os.path.join(self._tmp.name, "streamrecorder.db")),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        database.init_db()
 
         self.client = self.webui.app.test_client()
         with self.client.session_transaction() as sess:
             now = time.time()
             sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
                         login_time=now, last_active=now, _csrf_token="t")
-        self._tmp = tempfile.TemporaryDirectory(prefix="streamvault-chat-api-")
-        self.addCleanup(self._tmp.cleanup)
 
     def _write_rows(self, name, rows):
         path = os.path.join(self._tmp.name, name)
