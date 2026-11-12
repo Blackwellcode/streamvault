@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:19+0100\n"
+"POT-Creation-Date: 2026-11-12 15:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -864,6 +864,9 @@ msgid "Delete locally"
 msgstr ""
 
 msgid "Delete permanently"
+msgstr ""
+
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
 msgstr ""
 
 msgid "Delete this video? The file is removed from the archive and cannot be restored."
@@ -3285,9 +3288,6 @@ msgid "Visible to:"
 msgstr ""
 
 msgid "Volume"
-msgstr ""
-
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
 msgstr ""
 
 msgid "Waiting for server stream…"

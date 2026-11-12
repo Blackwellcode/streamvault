@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:19+0100\n"
+"POT-Creation-Date: 2026-11-12 15:13+0100\n"
 "PO-Revision-Date: 2026-11-03 19:25+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -867,6 +867,9 @@ msgstr "Lokal löschen"
 
 msgid "Delete permanently"
 msgstr "Endgültig löschen"
+
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "Den Ordner dieses Streamers und alle Aufnahmen löschen? Das lässt sich nicht rückgängig machen."
 
 msgid "Delete this video? The file is removed from the archive and cannot be restored."
 msgstr "Dieses Video löschen? Die Datei wird aus dem Archiv entfernt und kann nicht wiederhergestellt werden."
@@ -3288,9 +3291,6 @@ msgstr "Sichtbar:"
 
 msgid "Volume"
 msgstr "Lautstärke"
-
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "ACHTUNG: Möchtest du diesen Streamer und alle Aufnahmen unwiderruflich löschen?"
 
 msgid "Waiting for server stream…"
 msgstr "Warte auf Server-Stream…"

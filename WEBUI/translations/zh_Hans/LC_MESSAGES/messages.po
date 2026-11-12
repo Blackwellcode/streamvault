@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:19+0100\n"
+"POT-Creation-Date: 2026-11-12 15:13+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -194,7 +194,7 @@ msgid "Account active (access allowed)"
 msgstr "账户已启用（允许访问）"
 
 msgid "Accounts"
-msgstr ""
+msgstr "账户"
 
 msgid "Action"
 msgstr "操作"
@@ -224,7 +224,7 @@ msgid "Actively monitored by the recorder core"
 msgstr "由录制核心主动监控"
 
 msgid "Add a channel to record"
-msgstr ""
+msgstr "添加要录制的频道"
 
 msgid "Add channel"
 msgstr "添加频道"
@@ -236,7 +236,7 @@ msgid "Add provider"
 msgstr "添加提供商"
 
 msgid "Add the first channel above"
-msgstr ""
+msgstr "在上方添加第一个频道"
 
 msgid "Addressing"
 msgstr "寻址"
@@ -499,7 +499,7 @@ msgid "Cancel"
 msgstr "取消"
 
 msgid "Category"
-msgstr ""
+msgstr "分类"
 
 msgid "Category search failed."
 msgstr "分类搜索失败。"
@@ -588,7 +588,7 @@ msgid "Clip"
 msgstr "剪辑"
 
 msgid "Clip Editor"
-msgstr ""
+msgstr "剪辑编辑器"
 
 msgid "Clip URL is missing on this page."
 msgstr "此页面缺少剪辑 URL。"
@@ -675,7 +675,7 @@ msgid "Configured streamers & sources"
 msgstr "已配置的主播与来源"
 
 msgid "Confirm"
-msgstr ""
+msgstr "确认"
 
 msgid "Connect account"
 msgstr "连接账户"
@@ -699,7 +699,7 @@ msgid "Connection failed"
 msgstr "连接失败"
 
 msgid "Connection failed. Check your network and try again."
-msgstr ""
+msgstr "连接失败。请检查网络后重试。"
 
 msgid "Connection lost — reconnecting…"
 msgstr "连接中断——正在重连…"
@@ -718,7 +718,7 @@ msgid "Control the global maintenance mode or lock individual platform areas."
 msgstr "控制全局维护模式，或锁定特定平台区域。"
 
 msgid "Copied"
-msgstr ""
+msgstr "已复制"
 
 msgid "Copy"
 msgstr "复制"
@@ -838,11 +838,11 @@ msgstr "删除"
 
 #, python-format
 msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
-msgstr ""
+msgstr "删除 %(name)s？文件将从存档中移除且无法恢复。"
 
 #, python-format
 msgid "Delete backup %(name)s? This cannot be undone."
-msgstr ""
+msgstr "删除备份 %(name)s？此操作无法撤销。"
 
 msgid "Delete folder"
 msgstr "删除文件夹"
@@ -862,8 +862,11 @@ msgstr "本地删除"
 msgid "Delete permanently"
 msgstr "永久删除"
 
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "删除该主播的文件夹及所有录像？此操作无法撤销。"
+
 msgid "Delete this video? The file is removed from the archive and cannot be restored."
-msgstr ""
+msgstr "删除此视频？文件将从存档中移除且无法恢复。"
 
 msgid "Delete user"
 msgstr "删除用户"
@@ -946,7 +949,7 @@ msgid "Download all"
 msgstr "全部下载"
 
 msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
-msgstr ""
+msgstr "将该主播的所有 VOD 下载为一个压缩包？大型频道可能需要一些时间。"
 
 msgid "Download archive & VODs"
 msgstr "下载存档和 VOD"
@@ -1017,7 +1020,7 @@ msgid "Email address (optional)"
 msgstr "电子邮件地址（可选）"
 
 msgid "Emotes"
-msgstr ""
+msgstr "表情"
 
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr "留空 = AWS。对于 R2、B2、Wasabi、MinIO 等，请填写 S3 端点。"
@@ -1035,7 +1038,7 @@ msgid "Enable maintenance mode"
 msgstr "启用维护模式"
 
 msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
-msgstr ""
+msgstr "启用维护模式？除允许列表中的用户外，所有人都会看到维护页面，直到你关闭它。"
 
 msgid "Enable recording"
 msgstr "启用录制"
@@ -1195,7 +1198,7 @@ msgid "Filter"
 msgstr "筛选"
 
 msgid "Filter chat"
-msgstr ""
+msgstr "筛选聊天"
 
 msgid "Filter chat…"
 msgstr "筛选聊天…"
@@ -1641,7 +1644,7 @@ msgid "MP4 check not possible"
 msgstr "无法检查 MP4"
 
 msgid "Main navigation"
-msgstr ""
+msgstr "主导航"
 
 msgid "Maintenance"
 msgstr "维护中"
@@ -1709,7 +1712,7 @@ msgid "Mobile live is temporarily disabled. Please use the desktop version or th
 msgstr "移动端直播暂时停用。请使用桌面版或已安装的应用。"
 
 msgid "Mods"
-msgstr ""
+msgstr "管理员"
 
 msgid "Monitored"
 msgstr "已监控"
@@ -1775,7 +1778,7 @@ msgid "No (self-signed only)"
 msgstr "否（仅限自签名证书）"
 
 msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
-msgstr ""
+msgstr "还没有 VOD。被监控的频道开播后，录像会自动显示在这里。"
 
 msgid "No acceptances yet."
 msgstr "尚无人同意。"
@@ -1811,7 +1814,7 @@ msgid "No badges received from Twitch."
 msgstr "未从 Twitch 获取到徽章。"
 
 msgid "No channels are monitored yet."
-msgstr ""
+msgstr "尚未监控任何频道。"
 
 msgid "No chat"
 msgstr "无聊天"
@@ -1964,7 +1967,7 @@ msgstr "打开编辑器"
 
 #, python-format
 msgid "Open streamer %(name)s"
-msgstr ""
+msgstr "打开主播 %(name)s"
 
 msgid "Operating mode"
 msgstr "运行模式："
@@ -2089,7 +2092,7 @@ msgid "Player error — reconnecting…"
 msgstr "播放器错误——正在重连…"
 
 msgid "Please confirm"
-msgstr ""
+msgstr "请确认"
 
 msgid "Please enter a name for the storage provider."
 msgstr "请输入存储提供商的名称。"
@@ -2308,7 +2311,7 @@ msgstr "移除频道"
 
 #, python-format
 msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
-msgstr ""
+msgstr "移除频道 %(name)s？监控将停止，现有录像会保留在存档中。"
 
 msgid "Remove only the database entry?"
 msgstr "仅移除数据库条目？"
@@ -2324,7 +2327,7 @@ msgid "Rename file"
 msgstr "重命名文件"
 
 msgid "Rename the file? Existing links and shares to the old file name stop working."
-msgstr ""
+msgstr "重命名文件？指向旧文件名的现有链接和分享将失效。"
 
 msgid "Renamed."
 msgstr "已重命名。"
@@ -2352,7 +2355,7 @@ msgid "Restart services"
 msgstr "重启服务"
 
 msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
-msgstr ""
+msgstr "立即重启录制器和聊天记录器？正在进行的录制会中断几秒钟。"
 
 msgid "Restore"
 msgstr "恢复"
@@ -2371,7 +2374,7 @@ msgid "Revoke"
 msgstr "撤销"
 
 msgid "Revoke this share? The link stops working immediately."
-msgstr ""
+msgstr "撤销此分享？链接将立即失效。"
 
 #, python-format
 msgid "Role access '%(slug)s' added."
@@ -2479,7 +2482,7 @@ msgid "Search failed."
 msgstr "搜索失败。"
 
 msgid "Search recordings"
-msgstr ""
+msgstr "搜索录像"
 
 msgid "Search recordings (title, date, game)…"
 msgstr "搜索录制（标题、日期、游戏）…"
@@ -2601,13 +2604,13 @@ msgid "Size"
 msgstr "大小"
 
 msgid "Skip to content"
-msgstr ""
+msgstr "跳到内容"
 
 msgid "Sort"
-msgstr ""
+msgstr "排序"
 
 msgid "Sort order"
-msgstr ""
+msgstr "排序顺序"
 
 msgid "Sound"
 msgstr "声音"
@@ -2690,7 +2693,7 @@ msgid "Storage providers"
 msgstr "存储提供商"
 
 msgid "Storage usage"
-msgstr ""
+msgstr "存储用量"
 
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
@@ -2754,7 +2757,7 @@ msgid "Subfolder"
 msgstr "子文件夹"
 
 msgid "Subs"
-msgstr ""
+msgstr "订阅者"
 
 msgid "Success"
 msgstr "成功"
@@ -3010,7 +3013,7 @@ msgid "Transcript missing despite finished status"
 msgstr "状态为已完成，但缺少转录文本"
 
 msgid "Transcript progress"
-msgstr ""
+msgstr "转写进度"
 
 msgid "Transcription cancelled"
 msgstr "转录已取消"
@@ -3053,7 +3056,7 @@ msgid "Twitch badge library synchronized."
 msgstr "Twitch 徽章库已同步。"
 
 msgid "Twitch channel name"
-msgstr ""
+msgstr "Twitch 频道名"
 
 msgid "Twitch channel name…"
 msgstr "Twitch 频道名称…"
@@ -3282,9 +3285,6 @@ msgstr "可见范围："
 
 msgid "Volume"
 msgstr "音量"
-
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "警告：确定要永久删除此主播及所有录制吗？"
 
 msgid "Waiting for server stream…"
 msgstr "正在等待服务器流…"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:19+0100\n"
+"POT-Creation-Date: 2026-11-12 15:13+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -200,7 +200,7 @@ msgid "Account active (access allowed)"
 msgstr "Cuenta activa (acceso permitido)"
 
 msgid "Accounts"
-msgstr ""
+msgstr "Cuentas"
 
 msgid "Action"
 msgstr "Acción"
@@ -230,7 +230,7 @@ msgid "Actively monitored by the recorder core"
 msgstr "Supervisado activamente por el núcleo de grabación"
 
 msgid "Add a channel to record"
-msgstr ""
+msgstr "Añadir un canal para grabar"
 
 msgid "Add channel"
 msgstr "Añadir canal"
@@ -242,7 +242,7 @@ msgid "Add provider"
 msgstr "Añadir proveedor"
 
 msgid "Add the first channel above"
-msgstr ""
+msgstr "Añade el primer canal arriba"
 
 msgid "Addressing"
 msgstr "Direccionamiento"
@@ -505,7 +505,7 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 msgid "Category"
-msgstr ""
+msgstr "Categoría"
 
 msgid "Category search failed."
 msgstr "Falló la búsqueda de categorías."
@@ -594,7 +594,7 @@ msgid "Clip"
 msgstr "Clip"
 
 msgid "Clip Editor"
-msgstr ""
+msgstr "Editor de clips"
 
 msgid "Clip URL is missing on this page."
 msgstr "Falta la URL del clip en esta página."
@@ -681,7 +681,7 @@ msgid "Configured streamers & sources"
 msgstr "Streamers y fuentes configurados"
 
 msgid "Confirm"
-msgstr ""
+msgstr "Confirmar"
 
 msgid "Connect account"
 msgstr "Conectar cuenta"
@@ -705,7 +705,7 @@ msgid "Connection failed"
 msgstr "Error de conexión"
 
 msgid "Connection failed. Check your network and try again."
-msgstr ""
+msgstr "Error de conexión. Comprueba tu red e inténtalo de nuevo."
 
 msgid "Connection lost — reconnecting…"
 msgstr "Conexión perdida — reconectando…"
@@ -724,7 +724,7 @@ msgid "Control the global maintenance mode or lock individual platform areas."
 msgstr "Controla el modo de mantenimiento global o bloquea áreas concretas de la plataforma."
 
 msgid "Copied"
-msgstr ""
+msgstr "Copiado"
 
 msgid "Copy"
 msgstr "Copiar"
@@ -844,11 +844,11 @@ msgstr "Eliminar"
 
 #, python-format
 msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
-msgstr ""
+msgstr "¿Eliminar %(name)s? El archivo se quita del archivo y no se puede restaurar."
 
 #, python-format
 msgid "Delete backup %(name)s? This cannot be undone."
-msgstr ""
+msgstr "¿Eliminar la copia de seguridad %(name)s? No se puede deshacer."
 
 msgid "Delete folder"
 msgstr "Eliminar carpeta"
@@ -868,8 +868,11 @@ msgstr "Eliminar localmente"
 msgid "Delete permanently"
 msgstr "Eliminar definitivamente"
 
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "¿Eliminar la carpeta de este streamer y todas las grabaciones? No se puede deshacer."
+
 msgid "Delete this video? The file is removed from the archive and cannot be restored."
-msgstr ""
+msgstr "¿Eliminar este vídeo? El archivo se quita del archivo y no se puede restaurar."
 
 msgid "Delete user"
 msgstr "Eliminar usuario"
@@ -952,7 +955,7 @@ msgid "Download all"
 msgstr "Descargar todo"
 
 msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
-msgstr ""
+msgstr "¿Descargar todos los VODs de este streamer como un solo archivo? Puede tardar en canales grandes."
 
 msgid "Download archive & VODs"
 msgstr "Descargar archivo y VODs"
@@ -1023,7 +1026,7 @@ msgid "Email address (optional)"
 msgstr "Correo electrónico (opcional)"
 
 msgid "Emotes"
-msgstr ""
+msgstr "Emotes"
 
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr "Vacío = AWS. Para R2, B2, Wasabi, MinIO, etc., introduce el endpoint S3."
@@ -1041,7 +1044,7 @@ msgid "Enable maintenance mode"
 msgstr "Activar modo de mantenimiento"
 
 msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
-msgstr ""
+msgstr "¿Activar el modo de mantenimiento? Todos, salvo los usuarios permitidos, verán la página de mantenimiento hasta que lo desactives."
 
 msgid "Enable recording"
 msgstr "Activar grabación"
@@ -1201,7 +1204,7 @@ msgid "Filter"
 msgstr "Filtrar"
 
 msgid "Filter chat"
-msgstr ""
+msgstr "Filtrar chat"
 
 msgid "Filter chat…"
 msgstr "Filtrar chat…"
@@ -1647,7 +1650,7 @@ msgid "MP4 check not possible"
 msgstr "No es posible comprobar el MP4"
 
 msgid "Main navigation"
-msgstr ""
+msgstr "Navegación principal"
 
 msgid "Maintenance"
 msgstr "Mantenimiento"
@@ -1715,7 +1718,7 @@ msgid "Mobile live is temporarily disabled. Please use the desktop version or th
 msgstr "El directo en móvil está desactivado temporalmente. Usa la versión de escritorio o la app instalada."
 
 msgid "Mods"
-msgstr ""
+msgstr "Mods"
 
 msgid "Monitored"
 msgstr "Supervisado"
@@ -1781,7 +1784,7 @@ msgid "No (self-signed only)"
 msgstr "No (solo con autofirmado)"
 
 msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
-msgstr ""
+msgstr "Aún no hay VODs. Las grabaciones aparecen aquí automáticamente en cuanto un canal vigilado empieza a emitir."
 
 msgid "No acceptances yet."
 msgstr "Aún no hay aceptaciones."
@@ -1817,7 +1820,7 @@ msgid "No badges received from Twitch."
 msgstr "No se recibieron insignias de Twitch."
 
 msgid "No channels are monitored yet."
-msgstr ""
+msgstr "Todavía no se vigila ningún canal."
 
 msgid "No chat"
 msgstr "Sin chat"
@@ -1970,7 +1973,7 @@ msgstr "Abrir editor"
 
 #, python-format
 msgid "Open streamer %(name)s"
-msgstr ""
+msgstr "Abrir streamer %(name)s"
 
 msgid "Operating mode"
 msgstr "Modo de funcionamiento:"
@@ -2095,7 +2098,7 @@ msgid "Player error — reconnecting…"
 msgstr "Error del reproductor — reconectando…"
 
 msgid "Please confirm"
-msgstr ""
+msgstr "Confirma, por favor"
 
 msgid "Please enter a name for the storage provider."
 msgstr "Introduce un nombre para el proveedor de almacenamiento."
@@ -2314,7 +2317,7 @@ msgstr "Quitar canal"
 
 #, python-format
 msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
-msgstr ""
+msgstr "¿Quitar el canal %(name)s? La vigilancia se detiene; las grabaciones existentes se quedan en el archivo."
 
 msgid "Remove only the database entry?"
 msgstr "¿Eliminar solo la entrada de la base de datos?"
@@ -2330,7 +2333,7 @@ msgid "Rename file"
 msgstr "Renombrar archivo"
 
 msgid "Rename the file? Existing links and shares to the old file name stop working."
-msgstr ""
+msgstr "¿Renombrar el archivo? Los enlaces y comparticiones existentes al nombre anterior dejarán de funcionar."
 
 msgid "Renamed."
 msgstr "Renombrado."
@@ -2358,7 +2361,7 @@ msgid "Restart services"
 msgstr "Reiniciar servicios"
 
 msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
-msgstr ""
+msgstr "¿Reiniciar ahora el grabador y el registrador de chat? Las grabaciones en curso se interrumpen unos segundos."
 
 msgid "Restore"
 msgstr "Restaurar"
@@ -2377,7 +2380,7 @@ msgid "Revoke"
 msgstr "Revocar"
 
 msgid "Revoke this share? The link stops working immediately."
-msgstr ""
+msgstr "¿Revocar este enlace compartido? Deja de funcionar de inmediato."
 
 #, python-format
 msgid "Role access '%(slug)s' added."
@@ -2485,7 +2488,7 @@ msgid "Search failed."
 msgstr "Falló la búsqueda."
 
 msgid "Search recordings"
-msgstr ""
+msgstr "Buscar grabaciones"
 
 msgid "Search recordings (title, date, game)…"
 msgstr "Buscar grabaciones (título, fecha, juego)…"
@@ -2607,13 +2610,13 @@ msgid "Size"
 msgstr "Tamaño"
 
 msgid "Skip to content"
-msgstr ""
+msgstr "Saltar al contenido"
 
 msgid "Sort"
-msgstr ""
+msgstr "Ordenar"
 
 msgid "Sort order"
-msgstr ""
+msgstr "Orden"
 
 msgid "Sound"
 msgstr "Sonido"
@@ -2696,7 +2699,7 @@ msgid "Storage providers"
 msgstr "Proveedores de almacenamiento"
 
 msgid "Storage usage"
-msgstr ""
+msgstr "Uso de almacenamiento"
 
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
@@ -2760,7 +2763,7 @@ msgid "Subfolder"
 msgstr "Subcarpeta"
 
 msgid "Subs"
-msgstr ""
+msgstr "Subs"
 
 msgid "Success"
 msgstr "Éxito"
@@ -3016,7 +3019,7 @@ msgid "Transcript missing despite finished status"
 msgstr "Falta la transcripción pese al estado terminado"
 
 msgid "Transcript progress"
-msgstr ""
+msgstr "Progreso de la transcripción"
 
 msgid "Transcription cancelled"
 msgstr "Transcripción cancelada"
@@ -3059,7 +3062,7 @@ msgid "Twitch badge library synchronized."
 msgstr "Biblioteca de insignias de Twitch sincronizada."
 
 msgid "Twitch channel name"
-msgstr ""
+msgstr "Nombre del canal de Twitch"
 
 msgid "Twitch channel name…"
 msgstr "Nombre del canal de Twitch…"
@@ -3288,9 +3291,6 @@ msgstr "Visible para:"
 
 msgid "Volume"
 msgstr "Volumen"
-
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "ATENCIÓN: ¿quieres eliminar definitivamente este streamer y todas sus grabaciones?"
 
 msgid "Waiting for server stream…"
 msgstr "Esperando el stream del servidor…"

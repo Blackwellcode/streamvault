@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:19+0100\n"
+"POT-Creation-Date: 2026-11-12 15:13+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -200,7 +200,7 @@ msgid "Account active (access allowed)"
 msgstr "Account actief (toegang toegestaan)"
 
 msgid "Accounts"
-msgstr ""
+msgstr "Accounts"
 
 msgid "Action"
 msgstr "Actie"
@@ -230,7 +230,7 @@ msgid "Actively monitored by the recorder core"
 msgstr "Actief bewaakt door de recorder-kern"
 
 msgid "Add a channel to record"
-msgstr ""
+msgstr "Kanaal toevoegen om op te nemen"
 
 msgid "Add channel"
 msgstr "Kanaal toevoegen"
@@ -242,7 +242,7 @@ msgid "Add provider"
 msgstr "Provider toevoegen"
 
 msgid "Add the first channel above"
-msgstr ""
+msgstr "Voeg hierboven het eerste kanaal toe"
 
 msgid "Addressing"
 msgstr "Adressering"
@@ -505,7 +505,7 @@ msgid "Cancel"
 msgstr "Annuleren"
 
 msgid "Category"
-msgstr ""
+msgstr "Categorie"
 
 msgid "Category search failed."
 msgstr "Zoeken naar categorie mislukt."
@@ -594,7 +594,7 @@ msgid "Clip"
 msgstr "Clip"
 
 msgid "Clip Editor"
-msgstr ""
+msgstr "Clipeditor"
 
 msgid "Clip URL is missing on this page."
 msgstr "Clip-URL ontbreekt op deze pagina."
@@ -681,7 +681,7 @@ msgid "Configured streamers & sources"
 msgstr "Geconfigureerde streamers & bronnen"
 
 msgid "Confirm"
-msgstr ""
+msgstr "Bevestigen"
 
 msgid "Connect account"
 msgstr "Account koppelen"
@@ -705,7 +705,7 @@ msgid "Connection failed"
 msgstr "Verbinding mislukt"
 
 msgid "Connection failed. Check your network and try again."
-msgstr ""
+msgstr "Verbinding mislukt. Controleer je netwerk en probeer het opnieuw."
 
 msgid "Connection lost — reconnecting…"
 msgstr "Verbinding verbroken — opnieuw verbinden…"
@@ -724,7 +724,7 @@ msgid "Control the global maintenance mode or lock individual platform areas."
 msgstr "Beheer de globale onderhoudsmodus of vergrendel afzonderlijke onderdelen van het platform."
 
 msgid "Copied"
-msgstr ""
+msgstr "Gekopieerd"
 
 msgid "Copy"
 msgstr "Kopiëren"
@@ -844,11 +844,11 @@ msgstr "Verwijderen"
 
 #, python-format
 msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
-msgstr ""
+msgstr "%(name)s verwijderen? Het bestand wordt uit het archief verwijderd en kan niet worden hersteld."
 
 #, python-format
 msgid "Delete backup %(name)s? This cannot be undone."
-msgstr ""
+msgstr "Back-up %(name)s verwijderen? Dit kan niet ongedaan worden gemaakt."
 
 msgid "Delete folder"
 msgstr "Map verwijderen"
@@ -868,8 +868,11 @@ msgstr "Lokaal verwijderen"
 msgid "Delete permanently"
 msgstr "Definitief verwijderen"
 
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "De map van deze streamer en alle opnames verwijderen? Dit kan niet ongedaan worden gemaakt."
+
 msgid "Delete this video? The file is removed from the archive and cannot be restored."
-msgstr ""
+msgstr "Deze video verwijderen? Het bestand wordt uit het archief verwijderd en kan niet worden hersteld."
 
 msgid "Delete user"
 msgstr "Gebruiker verwijderen"
@@ -952,7 +955,7 @@ msgid "Download all"
 msgstr "Alles downloaden"
 
 msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
-msgstr ""
+msgstr "Alle VOD’s van deze streamer als één archief downloaden? Bij grote kanalen kan dat even duren."
 
 msgid "Download archive & VODs"
 msgstr "Archief & VOD's downloaden"
@@ -1023,7 +1026,7 @@ msgid "Email address (optional)"
 msgstr "E-mailadres (optioneel)"
 
 msgid "Emotes"
-msgstr ""
+msgstr "Emotes"
 
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr "Leeg = AWS. Vul voor R2, B2, Wasabi, MinIO enz. het S3-endpoint in."
@@ -1041,7 +1044,7 @@ msgid "Enable maintenance mode"
 msgstr "Onderhoudsmodus inschakelen"
 
 msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
-msgstr ""
+msgstr "Onderhoudsmodus inschakelen? Iedereen behalve toegestane gebruikers ziet de onderhoudspagina tot je hem beëindigt."
 
 msgid "Enable recording"
 msgstr "Opname inschakelen"
@@ -1201,7 +1204,7 @@ msgid "Filter"
 msgstr "Filteren"
 
 msgid "Filter chat"
-msgstr ""
+msgstr "Chat filteren"
 
 msgid "Filter chat…"
 msgstr "Chat filteren…"
@@ -1647,7 +1650,7 @@ msgid "MP4 check not possible"
 msgstr "MP4-controle niet mogelijk"
 
 msgid "Main navigation"
-msgstr ""
+msgstr "Hoofdnavigatie"
 
 msgid "Maintenance"
 msgstr "Onderhoud"
@@ -1715,7 +1718,7 @@ msgid "Mobile live is temporarily disabled. Please use the desktop version or th
 msgstr "Mobiel live kijken is tijdelijk uitgeschakeld. Gebruik de desktopversie of de geïnstalleerde app."
 
 msgid "Mods"
-msgstr ""
+msgstr "Mods"
 
 msgid "Monitored"
 msgstr "Bewaakt"
@@ -1781,7 +1784,7 @@ msgid "No (self-signed only)"
 msgstr "Nee (alleen zelfondertekend)"
 
 msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
-msgstr ""
+msgstr "Nog geen VOD’s. Opnames verschijnen hier automatisch zodra een bewaakt kanaal live gaat."
 
 msgid "No acceptances yet."
 msgstr "Nog geen acceptaties."
@@ -1817,7 +1820,7 @@ msgid "No badges received from Twitch."
 msgstr "Geen badges ontvangen van Twitch."
 
 msgid "No channels are monitored yet."
-msgstr ""
+msgstr "Er worden nog geen kanalen bewaakt."
 
 msgid "No chat"
 msgstr "Geen chat"
@@ -1970,7 +1973,7 @@ msgstr "Editor openen"
 
 #, python-format
 msgid "Open streamer %(name)s"
-msgstr ""
+msgstr "Streamer %(name)s openen"
 
 msgid "Operating mode"
 msgstr "Bedrijfsmodus:"
@@ -2095,7 +2098,7 @@ msgid "Player error — reconnecting…"
 msgstr "Spelerfout — opnieuw verbinden…"
 
 msgid "Please confirm"
-msgstr ""
+msgstr "Bevestig alsjeblieft"
 
 msgid "Please enter a name for the storage provider."
 msgstr "Voer een naam in voor de opslagprovider."
@@ -2314,7 +2317,7 @@ msgstr "Kanaal verwijderen"
 
 #, python-format
 msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
-msgstr ""
+msgstr "Kanaal %(name)s verwijderen? Het bewaken stopt; bestaande opnames blijven in het archief."
 
 msgid "Remove only the database entry?"
 msgstr "Alleen het database-item verwijderen?"
@@ -2330,7 +2333,7 @@ msgid "Rename file"
 msgstr "Bestand hernoemen"
 
 msgid "Rename the file? Existing links and shares to the old file name stop working."
-msgstr ""
+msgstr "Bestand hernoemen? Bestaande links en shares naar de oude bestandsnaam werken dan niet meer."
 
 msgid "Renamed."
 msgstr "Hernoemd."
@@ -2358,7 +2361,7 @@ msgid "Restart services"
 msgstr "Services herstarten"
 
 msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
-msgstr ""
+msgstr "Recorder en chatlogger nu herstarten? Lopende opnames worden een paar seconden onderbroken."
 
 msgid "Restore"
 msgstr "Herstellen"
@@ -2377,7 +2380,7 @@ msgid "Revoke"
 msgstr "Intrekken"
 
 msgid "Revoke this share? The link stops working immediately."
-msgstr ""
+msgstr "Deze share intrekken? De link werkt meteen niet meer."
 
 #, python-format
 msgid "Role access '%(slug)s' added."
@@ -2485,7 +2488,7 @@ msgid "Search failed."
 msgstr "Zoeken mislukt."
 
 msgid "Search recordings"
-msgstr ""
+msgstr "Opnames zoeken"
 
 msgid "Search recordings (title, date, game)…"
 msgstr "Opnames zoeken (titel, datum, game)…"
@@ -2607,13 +2610,13 @@ msgid "Size"
 msgstr "Grootte"
 
 msgid "Skip to content"
-msgstr ""
+msgstr "Naar inhoud springen"
 
 msgid "Sort"
-msgstr ""
+msgstr "Sorteren"
 
 msgid "Sort order"
-msgstr ""
+msgstr "Sorteervolgorde"
 
 msgid "Sound"
 msgstr "Geluid"
@@ -2696,7 +2699,7 @@ msgid "Storage providers"
 msgstr "Opslagproviders"
 
 msgid "Storage usage"
-msgstr ""
+msgstr "Opslaggebruik"
 
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
@@ -2760,7 +2763,7 @@ msgid "Subfolder"
 msgstr "Submap"
 
 msgid "Subs"
-msgstr ""
+msgstr "Subs"
 
 msgid "Success"
 msgstr "Gelukt"
@@ -3016,7 +3019,7 @@ msgid "Transcript missing despite finished status"
 msgstr "Transcript ontbreekt ondanks voltooide status"
 
 msgid "Transcript progress"
-msgstr ""
+msgstr "Voortgang transcriptie"
 
 msgid "Transcription cancelled"
 msgstr "Transcriptie geannuleerd"
@@ -3059,7 +3062,7 @@ msgid "Twitch badge library synchronized."
 msgstr "Twitch-badgebibliotheek gesynchroniseerd."
 
 msgid "Twitch channel name"
-msgstr ""
+msgstr "Naam van Twitch-kanaal"
 
 msgid "Twitch channel name…"
 msgstr "Twitch-kanaalnaam…"
@@ -3288,9 +3291,6 @@ msgstr "Zichtbaar voor:"
 
 msgid "Volume"
 msgstr "Volume"
-
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "WAARSCHUWING: Wil je deze streamer en alle opnames definitief verwijderen?"
 
 msgid "Waiting for server stream…"
 msgstr "Wachten op serverstream…"
