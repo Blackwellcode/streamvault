@@ -401,5 +401,143 @@ class SilentFailureLoggingTests(IsolatedBaseTest):
             worker.cleanup_old_tasks(force=True)
 
 
+
+class ChannelLockFileTests(IsolatedBaseTest):
+    """Lock-file bookkeeping: only the holder (or the PID inside) may release."""
+
+    def setUp(self):
+        super().setUp()
+        self.recordings = self.base / "chan"
+        self.recordings.mkdir()
+        self.path = recorder.channel_lock_path(str(self.recordings), "chan")
+        self.addCleanup(recorder.release_held_channel_lock, str(self.recordings), "chan")
+
+    def _content(self):
+        return Path(self.path).read_text(encoding="utf-8")
+
+    def test_lock_records_the_child_pid_after_spawn(self):
+        self.assertIsNotNone(recorder.try_acquire_channel_lock(str(self.recordings), "chan", pid=111))
+        self.assertEqual(self._content(), "111")
+        recorder.update_channel_lock_pid(str(self.recordings), 22222, "chan")
+        self.assertEqual(self._content(), "22222")
+
+    def test_release_for_a_foreign_pid_keeps_the_held_lock(self):
+        recorder.try_acquire_channel_lock(str(self.recordings), "chan", pid=111)
+        recorder.release_channel_lock(str(self.recordings), pid=999, source_channel="chan")
+        self.assertIn(self.path, recorder._CHANNEL_LOCK_FDS)
+        self.assertTrue(os.path.exists(self.path))
+        recorder.release_channel_lock(str(self.recordings), pid=111, source_channel="chan")
+        self.assertNotIn(self.path, recorder._CHANNEL_LOCK_FDS)
+        self.assertFalse(os.path.exists(self.path))
+
+    def test_unheld_lock_file_is_removed_only_for_its_own_pid(self):
+        Path(self.path).write_text("999", encoding="utf-8")
+        recorder.release_channel_lock(str(self.recordings), pid=111, source_channel="chan")
+        self.assertEqual(self._content(), "999")
+        recorder.release_channel_lock(str(self.recordings), pid=999, source_channel="chan")
+        self.assertFalse(os.path.exists(self.path))
+
+
+@unittest.skipUnless(os.name == "posix", "needs real fcntl.flock")
+class InstanceLockRealFlockTests(IsolatedBaseTest):
+    """Invariant: a second recorder instance exits instead of recording twice."""
+
+    def setUp(self):
+        super().setUp()
+        self.lock_file = str(self.base / ".streamrecorder.pid")
+        for patcher in (mock.patch.object(recorder, "INSTANCE_LOCK_FILE", self.lock_file),
+                        mock.patch.object(recorder, "_INSTANCE_LOCK_FD", None),
+                        mock.patch.object(recorder.atexit, "register")):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.addCleanup(recorder.release_instance_lock)
+
+    def test_second_instance_exits_while_the_first_holds_the_lock(self):
+        holder = subprocess.Popen([sys.executable, "-c", ChannelLockRealFlockTests.HOLDER, self.lock_file],
+                                  stdout=subprocess.PIPE, text=True)
+        self.addCleanup(lambda: holder.poll() is None and (holder.kill(), holder.wait(timeout=5)))
+        self.assertEqual(holder.stdout.readline().strip(), "locked")
+        with self.assertLogs(recorder.logger, level="ERROR"), self.assertRaises(SystemExit) as ctx:
+            recorder.acquire_instance_lock()
+        self.assertEqual(ctx.exception.code, 1)
+        holder.kill()
+        holder.wait(timeout=5)
+        recorder.acquire_instance_lock()
+        self.assertEqual(Path(self.lock_file).read_text(encoding="utf-8"), str(os.getpid()))
+        recorder.release_instance_lock()
+        self.assertFalse(os.path.exists(self.lock_file))
+
+
+def _ignore_sigterm_and_wait(ready):
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    ready.set()
+    time.sleep(30)
+
+
+@unittest.skipUnless(POSIX and hasattr(os, "fork"), "needs fork and POSIX signals")
+class StopChannelProcessRealChildTests(unittest.TestCase):
+    """A channel worker that ignores SIGTERM is killed within the deadline."""
+
+    def test_worker_ignoring_sigterm_is_killed(self):
+        import multiprocessing
+        ctx = multiprocessing.get_context("fork")
+        ready = ctx.Event()
+        proc = ctx.Process(target=_ignore_sigterm_and_wait, args=(ready,))
+        proc.start()
+        self.addCleanup(lambda: proc.is_alive() and (proc.kill(), proc.join(5)))
+        self.assertTrue(ready.wait(10))
+        started = time.monotonic()
+        with self.assertLogs(recorder.logger, level="WARNING"):
+            recorder.stop_channel_process(proc, "chan", timeout=0.5)
+        self.assertFalse(proc.is_alive())
+        self.assertEqual(proc.exitcode, -signal.SIGKILL)
+        self.assertLess(time.monotonic() - started, 10)
+
+
+class WorkerVodTaskPathTests(IsolatedBaseTest):
+    """worker._safe_vod_task_path: remux/thumbnail tasks never leave the archive."""
+
+    def setUp(self):
+        super().setUp()
+        from recorder import worker
+        self.worker = worker
+        self.channel = self.base / "streamer"
+        self.channel.mkdir()
+        self.vod = self.channel / "vod.mp4"
+        self.vod.write_bytes(b"\0" * 16)
+        self.outside = Path(self._tmp.name).parent / f"outside-{os.getpid()}-{id(self)}.mp4"
+        self.outside.write_bytes(b"secret")
+        self.addCleanup(self.outside.unlink)
+
+    def test_archive_file_resolves(self):
+        resolved = self.worker._safe_vod_task_path("streamer", "vod.mp4")
+        self.assertEqual(os.path.normcase(resolved), os.path.normcase(os.path.realpath(self.vod)))
+
+    def test_traversal_and_non_archive_names_are_rejected(self):
+        cases = [
+            ("streamer", "../" + self.outside.name),
+            ("streamer", "..\\" + self.outside.name),
+            ("streamer", str(self.outside)),
+            ("..", self.outside.name),
+            ("../streamer", "vod.mp4"),
+            ("streamer", "missing.mp4"),
+            ("streamer", "vod.mp4.part"),
+            ("streamer", "notes.txt"),
+            ("", "vod.mp4"),
+            ("streamer", ""),
+        ]
+        for streamer, filename in cases:
+            with self.subTest(streamer=streamer, filename=filename):
+                self.assertIsNone(self.worker._safe_vod_task_path(streamer, filename))
+
+    def test_symlink_out_of_the_archive_is_rejected(self):
+        link = self.channel / "link.mp4"
+        try:
+            os.symlink(self.outside, link)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"symlinks unavailable: {exc}")
+        self.assertIsNone(self.worker._safe_vod_task_path("streamer", "link.mp4"))
+
+
 if __name__ == "__main__":
     unittest.main()
