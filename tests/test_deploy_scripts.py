@@ -32,14 +32,14 @@ class CliRecordingGuardTests(unittest.TestCase):
 
     def _guard(self, force):
         script = _cli_functions() + f"\nguard_recordings {force}\necho passed\n"
-        env = dict(os.environ, STREAMVAULT_ENV=str(self.env_file), STREAMVAULT_DIR=str(self.base.parent))
+        env = dict(os.environ, STREAMVAULT_ENV=str(self.env_file), STREAMVAULT_DIR=str(ROOT))
         return subprocess.run([BASH, "-c", script], capture_output=True, text=True, env=env, timeout=30)
 
     def test_fresh_part_file_blocks_restart(self):
         (self.base / "chan" / "rec.mp4.part").write_bytes(b"x")
         result = self._guard(0)
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn("rec.mp4.part", result.stdout)
+        self.assertIn("rec.mp4.part", result.stdout + result.stderr)
         self.assertNotIn("passed", result.stdout)
 
     def test_force_overrides_the_guard(self):
@@ -65,7 +65,7 @@ class CliRecordingGuardTests(unittest.TestCase):
         result = self._guard(0)
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertNotIn("passed", result.stdout)
-        self.assertIn("Could not check for active recordings", result.stdout)
+        self.assertIn("for active recordings", result.stdout + result.stderr)
         forced = self._guard(1)
         self.assertEqual(forced.returncode, 0, forced.stderr)
         self.assertIn("passed", forced.stdout)
@@ -74,6 +74,62 @@ class CliRecordingGuardTests(unittest.TestCase):
         script = _cli_functions() + '\nhas_force restart --force\nhas_force restart webui\n'
         result = subprocess.run([BASH, "-c", script], capture_output=True, text=True, timeout=30)
         self.assertEqual(result.stdout.split(), ["1", "0"])
+
+
+@unittest.skipUnless(BASH, "needs bash on a POSIX host")
+class RecordingGuardLibTests(unittest.TestCase):
+    """scripts/recording-guard.sh, shared by install.sh, bin/streamvault and the VPS script."""
+
+    def _rc(self, base, force):
+        script = f'source "{ROOT / "scripts" / "recording-guard.sh"}"; sv_recording_guard "{base}" {force}'
+        return subprocess.run([BASH, "-c", script], capture_output=True, text=True, timeout=30).returncode
+
+    def test_return_codes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            (base / "chan").mkdir()
+            self.assertEqual(self._rc(base, 0), 0)
+            self.assertEqual(self._rc(base / "missing", 0), 0)
+            (base / "chan" / "rec.mp4.part").write_bytes(b"x")
+            self.assertEqual(self._rc(base, 0), 1)
+            self.assertEqual(self._rc(base, 1), 0)
+            if not (hasattr(os, "geteuid") and os.geteuid() == 0):
+                locked = base / "locked"
+                locked.mkdir()
+                os.chmod(locked, 0)
+                try:
+                    self.assertEqual(self._rc(base, 0), 2)
+                    self.assertEqual(self._rc(base, 1), 0)
+                finally:
+                    os.chmod(locked, 0o755)
+
+    def test_installer_aborts_when_the_archive_cannot_be_scanned(self):
+        text = (ROOT / "install.sh").read_text(encoding="utf-8")
+        block = text.split('if [[ "${GUARD_RC}" == "2" ]]; then', 1)[1].split("elif", 1)[0]
+        self.assertIn("exit 1", block)
+
+
+@unittest.skipUnless(BASH and shutil.which("rsync") and shutil.which("tar"), "needs bash, rsync and tar")
+class VpsSnapshotTests(unittest.TestCase):
+    def test_snapshot_uses_the_shared_exclude_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "app"
+            for rel in ("WEBUI/webui.py", "core/config.py", "data/streamrecorder.db", ".env", ".env.local",
+                        ".venv/bin/python", "logs/webui.log", "x.sqlite3", ".meta/secret_key.txt",
+                        ".hls/a.ts", ".git/HEAD", "chan/rec.mp4.part"):
+                path = src / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("x", encoding="utf-8")
+            archive = Path(tmp) / "snap.tgz"
+            script = (f'source "{ROOT / "scripts" / "streamvault_vps.sh"}"; '
+                      f'snapshot_code "{src}" "{archive}"')
+            result = subprocess.run([BASH, "-c", script], capture_output=True, text=True, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            listing = subprocess.run(["tar", "-tzf", str(archive)], capture_output=True, text=True,
+                                     check=True).stdout.split()
+        files = sorted(name[2:] if name.startswith("./") else name
+                       for name in listing if not name.endswith("/"))
+        self.assertEqual(files, ["WEBUI/webui.py", "core/config.py"])
 
 
 class InstallerStaticTests(unittest.TestCase):
