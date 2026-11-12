@@ -19,6 +19,19 @@ Useful details:
 
 Only the latest release on the default branch receives security fixes.
 
+## Known limits
+
+- **Login guessing from many networks.** Failed logins are limited per
+  address (IPv6: per /64), per account and network
+  (`VOD_LOGIN_USER_MAX_FAILS`) and by an account-wide safety net
+  (`VOD_LOGIN_USER_GLOBAL_MAX_FAILS`). The safety net only slows networks
+  that themselves failed at least `VOD_LOGIN_USER_NET_MIN_FAILS` times
+  (default 3), so that nobody can lock the owner out. The price: an attacker
+  who controls many networks, for example the 65,536 /64 networks of one
+  IPv6 /48, still gets about that many guesses per network and hour. Use a
+  long, unique password; a reverse proxy or firewall can additionally limit
+  `/login` per larger prefix.
+
 ## Scope
 
 StreamVault is self-hosted. Operators are responsible for TLS, firewalling and

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 18:23+0100\n"
+"POT-Creation-Date: 2026-11-12 15:19+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ja\n"
@@ -3006,8 +3006,10 @@ msgstr "今日 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "現在、再生中の VOD が多すぎます。ライブには影響しません。数分後に再度お試しください。誰かがプレーヤーを閉じるとスロットが空きます。"
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "試行回数が多すぎます。IP が一時的にブロックされました。しばらくしてから再度お試しください。"
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "ログイン試行回数が多すぎます。%(num)d分後にもう一度お試しください。"
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "トップ配信は現在利用できません。監視中のチャンネルまたは検索をご利用ください。"
@@ -3402,8 +3404,8 @@ msgstr "ユーザー管理権限のないグループに自分を移動するこ
 msgid "You have accepted version %(version)s."
 msgstr "バージョン %(version)s に同意済みです。"
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "お使いの IP は一時的にブロックされています。しばらくしてから再度お試しください。"
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "このIPはブロックされました。管理者に連絡してください。"
 
 msgid "Your browser does not support the video tag."
 msgstr "お使いのブラウザーは video タグに対応していません。"
@@ -3509,4 +3511,10 @@ msgstr "✓ クリップを保存しました"
 
 msgid "✕ CLIP FAILED"
 msgstr "✕ クリップに失敗しました"
+
+#~ msgid "Too many attempts. IP temporarily blocked. Please try again later."
+#~ msgstr "試行回数が多すぎます。IP が一時的にブロックされました。しばらくしてから再度お試しください。"
+
+#~ msgid "Your IP has been temporarily blocked. Please try again later."
+#~ msgstr "お使いの IP は一時的にブロックされています。しばらくしてから再度お試しください。"
 

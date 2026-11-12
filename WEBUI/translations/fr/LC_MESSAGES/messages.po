@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 18:23+0100\n"
+"POT-Creation-Date: 2026-11-12 15:19+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -3015,8 +3015,11 @@ msgstr "Aujourd'hui, %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "Trop de VOD sont en cours de lecture. Le direct n'est pas concerné. Réessayez dans quelques minutes — une place se libère dès que quelqu'un ferme le lecteur."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "Trop de tentatives. IP temporairement bloquée. Veuillez réessayer plus tard."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "Trop de tentatives de connexion. Réessayez dans %(num)d minute."
+msgstr[1] "Trop de tentatives de connexion. Réessayez dans %(num)d minutes."
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "Les meilleurs streams sont actuellement indisponibles. Utilisez les chaînes surveillées ou la recherche."
@@ -3411,8 +3414,8 @@ msgstr "Vous ne pouvez pas vous déplacer dans un groupe sans autorisation de ge
 msgid "You have accepted version %(version)s."
 msgstr "Vous avez accepté la version %(version)s."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "Votre IP a été temporairement bloquée. Veuillez réessayer plus tard."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "Votre IP a été bloquée. Veuillez contacter l’administrateur."
 
 msgid "Your browser does not support the video tag."
 msgstr "Votre navigateur ne prend pas en charge la balise vidéo."
@@ -3518,4 +3521,10 @@ msgstr "✓ CLIP ENREGISTRÉ"
 
 msgid "✕ CLIP FAILED"
 msgstr "✕ ÉCHEC DU CLIP"
+
+#~ msgid "Too many attempts. IP temporarily blocked. Please try again later."
+#~ msgstr "Trop de tentatives. IP temporairement bloquée. Veuillez réessayer plus tard."
+
+#~ msgid "Your IP has been temporarily blocked. Please try again later."
+#~ msgstr "Votre IP a été temporairement bloquée. Veuillez réessayer plus tard."
 

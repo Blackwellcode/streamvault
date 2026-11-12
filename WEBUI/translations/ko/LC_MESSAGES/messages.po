@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 18:23+0100\n"
+"POT-Creation-Date: 2026-11-12 15:19+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -3006,8 +3006,10 @@ msgstr "오늘 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "지금 재생 중인 VOD가 너무 많습니다. 라이브에는 영향이 없습니다. 몇 분 후 다시 시도하세요 — 누군가 플레이어를 닫으면 자리가 납니다."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "시도 횟수가 너무 많습니다. IP가 일시적으로 차단되었습니다. 나중에 다시 시도하세요."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "로그인 시도가 너무 많습니다. %(num)d분 후에 다시 시도하세요."
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "인기 스트림을 현재 사용할 수 없습니다. 모니터링 채널이나 검색을 이용하세요."
@@ -3402,8 +3404,8 @@ msgstr "사용자 관리 권한이 없는 그룹으로 자신을 이동할 수 �
 msgid "You have accepted version %(version)s."
 msgstr "버전 %(version)s에 동의했습니다."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "IP가 일시적으로 차단되었습니다. 나중에 다시 시도하세요."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "IP가 차단되었습니다. 관리자에게 문의하세요."
 
 msgid "Your browser does not support the video tag."
 msgstr "브라우저가 video 태그를 지원하지 않습니다."
@@ -3509,4 +3511,10 @@ msgstr "✓ 클립 저장됨"
 
 msgid "✕ CLIP FAILED"
 msgstr "✕ 클립 실패"
+
+#~ msgid "Too many attempts. IP temporarily blocked. Please try again later."
+#~ msgstr "시도 횟수가 너무 많습니다. IP가 일시적으로 차단되었습니다. 나중에 다시 시도하세요."
+
+#~ msgid "Your IP has been temporarily blocked. Please try again later."
+#~ msgstr "IP가 일시적으로 차단되었습니다. 나중에 다시 시도하세요."
 

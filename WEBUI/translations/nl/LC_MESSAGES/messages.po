@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 18:23+0100\n"
+"POT-Creation-Date: 2026-11-12 15:19+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -3015,8 +3015,11 @@ msgstr "Vandaag, %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "Er worden momenteel te veel VOD's afgespeeld. Live is niet getroffen. Probeer het over een paar minuten opnieuw — er komt een plek vrij zodra iemand de speler sluit."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "Te veel pogingen. IP tijdelijk geblokkeerd. Probeer het later opnieuw."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "Te veel inlogpogingen. Probeer het over %(num)d minuut opnieuw."
+msgstr[1] "Te veel inlogpogingen. Probeer het over %(num)d minuten opnieuw."
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "Topstreams zijn momenteel niet beschikbaar. Gebruik bewaakte kanalen of de zoekfunctie."
@@ -3411,8 +3414,8 @@ msgstr "Je kunt jezelf niet naar een groep zonder rechten voor gebruikersbeheer 
 msgid "You have accepted version %(version)s."
 msgstr "Je hebt versie %(version)s geaccepteerd."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "Je IP is tijdelijk geblokkeerd. Probeer het later opnieuw."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "Je IP-adres is geblokkeerd. Neem contact op met de beheerder."
 
 msgid "Your browser does not support the video tag."
 msgstr "Je browser ondersteunt de video-tag niet."
@@ -3518,4 +3521,10 @@ msgstr "✓ CLIP OPGESLAGEN"
 
 msgid "✕ CLIP FAILED"
 msgstr "✕ CLIP MISLUKT"
+
+#~ msgid "Too many attempts. IP temporarily blocked. Please try again later."
+#~ msgstr "Te veel pogingen. IP tijdelijk geblokkeerd. Probeer het later opnieuw."
+
+#~ msgid "Your IP has been temporarily blocked. Please try again later."
+#~ msgstr "Je IP is tijdelijk geblokkeerd. Probeer het later opnieuw."
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 18:23+0100\n"
+"POT-Creation-Date: 2026-11-12 15:19+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -3006,8 +3006,10 @@ msgstr "今天 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "当前播放的 VOD 过多。直播不受影响。请几分钟后再试——有人关闭播放器后就会空出名额。"
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "尝试次数过多。IP 已被暂时封禁。请稍后重试。"
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "登录尝试次数过多。请在 %(num)d 分钟后重试。"
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "热门直播暂不可用。请使用监控频道或搜索。"
@@ -3402,8 +3404,8 @@ msgstr "不能将自己移到没有用户管理权限的用户组。"
 msgid "You have accepted version %(version)s."
 msgstr "你已接受版本 %(version)s。"
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "你的 IP 已被暂时封禁。请稍后重试。"
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "您的 IP 已被封禁。请联系管理员。"
 
 msgid "Your browser does not support the video tag."
 msgstr "你的浏览器不支持 video 标签。"
@@ -3509,4 +3511,10 @@ msgstr "✓ 剪辑已保存"
 
 msgid "✕ CLIP FAILED"
 msgstr "✕ 剪辑失败"
+
+#~ msgid "Too many attempts. IP temporarily blocked. Please try again later."
+#~ msgstr "尝试次数过多。IP 已被暂时封禁。请稍后重试。"
+
+#~ msgid "Your IP has been temporarily blocked. Please try again later."
+#~ msgstr "你的 IP 已被暂时封禁。请稍后重试。"
 

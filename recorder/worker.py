@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -299,8 +300,8 @@ def cleanup_old_tasks(force=False):
         if conn is not None:
             try:
                 conn.close()
-            except Exception:
-                pass
+            except sqlite3.Error as exc:
+                logging.warning("Task cleanup connection not closed: %s", exc)
 
 
 def thumbnail_lock_path(thumb_path):
@@ -984,7 +985,16 @@ def process_transcribe(payload):
         if transcript:
             cmd.append(transcript)
         # run synchronously so worker marks task complete/failed
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3600)
+        # Own session: the runner leads its process group, so a cancel from the
+        # web UI can signal exactly this group and never the worker's own.
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=3600,
+            start_new_session=True,
+        )
         if result.returncode != 0:
             logging.error(f"Transcribe subprocess failed: {result.stderr}")
             return False
@@ -1233,8 +1243,8 @@ def process_remux_vod(payload):
         try:
             from core import redis_client
             redis_client.invalidate_dashboard_cache()
-        except Exception:
-            pass
+        except ImportError as exc:
+            logging.warning("Redis client unavailable, dashboard cache not invalidated: %s", exc)
     _maybe_enqueue_storage_upload(final_path)
     return True
 
