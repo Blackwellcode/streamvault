@@ -24,6 +24,14 @@ All notable changes to this project are documented here. The format follows
   with `STREAM_RECORDER_USE_PROXY=true`.
 - **Backups.** `BACKUP_DIR` defaults to `<VOD_META_DIR>/backups`; "create
   backup" runs the script named in `VOD_BACKUP_SCRIPT`.
+- **Content-Security-Policy is enforced.** `VOD_CSP_ENFORCE` now defaults to
+  `true`: inline scripts need the per-request nonce and inline event handlers
+  (`onclick=` ...) are blocked. Custom templates or overlays with inline
+  scripts must use `nonce="{{ csp_nonce() }}"`. `VOD_CSP_ENFORCE=false` falls
+  back to `Content-Security-Policy-Report-Only`.
+- **Overlay tokens as headers.** The TTS and alert overlays read `?token=`
+  from their own URL but send it to the API only as `X-TTS-Token` /
+  `X-Alert-Token`; audio is fetched with the header and played from a blob URL.
 
 ### Security
 
@@ -32,6 +40,9 @@ All notable changes to this project are documented here. The format follows
   rate limits and bans. `VOD_TRUSTED_PROXIES` accepts CIDR networks.
 - Code and dot-directories below `VOD_BASE_DIR` can no longer be deleted as
   streamer archives.
+- WebUI: chat fallbacks escape Twitch chat text, toasts use `textContent`,
+  banner/hero URLs only reach CSS `url()` through the `css_url` filter, and
+  the CSP allows the emote hosts (BTTV, FFZ, 7TV, ivr.fi) and `https:` images.
 
 ### Fixed
 
@@ -53,6 +64,13 @@ All notable changes to this project are documented here. The format follows
 - Channel pages showed a stray separator when a recording had no size.
 
 ### Added
+
+- WebUI accessibility and design (audit 2026-11-12): native `<dialog>` modals
+  with focus handling, one confirmation dialog (`data-confirm`) for restart,
+  maintenance and deletions, bottom navigation with logout below 768px,
+  skip link, labelled fields, AA contrast tokens, unlocked zoom on mobile.
+  `static/css/tokens.css` is the single token layer; stylesheets load as
+  parallel `<link>`s.
 
 - GitHub Actions CI (Python 3.10–3.12, ruff, unit tests, shell syntax),
   Dependabot, contribution and security guidelines.
