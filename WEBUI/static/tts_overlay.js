@@ -1,13 +1,12 @@
 /* TTS overlay (OBS browser source). External file: the enforced CSP blocks inline scripts.
-   Auth: token from ?token= of the overlay URL, sent to the API only as X-TTS-Token header. */
+   Auth: token from #token= of the overlay URL (a legacy ?token= is moved into the fragment),
+   sent to the API only as X-TTS-Token header. No token or HTTP 401: polling stops. */
 (function () {
-    // OBS cannot send headers: the token sits in the URL fragment (#token=..., never sent to
-    // the server) or, for older URLs, in ?token=. It is passed to the API only as a header.
-    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
-    const queryParams = new URLSearchParams(location.search);
-    const token = hashParams.get("token") || queryParams.get("token") || "";
-    const streamer = queryParams.get("streamer") || hashParams.get("streamer") || "";
-    const showToast = (queryParams.get("toast") || hashParams.get("toast")) !== "0";
+    const overlay = window.SVOverlay;
+    const parsed = overlay.readToken();
+    const token = parsed.token;
+    const streamer = parsed.params.get("streamer") || "";
+    const showToast = parsed.params.get("toast") !== "0";
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
     const userEl = toastEl.querySelector(".user");
@@ -15,15 +14,22 @@
     const player = document.getElementById("player");
     const AUTH_HEADERS = { "X-TTS-Token": token };
 
-    const audio = window.SVOverlayAudio.create(player, AUTH_HEADERS);
-
-    let busy = false;
-    let currentId = null;
-    let skipTimer = null;
-
     function setStatus(msg) {
       statusEl.textContent = msg;
     }
+
+    if (!token) {
+      setStatus("Token fehlt – Overlay-URL mit #token=… verwenden");
+      return;
+    }
+    if (!streamer) {
+      setStatus("streamer fehlt");
+      return;
+    }
+
+    const audio = overlay.createAudio(player, AUTH_HEADERS);
+    let busy = false;
+    let currentId = null;
 
     function showItem(user, text) {
       if (!showToast) return;
@@ -36,18 +42,18 @@
       toastEl.classList.remove("show");
     }
 
-    function withAuth(path) {
+    function withStreamer(path) {
       const u = new URL(path, location.origin);
       u.searchParams.set("streamer", streamer);
       return u.pathname + u.search;
     }
 
+    /** @returns {Promise<{status: number, data: any}>} */
     async function api(path, opts) {
       const o = Object.assign({}, opts || {});
       o.headers = Object.assign({}, o.headers || {}, AUTH_HEADERS);
-      const res = await fetch(withAuth(path), o);
-      if (!res.ok) throw new Error("http " + res.status);
-      return res.json();
+      const res = await fetch(withStreamer(path), o);
+      return { status: res.status, data: res.ok ? await res.json() : null };
     }
 
     async function ack(id) {
@@ -63,64 +69,75 @@
     }
 
     async function pollSkip() {
-      if (!currentId || !busy) return;
-      try {
-        const data = await api("/tts/api/skipcheck?id=" + encodeURIComponent(currentId));
-        if (data && data.skip) {
-          player.pause();
-          hideToast();
-          const id = currentId;
-          currentId = null;
-          busy = false;
-          await ack(id);
-          setStatus("skipped");
-        }
-      } catch (e) {
-        console.error("[tts-overlay] skip check failed for item", currentId, e);
+      if (!currentId || !busy) return "ok";
+      const res = await api("/tts/api/skipcheck?id=" + encodeURIComponent(currentId));
+      if (res.status === 401) return "unauthorized";
+      if (res.status !== 200) return "error";
+      if (res.data && res.data.skip) {
+        player.pause();
+        hideToast();
+        const id = currentId;
+        currentId = null;
+        busy = false;
+        await ack(id);
+        setStatus("skipped");
       }
+      return "ok";
     }
 
     async function tick() {
-      if (!streamer) {
-        setStatus("streamer fehlt");
-        return;
+      if (busy) return "ok";
+      const res = await api("/tts/api/next");
+      if (res.status === 401) return "unauthorized";
+      if (res.status !== 200) {
+        setStatus("error " + res.status);
+        return "error";
       }
-      if (busy) return;
+      if (!res.data || !res.data.item) {
+        setStatus("TTS idle");
+        return "ok";
+      }
+      const item = res.data.item;
+      busy = true;
+      currentId = item.id;
+      setStatus("playing · " + (item.user || ""));
+      showItem(item.user, item.text);
       try {
-        const data = await api("/tts/api/next");
-        if (!data || !data.item) {
-          setStatus("TTS idle");
-          return;
-        }
-        const item = data.item;
-        busy = true;
-        currentId = item.id;
-        setStatus("playing · " + (item.user || ""));
-        showItem(item.user, item.text);
         await audio.load(item.audio_url);
-        try {
-          await player.play();
-        } catch (err) {
-          console.error("[tts-overlay] autoplay blocked", err);
-          setStatus("autoplay blocked — Interact + click once");
-          const retry = async () => {
-            try {
-              player.muted = false;
-              await player.play();
-              setStatus("playing · " + (item.user || ""));
-            } catch (e2) {
-              console.error("[tts-overlay] autoplay retry failed", e2);
-              setStatus("autoplay still blocked");
-            }
-          };
-          window.addEventListener("pointerdown", retry, { once: true });
-          return;
-        }
       } catch (e) {
-        console.error("[tts-overlay] loading or playing the next item failed", e);
-        setStatus("error");
+        console.error("[tts-overlay] loading audio failed for item", item.id, e);
+        busy = false;
+        currentId = null;
+        setStatus("audio error");
+        return "error";
       }
+      try {
+        await player.play();
+      } catch (err) {
+        console.error("[tts-overlay] autoplay blocked", err);
+        setStatus("autoplay blocked — Interact + click once");
+        const retry = async () => {
+          try {
+            player.muted = false;
+            await player.play();
+            setStatus("playing · " + (item.user || ""));
+          } catch (e2) {
+            console.error("[tts-overlay] autoplay retry failed", e2);
+            setStatus("autoplay still blocked");
+          }
+        };
+        window.addEventListener("pointerdown", retry, { once: true });
+      }
+      return "ok";
     }
+
+    function stopAll() {
+      nextPoller.stop();
+      skipPoller.stop();
+      setStatus("Token ungültig – Abfrage angehalten");
+    }
+    const nextPoller = overlay.createPoller(tick, { interval: 1200, maxInterval: 30000, label: "tts next", onUnauthorized: stopAll });
+    const skipPoller = overlay.createPoller(pollSkip, { interval: 800, maxInterval: 30000, label: "tts skipcheck", onUnauthorized: stopAll });
 
     player.addEventListener("ended", async () => {
       const id = currentId;
@@ -130,7 +147,7 @@
       audio.release();
       if (id) await ack(id);
       setStatus("TTS idle");
-      tick();
+      nextPoller.now();
     });
 
     player.addEventListener("error", async () => {
@@ -149,7 +166,6 @@
       player.play().catch((e) => console.error("[tts-overlay] unlock play failed", e));
     }, {once: true});
 
-    setInterval(tick, 1200);
-    setInterval(pollSkip, 800);
-    tick();
+    nextPoller.start();
+    skipPoller.start();
 })();

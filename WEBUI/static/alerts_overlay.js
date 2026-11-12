@@ -1,55 +1,65 @@
 /* Alert sound overlay (OBS browser source). External file: the enforced CSP blocks inline scripts.
-   Auth: token from ?token= of the overlay URL, sent to the API only as X-Alert-Token header. */
+   Auth: token from #token= of the overlay URL (a legacy ?token= is moved into the fragment),
+   sent to the API only as X-Alert-Token header. No token or HTTP 401: polling stops. */
 (function () {
-    // OBS cannot send headers: the token sits in the URL fragment (#token=..., never sent to
-    // the server) or, for older URLs, in ?token=. It is passed to the API only as a header.
-    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
-    const queryParams = new URLSearchParams(location.search);
-    const token = hashParams.get("token") || queryParams.get("token") || "";
+    const overlay = window.SVOverlay;
+    const token = overlay.readToken().token;
     const hud = document.getElementById("hud");
     const player = document.getElementById("player");
     const AUTH_HEADERS = { "X-Alert-Token": token };
 
-    const audio = window.SVOverlayAudio.create(player, AUTH_HEADERS);
+    function showHud(text) {
+      hud.textContent = text;
+      hud.classList.add("show");
+    }
+
+    if (!token) {
+      showHud("Token fehlt – Overlay-URL mit #token=… verwenden");
+      return;
+    }
+
+    const audio = overlay.createAudio(player, AUTH_HEADERS);
     let busy = false;
     let currentId = null;
-
-    function url(path) {
-      const u = new URL(path, location.origin);
-      return u.pathname + u.search;
-    }
 
     async function ack(id) {
       if (!id) return;
       try {
-        await fetch(url("/alerts/api/ack?id=" + encodeURIComponent(id)), { method: "POST", headers: AUTH_HEADERS });
+        await fetch("/alerts/api/ack?id=" + encodeURIComponent(id), { method: "POST", headers: AUTH_HEADERS });
       } catch (e) {
         console.error("[alerts-overlay] ack failed for item", id, e);
       }
     }
 
     async function tick() {
-      if (busy) return;
+      if (busy) return "ok";
+      const res = await fetch("/alerts/api/next", { headers: AUTH_HEADERS });
+      if (res.status === 401) return "unauthorized";
+      if (!res.ok) return "error";
+      const data = await res.json();
+      if (!data || !data.item) return "ok";
+      const item = data.item;
+      busy = true;
+      currentId = item.id;
+      showHud("🔔 " + (item.label || item.event));
       try {
-        const res = await fetch(url("/alerts/api/next"), { headers: AUTH_HEADERS });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data || !data.item) return;
-        const item = data.item;
-        busy = true;
-        currentId = item.id;
-        hud.textContent = "🔔 " + (item.label || item.event);
-        hud.classList.add("show");
         await audio.load(item.audio_url);
         await player.play();
       } catch (e) {
         console.error("[alerts-overlay] loading or playing the next alert failed", e);
-        hud.textContent = "click once to unlock audio";
-        hud.classList.add("show");
+        showHud("click once to unlock audio");
         busy = false;
         currentId = null;
       }
+      return "ok";
     }
+
+    const poller = overlay.createPoller(tick, {
+      interval: 900,
+      maxInterval: 30000,
+      label: "alerts next",
+      onUnauthorized: function () { showHud("Token ungültig – Abfrage angehalten"); },
+    });
 
     player.addEventListener("ended", async () => {
       const id = currentId;
@@ -58,7 +68,7 @@
       hud.classList.remove("show");
       audio.release();
       await ack(id);
-      tick();
+      poller.now();
     });
 
     player.addEventListener("error", async () => {
@@ -74,6 +84,5 @@
       player.play().catch((e) => console.error("[alerts-overlay] unlock play failed", e));
     }, { once: true });
 
-    setInterval(tick, 900);
-    tick();
+    poller.start();
 })();
