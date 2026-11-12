@@ -3592,6 +3592,9 @@ def resolve_resource_file_path(filename):
     file_path = safe_join(config.FILES_DIR, filename)
     if not file_path or not os.path.isfile(file_path):
         return None
+    if os.path.islink(file_path):
+        logging.warning("Refusing symlinked resource file %s", file_path)
+        return None
     return file_path
 
 
@@ -6125,6 +6128,11 @@ def resolve_media_path(streamer, filename, route):
             else:
                 file_path = safe_join(safe_dir, filename)
             if file_path and os.path.isfile(file_path):
+                # A symlinked media file could point anywhere on disk. The archive
+                # directory itself may be a symlink (other drive); its files may not.
+                if os.path.islink(file_path) or not _path_is_under(file_path, safe_dir):
+                    logging.warning("Refusing symlinked media path %s", file_path)
+                    continue
                 return file_path
     return None
 

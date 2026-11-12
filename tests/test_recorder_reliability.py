@@ -376,6 +376,12 @@ class TaskRequeueTests(IsolatedBaseTest):
 
 
 class RunTranscribeTests(unittest.TestCase):
+    def setUp(self):
+        # run_transcribe.main sets STREAMVAULT_IMPORT_ONLY process-wide; restore it.
+        env = mock.patch.dict(os.environ)
+        env.start()
+        self.addCleanup(env.stop)
+
     def test_usage_error(self):
         self.assertEqual(run_transcribe.main([]), 2)
 
@@ -817,6 +823,10 @@ class DemoSeedTests(IsolatedBaseTest):
         (own / self.demo_seed.MARKER_FILE).write_text("x", encoding="utf-8")
         (own / "pixelharbor").mkdir()
         self.demo_seed.check_target(str(own))
+        # check_target creates a missing target and leaves its own data alone.
+        self.assertTrue((self.base / "fresh").is_dir())
+        self.assertEqual(sorted(p.name for p in own.iterdir()),
+                         sorted([self.demo_seed.MARKER_FILE, "pixelharbor"]))
 
 
 class LoadJsonTests(IsolatedBaseTest):

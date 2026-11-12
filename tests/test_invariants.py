@@ -191,6 +191,105 @@ class StopProcessRealChildTests(unittest.TestCase):
         self.assertEqual(child.returncode, -signal.SIGTERM)
 
 
+@unittest.skipUnless(os.name == "posix", "needs real fcntl.flock")
+class ChannelLockRealFlockTests(IsolatedBaseTest):
+    """Invariant: one recorder per channel, enforced by a real flock across processes."""
+
+    HOLDER = (
+        "import fcntl, os, sys, time\n"
+        "fd = os.open(sys.argv[1], os.O_CREAT | os.O_RDWR, 0o644)\n"
+        "fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)\n"
+        "print('locked', flush=True)\n"
+        "time.sleep(30)\n"
+    )
+
+    def test_second_process_cannot_take_a_held_channel_lock(self):
+        recordings = self.base / "chan"
+        recordings.mkdir()
+        path = recorder.channel_lock_path(str(recordings), "chan")
+        holder = subprocess.Popen([sys.executable, "-c", self.HOLDER, path],
+                                  stdout=subprocess.PIPE, text=True)
+        self.addCleanup(lambda: holder.poll() is None and (holder.kill(), holder.wait(timeout=5)))
+        self.assertEqual(holder.stdout.readline().strip(), "locked")
+        self.assertIsNone(recorder.try_acquire_channel_lock(str(recordings), "chan"))
+        holder.kill()
+        holder.wait(timeout=5)
+        fd = recorder.try_acquire_channel_lock(str(recordings), "chan", pid=4321)
+        self.addCleanup(recorder.release_held_channel_lock, str(recordings), "chan")
+        self.assertIsNotNone(fd)
+        self.assertEqual(Path(path).read_text(encoding="utf-8"), "4321")
+        recorder.release_held_channel_lock(str(recordings), "chan")
+        self.assertFalse(os.path.exists(path))
+
+
+class MediaPathTraversalTests(IsolatedBaseTest):
+    """resolve_media_path / media route: nothing outside the archive is served."""
+
+    def setUp(self):
+        super().setUp()
+        from WEBUI import webui
+        self.webui = webui
+        patcher = mock.patch.object(webui, "BASE_DIR", str(self.base))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        webui.ensure_admin_user()
+        self.archive = self.base / "streamer"
+        self.archive.mkdir()
+        (self.archive / "vod.mp4").write_bytes(b"\0" * 32)
+        self.outside = Path(self._tmp.name).parent / f"outside-{os.getpid()}-{id(self)}.mp4"
+        self.outside.write_bytes(b"secret")
+        self.addCleanup(self.outside.unlink)
+
+    def test_regular_file_resolves(self):
+        resolved = self.webui.resolve_media_path("streamer", "vod.mp4", "vod")
+        self.assertEqual(os.path.normpath(resolved), os.path.normpath(str(self.archive / "vod.mp4")))
+
+    def test_dot_dot_and_absolute_names_are_rejected(self):
+        for name in ("../" + self.outside.name, "..\\" + self.outside.name,
+                     str(self.outside), "/etc/passwd.mp4", "..", "."):
+            with self.subTest(name=name):
+                self.assertIsNone(self.webui.resolve_media_path("streamer", name, "vod"))
+        for streamer in ("..", "../streamer", "/"):
+            with self.subTest(streamer=streamer):
+                self.assertIsNone(self.webui.resolve_media_path(streamer, self.outside.name, "vod"))
+
+    def test_route_returns_404_for_traversal(self):
+        client = _admin_client(self.webui)
+        for url in (f"/media/streamer/..%2F{self.outside.name}",
+                    f"/media/streamer/..%5C{self.outside.name}",
+                    f"/media/..%2F/{self.outside.name}"):
+            with self.subTest(url=url):
+                # Werkzeug may 308-normalise slashes first; the final answer must be 404.
+                response = client.get(url, follow_redirects=True)
+                self.assertEqual(response.status_code, 404)
+                self.assertNotIn(b"secret", response.data)
+
+    def test_symlink_to_outside_file_is_404(self):
+        link = self.archive / "link.mp4"
+        try:
+            os.symlink(self.outside, link)
+        except (OSError, NotImplementedError) as exc:
+            self.skipTest(f"symlinks unavailable: {exc}")
+        self.assertIsNone(self.webui.resolve_media_path("streamer", "link.mp4", "vod"))
+        client = _admin_client(self.webui)
+        self.assertEqual(client.get("/media/streamer/link.mp4").status_code, 404)
+
+
+class SqlitePragmaTests(IsolatedBaseTest):
+    """Invariant 4: every connection runs WAL, busy_timeout=10000, synchronous=NORMAL."""
+
+    def test_get_db_pragmas(self):
+        from core import database
+        conn = database.get_db()
+        try:
+            self.assertEqual(conn.execute("PRAGMA journal_mode").fetchone()[0].lower(), "wal")
+            self.assertEqual(conn.execute("PRAGMA busy_timeout").fetchone()[0], 10000)
+            self.assertEqual(conn.execute("PRAGMA synchronous").fetchone()[0], 1)  # NORMAL
+            self.assertEqual(conn.execute("PRAGMA foreign_keys").fetchone()[0], 1)
+        finally:
+            conn.close()
+
+
 class ClipKillProcessTreeTests(unittest.TestCase):
     """clip_engine._kill_process_tree must never killpg its own group."""
 
