@@ -772,6 +772,39 @@ gate_release() {
     [[ $N_FAIL -eq 0 ]]
 }
 
+# Code snapshots and copies never carry runtime data, databases or secrets.
+CODE_EXCLUDES=(
+    --exclude '.git/' --exclude '.venv/' --exclude 'venv/' --exclude '__pycache__/' --exclude '*.pyc'
+    --exclude '.env' --exclude '.env.*' --exclude 'data/' --exclude 'demo-data/' --exclude 'files/'
+    --exclude '.meta/' --exclude '.hls/' --exclude '.hls_live/' --exclude '.thumbs/' --exclude '.vodcache/'
+    --exclude '*.db' --exclude '*.db-wal' --exclude '*.db-shm' --exclude '*.sqlite' --exclude '*.sqlite3'
+    --exclude '*.part'
+)
+
+# Consistent online copy of the SQLite database (WAL-safe) before any deploy.
+backup_database() {
+    local ts="$1" db tmp out
+    db="$(readlink -f "${BASE_DIR}")/streamrecorder.db"
+    if [[ ! -f "$db" ]]; then
+        printf 'DB-Backup: keine Datenbank unter %s\n' "$db"
+        return 0
+    fi
+    have sqlite3 || die "sqlite3 fehlt (apt-get install sqlite3) - ohne DB-Backup kein Deploy."
+    # Run as the service user so no root-owned -wal/-shm files appear next to the DB.
+    tmp="$(mktemp -d)"
+    chown "$SERVICE_USER" "$tmp"
+    if ! as_service sqlite3 "$db" ".backup '${tmp}/db.sqlite'"; then
+        rm -rf -- "$tmp"
+        die "DB-Backup von $db fehlgeschlagen - Deploy abgebrochen."
+    fi
+    out="${BACKUP_DIR}/streamrecorder-${ts}.db"
+    mv -- "${tmp}/db.sqlite" "$out"
+    chmod 600 "$out"
+    rm -rf -- "$tmp"
+    find "$BACKUP_DIR" -maxdepth 1 -name 'streamrecorder-*.db' -printf '%T@ %p\n' | sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r rm -f --
+    printf 'DB-Backup: %s\n' "$out"
+}
+
 restore_snapshot() {
     local state="${BACKUP_DIR}/last_deploy.env" mode prev archive tmp
     [[ -r "$state" ]] || die "Kein Deploy-Zustand in $state."
@@ -785,7 +818,7 @@ restore_snapshot() {
         [[ -r "$archive" ]] || die "Snapshot fehlt: $archive"
         tmp="$(mktemp -d)"
         tar -xzf "$archive" -C "$tmp"
-        rsync -a --delete --exclude '.git/' "$tmp"/ "$APP_DIR"/
+        rsync -a --delete "${CODE_EXCLUDES[@]}" "$tmp"/ "$APP_DIR"/
         chown -R "$SERVICE_USER:$SERVICE_USER" "$APP_DIR"
         rm -rf -- "$tmp"
         printf 'Rollback: %s wiederhergestellt\n' "$archive"
@@ -813,7 +846,9 @@ do_deploy() {
     local ts mode prev snapshot
     ts="$(date +%Y%m%d-%H%M%S)"
     snapshot="${BACKUP_DIR}/app-${ts}.tgz"
-    tar -czf "$snapshot" -C "$APP_DIR" --exclude='./.git' --exclude='__pycache__' .
+    tar -czf "$snapshot" -C "$APP_DIR" --exclude='./.git' --exclude='__pycache__' \
+        --exclude='./data' --exclude='./demo-data' --exclude='./files' --exclude='*.db' \
+        --exclude='*.db-wal' --exclude='*.db-shm' --exclude='*.part' --exclude='./.env' .
     if [[ -d "${APP_DIR}/.git" ]]; then
         mode=git; prev="$(as_service git -C "$APP_DIR" rev-parse HEAD)"
     else
@@ -823,6 +858,7 @@ do_deploy() {
     printf 'MODE=%s\nPREV_REV=%s\nSNAPSHOT=%s\nTS=%s\n' "$mode" "$prev" "$snapshot" "$ts" > "${BACKUP_DIR}/last_deploy.env"
     find "$BACKUP_DIR" -maxdepth 1 -name 'app-*.tgz' -printf '%T@ %p\n' | sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r rm -f --
     printf 'Snapshot: %s\n' "$snapshot"
+    backup_database "$ts"
 
     # 3. Update code.
     if [[ -n "$GIT_REF" ]]; then
@@ -835,7 +871,7 @@ do_deploy() {
         printf 'Code: git %s -> %s\n' "${prev:0:12}" "$(as_service git -C "$APP_DIR" rev-parse --short=12 HEAD)"
     else
         [[ -f "${SOURCE_DIR}/WEBUI/webui.py" ]] || die "$SOURCE_DIR ist kein StreamVault-Quellbaum."
-        local -a rs=(-a --exclude '.git/' --exclude '.venv/' --exclude '__pycache__/' --exclude '*.pyc' --exclude '.env')
+        local -a rs=(-a "${CODE_EXCLUDES[@]}")
         if [[ $PRUNE -eq 1 ]]; then
             case "$(readlink -f "$BASE_DIR")/" in
                 "$(readlink -f "$APP_DIR")"/*) die "--prune verweigert: VOD_BASE_DIR liegt innerhalb von APP_DIR." ;;

@@ -35,13 +35,15 @@ usage() {
     echo ""
     echo -e "${BOLD}Service Management:${NC}"
     echo -e "  ${GREEN}start${NC}             Start WebUI, Recorder and Worker daemons"
-    echo -e "  ${GREEN}stop${NC}              Stop all running daemons"
-    echo -e "  ${GREEN}restart${NC}           Restart WebUI, Recorder and Worker daemons"
+    echo -e "  ${GREEN}stop${NC} [--force]    Stop all running daemons"
+    echo -e "  ${GREEN}restart${NC} [service] [--force]"
+    echo -e "                    Restart all daemons or one (webui, recorder, worker)."
+    echo -e "                    Refuses to cut active recordings unless --force is given."
     echo -e "  ${GREEN}status${NC}            Display health, system load, and systemd status"
     echo -e "  ${GREEN}logs${NC} [service]    Follow live logs (webui, recorder, worker, or all)"
     echo ""
     echo -e "${BOLD}Operations:${NC}"
-    echo -e "  ${GREEN}update${NC}            Pull latest Git commit, upgrade deps, and restart"
+    echo -e "  ${GREEN}update${NC} [--force]  Pull latest Git commit, upgrade deps, and restart"
     echo -e "  ${GREEN}config${NC}            Inspect or edit active environment (/etc/streamvault/env)"
     echo -e "  ${GREEN}check${NC}             Validate Python syntax, Nginx, and database schemas"
     echo ""
@@ -68,6 +70,35 @@ load_env() {
     fi
 }
 
+# Fresh .part files (written within the last 2 minutes) mean ffmpeg is recording.
+active_recordings() {
+    local base="${VOD_BASE_DIR:-${APP_DIR}/data}"
+    [[ -d "$base" ]] || return 0
+    find "$(readlink -f "$base")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2 2>/dev/null || true
+}
+
+# Usage: guard_recordings <force-flag>. Exits when recordings would be cut.
+guard_recordings() {
+    local force="${1:-0}" active
+    load_env
+    active="$(active_recordings)"
+    if [[ -n "$active" && "$force" != "1" ]]; then
+        echo -e "${YELLOW}[!] Active recordings (fresh .part files):${NC}"
+        echo "$active" | sed 's/^/    /'
+        echo -e "${RED}[ERROR] Restarting the recorder now would split these recordings."
+        echo -e "        Try again later or add --force.${NC}"
+        exit 1
+    fi
+}
+
+has_force() {
+    local arg
+    for arg in "$@"; do
+        [[ "$arg" == "--force" ]] && { echo 1; return 0; }
+    done
+    echo 0
+}
+
 cmd_start() {
     require_root
     echo -e "${BLUE}[*] Starting StreamVault daemons...${NC}"
@@ -77,6 +108,7 @@ cmd_start() {
 
 cmd_stop() {
     require_root
+    guard_recordings "$(has_force "$@")"
     echo -e "${BLUE}[*] Stopping StreamVault daemons...${NC}"
     systemctl stop streamvault-worker.service streamvault-recorder.service streamvault-webui.service
     echo -e "${GREEN}[OK] Services stopped.${NC}"
@@ -84,8 +116,24 @@ cmd_stop() {
 
 cmd_restart() {
     require_root
-    echo -e "${BLUE}[*] Restarting StreamVault daemons...${NC}"
-    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+    local target="all" arg
+    for arg in "$@"; do
+        case "$arg" in
+            webui|recorder|worker|all) target="$arg" ;;
+            --force) ;;
+            *) echo -e "${RED}[ERROR] Unknown restart target: $arg${NC}"; exit 1 ;;
+        esac
+    done
+    # Only the recorder owns ffmpeg; webui and worker restarts never cut a recording.
+    if [[ "$target" == "all" || "$target" == "recorder" ]]; then
+        guard_recordings "$(has_force "$@")"
+    fi
+    echo -e "${BLUE}[*] Restarting StreamVault daemons (${target})...${NC}"
+    if [[ "$target" == "all" ]]; then
+        systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+    else
+        systemctl restart "streamvault-${target}.service"
+    fi
     echo -e "${GREEN}[OK] Restart complete.${NC}"
 }
 
@@ -123,10 +171,12 @@ cmd_logs() {
 
 cmd_update() {
     require_root
+    guard_recordings "$(has_force "$@")"
     echo -e "${BLUE}[*] Updating StreamVault from Git...${NC}"
     cd "${APP_DIR}"
-    git pull --ff-only
-    "${VENV_DIR}/bin/pip" install --upgrade -r requirements.txt
+    # Repository and venv belong to the service user; root never runs git hooks.
+    runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" pull --ff-only
+    runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --upgrade -r requirements.txt
     systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
     echo -e "${GREEN}[OK] Update completed and daemons restarted.${NC}"
 }
@@ -174,10 +224,12 @@ case "${1:-}" in
         cmd_start
         ;;
     stop)
-        cmd_stop
+        shift
+        cmd_stop "$@"
         ;;
     restart)
-        cmd_restart
+        shift
+        cmd_restart "$@"
         ;;
     status)
         cmd_status
@@ -186,7 +238,8 @@ case "${1:-}" in
         cmd_logs "${2:-webui}"
         ;;
     update)
-        cmd_update
+        shift
+        cmd_update "$@"
         ;;
     config)
         cmd_config

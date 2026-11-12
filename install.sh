@@ -49,6 +49,7 @@ apt-get install -y -qq \
     curl \
     git \
     procps \
+    rsync \
     ca-certificates
 
 # 2. System Service User Creation
@@ -74,18 +75,32 @@ chmod 750 "${LOG_DIR}"
 # 4. Deploying Source Code
 echo -e "${BLUE}[4/8] Deploying application codebase...${NC}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Runtime data, databases, secrets and local environments never belong in the
+# code tree: a source checkout used for testing may contain all of them.
+RSYNC_EXCLUDES=(
+    --exclude '.git/' --exclude '.venv/' --exclude 'venv/' --exclude '__pycache__/'
+    --exclude '*.pyc' --exclude '.env' --exclude '.env.*'
+    --exclude 'data/' --exclude 'demo-data/' --exclude 'files/'
+    --exclude '.meta/' --exclude '.hls/' --exclude '.hls_live/' --exclude '.thumbs/'
+    --exclude '.vodcache/' --exclude 'logs/'
+    --exclude '*.db' --exclude '*.db-wal' --exclude '*.db-shm'
+    --exclude '*.sqlite' --exclude '*.sqlite3' --exclude '*.part'
+)
 if [[ -f "${SCRIPT_DIR}/WEBUI/webui.py" ]]; then
     echo -e "${CYAN}[*] Copying from local source tree (${SCRIPT_DIR})...${NC}"
-    cp -ru "${SCRIPT_DIR}"/* "${APP_DIR}/"
+    rsync -a "${RSYNC_EXCLUDES[@]}" "${SCRIPT_DIR}/" "${APP_DIR}/"
+    chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
 else
     echo -e "${CYAN}[*] Cloning from GitHub repository (${REPO_URL})...${NC}"
+    # The checkout belongs to the service user; git runs as that user so root
+    # never executes repository hooks or leaves root-owned files behind.
+    chown "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
     if [[ -d "${APP_DIR}/.git" ]]; then
-        cd "${APP_DIR}" && git pull --ff-only
+        runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" pull --ff-only
     else
-        git clone "${REPO_URL}" "${APP_DIR}"
+        runuser -u "${SERVICE_USER}" -- git clone "${REPO_URL}" "${APP_DIR}"
     fi
 fi
-chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
 
 # 5. Virtualenv & Dependencies
 echo -e "${BLUE}[5/8] Configuring Python virtual environment...${NC}"
@@ -120,9 +135,11 @@ VOD_USE_X_ACCEL=true
 EOF
     chown root:"${SERVICE_USER}" "${ENV_FILE}"
     chmod 640 "${ENV_FILE}"
-    echo -e "${YELLOW}${BOLD}[!] Generated initial admin credentials in ${ENV_FILE}:${NC}"
+    unset INITIAL_PASS SECRET_KEY
+    # The password stays out of terminal scrollback, CI logs and screen shares.
+    echo -e "${YELLOW}${BOLD}[!] Generated initial admin credentials in ${ENV_FILE}.${NC}"
     echo -e "${YELLOW}    Username: vaultadmin${NC}"
-    echo -e "${YELLOW}    Password: ${INITIAL_PASS}${NC}"
+    echo -e "${YELLOW}    Password: sudo grep '^VOD_PASS=' ${ENV_FILE}${NC}"
 else
     echo -e "${GREEN}[OK] Existing configuration found at ${ENV_FILE}.${NC}"
 fi
@@ -202,6 +219,12 @@ ln -sf "${APP_DIR}/bin/streamvault" /usr/local/bin/streamvault
 if [[ -d /etc/nginx/sites-available ]]; then
     echo -e "${CYAN}[*] Configuring Nginx reverse proxy...${NC}"
     cat > /etc/nginx/sites-available/streamvault.conf <<EOF
+# WebSocket upgrades only when the client asks for one.
+map \$http_upgrade \$streamvault_connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
     listen 80;
     server_name localhost;
@@ -213,10 +236,20 @@ server {
     client_max_body_size 4G;
 
     gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml;
+    # Everything goes through the proxy; without gzip_proxied nothing is compressed.
+    gzip_proxied any;
+    gzip_vary on;
+    gzip_types text/plain text/css application/json application/javascript text/javascript text/xml;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     location / {
         proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$streamvault_connection_upgrade;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -244,11 +277,16 @@ server {
         alias ${DATA_DIR}/.vodcache/;
     }
 
+    # A location with its own add_header drops the server-level ones, so the
+    # security headers are repeated wherever add_header is used.
     location /_protected_thumbs/ {
         internal;
         alias ${DATA_DIR}/.thumbs/;
-        expires 1d;
-        add_header Cache-Control "public";
+        # Thumbnails sit behind login: never in shared caches.
+        add_header Cache-Control "private, max-age=86400" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
     location /_protected_hls/ {
@@ -260,7 +298,10 @@ server {
             video/mp4 m4s mp4;
         }
         default_type application/octet-stream;
-        add_header Cache-Control "no-cache";
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
     location /_protected_hls_live/ {
@@ -273,16 +314,36 @@ server {
             video/mp4 m4s mp4;
         }
         default_type application/octet-stream;
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 }
 EOF
     ln -sf /etc/nginx/sites-available/streamvault.conf /etc/nginx/sites-enabled/
-    nginx -t && systemctl reload nginx || true
+    if ! nginx -t; then
+        echo -e "${RED}[ERROR] nginx -t failed; nginx was not reloaded. Fix the configuration and re-run.${NC}"
+        exit 1
+    fi
+    systemctl reload nginx
 fi
 
-# Start services
-systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+# Start services. A re-run on a live system must not split running recordings.
+ACTIVE_BASE="$(grep -E '^VOD_BASE_DIR=' "${ENV_FILE}" 2>/dev/null | tail -n 1 | cut -d= -f2- || true)"
+ACTIVE_BASE="${ACTIVE_BASE:-${DATA_DIR}}"
+ACTIVE_PARTS=""
+if [[ -d "${ACTIVE_BASE}" ]]; then
+    ACTIVE_PARTS="$(find "$(readlink -f "${ACTIVE_BASE}")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2 2>/dev/null || true)"
+fi
+if [[ -n "${ACTIVE_PARTS}" && "${STREAMVAULT_FORCE_RESTART:-0}" != "1" ]]; then
+    echo -e "${YELLOW}[!] Active recordings (fresh .part files):${NC}"
+    echo "${ACTIVE_PARTS}" | sed 's/^/    /'
+    echo -e "${YELLOW}[!] Services were NOT restarted. Run 'streamvault restart' once the recordings"
+    echo -e "    are finished, or re-run with STREAMVAULT_FORCE_RESTART=1.${NC}"
+else
+    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+fi
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"
 echo -e "${GREEN}${BOLD}      StreamVault Installation & Registration Complete!               ${NC}"
