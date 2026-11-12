@@ -16,6 +16,7 @@
   --nebula-border: #26344F;           /* Feine, dezente Konturen */
   --nebula-border-subtle: rgba(38, 52, 79, 0.6);
   --nebula-border-bright: #3B4E73;
+  --nebula-field-edge: #66789C;       /* Formularfeld-Kanten: >= 3:1 auf allen Flaechen (WCAG 1.4.11) */
   --nebula-border-glow: rgba(77, 99, 255, 0.4); /* Cosmic Glow */
 
   /* Primary & Accent Spectrum */
@@ -24,16 +25,20 @@
   --nebula-accent-highlight: #BB78FF; /* Violetter Highlight-Akzent */
   --nebula-accent-magenta: #E45DC5;   /* Dezenter Magenta-Akzent */
   --nebula-accent-cyan: #69C9FF;      /* Sekundärer Cyan-Akzent */
+  --nebula-accent-text: #8494FF;      /* Akzent als Textfarbe: >= 5:1 auf allen Flaechen */
+  --nebula-focus-ring: #8494FF;       /* Einheitliche Fokusfarbe (>= 3:1 auf allen Flaechen) */
 
   /* Status Colors */
   --nebula-status-live: #F04458;      /* Live-Anzeige (Red) */
   --nebula-status-success: #48D6A2;   /* Erfolgsstatus (Green/Mint) */
   --nebula-status-warning: #F2BC61;   /* Warnung (Amber/Gold) */
+  --nebula-status-live-text: #F2667A; /* Live/Fehler als Text: >= 4.5:1 auf allen Flaechen */
+  --nebula-danger-bg: #D42A40;        /* Danger-Buttons: Weiss darauf 4.99:1 */
 
   /* Typography Colors */
   --nebula-text-main: #F3F5FC;        /* Haupttext (Strahlendes Eisweiß) */
   --nebula-text-secondary: #A2AEC8;   /* Sekundärtext */
-  --nebula-text-muted: #75839D;       /* Dezenter Text / Metadaten */
+  --nebula-text-muted: #8A97B0;       /* Dezenter Text / Metadaten: >= 4.5:1 auf allen Flaechen (vorher #75839D, 3.62:1 auf active) */
   --nebula-text-inverse: #070B14;     /* Kontrasttext auf Akzenten */
 
   /* Typography Stacks */
@@ -41,7 +46,7 @@
   --nebula-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
   /* Gradients & Glows */
-  --nebula-gradient-primary: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%);
+  --nebula-gradient-primary: linear-gradient(135deg, #4D63FF 0%, #4D63FF 100%); /* Vollton: Weiss 4.62:1 (Verlaufsende #9365FF hatte 3.79:1) */
   --nebula-gradient-hero: linear-gradient(180deg, rgba(7, 11, 20, 0) 0%, rgba(7, 11, 20, 0.95) 100%);
   --nebula-gradient-cosmic: radial-gradient(circle at 50% 0%, rgba(147, 101, 255, 0.15) 0%, rgba(7, 11, 20, 0) 70%);
   --nebula-glow-blue: 0 0 20px rgba(77, 99, 255, 0.35);
@@ -55,6 +60,7 @@
   --nebula-radius-lg: 16px;
   --nebula-radius-full: 9999px;
   --nebula-rail-width: 72px;
+  --sv-min-text: 12px;                /* Mindestschriftgroesse fuer Labels/Metadaten */
 
   /* 2. NAMESPACE MAPPINGS FOR SYSTEM INTEGRATION */
   /* --ns-* mappings */
@@ -67,7 +73,7 @@
   --ns-border-subtle: var(--nebula-border);
   --ns-border-medium: var(--nebula-border-bright);
   --ns-border-strong: var(--nebula-border-glow);
-  --ns-border-focus: var(--nebula-accent-primary);
+  --ns-border-focus: var(--nebula-focus-ring);
   --ns-text-primary: var(--nebula-text-main);
   --ns-text-secondary: var(--nebula-text-secondary);
   --ns-text-muted: var(--nebula-text-muted);
@@ -77,6 +83,8 @@
   --ns-brand-crimson-subtle: rgba(77, 99, 255, 0.15);
   --ns-live-red: var(--nebula-status-live);
   --ns-recording-amber: var(--nebula-status-warning);
+  --ns-warm: var(--nebula-status-warning);
+  --ns-warm-2: #E8A33D;
   --ns-online-green: var(--nebula-status-success);
   --ns-platform-twitch: var(--nebula-accent-secondary);
   --ns-drive-blue: var(--nebula-accent-cyan);
