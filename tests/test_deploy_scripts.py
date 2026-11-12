@@ -56,6 +56,20 @@ class CliRecordingGuardTests(unittest.TestCase):
         result = self._guard(0)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0, "root reads every directory")
+    def test_unreadable_archive_fails_closed(self):
+        locked = self.base / "locked"
+        locked.mkdir()
+        os.chmod(locked, 0)
+        self.addCleanup(os.chmod, locked, 0o755)
+        result = self._guard(0)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertNotIn("passed", result.stdout)
+        self.assertIn("Could not check for active recordings", result.stdout)
+        forced = self._guard(1)
+        self.assertEqual(forced.returncode, 0, forced.stderr)
+        self.assertIn("passed", forced.stdout)
+
     def test_has_force_detects_flag(self):
         script = _cli_functions() + '\nhas_force restart --force\nhas_force restart webui\n'
         result = subprocess.run([BASH, "-c", script], capture_output=True, text=True, timeout=30)
@@ -74,10 +88,30 @@ class InstallerStaticTests(unittest.TestCase):
         self.assertIn("if ! nginx -t; then", self.text)
 
     def test_copy_excludes_runtime_data(self):
-        for pattern in ("'*.db'", "'demo-data/'", "'files/'", "'data/'", "'.env'"):
+        # One list for install.sh and streamvault_vps.sh (scripts/deploy-excludes.txt).
+        excludes = (ROOT / "scripts" / "deploy-excludes.txt").read_text(encoding="utf-8").split()
+        for pattern in ("*.db", "/demo-data/", "/files/", "/data/", "/.env"):
             with self.subTest(pattern=pattern):
-                self.assertIn(f"--exclude {pattern}", self.text)
+                self.assertIn(pattern, excludes)
+        self.assertIn('rsync -a --exclude-from="${EXCLUDES_FILE}"', self.text)
+        vps = (ROOT / "scripts" / "streamvault_vps.sh").read_text(encoding="utf-8")
+        self.assertIn('CODE_EXCLUDES=(--exclude-from="$EXCLUDES_FILE")', vps)
         self.assertNotIn('cp -ru "${SCRIPT_DIR}"/*', self.text)
+
+    @unittest.skipUnless(shutil.which("rsync") and os.name == "posix", "needs rsync")
+    def test_exclude_list_keeps_runtime_data_out_of_a_copy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src, dst = Path(tmp) / "src", Path(tmp) / "dst"
+            for rel in ("WEBUI/webui.py", "core/config.py", "scripts/demo_seed.py", "data/streamrecorder.db",
+                        "demo-data/x/vod.mp4", "files/up.pdf", ".env", "local.db", "core/x.db-wal",
+                        "chan/rec.mp4.part", ".venv/bin/python", "core/__pycache__/c.pyc"):
+                path = src / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("x", encoding="utf-8")
+            subprocess.run(["rsync", "-a", f"--exclude-from={ROOT / 'scripts' / 'deploy-excludes.txt'}",
+                            f"{src}/", f"{dst}/"], check=True, timeout=60)
+            copied = sorted(str(p.relative_to(dst)).replace(os.sep, "/") for p in dst.rglob("*") if p.is_file())
+        self.assertEqual(copied, ["WEBUI/webui.py", "core/config.py", "scripts/demo_seed.py"])
 
     def test_git_runs_as_service_user(self):
         import re

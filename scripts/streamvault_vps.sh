@@ -772,14 +772,10 @@ gate_release() {
     [[ $N_FAIL -eq 0 ]]
 }
 
-# Code snapshots and copies never carry runtime data, databases or secrets.
-CODE_EXCLUDES=(
-    --exclude '.git/' --exclude '.venv/' --exclude 'venv/' --exclude '__pycache__/' --exclude '*.pyc'
-    --exclude '.env' --exclude '.env.*' --exclude 'data/' --exclude 'demo-data/' --exclude 'files/'
-    --exclude '.meta/' --exclude '.hls/' --exclude '.hls_live/' --exclude '.thumbs/' --exclude '.vodcache/'
-    --exclude '*.db' --exclude '*.db-wal' --exclude '*.db-shm' --exclude '*.sqlite' --exclude '*.sqlite3'
-    --exclude '*.part'
-)
+# Code copies never carry runtime data, databases or secrets. Same list as
+# install.sh; the tar snapshot below uses the equivalent ./-anchored patterns.
+EXCLUDES_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/deploy-excludes.txt"
+CODE_EXCLUDES=(--exclude-from="$EXCLUDES_FILE")
 
 # Consistent online copy of the SQLite database (WAL-safe) before any deploy.
 backup_database() {
@@ -835,11 +831,15 @@ do_deploy() {
     [[ -n "$SOURCE_DIR" && -n "$GIT_REF" ]] && die "--source und --ref schliessen sich aus."
     [[ -d "$APP_DIR" && -x "$PY" ]] || die "Keine Installation unter $APP_DIR / $VENV_DIR - zuerst install.sh ausfuehren."
     have rsync || die "rsync fehlt (apt-get install rsync)."
+    [[ -r "$EXCLUDES_FILE" ]] || die "$EXCLUDES_FILE fehlt."
     load_paths
 
     # 1. Never cut running recordings without explicit consent.
     local active
-    active="$(find "$(readlink -f "$BASE_DIR")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2 2>/dev/null || true)"
+    # Fail closed: an unreadable archive could hide running recordings.
+    if ! active="$(find "$(readlink -f "$BASE_DIR")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2)"; then
+        [[ $FORCE -eq 1 ]] || die "Aktive Aufnahmen nicht pruefbar (find-Fehler oben) - Rechte pruefen oder --force."
+    fi
     if [[ -n "$active" && $FORCE -eq 0 ]]; then
         printf 'Aktive Aufnahmen (frische .part-Dateien):\n%s\n' "$active" | sed 's/^/  /'
         die "Recorder-Neustart wuerde diese Aufnahmen splitten. Spaeter erneut versuchen oder --force."

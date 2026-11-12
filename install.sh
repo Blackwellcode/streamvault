@@ -76,19 +76,13 @@ chmod 750 "${LOG_DIR}"
 echo -e "${BLUE}[4/8] Deploying application codebase...${NC}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Runtime data, databases, secrets and local environments never belong in the
-# code tree: a source checkout used for testing may contain all of them.
-RSYNC_EXCLUDES=(
-    --exclude '.git/' --exclude '.venv/' --exclude 'venv/' --exclude '__pycache__/'
-    --exclude '*.pyc' --exclude '.env' --exclude '.env.*'
-    --exclude 'data/' --exclude 'demo-data/' --exclude 'files/'
-    --exclude '.meta/' --exclude '.hls/' --exclude '.hls_live/' --exclude '.thumbs/'
-    --exclude '.vodcache/' --exclude 'logs/'
-    --exclude '*.db' --exclude '*.db-wal' --exclude '*.db-shm'
-    --exclude '*.sqlite' --exclude '*.sqlite3' --exclude '*.part'
-)
+# code tree: a source checkout used for testing may contain all of them. The
+# list is shared with scripts/streamvault_vps.sh.
+EXCLUDES_FILE="${SCRIPT_DIR}/scripts/deploy-excludes.txt"
 if [[ -f "${SCRIPT_DIR}/WEBUI/webui.py" ]]; then
     echo -e "${CYAN}[*] Copying from local source tree (${SCRIPT_DIR})...${NC}"
-    rsync -a "${RSYNC_EXCLUDES[@]}" "${SCRIPT_DIR}/" "${APP_DIR}/"
+    [[ -r "${EXCLUDES_FILE}" ]] || { echo -e "${RED}[ERROR] ${EXCLUDES_FILE} missing.${NC}"; exit 1; }
+    rsync -a --exclude-from="${EXCLUDES_FILE}" "${SCRIPT_DIR}/" "${APP_DIR}/"
     chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
 else
     echo -e "${CYAN}[*] Cloning from GitHub repository (${REPO_URL})...${NC}"
@@ -333,10 +327,17 @@ fi
 ACTIVE_BASE="$(grep -E '^VOD_BASE_DIR=' "${ENV_FILE}" 2>/dev/null | tail -n 1 | cut -d= -f2- || true)"
 ACTIVE_BASE="${ACTIVE_BASE:-${DATA_DIR}}"
 ACTIVE_PARTS=""
+SCAN_FAILED=0
 if [[ -d "${ACTIVE_BASE}" ]]; then
-    ACTIVE_PARTS="$(find "$(readlink -f "${ACTIVE_BASE}")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2 2>/dev/null || true)"
+    # Fail closed: an unreadable archive could hide running recordings.
+    if ! ACTIVE_PARTS="$(find "$(readlink -f "${ACTIVE_BASE}")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2)"; then
+        SCAN_FAILED=1
+    fi
 fi
-if [[ -n "${ACTIVE_PARTS}" && "${STREAMVAULT_FORCE_RESTART:-0}" != "1" ]]; then
+if [[ "${SCAN_FAILED}" == "1" && "${STREAMVAULT_FORCE_RESTART:-0}" != "1" ]]; then
+    echo -e "${YELLOW}[!] Could not check ${ACTIVE_BASE} for active recordings (see find error above).${NC}"
+    echo -e "${YELLOW}[!] Services were NOT restarted. Fix the permissions or re-run with STREAMVAULT_FORCE_RESTART=1.${NC}"
+elif [[ -n "${ACTIVE_PARTS}" && "${STREAMVAULT_FORCE_RESTART:-0}" != "1" ]]; then
     echo -e "${YELLOW}[!] Active recordings (fresh .part files):${NC}"
     echo "${ACTIVE_PARTS}" | sed 's/^/    /'
     echo -e "${YELLOW}[!] Services were NOT restarted. Run 'streamvault restart' once the recordings"

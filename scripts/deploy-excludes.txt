@@ -1,0 +1,25 @@
+# rsync exclude list shared by install.sh and scripts/streamvault_vps.sh.
+# Runtime data, databases, secrets and local environments never belong in the
+# code tree. Directory patterns are anchored to the transfer root.
+/.git/
+/.venv/
+/venv/
+__pycache__/
+*.pyc
+/.env
+/.env.*
+/data/
+/demo-data/
+/files/
+/.meta/
+/.hls/
+/.hls_live/
+/.thumbs/
+/.vodcache/
+/logs/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.part

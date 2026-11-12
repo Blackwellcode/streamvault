@@ -71,17 +71,26 @@ load_env() {
 }
 
 # Fresh .part files (written within the last 2 minutes) mean ffmpeg is recording.
+# Returns non-zero when the archive could not be fully scanned.
 active_recordings() {
     local base="${VOD_BASE_DIR:-${APP_DIR}/data}"
     [[ -d "$base" ]] || return 0
-    find "$(readlink -f "$base")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2 2>/dev/null || true
+    find "$(readlink -f "$base")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2
 }
 
 # Usage: guard_recordings <force-flag>. Exits when recordings would be cut.
 guard_recordings() {
     local force="${1:-0}" active
     load_env
-    active="$(active_recordings)"
+    # Fail closed: if the archive cannot be scanned, recordings may be running.
+    if ! active="$(active_recordings)"; then
+        if [[ "$force" != "1" ]]; then
+            echo -e "${RED}[ERROR] Could not check for active recordings (see find error above)."
+            echo -e "        Fix the permissions or add --force.${NC}"
+            exit 1
+        fi
+        echo -e "${YELLOW}[!] Active-recording check failed; continuing because of --force.${NC}"
+    fi
     if [[ -n "$active" && "$force" != "1" ]]; then
         echo -e "${YELLOW}[!] Active recordings (fresh .part files):${NC}"
         echo "$active" | sed 's/^/    /'
