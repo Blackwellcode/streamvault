@@ -11,6 +11,7 @@ import select
 import shutil
 import signal
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -189,8 +190,8 @@ def find_ffmpeg():
         result = subprocess.run(['which', 'ffmpeg'], capture_output=True, text=True)
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
-    except Exception:
-        pass
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning("which ffmpeg failed: %s", exc)
     raise FileNotFoundError("FFmpeg nicht gefunden. Installiere es mit 'sudo apt install ffmpeg' oder 'sudo snap install ffmpeg'.")
 
 def find_streamlink():
@@ -351,8 +352,8 @@ def atomic_write(path, content, is_json=False):
         if os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Temp file %s not removed: %s", tmp_path, exc)
 
 def throttled_log(level, key, message, interval=300):
     now = time.time()
@@ -549,8 +550,8 @@ def salvage_temp_recording(temp_path, output_file, reason="", source_channel=Non
             source_channel=src,
         )
         clear_current_recording(recordings_dir, filename=os.path.basename(output_file or temp_path), source_channel=src)
-    except Exception:
-        pass
+    except Exception as exc:  # status bookkeeping must not stop the salvage
+        logger.error("Salvage status for %s not recorded: %s", final_path, exc)
 
     try:
         enqueue_remux_vod(final_path)
@@ -959,8 +960,8 @@ def clear_current_recording(recordings_dir, filename=None, source_channel=None):
         timeline_file = info.get("timeline_file") if info else None
         try:
             os.remove(path)
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Current-recording marker %s not removed: %s", path, exc)
         if timeline_file:
             try:
                 os.remove(timeline_file)
@@ -1028,8 +1029,8 @@ def drop_inherited_instance_lock():
         return
     try:
         os.close(_INSTANCE_LOCK_FD)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Inherited instance lock fd not closed: %s", exc)
     _INSTANCE_LOCK_FD = None
 
 def release_instance_lock():
@@ -1038,20 +1039,20 @@ def release_instance_lock():
         if _INSTANCE_LOCK_FD is not None:
             try:
                 fcntl.flock(_INSTANCE_LOCK_FD, fcntl.LOCK_UN)
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Instance lock not unlocked: %s", exc)
             try:
                 os.close(_INSTANCE_LOCK_FD)
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Instance lock fd not closed: %s", exc)
             _INSTANCE_LOCK_FD = None
         if os.path.exists(INSTANCE_LOCK_FILE):
             with open(INSTANCE_LOCK_FILE, 'r', encoding='utf-8') as f:
                 content = f.read().strip()
             if content == str(os.getpid()):
                 os.remove(INSTANCE_LOCK_FILE)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Instance lock file %s not released: %s", INSTANCE_LOCK_FILE, exc)
 
 def channel_lock_path(recordings_dir, source_channel=None):
     suffix = source_state_suffix(source_channel)
@@ -1114,17 +1115,17 @@ def release_held_channel_lock(recordings_dir, source_channel=None):
     if fd is not None:
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Channel lock %s not unlocked: %s", path, exc)
         try:
             os.close(fd)
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Channel lock fd for %s not closed: %s", path, exc)
     try:
         if os.path.exists(path):
             os.remove(path)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Channel lock file %s not removed: %s", path, exc)
 
 
 def release_channel_lock(recordings_dir, pid=None, source_channel=None):
@@ -1154,8 +1155,8 @@ def release_channel_lock(recordings_dir, pid=None, source_channel=None):
             content = f.read().strip()
         if content and content == str(pid):
             os.remove(path)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Channel lock file %s not released: %s", path, exc)
 
 def cleanup_stale_recording_metadata(recordings_dir, source_channel=None):
     info = load_current_recording(recordings_dir, source_channel)
@@ -1194,8 +1195,8 @@ def cleanup_stale_recording_metadata(recordings_dir, source_channel=None):
             try:
                 os.remove(candidate_temp)
                 logger.info(f"Stale tiny temp recording gelöscht: {candidate_temp}")
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Tiny temp recording %s not removed: %s", candidate_temp, exc)
             return
         if age <= RETRY_DELAY * 2:
             return
@@ -1210,8 +1211,8 @@ def cleanup_stale_recording_metadata(recordings_dir, source_channel=None):
         try:
             os.remove(candidate_temp)
             logger.info(f"Stale temp recording gelöscht: {candidate_temp}")
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Stale temp recording %s not removed: %s", candidate_temp, exc)
 
     _cleanup_temp(temp_path, file_path)
     if mkv_temp and mkv_temp != temp_path:
@@ -1222,8 +1223,8 @@ def cleanup_stale_recording_metadata(recordings_dir, source_channel=None):
             try:
                 os.remove(file_path)
                 logger.info(f"Defekte oder zu kleine Aufnahme gelöscht: {file_path}")
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Broken recording %s not removed: %s", file_path, exc)
             clear_current_recording(recordings_dir, filename=owned_name, source_channel=source_channel)
             return
         if now - info.get("start_ts", 0) > STALE_RECORDING_AGE:
@@ -2063,8 +2064,8 @@ def chat_process(source_channel, chat_text_file):
     try:
         with open(live_log_file, "w", encoding="utf-8"):
             pass
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Live chat log %s not reset: %s", live_log_file, exc)
 
     current_info = None
     current_mtime = None
@@ -2124,8 +2125,8 @@ def chat_process(source_channel, chat_text_file):
             try:
                 handles['live'].flush()
                 os.fsync(handles['live'].fileno())
-            except Exception:
-                pass
+            except (OSError, ValueError) as exc:
+                throttled_log("warning", f"chatflush-live-{source_channel}", f"Live chat log flush failed: {exc}")
 
             # 2. Session Log (Archiv)
             if current_info:
@@ -2155,8 +2156,8 @@ def chat_process(source_channel, chat_text_file):
                     try:
                         handles['session'].flush()
                         os.fsync(handles['session'].fileno())
-                    except Exception:
-                        pass
+                    except (OSError, ValueError) as exc:
+                        throttled_log("warning", f"chatflush-session-{source_channel}", f"Session chat log flush failed: {exc}")
             else:
                 # Keine aktive Session -> Handle schließen falls offen
                 if handles['session']:
@@ -2171,8 +2172,8 @@ def chat_process(source_channel, chat_text_file):
                 if handles.get(k):
                     try:
                         handles[k].close()
-                    except Exception:
-                        pass
+                    except (OSError, ValueError) as exc:
+                        logger.warning("Chat log handle %s not closed: %s", k, exc)
                     handles[k] = None
             handles['session_path'] = None
     
@@ -2347,8 +2348,8 @@ def chat_process(source_channel, chat_text_file):
                         # Timeout ist normal bei Inaktivität, sende PING zur Sicherheit
                         try:
                             sock.sendall(b"PING :tmi.twitch.tv\r\n")
-                        except Exception:
-                            pass
+                        except OSError as exc:
+                            logger.warning("Chat PING failed: %s", exc)
                         last_ping = time.time()
                     except Exception as e:
                         logger.error(f"Fehler im Chat-Prozess: {e!s}")
@@ -2359,8 +2360,8 @@ def chat_process(source_channel, chat_text_file):
                 if sock is not None:
                     try:
                         sock.close()
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logger.debug("Chat socket close failed: %s", exc)
             time.sleep(5)
     finally:
         # Sicherstellen, dass offene Datei-Handles sauber geschlossen werden
@@ -2370,18 +2371,18 @@ def chat_process(source_channel, chat_text_file):
                 try:
                     try:
                         h.flush()
-                    except Exception:
-                        pass
+                    except (OSError, ValueError) as exc:
+                        logger.warning("Chat log %s flush on exit failed: %s", k, exc)
                     try:
                         os.fsync(h.fileno())
-                    except Exception:
-                        pass
+                    except (OSError, ValueError) as exc:
+                        logger.warning("Chat log %s fsync on exit failed: %s", k, exc)
                     try:
                         h.close()
-                    except Exception:
-                        pass
-                except Exception:
-                    pass
+                    except (OSError, ValueError) as exc:
+                        logger.warning("Chat log %s close on exit failed: %s", k, exc)
+                except Exception as exc:  # cleanup of one handle must not skip the others
+                    logger.error("Chat log %s cleanup failed: %s", k, exc)
 
 YOUTUBE_CHAT_RENDERER_KEYS = (
     "liveChatTextMessageRenderer",
@@ -2539,8 +2540,8 @@ def youtube_chat_process(source_channel, chat_text_file):
     try:
         with open(live_log_file, "w", encoding="utf-8"):
             pass
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Live chat log %s not reset: %s", live_log_file, exc)
 
     current_info = None
     current_mtime = None
@@ -2581,8 +2582,8 @@ def youtube_chat_process(source_channel, chat_text_file):
             try:
                 handles["live"].flush()
                 os.fsync(handles["live"].fileno())
-            except Exception:
-                pass
+            except (OSError, ValueError) as exc:
+                throttled_log("warning", f"ytchatflush-live-{source_channel}", f"Live chat log flush failed: {exc}")
 
             if current_info:
                 log_file = current_info.get("log_file")
@@ -2600,8 +2601,8 @@ def youtube_chat_process(source_channel, chat_text_file):
                     try:
                         handles["session"].flush()
                         os.fsync(handles["session"].fileno())
-                    except Exception:
-                        pass
+                    except (OSError, ValueError) as exc:
+                        throttled_log("warning", f"ytchatflush-session-{source_channel}", f"Session chat log flush failed: {exc}")
             elif handles["session"]:
                 handles["session"].close()
                 handles["session"] = None
@@ -2683,8 +2684,8 @@ def youtube_chat_process(source_channel, chat_text_file):
             if handle:
                 try:
                     handle.close()
-                except Exception:
-                    pass
+                except (OSError, ValueError) as exc:
+                    logger.warning("Chat log handle %s not closed: %s", key, exc)
 
 def get_twitch_stream_status(channel, conf=None):
     """Holt Live-Metadaten via Twitch GQL."""
@@ -3222,8 +3223,8 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                 if source_stderr_handle not in (None, subprocess.DEVNULL):
                     try:
                         source_stderr_handle.close()
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logger.warning("Streamlink stderr handle not closed: %s", exc)
                 if source_process.stdout is None:
                     raise RuntimeError("Streamlink stdout ist nicht verfügbar.")
 
@@ -3620,8 +3621,8 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     try:
                         os.remove(final_output_file)
                         logger.info(f"Defekte Aufnahme gelöscht: {final_output_file}")
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logger.warning("Broken recording %s not removed: %s", final_output_file, exc)
 
                 if 'output_file' in locals() and output_file is not None and os.path.exists(output_file):
                     logger.info("Versuche Video-Datei zu reparieren...")
@@ -3771,8 +3772,8 @@ def interruptible_sleep(seconds, wake_check=None):
             try:
                 if wake_check():
                     return True
-            except Exception:
-                pass
+            except Exception as exc:  # a faulty wake probe must not end the sleep loop
+                throttled_log("warning", "wake-check", f"wake_check failed: {exc}")
         time.sleep(min(1.0, max(0.0, deadline - time.time())))
     return False
 
@@ -3829,22 +3830,22 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
                     conn.execute("UPDATE channels SET live=1 WHERE name=?", (source_channel,))
                     conn.commit()
                     conn.close()
-                except Exception:
-                    pass
+                except sqlite3.Error as exc:
+                    logger.error("live=1 for %s not stored: %s", source_channel, exc)
             elif not stream_live and is_live_now:
                 is_live_now = False
                 logger.info(f"Streamer {source_channel} ist offline (Live-Only).")
                 try:
                     clear_discord_live_session(archive_channel or source_channel)
-                except Exception:
-                    pass
+                except Exception as exc:  # Discord session cleanup is best effort
+                    logger.warning("Discord live session for %s not cleared: %s", archive_channel or source_channel, exc)
                 try:
                     conn = database.get_db()
                     conn.execute("UPDATE channels SET live=0 WHERE name=?", (source_channel,))
                     conn.commit()
                     conn.close()
-                except Exception:
-                    pass
+                except sqlite3.Error as exc:
+                    logger.error("live=0 for %s not stored: %s", source_channel, exc)
 
             interruptible_sleep(CHECK_INTERVAL)
         except (KeyboardInterrupt, SystemExit):
@@ -3903,15 +3904,15 @@ def run_channel(source_channel):
             if 'chat_proc' in locals() and chat_proc.is_alive():
                 chat_proc.terminate()
                 chat_proc.join(timeout=5)
-        except Exception:
-            pass
+        except (OSError, ValueError, AssertionError) as exc:
+            logger.warning("Chat process not stopped cleanly: %s", exc)
         # Only remove this source's overlay files — siblings may still need theirs.
         for path in (chat_text_file, viewer_text_file):
             if path and os.path.exists(path):
                 try:
                     os.remove(path)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logger.warning("Overlay file %s not removed: %s", path, exc)
         # Channel flock is held by the parent process for the child lifetime.
         logger.info("Stream-Recorder beendet.")
 

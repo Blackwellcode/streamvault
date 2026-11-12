@@ -191,5 +191,117 @@ class StopProcessRealChildTests(unittest.TestCase):
         self.assertEqual(child.returncode, -signal.SIGTERM)
 
 
+class ClipKillProcessTreeTests(unittest.TestCase):
+    """clip_engine._kill_process_tree must never killpg its own group."""
+
+    def test_own_group_falls_back_to_kill(self):
+        from recorder import clip_engine
+        proc = mock.Mock(pid=4242)
+        proc.poll.return_value = None
+        own = os.getpgrp() if hasattr(os, "getpgrp") else 4242
+        with mock.patch.object(clip_engine.os, "getpgid", return_value=own, create=True), \
+                mock.patch.object(clip_engine.os, "getpgrp", return_value=own, create=True), \
+                mock.patch.object(clip_engine.os, "killpg", create=True) as killpg:
+            clip_engine._kill_process_tree(proc)
+        killpg.assert_not_called()
+        proc.kill.assert_called_once()
+
+    def test_failed_kill_is_logged(self):
+        from recorder import clip_engine
+        proc = mock.Mock(pid=4242)
+        proc.poll.return_value = None
+        proc.kill.side_effect = OSError("gone")
+        with mock.patch.object(clip_engine.os, "getpgid", return_value=1, create=True), \
+                mock.patch.object(clip_engine.os, "killpg", create=True), \
+                self.assertLogs(clip_engine.logger, level="WARNING"):
+            clip_engine._kill_process_tree(proc)
+
+
+class SilentFailureLoggingTests(IsolatedBaseTest):
+    """Former `except Exception: pass` paths now log a specific failure."""
+
+    def test_corrupt_group_permissions_are_logged_and_empty(self):
+        from core import database
+        group = database.get_user_group_by_name("Viewer")
+        conn = database.get_db()
+        try:
+            conn.execute("UPDATE user_groups SET permissions='{not json' WHERE id=?", (group["id"],))
+            conn.commit()
+        finally:
+            conn.close()
+        with self.assertLogs("database", level="WARNING"):
+            loaded = database.get_user_group(group["id"])
+        self.assertEqual(loaded["name"], "Viewer")
+        self.assertIsInstance(loaded["permissions"], dict)
+
+    def test_corrupt_legacy_channel_file_is_logged_and_kept(self):
+        from core import database
+        legacy = self.base / ".channels.json"
+        legacy.write_text("{broken", encoding="utf-8")
+        with mock.patch.object(database, "LEGACY_CHANNELS_FILE", str(legacy)), \
+                self.assertLogs("database", level="ERROR"):
+            database.init_db()
+        self.assertTrue(legacy.exists(), "unreadable legacy data must not be renamed away")
+
+    def test_channel_lock_release_logs_fd_errors_and_removes_file(self):
+        recordings = self.base / "chan"
+        recordings.mkdir()
+        path = recorder.channel_lock_path(str(recordings), "chan")
+        Path(path).write_text("1", encoding="utf-8")
+        recorder._CHANNEL_LOCK_FDS[path] = 987654  # not an open descriptor
+        self.addCleanup(recorder._CHANNEL_LOCK_FDS.pop, path, None)
+        with self.assertLogs(recorder.logger, level="WARNING") as logs:
+            recorder.release_held_channel_lock(str(recordings), "chan")
+        self.assertTrue(any("not closed" in line for line in logs.output))
+        self.assertFalse(os.path.exists(path))
+        self.assertNotIn(path, recorder._CHANNEL_LOCK_FDS)
+
+    def test_failing_wake_check_does_not_end_the_sleep(self):
+        calls = []
+
+        def wake():
+            calls.append(1)
+            raise RuntimeError("probe broken")
+
+        with mock.patch.object(recorder.time, "sleep"), \
+                self.assertLogs(recorder.logger, level="WARNING"):
+            recorder.LOG_THROTTLE.pop("wake-check", None)
+            self.assertFalse(recorder.interruptible_sleep(0.01, wake_check=wake))
+        self.assertTrue(calls)
+
+    def test_unpersisted_secret_key_is_logged(self):
+        from WEBUI import webui
+        with mock.patch.object(config, "SECRET_KEY", ""), \
+                mock.patch.object(webui.os, "open", side_effect=PermissionError("read-only")), \
+                self.assertLogs(level="ERROR") as logs:
+            key = webui.load_secret_key()
+        self.assertEqual(len(key), 64)
+        self.assertTrue(any("not persisted" in line for line in logs.output))
+
+    def test_secret_key_file_is_reused(self):
+        from WEBUI import webui
+        with mock.patch.object(config, "SECRET_KEY", ""):
+            first = webui.load_secret_key()
+            self.assertEqual(webui.load_secret_key(), first)
+
+    def test_dashboard_shm_cache_removal_failure_is_logged(self):
+        from WEBUI import webui
+        shm = self.base / "dash.json"
+        shm.write_text("{}", encoding="utf-8")
+        with mock.patch.object(webui, "_DASHBOARD_SHM_PATH", str(shm)), \
+                mock.patch.object(webui.os, "remove", side_effect=PermissionError("busy")), \
+                self.assertLogs(level="WARNING") as logs:
+            webui.invalidate_dashboard_media_cache()
+        self.assertTrue(any("shm cache" in line for line in logs.output))
+
+    def test_worker_task_cleanup_logs_close_errors(self):
+        from recorder import worker
+        conn = mock.Mock()
+        conn.close.side_effect = worker.sqlite3.ProgrammingError("closed")
+        with mock.patch.object(worker, "get_db", return_value=conn), \
+                self.assertLogs(level="WARNING"):
+            worker.cleanup_old_tasks(force=True)
+
+
 if __name__ == "__main__":
     unittest.main()

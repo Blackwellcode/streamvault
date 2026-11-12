@@ -341,8 +341,8 @@ def load_secret_key():
                     except OSError:
                         pass
                     return key
-    except Exception:
-        pass
+    except (OSError, UnicodeDecodeError) as exc:
+        logging.error("Secret key file %s unreadable, generating a new one: %s", key_path, exc)
     os.makedirs(config.META_DIR, exist_ok=True)
     key = secrets.token_hex(32)
     try:
@@ -361,8 +361,8 @@ def load_secret_key():
                 pass
             raise
         os.chmod(key_path, 0o600)
-    except Exception:
-        pass
+    except OSError as exc:
+        logging.error("Secret key not persisted to %s (sessions will not survive restarts or span workers): %s", key_path, exc)
     return key
 
 app = Flask(__name__)
@@ -451,8 +451,8 @@ def get_sys_stats():
         total = mem.get('MemTotal', 1)
         avail = mem.get('MemAvailable', mem.get('MemFree', 0))
         ram_pct = int(((total - avail) / total) * 100)
-    except Exception:
-        pass
+    except (OSError, ValueError, IndexError, ZeroDivisionError) as exc:
+        logging.warning("RAM usage from /proc/meminfo unavailable: %s", exc)
         
     # Disk
     disk = storage_info()
@@ -3785,8 +3785,8 @@ def _setup_transcribe_threads():
     try:
         import torch
         torch.set_num_threads(TRANSCRIBE_THREADS)
-    except Exception:
-        pass
+    except (ImportError, RuntimeError) as exc:
+        logging.info("torch thread limit not applied: %s", exc)
 
 
 def transcript_path_for_media(file_path):
@@ -4072,8 +4072,8 @@ def transcribe_media_file(file_path, transcript_path=None):
                         # best-effort
                         with open(partial_final, 'w', encoding='utf-8') as pf:
                             pf.write("\n\n".join([t for t in transcripts if t]))
-            except Exception:
-                pass
+            except (OSError, ValueError) as exc:
+                logging.warning("Partial transcript %s not written: %s", transcript_path, exc)
 
         transcript_text = "\n\n".join([t for t in transcripts if t])
         if not transcript_text:
@@ -4094,8 +4094,8 @@ def transcribe_media_file(file_path, transcript_path=None):
                 partial = f"{transcript_path}.partial"
                 if os.path.exists(partial):
                     os.remove(partial)
-            except Exception:
-                pass
+            except OSError as exc:
+                logging.warning("Partial transcript for %s not removed: %s", transcript_path, exc)
             set_transcript_status(transcript_path, "finished", 100, gettext("Transcript finished"))
             logging.info("Transcription finished: %s", transcript_path)
             return True, gettext("Transcript created")
@@ -5163,8 +5163,8 @@ def list_streamers():
             STREAMER_CACHE["token"] = token
             STREAMER_CACHE["data"] = cached_streamers
             return cached_streamers
-    except Exception:
-        pass
+    except ImportError as exc:
+        logging.warning("Redis client unavailable for streamer cache: %s", exc)
 
     streamers = []
     live_channels = set(load_live_channels())
@@ -5353,8 +5353,8 @@ def list_streamers():
     try:
         from core import redis_client
         redis_client.set_state("streamers_list", streamers, ex=60)
-    except Exception:
-        pass
+    except ImportError as exc:
+        logging.warning("Redis client unavailable for streamer cache: %s", exc)
     return streamers
 
 def get_metadata_cache():
@@ -6887,10 +6887,10 @@ def touch_live_heartbeat(streamer):
             _LIVE_ASSERT_TS[channel] = now
             try:
                 add_live_channel(channel)
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except (sqlite3.Error, OSError) as exc:
+                logging.warning("live=1 for %s not re-asserted: %s", channel, exc)
+    except Exception as exc:  # heartbeat is advisory; the watch page must still load
+        logging.warning("Live heartbeat for %s failed: %s", channel, exc)
 
 
 def live_playlist_fresh(streamer):
@@ -7000,8 +7000,8 @@ def delete_video_file(streamer, filename, is_clip):
     bust_media_cache()
     try:
         invalidate_dashboard_media_cache()
-    except Exception:
-        pass
+    except OSError as exc:
+        logging.warning("Dashboard cache not invalidated after delete: %s", exc)
     return True
 
 
@@ -7154,8 +7154,8 @@ def rename_video_file(streamer, old_filename, new_filename, is_clip=False):
     STREAMER_CACHE["ts"] = 0
     try:
         bust_media_cache()
-    except Exception:
-        pass
+    except Exception as exc:  # cache bust is advisory after a completed rename
+        logging.warning("Media cache not busted after rename: %s", exc)
 
     return True, gettext("Renamed."), new_name
 
@@ -7548,8 +7548,8 @@ def csrf_protect():
                 request.method,
                 wants_json=_request_wants_json_response(),
             )
-        except Exception:
-            pass
+        except Exception as exc:  # traffic statistics must never fail a request
+            logging.warning("Page traffic for %s not recorded: %s", ctx["username"], exc)
 
         # Soft-gate: current AGB + Hausordnung must be accepted (admins exempt).
         if _path_requires_rules_acceptance(request.path) and current_user_needs_terms_acceptance():
@@ -7767,8 +7767,8 @@ def login():
             log_login_attempt(ip, username, True)
             try:
                 user_traffic.record(username, "login")
-            except Exception:
-                pass
+            except Exception as exc:  # traffic statistics must never fail a request
+                logging.warning("Login traffic for %s not recorded: %s", username, exc)
             logging.info(f"Successful login: {username} from {ip}")
 
             if role != "admin" and maintenance_mode_enabled():
@@ -9445,13 +9445,13 @@ def invalidate_dashboard_media_cache():
     try:
         from core import redis_client
         redis_client.invalidate_dashboard_cache()
-    except Exception:
-        pass
+    except ImportError as exc:
+        logging.warning("Redis client unavailable for dashboard cache: %s", exc)
     try:
         if os.path.exists(_DASHBOARD_SHM_PATH):
             os.remove(_DASHBOARD_SHM_PATH)
-    except Exception:
-        pass
+    except OSError as exc:
+        logging.warning("Dashboard shm cache %s not removed: %s", _DASHBOARD_SHM_PATH, exc)
 
 def _compute_dashboard_media_sync(streamers=None):
     recent_vods = []
@@ -10110,8 +10110,8 @@ def vod_view(streamer, filename):
                 if os.path.exists(partial_path):
                     with open(partial_path, 'r', encoding='utf-8') as pf:
                         transcript_text = pf.read().strip()
-            except Exception:
-                pass
+            except (OSError, UnicodeDecodeError) as exc:
+                logging.warning("Partial transcript %s unreadable: %s", transcript_path, exc)
 
     vod_display_title = vod_meta.get("display_title") or vod_meta.get("title") or filename
     vod_description = clean_vod_description(vod_meta.get("description") or "")
@@ -10453,8 +10453,8 @@ def media(streamer, filename):
     if request.method != "HEAD":
         try:
             user_traffic.record(current_username(), "media", key=f"{streamer}/{filename}")
-        except Exception:
-            pass
+        except Exception as exc:  # traffic statistics must never fail a request
+            logging.warning("Media traffic for %s/%s not recorded: %s", streamer, filename, exc)
     file_path = resolve_media_path(streamer, filename, "vod")
     if file_path:
         accel_path = media_accel_path(streamer, filename, file_path=file_path) if USE_X_ACCEL else None
@@ -13022,8 +13022,8 @@ def delete_folder_route(streamer):
         STREAMER_CACHE["ts"] = 0
         try:
             invalidate_dashboard_media_cache()
-        except Exception:
-            pass
+        except OSError as exc:
+            logging.warning("Dashboard cache not invalidated after folder delete: %s", exc)
         
         # Keine Meldung anzeigen, da Löschen im Hintergrund passiert
         return redirect(url_for('index'))
@@ -13115,8 +13115,8 @@ def streamer_banner_update(streamer):
                 if os.path.isfile(target):
                     try:
                         os.remove(target)
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logging.warning("Old image %s not removed: %s", target, exc)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
@@ -13134,8 +13134,8 @@ def streamer_banner_update(streamer):
             if os.path.isfile(target):
                 try:
                     os.remove(target)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logging.warning("Old image %s not removed: %s", target, exc)
         target_path = os.path.join(banners_dir, f"{clean_slug}{ext}")
         file.save(target_path)
         entry.pop("custom_banner_url", None)
@@ -13152,8 +13152,8 @@ def streamer_banner_update(streamer):
             if os.path.isfile(target):
                 try:
                     os.remove(target)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logging.warning("Old image %s not removed: %s", target, exc)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
@@ -13193,8 +13193,8 @@ def admin_banner_update():
                 if os.path.isfile(target):
                     try:
                         os.remove(target)
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logging.warning("Old image %s not removed: %s", target, exc)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
@@ -13212,8 +13212,8 @@ def admin_banner_update():
             if os.path.isfile(target):
                 try:
                     os.remove(target)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logging.warning("Old image %s not removed: %s", target, exc)
         target_path = os.path.join(banners_dir, f"{clean_slug}{ext}")
         file.save(target_path)
         entry.pop("custom_banner_url", None)
@@ -13230,8 +13230,8 @@ def admin_banner_update():
             if os.path.isfile(target):
                 try:
                     os.remove(target)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logging.warning("Old image %s not removed: %s", target, exc)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
@@ -13340,8 +13340,8 @@ def streamer_avatar_update(streamer):
                 if os.path.isfile(target):
                     try:
                         os.remove(target)
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logging.warning("Old image %s not removed: %s", target, exc)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()
@@ -13359,8 +13359,8 @@ def streamer_avatar_update(streamer):
             if os.path.isfile(target):
                 try:
                     os.remove(target)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logging.warning("Old image %s not removed: %s", target, exc)
         target_path = os.path.join(avatars_dir, f"{clean_slug}{ext}")
         file.save(target_path)
         entry.pop("custom_avatar_url", None)
@@ -13377,8 +13377,8 @@ def streamer_avatar_update(streamer):
             if os.path.isfile(target):
                 try:
                     os.remove(target)
-                except Exception:
-                    pass
+                except OSError as exc:
+                    logging.warning("Old image %s not removed: %s", target, exc)
         profiles[archive_key] = entry
         save_profiles(profiles)
         bust_media_cache()

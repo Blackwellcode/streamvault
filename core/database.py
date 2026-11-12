@@ -88,8 +88,9 @@ def init_db():
             if column not in channel_columns:
                 try:
                     c.execute(f"ALTER TABLE channels ADD COLUMN {column} {definition}")
-                except Exception:
-                    pass
+                except sqlite3.OperationalError as exc:
+                    # Another process may have added it between PRAGMA and ALTER.
+                    logger.warning("Migration channels.%s skipped: %s", column, exc)
         c.execute("UPDATE channels SET platform='twitch' WHERE platform IS NULL OR platform=''")
         c.execute("UPDATE channels SET archive_name=name WHERE archive_name IS NULL OR archive_name=''")
 
@@ -99,8 +100,8 @@ def init_db():
         except sqlite3.OperationalError:
             try:
                 c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'admin'")
-            except Exception:
-                pass
+            except sqlite3.OperationalError as exc:
+                logger.warning("Migration users.role skipped: %s", exc)
         c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password_hash TEXT, role TEXT, active INTEGER DEFAULT 1)")
         c.execute(
             """
@@ -197,8 +198,8 @@ def init_db():
             if column not in user_columns:
                 try:
                     c.execute(f"ALTER TABLE users ADD COLUMN {column} {definition}")
-                except Exception:
-                    pass
+                except sqlite3.OperationalError as exc:
+                    logger.warning("Migration users.%s skipped: %s", column, exc)
 
         c.execute(
             """
@@ -248,8 +249,8 @@ def init_db():
         if "expires_at" not in ban_columns:
             try:
                 c.execute("ALTER TABLE bans ADD COLUMN expires_at REAL")
-            except Exception:
-                pass
+            except sqlite3.OperationalError as exc:
+                logger.warning("Migration bans.expires_at skipped: %s", exc)
         c.execute("CREATE TABLE IF NOT EXISTS login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, username TEXT, success INTEGER, ts REAL)")
         c.execute("CREATE TABLE IF NOT EXISTS login_attempts (ip TEXT NOT NULL, ts REAL NOT NULL)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_ts ON login_attempts(ip, ts)")
@@ -524,8 +525,8 @@ def migrate_legacy_data(c):
                 c.execute("INSERT OR IGNORE INTO channels (name, record) VALUES (?, 1)", (ch.lower(),))
                 c.execute("UPDATE channels SET record=1 WHERE name=?", (ch.lower(),))
             os.rename(LEGACY_CHANNELS_FILE, LEGACY_CHANNELS_FILE + ".migrated")
-        except Exception:
-            pass
+        except (OSError, ValueError, TypeError, sqlite3.Error) as exc:
+            logger.error("Legacy channel migration from %s failed: %s", LEGACY_CHANNELS_FILE, exc)
     if os.path.exists(LEGACY_LIVE_CHANNEL_FILE):
         try:
             with open(LEGACY_LIVE_CHANNEL_FILE, 'r') as f:
@@ -535,8 +536,8 @@ def migrate_legacy_data(c):
                 c.execute("INSERT OR IGNORE INTO channels (name, live) VALUES (?, 1)", (str(ch).lower(),))
                 c.execute("UPDATE channels SET live=1 WHERE name=?", (str(ch).lower(),))
             os.rename(LEGACY_LIVE_CHANNEL_FILE, LEGACY_LIVE_CHANNEL_FILE + ".migrated")
-        except Exception:
-            pass
+        except (OSError, ValueError, TypeError, sqlite3.Error) as exc:
+            logger.error("Legacy live-channel migration from %s failed: %s", LEGACY_LIVE_CHANNEL_FILE, exc)
 
 def get_channels(mode='record'):
     conn = get_db()
@@ -573,8 +574,8 @@ def add_task(task_type, payload):
     try:
         from core import redis_client
         redis_client.enqueue_task(task_type, payload, task_id)
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Redis client unavailable, task %s stays SQLite-only: %s", task_id, exc)
 
     return task_id
 
@@ -586,8 +587,8 @@ def get_system_state(key: str, default=None):
         cached = redis_client.get_state(f"sysstate:{key}")
         if cached is not None:
             return cached
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Redis client unavailable for state %s: %s", key, exc)
 
     conn = get_db()
     try:
@@ -600,8 +601,8 @@ def get_system_state(key: str, default=None):
             try:
                 from core import redis_client
                 redis_client.set_state(f"sysstate:{key}", val, ex=3600)
-            except Exception:
-                pass
+            except ImportError as exc:
+                logger.warning("Redis client unavailable for state %s: %s", key, exc)
             return val
         except json.JSONDecodeError:
             return default
@@ -615,8 +616,8 @@ def set_system_state(key: str, value):
     try:
         from core import redis_client
         redis_client.set_state(f"sysstate:{key}", value)
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Redis client unavailable for state %s: %s", key, exc)
 
     conn = get_db()
     try:
@@ -1910,8 +1911,8 @@ def list_user_groups() -> list[dict]:
             perms = {}
             try:
                 perms = json.loads(r["permissions"]) if r["permissions"] else {}
-            except Exception:
-                pass
+            except (TypeError, ValueError) as exc:
+                logger.warning("Group %s has unreadable permissions, using none: %s", r["id"], exc)
             result.append({
                 "id": r["id"],
                 "name": r["name"],
@@ -1949,8 +1950,8 @@ def get_user_group(group_id: int | str) -> dict | None:
         perms = {}
         try:
             perms = json.loads(row["permissions"]) if row["permissions"] else {}
-        except Exception:
-            pass
+        except (TypeError, ValueError) as exc:
+            logger.warning("Group %s has unreadable permissions, using none: %s", row["id"], exc)
         return {
             "id": row["id"],
             "name": row["name"],
@@ -1986,8 +1987,8 @@ def get_user_group_by_name(name: str) -> dict | None:
         perms = {}
         try:
             perms = json.loads(row["permissions"]) if row["permissions"] else {}
-        except Exception:
-            pass
+        except (TypeError, ValueError) as exc:
+            logger.warning("Group %s has unreadable permissions, using none: %s", row["id"], exc)
         return {
             "id": row["id"],
             "name": row["name"],
