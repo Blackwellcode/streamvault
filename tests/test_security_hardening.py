@@ -188,5 +188,74 @@ class LoginThrottleTests(WebTestBase):
             self.webui.limiter.reset()
 
 
+
+class ResourceUploadTests(WebTestBase):
+    """Shared files live on the app origin: allowlist uploads, always download."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = self.webui.app.test_client()
+        with self.client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        accel = mock.patch.object(self.webui, "USE_X_ACCEL", False)
+        accel.start()
+        self.addCleanup(accel.stop)
+
+    def upload(self, name, body=b"data"):
+        import io
+        return self.client.post(
+            "/files/upload",
+            data={"csrf_token": "t", "file": (io.BytesIO(body), name)},
+            content_type="multipart/form-data",
+        )
+
+    def test_active_content_types_are_rejected(self):
+        for name in ("page.html", "page.htm", "image.svg", "doc.xhtml", "feed.xml",
+                     "script.js", "tool.exe", "noext"):
+            with self.subTest(name=name):
+                self.upload(name)
+                self.assertFalse(os.path.exists(os.path.join(config.FILES_DIR, name)))
+
+    def test_allowlisted_types_are_stored(self):
+        for name in ("notes.pdf", "clip.mp4", "pic.png", "readme.txt"):
+            with self.subTest(name=name):
+                self.upload(name)
+                self.assertTrue(os.path.exists(os.path.join(config.FILES_DIR, name)))
+
+    def test_public_share_is_forced_download(self):
+        self.upload("pic.png", b"PNG-header <script>alert(1)</script>")
+        token = self.webui.create_share("_file_", "pic.png", "file")
+        anon = self.webui.app.test_client()
+        for path in (f"/public/media/{token}", f"/public/download/{token}"):
+            with self.subTest(path=path):
+                response = anon.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.headers["Content-Type"], "application/octet-stream")
+                self.assertTrue(response.headers["Content-Disposition"].startswith("attachment;"))
+                self.assertEqual(response.headers.get("X-Content-Type-Options"), "nosniff")
+                response.close()
+
+    def test_x_accel_share_is_forced_download(self):
+        self.upload("pic.png")
+        token = self.webui.create_share("_file_", "pic.png", "file")
+        with mock.patch.object(self.webui, "USE_X_ACCEL", True):
+            response = self.webui.app.test_client().get(f"/public/media/{token}")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("X-Accel-Redirect", response.headers)
+        self.assertEqual(response.headers["Content-Type"], "application/octet-stream")
+        self.assertTrue(response.headers["Content-Disposition"].startswith("attachment;"))
+
+    def test_legacy_disallowed_file_is_not_served_but_deletable(self):
+        legacy = os.path.join(config.FILES_DIR, "old.html")
+        with open(legacy, "w", encoding="utf-8") as fh:
+            fh.write("<script>alert(1)</script>")
+        token = self.webui.create_share("_file_", "old.html", "file")
+        self.assertEqual(self.webui.app.test_client().get(f"/public/media/{token}").status_code, 404)
+        self.client.post("/files/delete/old.html", data={"csrf_token": "t"})
+        self.assertFalse(os.path.exists(legacy))
+
+
 if __name__ == "__main__":
     unittest.main()

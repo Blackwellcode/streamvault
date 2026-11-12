@@ -3537,27 +3537,90 @@ def is_safe_resource_filename(filename):
     return secure_filename(filename) == filename
 
 
-DANGEROUS_RESOURCE_EXTENSIONS = {
-    ".app", ".bat", ".cmd", ".com", ".cpl", ".dll", ".dmg", ".exe", ".hta",
-    ".jar", ".js", ".jse", ".lnk", ".msi", ".msp", ".pif", ".ps1", ".scr",
-    ".sh", ".sys", ".vb", ".vbe", ".vbs", ".wsf",
-}
+# Allowlist: anything a browser could render as active content (.html, .svg,
+# .xhtml, .xml, .js ...) stays out, since shared files live on the app origin.
+DEFAULT_RESOURCE_EXTENSIONS = frozenset({
+    ".pdf", ".txt", ".md", ".csv", ".log", ".srt", ".vtt",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp",
+    ".mp3", ".wav", ".ogg", ".m4a", ".flac",
+    ".mp4", ".mkv", ".webm", ".mov",
+    ".zip", ".7z", ".rar", ".tar", ".gz",
+    ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp",
+})
+
+
+def _resource_extensions_from_env():
+    raw = os.environ.get("VOD_FILES_ALLOWED_EXTENSIONS", "").strip()
+    if not raw:
+        return DEFAULT_RESOURCE_EXTENSIONS
+    exts = set()
+    for item in raw.split(","):
+        item = item.strip().lower()
+        if item:
+            exts.add(item if item.startswith(".") else "." + item)
+    return frozenset(exts)
+
+
+ALLOWED_RESOURCE_EXTENSIONS = _resource_extensions_from_env()
 
 
 def is_allowed_resource_upload(filename):
     if not is_safe_resource_filename(filename):
         return False
     _, ext = os.path.splitext(filename.lower())
-    return ext not in DANGEROUS_RESOURCE_EXTENSIONS
+    return ext in ALLOWED_RESOURCE_EXTENSIONS
 
 
 def resolve_resource_file_path(filename):
+    """Path of a servable resource file (allowlisted extension), else None."""
     if not is_allowed_resource_upload(filename):
         return None
     file_path = safe_join(config.FILES_DIR, filename)
     if not file_path or not os.path.isfile(file_path):
         return None
     return file_path
+
+
+def resolve_existing_resource_path(filename):
+    """Path of any existing resource file with a safe name, for delete/update.
+
+    Files uploaded before the allowlist must still be removable.
+    """
+    if not is_safe_resource_filename(filename):
+        return None
+    file_path = safe_join(config.FILES_DIR, filename)
+    if not file_path or not os.path.isfile(file_path):
+        return None
+    return file_path
+
+
+def send_resource_attachment(file_path, accel_path=None):
+    """Serve a shared resource strictly as a download, never rendered inline."""
+    name = os.path.basename(file_path)
+    safe_name = name.encode("ascii", "ignore").decode("ascii").replace('"', "") or "download"
+    disposition = (
+        f'attachment; filename="{safe_name}"; '
+        f"filename*=UTF-8''{urllib.parse.quote(name)}"
+    )
+    if accel_path:
+        resp = Response(status=200, mimetype="application/octet-stream")
+        resp.headers["X-Accel-Redirect"] = accel_path
+        resp.headers["Accept-Ranges"] = "bytes"
+        resp.headers["X-Accel-Buffering"] = "no"
+    else:
+        resp = send_from_directory(
+            os.path.dirname(file_path),
+            name,
+            conditional=True,
+            as_attachment=True,
+            mimetype="application/octet-stream",
+        )
+        resp.headers["Accept-Ranges"] = "bytes"
+    resp.headers["Content-Disposition"] = disposition
+    resp.headers["Content-Type"] = "application/octet-stream"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Cache-Control"] = "private, max-age=86400"
+    return resp
 
 
 def send_mp4_with_range(file_path, accel_path=None, attachment_name=None):
@@ -11094,6 +11157,8 @@ def public_media(token):
     accel_path = None
     if USE_X_ACCEL:
         accel_path = media_accel_path(streamer, filename, clip=(route == "clip"), file_path=file_path)
+    if route == "file":
+        return send_resource_attachment(file_path, accel_path=accel_path)
     return send_mp4_with_range(file_path, accel_path=accel_path)
 
 
@@ -11111,6 +11176,8 @@ def public_download(token):
     accel_path = None
     if USE_X_ACCEL:
         accel_path = media_accel_path(streamer, filename, clip=(route == "clip"), file_path=file_path)
+    if route == "file":
+        return send_resource_attachment(file_path, accel_path=accel_path)
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
@@ -12409,9 +12476,10 @@ def files_upload():
 def files_download(filename):
     if not downloads_enabled():
         abort(403)
-    if not resolve_resource_file_path(filename):
+    path = resolve_resource_file_path(filename)
+    if not path:
         abort(404)
-    return send_from_directory(config.FILES_DIR, filename, as_attachment=True, conditional=True)
+    return send_resource_attachment(path)
 
 @app.route("/files/update", methods=["POST"])
 @admin_required
@@ -12419,7 +12487,7 @@ def files_update():
     filename = request.form.get("filename")
     title = request.form.get("title", "").strip()
     desc = request.form.get("description", "").strip()
-    if filename and resolve_resource_file_path(filename):
+    if filename and resolve_existing_resource_path(filename):
         res = load_resources()
         if "files" not in res:
             res["files"] = {}
@@ -12431,7 +12499,7 @@ def files_update():
 @admin_required
 def files_delete(filename):
     success = False
-    path = resolve_resource_file_path(filename)
+    path = resolve_existing_resource_path(filename)
     if path:
         try:
             os.remove(path)
@@ -12442,8 +12510,8 @@ def files_delete(filename):
             # Remove shares
             remove_shares_for("_file_", filename, "file")
             success = True
-        except Exception:
-            pass
+        except OSError as exc:
+            logging.error("Could not delete resource file %s: %s", path, exc)
             
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return Response(json.dumps({"success": success}), 200, mimetype="application/json")
