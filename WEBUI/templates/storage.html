@@ -6,11 +6,11 @@
 
 {% block header_actions %}
   <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     {{ _('Control panel') }}
   </a>
-  <button type="button" class="ns-btn ns-btn-primary" onclick="openStorageModal('modal-add-provider')">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <button type="button" class="ns-btn ns-btn-primary" data-storage-open="modal-add-provider">
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     {{ _('Add provider') }}
   </button>
 {% endblock %}
@@ -124,7 +124,7 @@
         <h3>{{ _('Storage providers') }}</h3>
         <p class="hint">{{ _('Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption.') }}</p>
       </div>
-      <button type="button" class="storage-btn primary" onclick="openStorageModal('modal-add-provider')">+ {{ _('Provider') }}</button>
+      <button type="button" class="storage-btn primary" data-storage-open="modal-add-provider">+ {{ _('Provider') }}</button>
     </div>
 
     {% if providers %}
@@ -176,8 +176,8 @@
           {% if p.oauth_supported %}
           <a class="storage-btn" href="{{ url_for('admin_storage_oauth_start', provider_id=p.id) }}">{{ p.oauth_label }}</a>
           {% endif %}
-          <button type="button" class="storage-btn" data-update-url="{{ url_for('admin_storage_provider_update', provider_id=p.id) }}" onclick="openEditProvider({{ p.id }}, this.dataset.updateUrl)">{{ _('Edit') }}</button>
-          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" onsubmit='return confirm({{ _("Really remove the provider? The cloud files are kept.")|tojson }});'>
+          <button type="button" class="storage-btn" data-storage-edit="{{ p.id }}" data-update-url="{{ url_for('admin_storage_provider_update', provider_id=p.id) }}">{{ _('Edit') }}</button>
+          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" data-storage-confirm="{{ _('Really remove the provider? The cloud files are kept.') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="storage-btn danger">{{ _('Remove') }}</button>
           </form>
@@ -325,7 +325,7 @@
                 </form>
                 {% endif %}
                 {% if o.status in ('uploaded','restored') and o.local_exists and not o.local_deleted_at %}
-                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" onsubmit='return confirm({{ _("Really delete the local file? The cloud copy is kept.")|tojson }});'>
+                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" data-storage-confirm="{{ _('Really delete the local file? The cloud copy is kept.') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="storage-btn danger">{{ _('Delete locally') }}</button>
                 </form>
@@ -337,12 +337,12 @@
                 </form>
                 {% endif %}
                 {% if not o.remote_deleted_at and not o.local_deleted_at and o.local_exists and o.status in ('uploaded','restored') %}
-                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" onsubmit='return confirm({{ _("Really delete the cloud file? A local copy is kept.")|tojson }});'>
+                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" data-storage-confirm="{{ _('Really delete the cloud file? A local copy is kept.') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="storage-btn danger">{{ _('Delete from cloud') }}</button>
                 </form>
                 {% endif %}
-                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" onsubmit='return confirm({{ _("Remove only the database entry?")|tojson }});'>
+                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" data-storage-confirm="{{ _('Remove only the database entry?') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="storage-btn">{{ _('Forget') }}</button>
                 </form>
@@ -372,14 +372,14 @@
   <div class="storage-modal">
     <div class="storage-modal-head">
       <h3>{{ _('Add provider') }}</h3>
-      <button type="button" class="storage-close" onclick="closeStorageModal('modal-add-provider')">&times;</button>
+      <button type="button" class="storage-close" data-storage-close="modal-add-provider" aria-label="{{ _('Close') }}">&times;</button>
     </div>
     <form method="post" action="{{ url_for('admin_storage_provider_add') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-modal-body">
         <div class="storage-field">
           <label>{{ _('Provider type') }}</label>
-          <select id="add-provider-type" name="provider_type" onchange="renderAddFields()">
+          <select id="add-provider-type" name="provider_type">
             {% for entry in catalog %}
             <option value="{{ entry.type_id }}">{{ entry.label }}</option>
             {% endfor %}
@@ -397,7 +397,7 @@
         </label>
       </div>
       <div class="storage-modal-foot">
-        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-add-provider')">{{ _('Cancel') }}</button>
+        <button type="button" class="storage-btn" data-storage-close="modal-add-provider">{{ _('Cancel') }}</button>
         <button type="submit" class="storage-btn primary">{{ _('Create') }}</button>
       </div>
     </form>
@@ -408,7 +408,7 @@
   <div class="storage-modal">
     <div class="storage-modal-head">
       <h3>{{ _('Edit provider') }}</h3>
-      <button type="button" class="storage-close" onclick="closeStorageModal('modal-edit-provider')">&times;</button>
+      <button type="button" class="storage-close" data-storage-close="modal-edit-provider" aria-label="{{ _('Close') }}">&times;</button>
     </div>
     <form method="post" id="edit-provider-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -424,14 +424,14 @@
         </label>
       </div>
       <div class="storage-modal-foot">
-        <button type="button" class="storage-btn" onclick="closeStorageModal('modal-edit-provider')">{{ _('Cancel') }}</button>
+        <button type="button" class="storage-btn" data-storage-close="modal-edit-provider">{{ _('Cancel') }}</button>
         <button type="submit" class="storage-btn primary">{{ _('Save') }}</button>
       </div>
     </form>
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   const STORAGE_CATALOG = {{ catalog|tojson }};
   const STORAGE_PROVIDERS = {{ providers|tojson }};
 
@@ -513,7 +513,32 @@
     openStorageModal('modal-edit-provider');
   }
 
+  document.addEventListener('click', function (event) {
+    const opener = event.target.closest('[data-storage-open]');
+    if (opener) {
+      openStorageModal(opener.getAttribute('data-storage-open'));
+      return;
+    }
+    const closer = event.target.closest('[data-storage-close]');
+    if (closer) {
+      closeStorageModal(closer.getAttribute('data-storage-close'));
+      return;
+    }
+    const editBtn = event.target.closest('[data-storage-edit]');
+    if (editBtn) {
+      openEditProvider(Number(editBtn.getAttribute('data-storage-edit')), editBtn.dataset.updateUrl);
+    }
+  });
+
+  document.addEventListener('submit', function (event) {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-storage-confirm')) return;
+    if (!confirm(form.getAttribute('data-storage-confirm'))) event.preventDefault();
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
+    const typeSelect = document.getElementById('add-provider-type');
+    if (typeSelect) typeSelect.addEventListener('change', renderAddFields);
     renderAddFields();
   });
 </script>

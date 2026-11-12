@@ -1,5 +1,5 @@
 <script src="{{ url_for('static', filename='chat_emotes.js', v=ASSET_VERSION) }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   const channel = {{ channel|tojson }};
   const displayName = {{ display_name|tojson }};
@@ -43,8 +43,14 @@
     return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   }
 
+  function escapeChatText(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[ch]);
+  }
+
   function processMsg(item) {
-    return (window.StreamVaultChat && window.StreamVaultChat.renderMessageHtml && window.StreamVaultChat.renderMessageHtml(item)) || (item.msg || '');
+    return (window.StreamVaultChat && window.StreamVaultChat.renderMessageHtml && window.StreamVaultChat.renderMessageHtml(item)) || escapeChatText(item.msg || '');
   }
 
   function atBottom(list, thresholdPx) {
@@ -109,7 +115,8 @@
     line.className = (window.StreamVaultChat && window.StreamVaultChat.chatLineClassName && window.StreamVaultChat.chatLineClassName(item))
       || (item.reward ? 'chat-line chat-line-redeem' : 'chat-line');
     line.innerHTML = '<span class="chat-time">' + formatTime(item.t) + '</span>' +
-      '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user" style="color:' + userColor + '"></span><span class="chat-msg"></span></span>';
+      '<span class="chat-text"><span class="chat-badges"></span><span class="chat-user"></span><span class="chat-msg"></span></span>';
+    line.querySelector('.chat-user').style.color = userColor;
     if (!item.event) {
       const badges = line.querySelector('.chat-badges');
       if (badges) badges.innerHTML = (window.StreamVaultChat && window.StreamVaultChat.renderBadgesHtml && window.StreamVaultChat.renderBadgesHtml(item)) || '';

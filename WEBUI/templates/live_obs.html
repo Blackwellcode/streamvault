@@ -26,7 +26,7 @@
   <body>
     <video id="player" autoplay playsinline></video>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1" referrerpolicy="no-referrer"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       const video = document.getElementById("player");
       const src = {{ playlist_url|tojson }};
       let hls = null;

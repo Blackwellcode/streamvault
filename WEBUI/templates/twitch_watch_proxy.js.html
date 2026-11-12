@@ -1,7 +1,20 @@
 {% if use_hls_proxy %}
-<script src="{{ url_for('static', filename='mpegts.js', v=ASSET_VERSION) }}" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js'"></script>
+<script src="{{ url_for('static', filename='mpegts.js', v=ASSET_VERSION) }}"></script>
+<script nonce="{{ csp_nonce() }}">
+(function() {
+  // The local mpegts.js above is parser-blocking, so by now it has either run or failed.
+  // On failure load the pinned CDN build once (replaces the former inline onerror handler).
+  if (window.mpegts) return;
+  const fallback = document.createElement('script');
+  fallback.src = 'https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js';
+  fallback.addEventListener('error', function() {
+    console.warn('[live] mpegts.js unavailable (local and CDN); using HLS fallback');
+  }, { once: true });
+  document.head.appendChild(fallback);
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   const playlistUrl = {{ (hls_playlist_url or '')|tojson }};
   const readyUrl = {{ (hls_ready_url or '')|tojson }};

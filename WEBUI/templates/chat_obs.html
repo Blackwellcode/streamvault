@@ -101,7 +101,7 @@
 
   {% include 'components/js_i18n.html' %}
   <script src="{{ url_for('static', filename='chat_emotes.js') }}"></script>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
     (function() {
       const streamer = {{ streamer|tojson }};
       const listEl = document.getElementById("chat-list");

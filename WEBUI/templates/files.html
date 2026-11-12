@@ -6,7 +6,7 @@
 
 {% block header_actions %}
   <a href="{{ url_for('index') }}" class="ns-btn ns-btn-secondary">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     {{ _('Back to dashboard') }}
   </a>
 {% endblock %}
@@ -34,8 +34,8 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       
       <div style="border: 2px dashed var(--ns-border-medium); border-radius: var(--ns-radius-lg); padding: 24px; text-align: center; cursor: pointer; position: relative; background: var(--ns-bg-surface-raised);">
-        <input type="file" name="file" id="file" required onchange="fileSelected(this)" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ns-brand-crimson); margin-bottom: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <input type="file" name="file" id="file" required style="position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ns-brand-crimson); margin-bottom: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <div id="file-label" style="font-size: 13px; color: var(--ns-text-secondary); font-weight: 500;">
           {{ _('Drop a file here or click to select') }}
         </div>
@@ -61,7 +61,7 @@
         <div>
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
             <div style="width: 36px; height: 36px; border-radius: var(--ns-radius-md); background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-subtle); display: flex; align-items: center; justify-content: center; color: var(--ns-brand-crimson);">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
             <span class="ns-overlay-chip" style="background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-subtle); color: var(--ns-text-muted);">{{ f.size_str }}</span>
           </div>
@@ -76,13 +76,13 @@
           {% endif %}
           
           {% if public_shares_enabled %}
-          <button class="ns-action-btn-mini" onclick="shareFile(this, '{{ url_for('files_share_create', filename=f.name) }}')" title="{{ _('Share') }}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <button type="button" class="ns-action-btn-mini" data-files-action="share" data-url="{{ url_for('files_share_create', filename=f.name) }}" title="{{ _('Share') }}" aria-label="{{ _('Share') }}">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
           {% endif %}
           
-          <button class="ns-action-btn-mini" style="color: #ef4444;" onclick="deleteFile(this, '{{ url_for('files_delete', filename=f.name) }}')" title="{{ _('Delete') }}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <button type="button" class="ns-action-btn-mini" style="color: #ef4444;" data-files-action="delete" data-url="{{ url_for('files_delete', filename=f.name) }}" title="{{ _('Delete') }}" aria-label="{{ _('Delete') }}">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>
         </div>
       </div>
@@ -96,10 +96,14 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   function fileSelected(input) {
     if (input.files && input.files[0]) {
-      document.getElementById('file-label').innerHTML = '<span style=\"color:var(--ns-online-green);\">✓ ' + input.files[0].name + '</span>';
+      const label = document.getElementById('file-label');
+      const chosen = document.createElement('span');
+      chosen.style.color = 'var(--ns-online-green)';
+      chosen.textContent = '✓ ' + input.files[0].name;
+      label.replaceChildren(chosen);
     }
   }
 
@@ -125,5 +129,18 @@
     const res = await fetch(url, {method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}});
     if(res.ok) location.reload();
   }
+
+  const fileInput = document.getElementById('file');
+  if (fileInput) {
+    fileInput.addEventListener('change', function () { fileSelected(fileInput); });
+  }
+
+  document.addEventListener('click', function (event) {
+    const btn = event.target.closest('[data-files-action]');
+    if (!btn) return;
+    const url = btn.getAttribute('data-url');
+    if (btn.getAttribute('data-files-action') === 'share') shareFile(btn, url);
+    else if (btn.getAttribute('data-files-action') === 'delete') deleteFile(btn, url);
+  });
 </script>
 {% endblock %}

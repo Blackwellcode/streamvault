@@ -9,7 +9,7 @@
     <span>{{ current_locale.split('_')[0]|upper }}</span>
   </span>
   {% endif %}
-  <select id="ns-lang-select" name="lang" onchange="this.form.submit()">
+  <select id="ns-lang-select" name="lang" data-lang-autosubmit>
     <option value="">{{ _('Automatic (browser)') }}</option>
     {% for code, name in available_locales %}
     <option value="{{ code }}" lang="{{ code|replace('_', '-') }}"{% if request.cookies.get('sv_lang') == code %} selected{% endif %}>{{ name }}</option>
@@ -17,3 +17,14 @@
   </select>
   <noscript><button type="submit">{{ _('Apply') }}</button></noscript>
 </form>
+<script nonce="{{ csp_nonce() }}">
+  (function () {
+    var script = document.currentScript;
+    var form = script && script.previousElementSibling;
+    var select = form && form.querySelector('select[data-lang-autosubmit]');
+    if (!select) return;
+    select.addEventListener('change', function () {
+      if (this.form) this.form.submit();
+    });
+  })();
+</script>

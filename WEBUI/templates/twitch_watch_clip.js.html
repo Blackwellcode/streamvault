@@ -1,6 +1,6 @@
 
 <script src="{{ url_for('static', filename='live_clip_overlay.js', v=ASSET_VERSION) }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   window.CLIP_SETTINGS = {{ clip_settings|tojson }};
   if (!window.StreamVaultLiveClip) return;

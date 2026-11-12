@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>StreamVault · {{ _('Rules') }}</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-regeln {{ theme_class }} ns-platform">
     <main class="regeln-shell">
@@ -43,7 +42,7 @@
         </label>
         <button type="submit" class="btn-primary" id="regelnSubmit" disabled>{{ _('Accept rules') }}</button>
       </form>
-      <script>
+      <script nonce="{{ csp_nonce() }}">
         (function () {
           var check = document.getElementById('regelnCheck');
           var btn = document.getElementById('regelnSubmit');
