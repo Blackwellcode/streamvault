@@ -4,8 +4,7 @@
   <meta charset="utf-8">
   <title>{{ display_name or streamer }} · StreamVault Mobile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+  {% include 'components/styles.html' %}
 </head>
 <body class="mobile-body {{ theme_class }} ns-platform" style="background:#070B14; color:#F3F5FC; padding-bottom:80px; overflow-x:hidden;">
 
