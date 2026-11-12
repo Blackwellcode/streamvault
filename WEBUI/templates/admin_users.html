@@ -5,16 +5,16 @@
 {% block page_subtitle %}{{ _('Dynamic user account and group management with granular stream and permission control') }}{% endblock %}
 
 {% block header_actions %}
-  <button type="button" class="ns-btn ns-btn-primary" onclick="openModal('modal-add-user')">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+  <button type="button" class="ns-btn ns-btn-primary" data-open-modal="modal-add-user">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
     {{ _('New user') }}
   </button>
-  <button type="button" class="ns-btn ns-btn-secondary" onclick="openModal('modal-add-group')">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <button type="button" class="ns-btn ns-btn-secondary" data-open-modal="modal-add-group">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     {{ _('New group') }}
   </button>
   <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     {{ _('System settings') }}
   </a>
 {% endblock %}
@@ -62,16 +62,18 @@
   .rbac-btn-icon.danger:hover { color: #F04458; background: rgba(240, 68, 88, 0.12); border-color: rgba(240, 68, 88, 0.35); }
   .rbac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
   .rbac-modal-backdrop.is-open { display: flex; }
+  dialog.rbac-modal-backdrop { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; color: inherit; }
+  dialog.rbac-modal-backdrop::backdrop { background: transparent; }
   .rbac-modal { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-medium); border-radius: var(--ns-radius-lg); box-shadow: var(--ns-shadow-lg); width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; animation: rbacModalFadeIn 0.18s ease-out; }
   @keyframes rbacModalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(-8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
   .rbac-modal-head { background: var(--ns-bg-surface-raised); padding: 18px 24px; border-bottom: 1px solid var(--ns-border-subtle); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 2; }
-  .rbac-modal-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ns-text-primary); }
+  .rbac-modal-head :is(h2, h3) { margin: 0; font-size: 16px; font-weight: 700; color: var(--ns-text-primary); }
   .rbac-modal-close { background: transparent; border: none; color: var(--ns-text-muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px; }
   .rbac-modal-close:hover { color: #FFF; }
   .rbac-modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
   .rbac-modal-foot { background: var(--ns-bg-surface-raised); padding: 16px 24px; border-top: 1px solid var(--ns-border-subtle); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; z-index: 2; }
   .rbac-form-group { display: flex; flex-direction: column; gap: 6px; }
-  .rbac-form-group label { font-size: 12px; font-weight: 600; color: var(--ns-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rbac-form-group label, .rbac-group-label { font-size: 12px; font-weight: 600; color: var(--ns-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
   .rbac-input, .rbac-select { background: var(--ns-bg-canvas); border: 1px solid var(--ns-border-medium); border-radius: var(--ns-radius-md); color: var(--ns-text-primary); padding: 10px 14px; font-size: 14px; outline: none; transition: border-color 0.15s ease; }
   .rbac-input:focus, .rbac-select:focus { border-color: #4D63FF; box-shadow: 0 0 0 2px rgba(77, 99, 255, 0.2); }
   .rbac-checkbox-list { display: flex; flex-direction: column; gap: 8px; background: var(--ns-bg-canvas); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); }
@@ -85,24 +87,24 @@
 </style>
 {% endblock %}{% block content %}
 <div style="max-width: 1400px; margin: 0 auto;">
-  <div class="rbac-nav-tabs">
-    <button type="button" class="rbac-tab-btn is-active" id="tab-btn-users" onclick="switchRbacTab('users')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <div class="rbac-nav-tabs" role="tablist" aria-label="{{ _('Users & groups') }}">
+    <button type="button" class="rbac-tab-btn is-active" id="tab-btn-users" role="tab" aria-selected="true" aria-controls="section-users" data-rbac-tab="users">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       {{ _('User accounts') }}
       <span class="rbac-tab-badge" id="badge-users-count">{{ users|length }}</span>
     </button>
-    <button type="button" class="rbac-tab-btn" id="tab-btn-groups" onclick="switchRbacTab('groups')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17v-4"/><path d="M9 9h.01"/><path d="M15 17v-8"/><path d="M15 9h.01"/></svg>
+    <button type="button" class="rbac-tab-btn" id="tab-btn-groups" role="tab" aria-selected="false" aria-controls="section-groups" tabindex="-1" data-rbac-tab="groups">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17v-4"/><path d="M9 9h.01"/><path d="M15 17v-8"/><path d="M15 9h.01"/></svg>
       {{ _('User groups & permissions') }}
       <span class="rbac-tab-badge" id="badge-groups-count">{{ groups|length }}</span>
     </button>
   </div>
 
   <!-- TAB 1: USERS SECTION -->
-  <section id="section-users" class="rbac-tab-section">
+  <section id="section-users" class="rbac-tab-section" role="tabpanel" aria-labelledby="tab-btn-users">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
       <div style="flex: 1; max-width: 360px;">
-        <input type="text" id="users-search-input" class="rbac-input" placeholder="{{ _('Search user, email or group...') }}" oninput="filterUsersTable()" style="width: 100%;">
+        <input type="text" id="users-search-input" class="rbac-input" placeholder="{{ _('Search user, email or group…') }}" aria-label="{{ _('Search user, email or group…') }}" style="width: 100%;">
       </div>
       <div style="font-size: 12px; color: var(--ns-text-muted);">
         {% set users_total %}<span style="color: #FFF; font-weight: 600;">{{ users|length }}</span>{% endset %}{{ _('Total: %(count)s registered accounts', count=users_total) }}
@@ -175,12 +177,12 @@
             </td>
             <td style="text-align: right;">
               <div class="rbac-actions" style="justify-content: flex-end;">
-                <button type="button" class="rbac-btn-icon" title="{{ _('Edit user') }}" onclick="openEditUserModal('{{ u.username }}', '{{ u.email }}', {{ u.group_id or 3 }}, {{ 1 if u.active else 0 }})">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <button type="button" class="rbac-btn-icon" title="{{ _('Edit user') }}" aria-label="{{ _('Edit user') }} {{ u.username }}" data-edit-user="{{ u.username }}" data-email="{{ u.email or '' }}" data-group-id="{{ u.group_id or 3 }}" data-active="{{ 1 if u.active else 0 }}">
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 {% if not u.is_system_admin and u.username.lower() != (current_username or '').lower() %}
-                <button type="button" class="rbac-btn-icon danger" title="{{ _('Delete user') }}" onclick="openDeleteUserModal('{{ u.username }}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <button type="button" class="rbac-btn-icon danger" title="{{ _('Delete user') }}" aria-label="{{ _('Delete user') }} {{ u.username }}" data-delete-user="{{ u.username }}">
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
                 {% endif %}
               </div>
@@ -193,7 +195,7 @@
   </section>
 
   <!-- TAB 2: GROUPS SECTION -->
-  <section id="section-groups" class="rbac-tab-section" style="display: none;">
+  <section id="section-groups" class="rbac-tab-section" role="tabpanel" aria-labelledby="tab-btn-groups" style="display: none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
       <div style="font-size: 13px; color: var(--ns-text-secondary);">
         {{ _('Configure dynamic permissions for streams, the video archive and channel access.') }}
@@ -240,7 +242,7 @@
                 {% if g.permissions.disabled_channels %}
                 <div style="display:flex; flex-direction:column; gap:4px;">
                   <span class="rbac-chip rbac-chip-channel-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                     {{ _('All streams (+ auto-new)') }}
                   </span>
                   <span style="font-size:11px; color:#F04458; font-weight:500;">
@@ -249,7 +251,7 @@
                 </div>
                 {% else %}
                 <span class="rbac-chip rbac-chip-channel-all">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                   {{ _('All streams (+ auto-new)') }}
                 </span>
                 {% endif %}
@@ -277,12 +279,12 @@
             </td>
             <td style="text-align: right;">
               <div class="rbac-actions" style="justify-content: flex-end;">
-                <button type="button" class="rbac-btn-icon" title="{{ _('Edit group') }}" onclick='openEditGroupModal({{ g.id }}, {{ g.name|tojson }}, {{ (g.description or "")|tojson }}, {{ 1 if g.is_system else 0 }}, {{ g.permissions|tojson }})'>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <button type="button" class="rbac-btn-icon" title="{{ _('Edit group') }}" aria-label="{{ _('Edit group') }} {{ g.name }}" data-edit-group="{{ g.id }}" data-name="{{ g.name }}" data-desc="{{ g.description or '' }}" data-system="{{ 1 if g.is_system else 0 }}" data-perms='{{ g.permissions|tojson }}'>
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 {% if not g.is_system %}
-                <button type="button" class="rbac-btn-icon danger" title="{{ _('Delete group') }}" onclick="openDeleteGroupModal({{ g.id }}, '{{ g.name }}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <button type="button" class="rbac-btn-icon danger" title="{{ _('Delete group') }}" aria-label="{{ _('Delete group') }} {{ g.name }}" data-delete-group="{{ g.id }}" data-name="{{ g.name }}">
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
                 {% endif %}
               </div>
@@ -294,28 +296,28 @@
     </div>
   </section>
 </div><!-- MODAL: ADD USER -->
-<div id="modal-add-user" class="rbac-modal-backdrop">
+<dialog id="modal-add-user" class="rbac-modal-backdrop" aria-labelledby="modal-add-user-title">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>{{ _('Create new user') }}</h3>
-      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-add-user')">&times;</button>
+      <h2 id="modal-add-user-title">{{ _('Create new user') }}</h2>
+      <button type="button" class="rbac-modal-close" data-close-modal="modal-add-user" aria-label="{{ _(\'Close\') }}">&times;</button>
     </div>
-    <form id="form-add-user" onsubmit="handleAddUser(event)">
+    <form id="form-add-user" data-rbac-submit="handleAddUser">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>{{ _('Username') }} *</label>
+          <label for="add-user-name">{{ _('Username') }} *</label>
           <input type="text" id="add-user-name" class="rbac-input" required minlength="3" maxlength="32" placeholder="{{ _('e.g. john_doe') }}">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('Email address (optional)') }}</label>
+          <label for="add-user-email">{{ _('Email address (optional)') }}</label>
           <input type="email" id="add-user-email" class="rbac-input" placeholder="{{ _('user@example.com') }}">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('Initial password') }} *</label>
+          <label for="add-user-pass">{{ _('Initial password') }} *</label>
           <input type="password" id="add-user-pass" class="rbac-input" required minlength="8" placeholder="{{ _('At least 8 characters') }}">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('User group') }} *</label>
+          <label for="add-user-group">{{ _('User group') }} *</label>
           <select id="add-user-group" class="rbac-select">
             {% for g in groups %}
             <option value="{{ g.id }}" {% if g.name == 'Viewer' %}selected{% endif %}>{{ g.name }}</option>
@@ -330,37 +332,37 @@
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-user')">{{ _('Cancel') }}</button>
+        <button type="button" class="ns-btn ns-btn-secondary" data-close-modal="modal-add-user">{{ _('Cancel') }}</button>
         <button type="submit" class="ns-btn ns-btn-primary">{{ _('Create user') }}</button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
 <!-- MODAL: EDIT USER -->
-<div id="modal-edit-user" class="rbac-modal-backdrop">
+<dialog id="modal-edit-user" class="rbac-modal-backdrop" aria-labelledby="modal-edit-user-title">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>{{ _('Edit user') }}</h3>
-      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-edit-user')">&times;</button>
+      <h2 id="modal-edit-user-title">{{ _('Edit user') }}</h2>
+      <button type="button" class="rbac-modal-close" data-close-modal="modal-edit-user" aria-label="{{ _(\'Close\') }}">&times;</button>
     </div>
-    <form id="form-edit-user" onsubmit="handleEditUser(event)">
+    <form id="form-edit-user" data-rbac-submit="handleEditUser">
       <input type="hidden" id="edit-user-original">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>{{ _('Username') }}</label>
+          <label for="edit-user-name">{{ _('Username') }}</label>
           <input type="text" id="edit-user-name" class="rbac-input" required minlength="3" maxlength="32">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('Email address') }}</label>
+          <label for="edit-user-email">{{ _('Email address') }}</label>
           <input type="email" id="edit-user-email" class="rbac-input" placeholder="{{ _('user@example.com') }}">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('New password (leave empty to keep unchanged)') }}</label>
+          <label for="edit-user-pass">{{ _('New password (leave empty to keep unchanged)') }}</label>
           <input type="password" id="edit-user-pass" class="rbac-input" minlength="8" placeholder="{{ _('New password...') }}">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('User group') }}</label>
+          <label for="edit-user-group">{{ _('User group') }}</label>
           <select id="edit-user-group" class="rbac-select">
             {% for g in groups %}
             <option value="{{ g.id }}">{{ g.name }}</option>
@@ -375,21 +377,21 @@
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-user')">{{ _('Cancel') }}</button>
+        <button type="button" class="ns-btn ns-btn-secondary" data-close-modal="modal-edit-user">{{ _('Cancel') }}</button>
         <button type="submit" class="ns-btn ns-btn-primary">{{ _('Save changes') }}</button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
 <!-- MODAL: DELETE USER -->
-<div id="modal-delete-user" class="rbac-modal-backdrop">
+<dialog id="modal-delete-user" class="rbac-modal-backdrop" aria-labelledby="modal-delete-user-title">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>{{ _('Delete user') }}</h3>
-      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-delete-user')">&times;</button>
+      <h2 id="modal-delete-user-title">{{ _('Delete user') }}</h2>
+      <button type="button" class="rbac-modal-close" data-close-modal="modal-delete-user" aria-label="{{ _(\'Close\') }}">&times;</button>
     </div>
-    <form id="form-delete-user" onsubmit="handleDeleteUser(event)">
+    <form id="form-delete-user" data-rbac-submit="handleDeleteUser">
       <input type="hidden" id="delete-user-name">
       <div class="rbac-modal-body">
         <p style="margin: 0; color: var(--ns-text-primary);">
@@ -400,37 +402,37 @@
         </p>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-user')">{{ _('Cancel') }}</button>
+        <button type="button" class="ns-btn ns-btn-secondary" data-close-modal="modal-delete-user">{{ _('Cancel') }}</button>
         <button type="submit" class="ns-btn ns-btn-danger">{{ _('Delete permanently') }}</button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
 <!-- MODAL: ADD GROUP -->
-<div id="modal-add-group" class="rbac-modal-backdrop">
+<dialog id="modal-add-group" class="rbac-modal-backdrop" aria-labelledby="modal-add-group-title">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>{{ _('Create new user group') }}</h3>
-      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-add-group')">&times;</button>
+      <h2 id="modal-add-group-title">{{ _('Create new user group') }}</h2>
+      <button type="button" class="rbac-modal-close" data-close-modal="modal-add-group" aria-label="{{ _(\'Close\') }}">&times;</button>
     </div>
-    <form id="form-add-group" onsubmit="handleAddGroup(event)">
+    <form id="form-add-group" data-rbac-submit="handleAddGroup">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>{{ _('Group name') }} *</label>
+          <label for="add-group-name">{{ _('Group name') }} *</label>
           <input type="text" id="add-group-name" class="rbac-input" required minlength="2" maxlength="50" placeholder="{{ _('e.g. VIP archive') }}">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('Description') }}</label>
+          <label for="add-group-desc">{{ _('Description') }}</label>
           <input type="text" id="add-group-desc" class="rbac-input" placeholder="{{ _('Purpose of this user group...') }}">
         </div>
 
         <!-- Stream- & Ordner-Zugriff -->
         <div class="rbac-form-group">
-          <label>{{ _('Stream & folder access') }}</label>
+          <span class="rbac-group-label">{{ _('Stream & folder access') }}</span>
           <div style="background: var(--ns-bg-canvas); padding: 14px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; flex-direction: column; gap: 10px;">
             <label class="rbac-checkbox-label" style="font-weight: 600; color: #FFF;">
-              <input type="checkbox" id="add-group-access-all" checked onchange="updateChannelMode('add')">
+              <input type="checkbox" id="add-group-access-all" checked data-channel-mode="add">
               <span>{{ _('Automatically unlock future streams & folders') }}</span>
             </label>
             <div id="add-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
@@ -443,8 +445,8 @@
                   {{ _('Disable / enable individual folders:') }}
                 </div>
                 <div style="display: flex; gap: 6px;">
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', true)">{{ _('All on') }}</button>
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('add', false)">{{ _('All off') }}</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 12px; padding: 2px 10px; min-height: 28px;" data-set-all="add" data-state="true">{{ _('All on') }}</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 12px; padding: 2px 10px; min-height: 28px;" data-set-all="add" data-state="false">{{ _('All off') }}</button>
                 </div>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.3); border-radius: var(--ns-radius-sm);">
@@ -461,7 +463,7 @@
 
         <!-- Funktionsrechte -->
         <div class="rbac-form-group">
-          <label>{{ _('Feature permissions') }}</label>
+          <span class="rbac-group-label">{{ _('Feature permissions') }}</span>
           <div class="rbac-checkbox-list">
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="add-perm-view-streams" checked>
@@ -487,39 +489,39 @@
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-add-group')">{{ _('Cancel') }}</button>
+        <button type="button" class="ns-btn ns-btn-secondary" data-close-modal="modal-add-group">{{ _('Cancel') }}</button>
         <button type="submit" class="ns-btn ns-btn-primary">{{ _('Create group') }}</button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
 <!-- MODAL: EDIT GROUP -->
-<div id="modal-edit-group" class="rbac-modal-backdrop">
+<dialog id="modal-edit-group" class="rbac-modal-backdrop" aria-labelledby="modal-edit-group-title">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>{{ _('Edit group & permissions') }}</h3>
-      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-edit-group')">&times;</button>
+      <h2 id="modal-edit-group-title">{{ _('Edit group & permissions') }}</h2>
+      <button type="button" class="rbac-modal-close" data-close-modal="modal-edit-group" aria-label="{{ _(\'Close\') }}">&times;</button>
     </div>
-    <form id="form-edit-group" onsubmit="handleEditGroup(event)">
+    <form id="form-edit-group" data-rbac-submit="handleEditGroup">
       <input type="hidden" id="edit-group-id">
       <input type="hidden" id="edit-group-is-system">
       <div class="rbac-modal-body">
         <div class="rbac-form-group">
-          <label>{{ _('Group name') }}</label>
+          <label for="edit-group-name">{{ _('Group name') }}</label>
           <input type="text" id="edit-group-name" class="rbac-input" required minlength="2" maxlength="50">
         </div>
         <div class="rbac-form-group">
-          <label>{{ _('Description') }}</label>
+          <label for="edit-group-desc">{{ _('Description') }}</label>
           <input type="text" id="edit-group-desc" class="rbac-input">
         </div>
 
         <!-- Stream- & Ordner-Zugriff -->
         <div class="rbac-form-group">
-          <label>{{ _('Stream & folder access') }}</label>
+          <span class="rbac-group-label">{{ _('Stream & folder access') }}</span>
           <div style="background: var(--ns-bg-canvas); padding: 14px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; flex-direction: column; gap: 10px;">
             <label class="rbac-checkbox-label" style="font-weight: 600; color: #FFF;">
-              <input type="checkbox" id="edit-group-access-all" onchange="updateChannelMode('edit')">
+              <input type="checkbox" id="edit-group-access-all" data-channel-mode="edit">
               <span>{{ _('Automatically unlock future streams & folders') }}</span>
             </label>
             <div id="edit-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
@@ -532,8 +534,8 @@
                   {{ _('Disable / enable individual folders:') }}
                 </div>
                 <div style="display: flex; gap: 6px;">
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', true)">{{ _('All on') }}</button>
-                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 11px; padding: 2px 8px; height: 22px;" onclick="setAllChannels('edit', false)">{{ _('All off') }}</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 12px; padding: 2px 10px; min-height: 28px;" data-set-all="edit" data-state="true">{{ _('All on') }}</button>
+                  <button type="button" class="ns-btn ns-btn-secondary" style="font-size: 12px; padding: 2px 10px; min-height: 28px;" data-set-all="edit" data-state="false">{{ _('All off') }}</button>
                 </div>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; background: rgba(0,0,0,0.3); border-radius: var(--ns-radius-sm);">
@@ -550,7 +552,7 @@
 
         <!-- Funktionsrechte -->
         <div class="rbac-form-group">
-          <label>{{ _('Feature permissions') }}</label>
+          <span class="rbac-group-label">{{ _('Feature permissions') }}</span>
           <div class="rbac-checkbox-list">
             <label class="rbac-checkbox-label">
               <input type="checkbox" id="edit-perm-view-streams">
@@ -576,21 +578,21 @@
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-edit-group')">{{ _('Cancel') }}</button>
+        <button type="button" class="ns-btn ns-btn-secondary" data-close-modal="modal-edit-group">{{ _('Cancel') }}</button>
         <button type="submit" class="ns-btn ns-btn-primary">{{ _('Save group') }}</button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
 <!-- MODAL: DELETE GROUP -->
-<div id="modal-delete-group" class="rbac-modal-backdrop">
+<dialog id="modal-delete-group" class="rbac-modal-backdrop" aria-labelledby="modal-delete-group-title">
   <div class="rbac-modal">
     <div class="rbac-modal-head">
-      <h3>{{ _('Delete user group') }}</h3>
-      <button type="button" class="rbac-modal-close" onclick="closeModal('modal-delete-group')">&times;</button>
+      <h2 id="modal-delete-group-title">{{ _('Delete user group') }}</h2>
+      <button type="button" class="rbac-modal-close" data-close-modal="modal-delete-group" aria-label="{{ _(\'Close\') }}">&times;</button>
     </div>
-    <form id="form-delete-group" onsubmit="handleDeleteGroup(event)">
+    <form id="form-delete-group" data-rbac-submit="handleDeleteGroup">
       <input type="hidden" id="delete-group-id">
       <div class="rbac-modal-body">
         <p style="margin: 0; color: var(--ns-text-primary);">
@@ -601,35 +603,50 @@
         </div>
       </div>
       <div class="rbac-modal-foot">
-        <button type="button" class="ns-btn ns-btn-secondary" onclick="closeModal('modal-delete-group')">{{ _('Cancel') }}</button>
+        <button type="button" class="ns-btn ns-btn-secondary" data-close-modal="modal-delete-group">{{ _('Cancel') }}</button>
         <button type="submit" class="ns-btn ns-btn-danger">{{ _('Delete group') }}</button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
 <div id="rbac-toast-container"></div>
 {% endblock %}{% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
   const CSRF_TOKEN = {{ csrf_token()|tojson }};
 
   function showToast(msg, type = 'success') {
     const container = document.getElementById('rbac-toast-container');
     const toast = document.createElement('div');
     toast.className = `rbac-toast ${type}`;
-    toast.innerHTML = `
-      <div style="flex: 1;">${msg}</div>
-      <button type="button" style="background:none;border:none;color:#FFF;cursor:pointer;padding:0 4px;" onclick="this.parentElement.remove()">&times;</button>
-    `;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    const text = document.createElement('div');
+    text.style.flex = '1';
+    text.textContent = String(msg == null ? '' : msg);
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.setAttribute('aria-label', {{ _('Close')|tojson }});
+    close.style.cssText = 'background:none;border:none;color:#FFF;cursor:pointer;padding:0 4px;min-width:24px;min-height:24px;';
+    close.textContent = '\u00d7';
+    close.addEventListener('click', () => toast.remove());
+    toast.appendChild(text);
+    toast.appendChild(close);
     container.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 4000);
   }
 
   function switchRbacTab(tabId) {
-    document.querySelectorAll('.rbac-tab-btn').forEach(b => b.classList.remove('is-active'));
+    document.querySelectorAll('.rbac-tab-btn').forEach(b => {
+      b.classList.remove('is-active');
+      b.setAttribute('aria-selected', 'false');
+      b.setAttribute('tabindex', '-1');
+    });
     document.querySelectorAll('.rbac-tab-section').forEach(s => s.style.display = 'none');
     
-    document.getElementById(`tab-btn-${tabId}`).classList.add('is-active');
+    const activeTab = document.getElementById(`tab-btn-${tabId}`);
+    activeTab.classList.add('is-active');
+    activeTab.setAttribute('aria-selected', 'true');
+    activeTab.removeAttribute('tabindex');
     document.getElementById(`section-${tabId}`).style.display = 'block';
   }
 
@@ -667,27 +684,96 @@
     });
   }
 
+  const modalOpeners = new Map();
+
   function openModal(id) {
     const m = document.getElementById(id);
-    if (m) m.classList.add('is-open');
+    if (!m) return;
+    modalOpeners.set(id, document.activeElement);
+    m.classList.add('is-open');
+    if (typeof m.showModal === 'function' && !m.open) m.showModal();
+    const first = m.querySelector('.rbac-modal-body input:not([type="hidden"]):not([disabled]), .rbac-modal-body select, .rbac-modal-body textarea, .rbac-modal-foot button');
+    if (first) first.focus();
   }
 
   function closeModal(id) {
     const m = document.getElementById(id);
-    if (m) m.classList.remove('is-open');
+    if (!m) return;
+    if (m.open && typeof m.close === 'function') {
+      m.close();
+    } else {
+      m.classList.remove('is-open');
+    }
   }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.rbac-modal-backdrop.is-open').forEach(m => m.classList.remove('is-open'));
-    }
-  });
-
   document.querySelectorAll('.rbac-modal-backdrop').forEach(b => {
+    b.addEventListener('close', () => {
+      b.classList.remove('is-open');
+      const opener = modalOpeners.get(b.id);
+      modalOpeners.delete(b.id);
+      if (opener && typeof opener.focus === 'function') opener.focus();
+    });
     b.addEventListener('click', (e) => {
-      if (e.target === b) b.classList.remove('is-open');
+      if (e.target === b) closeModal(b.id);
     });
   });
+
+  const rbacSubmitHandlers = {
+    handleAddUser: (e) => handleAddUser(e),
+    handleEditUser: (e) => handleEditUser(e),
+    handleDeleteUser: (e) => handleDeleteUser(e),
+    handleAddGroup: (e) => handleAddGroup(e),
+    handleEditGroup: (e) => handleEditGroup(e),
+    handleDeleteGroup: (e) => handleDeleteGroup(e),
+  };
+  document.querySelectorAll('form[data-rbac-submit]').forEach(f => {
+    const fn = rbacSubmitHandlers[f.getAttribute('data-rbac-submit')];
+    if (fn) f.addEventListener('submit', fn);
+  });
+
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-open-modal], [data-close-modal], [data-rbac-tab], [data-edit-user], [data-delete-user], [data-edit-group], [data-delete-group], [data-set-all]');
+    if (!t) return;
+    if (t.hasAttribute('data-open-modal')) {
+      openModal(t.getAttribute('data-open-modal'));
+    } else if (t.hasAttribute('data-close-modal')) {
+      closeModal(t.getAttribute('data-close-modal'));
+    } else if (t.hasAttribute('data-rbac-tab')) {
+      switchRbacTab(t.getAttribute('data-rbac-tab'));
+    } else if (t.hasAttribute('data-edit-user')) {
+      openEditUserModal(t.getAttribute('data-edit-user'), t.getAttribute('data-email'),
+        parseInt(t.getAttribute('data-group-id'), 10), t.getAttribute('data-active') === '1' ? 1 : 0);
+    } else if (t.hasAttribute('data-delete-user')) {
+      openDeleteUserModal(t.getAttribute('data-delete-user'));
+    } else if (t.hasAttribute('data-edit-group')) {
+      let perms = {};
+      try { perms = JSON.parse(t.getAttribute('data-perms') || '{}'); } catch (err) { perms = {}; }
+      openEditGroupModal(parseInt(t.getAttribute('data-edit-group'), 10), t.getAttribute('data-name'),
+        t.getAttribute('data-desc'), t.getAttribute('data-system') === '1' ? 1 : 0, perms);
+    } else if (t.hasAttribute('data-delete-group')) {
+      openDeleteGroupModal(parseInt(t.getAttribute('data-delete-group'), 10), t.getAttribute('data-name'));
+    } else if (t.hasAttribute('data-set-all')) {
+      setAllChannels(t.getAttribute('data-set-all'), t.getAttribute('data-state') === 'true');
+    }
+  });
+  document.querySelectorAll('[data-channel-mode]').forEach(cb => {
+    cb.addEventListener('change', () => updateChannelMode(cb.getAttribute('data-channel-mode')));
+  });
+  const usersSearch = document.getElementById('users-search-input');
+  if (usersSearch) usersSearch.addEventListener('input', filterUsersTable);
+  const rbacTabList = document.querySelector('.rbac-nav-tabs');
+  if (rbacTabList) {
+    rbacTabList.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const tabs = Array.from(rbacTabList.querySelectorAll('[data-rbac-tab]'));
+      const idx = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      e.preventDefault();
+      const next = tabs[(idx + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus();
+      switchRbacTab(next.getAttribute('data-rbac-tab'));
+    });
+  }
 
   function openEditUserModal(username, email, groupId, active) {
     document.getElementById('edit-user-original').value = username;
