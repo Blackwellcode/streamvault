@@ -8,14 +8,18 @@ encryption and task scheduling live in :mod:`core.storage.service`.
 
 from __future__ import annotations
 
+import logging
 import mimetypes
 import os
 import posixpath
 import re
+import sqlite3
 from dataclasses import dataclass
 from typing import Callable, Iterable, Iterator, Optional
 
 from flask_babel import gettext, lazy_gettext
+
+logger = logging.getLogger("storage.base")
 
 
 class StorageError(RuntimeError):
@@ -210,10 +214,16 @@ class StorageProvider:
             return
         try:
             callback(dict(self.config))
-        except Exception:
+        except (StorageError, sqlite3.Error, OSError, ValueError) as exc:
             # Token rotation must never make a request fail just because the
-            # optional persistence callback is unavailable.
-            pass
+            # optional persistence callback is unavailable. The rotated token
+            # stays valid in memory; after a restart the stored one is used,
+            # which a provider with single-use refresh tokens may reject.
+            logger.warning(
+                "%s: rotated credentials not persisted: %s",
+                self.type_id or "storage",
+                mask_error(exc),
+            )
 
     # ------------------------------------------------------------------
     # Configuration helpers
