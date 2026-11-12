@@ -70,32 +70,22 @@ load_env() {
     fi
 }
 
-# Fresh .part files (written within the last 2 minutes) mean ffmpeg is recording.
-# Returns non-zero when the archive could not be fully scanned.
-active_recordings() {
-    local base="${VOD_BASE_DIR:-${APP_DIR}/data}"
-    [[ -d "$base" ]] || return 0
-    find "$(readlink -f "$base")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2
-}
-
-# Usage: guard_recordings <force-flag>. Exits when recordings would be cut.
+# Usage: guard_recordings <force-flag>. Exits 1 when recordings would be cut or
+# the archive cannot be scanned (shared logic: scripts/recording-guard.sh).
 guard_recordings() {
-    local force="${1:-0}" active
+    local force="${1:-0}" guard_lib="${APP_DIR}/scripts/recording-guard.sh"
     load_env
-    # Fail closed: if the archive cannot be scanned, recordings may be running.
-    if ! active="$(active_recordings)"; then
+    if [[ ! -r "$guard_lib" ]]; then
         if [[ "$force" != "1" ]]; then
-            echo -e "${RED}[ERROR] Could not check for active recordings (see find error above)."
-            echo -e "        Fix the permissions or add --force.${NC}"
+            echo -e "${RED}[ERROR] ${guard_lib} missing; cannot check for active recordings. Add --force.${NC}"
             exit 1
         fi
-        echo -e "${YELLOW}[!] Active-recording check failed; continuing because of --force.${NC}"
+        return 0
     fi
-    if [[ -n "$active" && "$force" != "1" ]]; then
-        echo -e "${YELLOW}[!] Active recordings (fresh .part files):${NC}"
-        echo "$active" | sed 's/^/    /'
-        echo -e "${RED}[ERROR] Restarting the recorder now would split these recordings."
-        echo -e "        Try again later or add --force.${NC}"
+    # shellcheck source=../scripts/recording-guard.sh
+    source "$guard_lib"
+    if ! sv_recording_guard "${VOD_BASE_DIR:-${APP_DIR}/data}" "$force"; then
+        echo -e "${RED}[ERROR] Try again later or add --force.${NC}"
         exit 1
     fi
 }

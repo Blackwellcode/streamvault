@@ -326,20 +326,16 @@ fi
 # Start services. A re-run on a live system must not split running recordings.
 ACTIVE_BASE="$(grep -E '^VOD_BASE_DIR=' "${ENV_FILE}" 2>/dev/null | tail -n 1 | cut -d= -f2- || true)"
 ACTIVE_BASE="${ACTIVE_BASE:-${DATA_DIR}}"
-ACTIVE_PARTS=""
-SCAN_FAILED=0
-if [[ -d "${ACTIVE_BASE}" ]]; then
+FORCE_RESTART="${STREAMVAULT_FORCE_RESTART:-0}"
+# shellcheck source=scripts/recording-guard.sh
+source "${APP_DIR}/scripts/recording-guard.sh"
+GUARD_RC=0
+sv_recording_guard "${ACTIVE_BASE}" "${FORCE_RESTART}" || GUARD_RC=$?
+if [[ "${GUARD_RC}" == "2" ]]; then
     # Fail closed: an unreadable archive could hide running recordings.
-    if ! ACTIVE_PARTS="$(find "$(readlink -f "${ACTIVE_BASE}")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2)"; then
-        SCAN_FAILED=1
-    fi
-fi
-if [[ "${SCAN_FAILED}" == "1" && "${STREAMVAULT_FORCE_RESTART:-0}" != "1" ]]; then
-    echo -e "${YELLOW}[!] Could not check ${ACTIVE_BASE} for active recordings (see find error above).${NC}"
-    echo -e "${YELLOW}[!] Services were NOT restarted. Fix the permissions or re-run with STREAMVAULT_FORCE_RESTART=1.${NC}"
-elif [[ -n "${ACTIVE_PARTS}" && "${STREAMVAULT_FORCE_RESTART:-0}" != "1" ]]; then
-    echo -e "${YELLOW}[!] Active recordings (fresh .part files):${NC}"
-    echo "${ACTIVE_PARTS}" | sed 's/^/    /'
+    echo -e "${RED}[ERROR] Services were NOT restarted. Fix the permissions or re-run with STREAMVAULT_FORCE_RESTART=1.${NC}"
+    exit 1
+elif [[ "${GUARD_RC}" == "1" ]]; then
     echo -e "${YELLOW}[!] Services were NOT restarted. Run 'streamvault restart' once the recordings"
     echo -e "    are finished, or re-run with STREAMVAULT_FORCE_RESTART=1.${NC}"
 else
