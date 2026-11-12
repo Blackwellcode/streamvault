@@ -463,11 +463,11 @@
       .replace(/'/g, '&#39;');
   }
 
-  function fieldMarkup(field, values) {
+  function fieldMarkup(field, values, idPrefix) {
     const value = values && values[field.key] !== undefined ? values[field.key] : (field.default || '');
     const setFlag = values && values[field.key + '__set'];
     const key = escapeHtml(field.key);
-    const id = 'cfg_' + key;
+    const id = idPrefix + '-cfg_' + key;  // unique per modal (add and edit render the same fields)
     let input = '';
     if (field.type === 'select') {
       input = '<select id="' + id + '" name="cfg_' + key + '">';
@@ -491,7 +491,7 @@
     const entry = catalogEntry(typeId);
     if (!container || !entry) return;
     container.innerHTML = (entry.fields || []).map(function (field) {
-      return fieldMarkup(field, values || {});
+      return fieldMarkup(field, values || {}, containerId);
     }).join('');
   }
 
