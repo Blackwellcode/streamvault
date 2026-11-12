@@ -4827,18 +4827,22 @@ def abort_deleted_media(streamer, filename, file_id=None):
     slugs = set()
     try:
         slugs.update(related_archive_slugs(streamer) or [])
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Tombstone check for %s/%s without aliases (database error): %s", streamer, name, exc)
     primary = archive_name_for(streamer) or str(streamer or "").strip()
     if primary:
         slugs.add(primary)
     if streamer:
         slugs.add(str(streamer).strip())
     try:
-        if database.is_deleted_media(filename=name, file_id=file_id, streamers=slugs):
-            abort(404)
-    except Exception:
-        pass
+        deleted = database.is_deleted_media(filename=name, file_id=file_id, streamers=slugs)
+    except sqlite3.Error as exc:
+        # Same outcome as before: without the tombstone table the file
+        # itself decides (resolve_media_path still 404s a missing file).
+        logging.warning("Tombstone check for %s/%s failed, serving: %s", streamer, name, exc)
+        return
+    if deleted:
+        abort(404)
 
 
 def visible_streamers(streamers=None):
