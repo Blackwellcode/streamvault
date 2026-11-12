@@ -45,7 +45,7 @@
         playOverlay +
       '</div>' +
       '<div class="nebula-vod-body">' +
-        '<h4 class="nebula-vod-title">' + escapeHtml(vod.title || vod.name) + '</h4>' +
+        '<h3 class="nebula-vod-title">' + escapeHtml(vod.title || vod.name) + '</h3>' +
         '<div class="nebula-vod-footer">' +
           '<span>' + escapeHtml(vod.category || "VOD") + '</span>' +
           '<span>' + escapeHtml(vod.date_str || "") + '</span>' +
@@ -57,23 +57,23 @@
   function renderMobileCard(vod, isFresh) {
     var thumbHtml = vod.thumb_url
       ? '<img src="' + escapeHtml(vod.thumb_url) + '" loading="lazy" decoding="async" alt="' + escapeHtml(vod.title || vod.name) + '" style="width: 100%; height: 100%; object-fit: cover;">'
-      : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A2AEC8; font-weight: 700;">VOD</div>';
+      : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--sv-text-xs); color: var(--nebula-text-secondary); font-weight: 700;">VOD</div>';
 
     var durHtml = vod.duration_str
-      ? '<span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); color: #FFF; font-size: 12px; padding: 1px 4px; border-radius: 3px; font-family: var(--ns-font-mono);">' + escapeHtml(vod.duration_str) + '</span>'
+      ? '<span style="position: absolute; bottom: 4px; right: 4px; background: var(--nebula-scrim); color: var(--nebula-text-main); font-size: var(--sv-text-xs); padding: 1px 4px; border-radius: 3px; font-family: var(--ns-font-mono);">' + escapeHtml(vod.duration_str) + '</span>'
       : '';
 
-    var freshBorder = isFresh ? 'border-color: #4D63FF; animation: vodCardPulse 1.2s ease-out;' : '';
+    var freshBorder = isFresh ? 'border-color: var(--nebula-accent-primary); animation: vodCardPulse 1.2s ease-out;' : '';
 
-    return '<a href="' + escapeHtml(vod.url) + '" data-vod-name="' + escapeHtml(vod.name) + '" style="display: flex; gap: 12px; background: var(--nebula-bg-surface, #111A2B); border: 1px solid var(--nebula-border, #26344F); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; padding: 10px; box-sizing: border-box; ' + freshBorder + '">' +
-      '<div style="position: relative; width: 120px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #0B1220; flex-shrink: 0;">' +
+    return '<a href="' + escapeHtml(vod.url) + '" data-vod-name="' + escapeHtml(vod.name) + '" style="display: flex; gap: 12px; background: var(--nebula-bg-surface); border: 1px solid var(--nebula-border); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; padding: 10px; box-sizing: border-box; ' + freshBorder + '">' +
+      '<div style="position: relative; width: 120px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--nebula-bg-deep); flex-shrink: 0;">' +
         thumbHtml +
         durHtml +
       '</div>' +
       '<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;">' +
-        '<h4 style="font-size: 13px; font-weight: 600; color: #FFF; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(vod.title || vod.name) + '</h4>' +
-        '<div style="font-size: 12px; color: #BB78FF; margin-bottom: 2px;">' + escapeHtml(vod.streamer_name) + '</div>' +
-        '<div style="font-size: 12px; color: #75839D;">' + escapeHtml(vod.date_str || '') + '</div>' +
+        '<h3 style="font-size: var(--sv-text-sm); font-weight: 600; color: var(--nebula-text-main); margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(vod.title || vod.name) + '</h3>' +
+        '<div style="font-size: var(--sv-text-xs); color: var(--nebula-accent-highlight); margin-bottom: 2px;">' + escapeHtml(vod.streamer_name) + '</div>' +
+        '<div style="font-size: var(--sv-text-xs); color: var(--nebula-text-muted);">' + escapeHtml(vod.date_str || '') + '</div>' +
       '</div>' +
     '</a>';
   }

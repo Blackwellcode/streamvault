@@ -52,6 +52,8 @@
   --nebula-glow-blue: 0 0 20px rgba(77, 99, 255, 0.35);
   --nebula-glow-purple: 0 0 20px rgba(147, 101, 255, 0.35);
   --nebula-glow-live: 0 0 12px rgba(240, 68, 88, 0.55);
+  --nebula-shadow-brand: 0 2px 10px rgba(77, 99, 255, 0.3);
+  --nebula-scrim: rgba(0, 0, 0, 0.85);       /* Badges ueber Thumbnails */
 
   /* Geometry & Rhythm */
   --nebula-radius-xs: 4px;
