@@ -1,18 +1,18 @@
 {% if not is_mobile %}
-<aside class="ns-command-rail">
+<aside class="ns-command-rail" aria-label="{{ _('Main navigation') }}">
   <div class="ns-rail-brand" style="margin-bottom: 14px;">
-    <a href="{{ url_for('index') }}" class="ns-brand-glyph" title="StreamVault" aria-label="StreamVault" style="width: 40px; height: 40px; border-radius: 12px; font-size: 18px; background: linear-gradient(135deg, #4D63FF, #9365FF); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(77, 99, 255, 0.3);">
-      <span>SV</span>
+    <a href="{{ url_for('index') }}" class="ns-brand-glyph" title="StreamVault" style="width: 40px; height: 40px; border-radius: 12px; font-size: 18px; background: var(--nebula-accent-primary); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: var(--nebula-shadow-brand);">
+      <span aria-hidden="true">SV</span><span class="sr-only">StreamVault</span>
     </a>
   </div>
   <nav class="ns-rail-nav">
     <a href="{{ url_for('index') }}" class="ns-rail-item {% if request.endpoint == 'index' %}is-active{% endif %}" title="{{ _('Dashboard') }}" aria-label="{{ _('Dashboard') }}" style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
     </a>
     {% if not is_mobile %}
     {% if session.user_role == 'admin' or can_manage_users %}
     <a href="{{ url_for('admin_view') }}" class="ns-rail-item {% if request.endpoint in ('admin_view', 'channels_view', 'admin_users_view', 'admin_traffic_view', 'admin_stalk_view', 'admin_stalk_detail') %}is-active{% endif %}" title="{{ _('Options') }}" aria-label="{{ _('Options') }}" style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
     </a>
     {% endif %}
     {% endif %}
@@ -24,7 +24,7 @@
     {% set st_avatar = st.avatar_url if st is mapping else None %}
     {% set is_live = (st.twitch_live or st.online) if st is mapping else False %}
     <a href="{{ url_for('streamer_view', streamer=st_name) }}" class="ns-rail-item {% if request.view_args and request.view_args.get('streamer') == st_name %}is-active{% endif %}" title="{{ st_name }}" aria-label="{{ st_name }}" style="position: relative; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-      <div class="ns-rail-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #151F33; border: 1.5px solid #3B4E73; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #ffffff; text-transform: uppercase; overflow: hidden; box-shadow: none;">
+      <div class="ns-rail-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: var(--nebula-bg-card); border: 1.5px solid var(--nebula-border-bright); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #ffffff; text-transform: uppercase; overflow: hidden; box-shadow: none;">
         {% if st_avatar %}
         <img src="{{ st_avatar }}" alt="{{ st_name }}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;">
         {% else %}
@@ -32,7 +32,7 @@
         {% endif %}
       </div>
       {% if is_live %}
-      <span class="ns-rail-live-dot" style="position: absolute; bottom: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; border: 1.5px solid #070B14; box-shadow: 0 0 10px #ef4444;"></span>
+      <span class="ns-rail-live-dot" role="img" aria-label="{{ _('Live') }}" style="position: absolute; bottom: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; border: 1.5px solid var(--nebula-bg-root); box-shadow: 0 0 10px #ef4444;"></span>
       {% endif %}
     </a>
     {% endfor %}
@@ -42,19 +42,17 @@
   {% if not is_mobile %}
   <div class="ns-rail-footer" style="margin-top: auto; padding-top: 6px;">
     {% if session.username %}
-    <div class="ns-user-badge-mini" title="{{ session.username }} &bull; {{ _('Click to change password') }}" style="display: flex; justify-content: center; margin-bottom: 4px; cursor: pointer;" onclick="openSelfPasswordModal()">
-      <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #4D63FF, #9365FF); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #FFF; transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
-        {{ session.username[:1].upper() }}
-      </div>
+    <div class="ns-user-badge-mini" title="{{ session.username }}" style="display: flex; justify-content: center; margin-bottom: 4px;">
+      <span class="ns-user-badge-mini__avatar" aria-hidden="true" style="width: 30px; height: 30px; border-radius: 50%; background: var(--nebula-accent-primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFF;">{{ session.username[:1].upper() }}</span>
     </div>
-    <button type="button" class="ns-rail-item" title="{{ _('Change password') }}" aria-label="{{ _('Change password') }}" onclick="openSelfPasswordModal()" style="background: none; border: none; cursor: pointer; color: var(--ns-text-muted); display: flex; align-items: center; justify-content: center; width: 40px; height: 36px; border-radius: 8px; margin: 0 auto 2px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <button type="button" class="ns-rail-item" title="{{ _('Change password') }}" aria-label="{{ _('Change password') }}" data-open-self-password style="background: none; border: none; cursor: pointer; color: var(--ns-text-muted); display: flex; align-items: center; justify-content: center; width: 40px; height: 36px; border-radius: 8px; margin: 0 auto 2px;">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </button>
     <style>
       .ns-rail-lang .ns-lang-switch { position: relative; }
-      .ns-rail-lang .ns-lang-compact { display: flex; align-items: center; justify-content: center; gap: 3px; width: 44px; height: 30px; border: 1px solid var(--nebula-border, #26344F); border-radius: 8px; color: var(--ns-text-muted); font-size: 10px; font-weight: 700; letter-spacing: 0.02em; }
+      .ns-rail-lang .ns-lang-compact { display: flex; align-items: center; justify-content: center; gap: 3px; width: 44px; height: 30px; border: 1px solid var(--nebula-border); border-radius: 8px; color: var(--ns-text-muted); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
       .ns-rail-lang:hover .ns-lang-compact { color: #FFF; }
-      .ns-rail-lang .ns-lang-switch:focus-within .ns-lang-compact { outline: 2px solid #4D63FF; outline-offset: 2px; }
+      .ns-rail-lang .ns-lang-switch:focus-within .ns-lang-compact { outline: 2px solid var(--nebula-focus-ring); outline-offset: 2px; }
       .ns-rail-lang .ns-lang-switch select { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; padding: 0; opacity: 0; cursor: pointer; }
     </style>
     <div class="ns-rail-lang" title="{{ _('Language') }}" style="display: flex; justify-content: center; margin: 0 auto 4px;">
@@ -64,10 +62,35 @@
     <form method="post" action="{{ url_for('logout') }}" class="ns-logout-btn">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="ns-rail-item" title="{{ _('Log out') }}" aria-label="{{ _('Log out') }}" style="width: 40px; height: 36px; border-radius: 8px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+        <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
       </button>
     </form>
+    {% with logout_all_variant = 'rail' %}{% include 'components/logout_everywhere.html' %}{% endwith %}
   </div>
   {% endif %}
 </aside>
+<div class="mobile-global-nav sv-bottom-nav" role="navigation" aria-label="{{ _('Main navigation') }}">
+  <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active" aria-current="page"{% endif %}>
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>{{ _('Home') }}</span>
+  </a>
+  <a href="{{ url_for('search_view') }}" {% if request.endpoint == 'search_view' %}class="active" aria-current="page"{% endif %}>
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>{{ _('Search') }}</span>
+  </a>
+  {% if session.user_role == 'admin' or can_manage_users %}
+  <a href="{{ url_for('admin_view') }}" {% if request.endpoint in ('admin_view', 'channels_view', 'admin_users_view', 'admin_traffic_view', 'admin_storage_view') %}class="active" aria-current="page"{% endif %}>
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>{{ _('Options') }}</span>
+  </a>
+  {% endif %}
+  <form method="post" action="{{ url_for('logout') }}" class="sv-bottom-nav__logout">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      <span>{{ _('Log out') }}</span>
+    </button>
+  </form>
+  {% with logout_all_variant = 'nav' %}{% include 'components/logout_everywhere.html' %}{% endwith %}
+</div>
 {% endif %}

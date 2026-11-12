@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:19+0100\n"
+"POT-Creation-Date: 2026-11-12 15:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -251,9 +251,6 @@ msgstr ""
 msgid "A saved value is kept if the field is left empty."
 msgstr ""
 
-msgid "ACTIVE (locked)"
-msgstr ""
-
 msgid ""
 "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any "
 "S3-compatible endpoint."
@@ -268,6 +265,9 @@ msgstr ""
 msgid "Account active (access allowed)"
 msgstr ""
 
+msgid "Accounts"
+msgstr ""
+
 msgid "Action"
 msgstr ""
 
@@ -278,6 +278,9 @@ msgid "Activate account immediately"
 msgstr ""
 
 msgid "Active"
+msgstr ""
+
+msgid "Active (locked)"
 msgstr ""
 
 msgid "Active shares"
@@ -296,6 +299,9 @@ msgstr ""
 msgid "Actively monitored by the recorder core"
 msgstr ""
 
+msgid "Add a channel to record"
+msgstr ""
+
 msgid "Add channel"
 msgstr ""
 
@@ -303,6 +309,9 @@ msgid "Add new channel"
 msgstr ""
 
 msgid "Add provider"
+msgstr ""
+
+msgid "Add the first channel above"
 msgstr ""
 
 msgid "Addressing"
@@ -315,6 +324,9 @@ msgid "Admin controls"
 msgstr ""
 
 msgid "Admins only"
+msgstr ""
+
+msgid "Alert sound overlay"
 msgstr ""
 
 msgid "All"
@@ -568,7 +580,7 @@ msgstr ""
 msgid "Buffer:"
 msgstr ""
 
-msgid "Buffering..."
+msgid "Buffering…"
 msgstr ""
 
 msgid ""
@@ -576,19 +588,19 @@ msgid ""
 "features deliberately."
 msgstr ""
 
-msgid "CHANGE"
-msgstr ""
-
-msgid "CHANNEL MANAGEMENT (ADMIN)"
-msgstr ""
-
 msgid "Cancel"
+msgstr ""
+
+msgid "Category"
 msgstr ""
 
 msgid "Category search failed."
 msgstr ""
 
 msgid "Category search is currently unavailable."
+msgstr ""
+
+msgid "Change"
 msgstr ""
 
 msgid "Change banner"
@@ -604,6 +616,9 @@ msgid "Channel actions"
 msgstr ""
 
 msgid "Channel archive & recording metrics"
+msgstr ""
+
+msgid "Channel management (admin)"
 msgstr ""
 
 msgid "Channel not found."
@@ -665,10 +680,10 @@ msgstr ""
 msgid "Clear filters"
 msgstr ""
 
-msgid "Click to change password"
+msgid "Clip"
 msgstr ""
 
-msgid "Clip"
+msgid "Clip Editor"
 msgstr ""
 
 msgid "Clip URL is missing on this page."
@@ -757,6 +772,9 @@ msgstr ""
 msgid "Configured streamers & sources"
 msgstr ""
 
+msgid "Confirm"
+msgstr ""
+
 msgid "Connect account"
 msgstr ""
 
@@ -778,6 +796,9 @@ msgstr ""
 msgid "Connection failed"
 msgstr ""
 
+msgid "Connection failed. Check your network and try again."
+msgstr ""
+
 msgid "Connection lost — reconnecting…"
 msgstr ""
 
@@ -792,6 +813,9 @@ msgid "Control panel"
 msgstr ""
 
 msgid "Control the global maintenance mode or lock individual platform areas."
+msgstr ""
+
+msgid "Copied"
 msgstr ""
 
 msgid "Copy"
@@ -910,6 +934,16 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
+#, python-format
+msgid ""
+"Delete %(name)s? The file is removed from the archive and cannot be "
+"restored."
+msgstr ""
+
+#, python-format
+msgid "Delete backup %(name)s? This cannot be undone."
+msgstr ""
+
 msgid "Delete folder"
 msgstr ""
 
@@ -926,6 +960,14 @@ msgid "Delete locally"
 msgstr ""
 
 msgid "Delete permanently"
+msgstr ""
+
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr ""
+
+msgid ""
+"Delete this video? The file is removed from the archive and cannot be "
+"restored."
 msgstr ""
 
 msgid "Delete user"
@@ -1008,7 +1050,9 @@ msgstr ""
 msgid "Download all"
 msgstr ""
 
-msgid "Download all VODs?"
+msgid ""
+"Download all VODs of this streamer as one archive? This can take a while "
+"for large channels."
 msgstr ""
 
 msgid "Download archive & VODs"
@@ -1083,6 +1127,9 @@ msgstr ""
 msgid "Email address (optional)"
 msgstr ""
 
+msgid "Emotes"
+msgstr ""
+
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr ""
 
@@ -1098,6 +1145,11 @@ msgid "Enable immediately"
 msgstr ""
 
 msgid "Enable maintenance mode"
+msgstr ""
+
+msgid ""
+"Enable maintenance mode? Everyone except allowlisted users sees the "
+"maintenance page until you end it."
 msgstr ""
 
 msgid "Enable recording"
@@ -1197,6 +1249,9 @@ msgstr ""
 msgid "Error: %(error)s"
 msgstr ""
 
+msgid "Everywhere"
+msgstr ""
+
 msgid ""
 "Existing members of this group are automatically assigned to the default "
 "group <strong>Viewer</strong>."
@@ -1217,9 +1272,6 @@ msgstr ""
 msgid "Extracting audio..."
 msgstr ""
 
-msgid "FEATURED VOD"
-msgstr ""
-
 msgid "Failed"
 msgstr ""
 
@@ -1227,6 +1279,9 @@ msgid "Fast"
 msgstr ""
 
 msgid "Feature permissions"
+msgstr ""
+
+msgid "Featured VOD"
 msgstr ""
 
 msgid "Featured highlight"
@@ -1259,7 +1314,10 @@ msgstr ""
 msgid "Filter"
 msgstr ""
 
-msgid "Filter chat..."
+msgid "Filter chat"
+msgstr ""
+
+msgid "Filter chat…"
 msgstr ""
 
 msgid "First"
@@ -1564,19 +1622,6 @@ msgstr ""
 msgid "June"
 msgstr ""
 
-msgid "LIVE"
-msgstr ""
-
-#, python-format
-msgid "LIVE %(name)s (without Twitch login)"
-msgstr ""
-
-msgid "LIVE & DISCORD ONLY"
-msgstr ""
-
-msgid "LIVE NOW"
-msgstr ""
-
 msgid "Language"
 msgstr ""
 
@@ -1625,6 +1670,9 @@ msgstr ""
 msgid "Live"
 msgstr ""
 
+msgid "Live & Discord only"
+msgstr ""
+
 msgid "Live & Discord only:"
 msgstr ""
 
@@ -1664,7 +1712,7 @@ msgstr ""
 msgid "Live stream highlight"
 msgstr ""
 
-msgid "Live stream is currently unavailable. Searching for stream..."
+msgid "Live stream is currently unavailable. Searching for stream…"
 msgstr ""
 
 msgid "Live stream not available."
@@ -1680,6 +1728,10 @@ msgid "Live watch"
 msgstr ""
 
 msgid "Live-only"
+msgstr ""
+
+#, python-format
+msgid "Live: %(name)s (without Twitch login)"
 msgstr ""
 
 msgid "Load"
@@ -1722,6 +1774,9 @@ msgstr ""
 msgid "Log out"
 msgstr ""
 
+msgid "Log out everywhere"
+msgstr ""
+
 msgid "Login"
 msgstr ""
 
@@ -1732,6 +1787,9 @@ msgid "Login failed."
 msgstr ""
 
 msgid "MP4 check not possible"
+msgstr ""
+
+msgid "Main navigation"
 msgstr ""
 
 msgid "Maintenance"
@@ -1801,6 +1859,9 @@ msgid ""
 "the installed app."
 msgstr ""
 
+msgid "Mods"
+msgstr ""
+
 msgid "Monitored"
 msgstr ""
 
@@ -1822,9 +1883,6 @@ msgstr ""
 msgid "Network error while loading streams."
 msgstr ""
 
-msgid "Network error:"
-msgstr ""
-
 msgid "Network is back — reconnecting…"
 msgstr ""
 
@@ -1843,7 +1901,7 @@ msgstr ""
 msgid "New password * (min. 8 characters)"
 msgstr ""
 
-msgid "New password..."
+msgid "New password…"
 msgstr ""
 
 msgid "New user"
@@ -1869,7 +1927,9 @@ msgstr ""
 msgid "No (self-signed only)"
 msgstr ""
 
-msgid "No VODs available in the archive"
+msgid ""
+"No VODs yet. Recordings appear here automatically as soon as a monitored "
+"channel goes live."
 msgstr ""
 
 msgid "No acceptances yet."
@@ -1905,6 +1965,9 @@ msgid "No backups available."
 msgstr ""
 
 msgid "No badges received from Twitch."
+msgstr ""
+
+msgid "No channels are monitored yet."
 msgstr ""
 
 msgid "No chat"
@@ -1949,9 +2012,6 @@ msgid "No monitored Twitch channels."
 msgstr ""
 
 msgid "No monitored Twitch channels. Add streamers under Streamers."
-msgstr ""
-
-msgid "No monitored channels configured."
 msgstr ""
 
 msgid "No recently watched streams yet."
@@ -2010,28 +2070,13 @@ msgstr ""
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr ""
 
+msgid "OBS overlays"
+msgstr ""
+
 msgid "OFF (normal operation)"
 msgstr ""
 
-msgid "OFFLINE"
-msgstr ""
-
 msgid "OK"
-msgstr ""
-
-msgid "ONLINE"
-msgstr ""
-
-msgid "OPERATING MODE:"
-msgstr ""
-
-msgid "OPTION A: UPLOAD IMAGE FILE"
-msgstr ""
-
-msgid "OPTION A: UPLOAD PROFILE PICTURE"
-msgstr ""
-
-msgid "OPTION B: USE IMAGE URL"
 msgstr ""
 
 msgid "OR"
@@ -2059,6 +2104,9 @@ msgstr ""
 msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
 msgstr ""
 
+msgid "Online"
+msgstr ""
+
 msgid "Only after a successful upload and optional cloud verification."
 msgstr ""
 
@@ -2078,6 +2126,22 @@ msgid "Open clip"
 msgstr ""
 
 msgid "Open editor"
+msgstr ""
+
+#, python-format
+msgid "Open streamer %(name)s"
+msgstr ""
+
+msgid "Operating mode"
+msgstr ""
+
+msgid "Option A: upload image file"
+msgstr ""
+
+msgid "Option A: upload profile picture"
+msgstr ""
+
+msgid "Option B: use image URL"
 msgstr ""
 
 msgid "Option sections"
@@ -2198,6 +2262,9 @@ msgstr ""
 msgid "Player error — reconnecting…"
 msgstr ""
 
+msgid "Please confirm"
+msgstr ""
+
 msgid "Please enter a name for the storage provider."
 msgstr ""
 
@@ -2296,7 +2363,7 @@ msgstr ""
 msgid "Public link created:"
 msgstr ""
 
-msgid "Purpose of this user group..."
+msgid "Purpose of this user group…"
 msgstr ""
 
 msgid "Quality"
@@ -2311,20 +2378,10 @@ msgstr ""
 msgid "Quiet"
 msgstr ""
 
-msgid "RECORDING"
-msgstr ""
-
-msgid "RECORDING ACTIVE"
-msgstr ""
-
 msgid "Ready"
 msgstr ""
 
 msgid "Real-time stream error — reconnecting…"
-msgstr ""
-
-#, python-format
-msgid "Really delete backup %(name)s?"
 msgstr ""
 
 msgid "Really delete file?"
@@ -2336,26 +2393,13 @@ msgstr ""
 msgid "Really delete the local file? The cloud copy is kept."
 msgstr ""
 
-msgid "Really delete?"
-msgstr ""
-
-#, python-format
-msgid "Really remove channel %(name)s?"
-msgstr ""
-
 msgid "Really remove the provider? The cloud files are kept."
-msgstr ""
-
-msgid "Really rename the file?"
 msgstr ""
 
 msgid "Really reset the custom banner and switch to the default?"
 msgstr ""
 
 msgid "Really reset the custom profile picture and switch to the default?"
-msgstr ""
-
-msgid "Really revoke this share?"
 msgstr ""
 
 msgid "Really stop the recording?"
@@ -2365,6 +2409,12 @@ msgid "Recent task errors"
 msgstr ""
 
 msgid "Recently watched"
+msgstr ""
+
+msgid ""
+"Recommended browser-source URLs. Replace TOKEN with the value of "
+"TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS "
+"and reaches the server only as a request header, never in a log line."
 msgstr ""
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
@@ -2383,6 +2433,9 @@ msgid "Recording"
 msgstr ""
 
 msgid "Recording + live stream & Discord notification"
+msgstr ""
+
+msgid "Recording active"
 msgstr ""
 
 msgid "Recording disabled (live & Discord only)"
@@ -2436,7 +2489,9 @@ msgid "Remove channel"
 msgstr ""
 
 #, python-format
-msgid "Remove channel %(name)s?"
+msgid ""
+"Remove channel %(name)s? Monitoring stops; existing recordings stay in "
+"the archive."
 msgstr ""
 
 msgid "Remove only the database entry?"
@@ -2450,6 +2505,11 @@ msgid "Remux job started. Progress is shown in the admin panel."
 msgstr ""
 
 msgid "Rename file"
+msgstr ""
+
+msgid ""
+"Rename the file? Existing links and shares to the old file name stop "
+"working."
 msgstr ""
 
 msgid "Renamed."
@@ -2481,6 +2541,11 @@ msgstr ""
 msgid "Restart services"
 msgstr ""
 
+msgid ""
+"Restart the recorder and chat logger now? Running recordings are "
+"interrupted for a few seconds."
+msgstr ""
+
 msgid "Restore"
 msgstr ""
 
@@ -2495,6 +2560,9 @@ msgid "Resume playback"
 msgstr ""
 
 msgid "Revoke"
+msgstr ""
+
+msgid "Revoke this share? The link stops working immediately."
 msgstr ""
 
 #, python-format
@@ -2530,9 +2598,6 @@ msgid "Running…"
 msgstr ""
 
 msgid "S3-compatible"
-msgstr ""
-
-msgid "START"
 msgstr ""
 
 msgid "Safety migration:"
@@ -2590,16 +2655,13 @@ msgstr ""
 msgid "Saving transcript..."
 msgstr ""
 
-msgid "Saving..."
-msgstr ""
-
 msgid "Saving…"
 msgstr ""
 
 msgid "Search"
 msgstr ""
 
-msgid "Search VODs, streamers or games..."
+msgid "Search VODs, streamers or games…"
 msgstr ""
 
 msgid "Search category"
@@ -2611,7 +2673,10 @@ msgstr ""
 msgid "Search failed."
 msgstr ""
 
-msgid "Search recordings (title, date, game)..."
+msgid "Search recordings"
+msgstr ""
+
+msgid "Search recordings (title, date, game)…"
 msgstr ""
 
 msgid "Search results"
@@ -2623,19 +2688,19 @@ msgstr ""
 msgid "Search streamers"
 msgstr ""
 
-msgid "Search term (e.g. player name, chat message, date)..."
+msgid "Search term (e.g. player name, chat message, date)…"
 msgstr ""
 
-msgid "Search user, email or group..."
+msgid "Search user, email or group…"
 msgstr ""
 
-msgid "Search..."
-msgstr ""
-
-msgid "Searching for stream..."
+msgid "Searching for stream…"
 msgstr ""
 
 msgid "Searching…"
+msgstr ""
+
+msgid "Search…"
 msgstr ""
 
 msgid "Seconds after trigger"
@@ -2731,10 +2796,24 @@ msgstr ""
 msgid "Sign in"
 msgstr ""
 
+msgid ""
+"Sign out on every device? Every session of this account ends, including "
+"this one."
+msgstr ""
+
 msgid "Size"
 msgstr ""
 
+msgid "Skip to content"
+msgstr ""
+
 msgid "Someone"
+msgstr ""
+
+msgid "Sort"
+msgstr ""
+
+msgid "Sort order"
 msgstr ""
 
 msgid "Sound"
@@ -2821,6 +2900,9 @@ msgstr ""
 msgid "Storage providers"
 msgstr ""
 
+msgid "Storage usage"
+msgstr ""
+
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
 msgstr ""
@@ -2884,6 +2966,9 @@ msgid "Streamers, VODs & chat histories"
 msgstr ""
 
 msgid "Subfolder"
+msgstr ""
+
+msgid "Subs"
 msgstr ""
 
 msgid "Success"
@@ -2976,6 +3061,9 @@ msgid "Terms version outdated — reload the page and accept again."
 msgstr ""
 
 msgid "Test"
+msgstr ""
+
+msgid "Text-to-speech overlay"
 msgstr ""
 
 msgid ""
@@ -3183,6 +3271,9 @@ msgstr ""
 msgid "Transcript missing despite finished status"
 msgstr ""
 
+msgid "Transcript progress"
+msgstr ""
+
 msgid "Transcription cancelled"
 msgstr ""
 
@@ -3225,7 +3316,10 @@ msgstr ""
 msgid "Twitch badge library synchronized."
 msgstr ""
 
-msgid "Twitch channel name..."
+msgid "Twitch channel name"
+msgstr ""
+
+msgid "Twitch channel name…"
 msgstr ""
 
 msgid "Twitch live chat"
@@ -3234,7 +3328,7 @@ msgstr ""
 msgid "Twitch live stream"
 msgstr ""
 
-msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle…"
 msgstr ""
 
 msgid "Twitch or YouTube supported"
@@ -3459,14 +3553,6 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
-msgid ""
-"WARNING: Do you want to permanently delete this streamer and all "
-"recordings?"
-msgstr ""
-
-msgid "WATCH LIVE"
-msgstr ""
-
 msgid "Waiting for server stream…"
 msgstr ""
 
@@ -3477,6 +3563,9 @@ msgid "Watch"
 msgstr ""
 
 msgid "Watch latest video"
+msgstr ""
+
+msgid "Watch live"
 msgstr ""
 
 msgid "Watch now"

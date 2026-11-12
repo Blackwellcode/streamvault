@@ -1,0 +1,17 @@
+{#- POST /logout/all behind the confirmation dialog.
+    Usage: {% with logout_all_variant = 'rail' %}{% include 'components/logout_everywhere.html' %}{% endwith %}
+    Variants: 'rail' (desktop icon button), 'nav' (item in the bottom navigation). -#}
+{%- set _rail = logout_all_variant == 'rail' -%}
+<form method="post" action="{{ url_for('logout_everywhere') }}" class="{{ 'ns-logout-btn' if _rail else 'sv-bottom-nav__logout' }}" data-confirm="{{ _('Sign out on every device? Every session of this account ends, including this one.') }}" data-confirm-ok="{{ _('Log out everywhere') }}" data-confirm-danger>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {%- if _rail %}
+  <button type="submit" class="ns-rail-item" title="{{ _('Log out everywhere') }}" aria-label="{{ _('Log out everywhere') }}" style="width: 40px; height: 36px; border-radius: 8px;">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+  </button>
+  {%- else %}
+  <button type="submit" aria-label="{{ _('Log out everywhere') }}">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+    <span>{{ _('Everywhere') }}</span>
+  </button>
+  {%- endif %}
+</form>

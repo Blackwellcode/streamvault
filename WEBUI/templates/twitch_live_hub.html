@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Live · StreamVault</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-twitch-live {{ theme_class }} ns-platform">
 
@@ -36,7 +35,7 @@
             <div class="twitch-thumb-wrap">
               {% if s.is_live %}
               <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
-              <span class="twitch-live-pill">{{ _('LIVE') }}</span>
+              <span class="twitch-live-pill">{{ _('Live') }}</span>
               <span class="twitch-viewers">{{ s.viewer_count }}</span>
               {% else %}
               <div class="twitch-thumb-offline">{{ _('Offline') }}</div>
@@ -74,7 +73,7 @@
           <a class="twitch-stream-card is-live" href="{{ url_for('twitch_watch', channel=s.login) }}" data-login="{{ s.login }}">
             <div class="twitch-thumb-wrap">
               <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
-              <span class="twitch-live-pill">{{ _('LIVE') }}</span>
+              <span class="twitch-live-pill">{{ _('Live') }}</span>
               <span class="twitch-viewers">{{ s.viewer_count }}</span>
             </div>
             <div class="twitch-card-body">
@@ -106,7 +105,7 @@
       </section>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     (function() {
       const RECENT_KEY = 'streamvault_twitch_recent_v1';
       const watchBase = {{ url_for('twitch_watch', channel='__LOGIN__')|tojson }};

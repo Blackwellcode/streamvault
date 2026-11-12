@@ -4,29 +4,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{{ filename }}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+{% include 'components/styles.html' %}
 </head>
 <body class="page-mobile-player landscape-chat-open {{ theme_class }} ns-platform">
   <div class="video-container">
     <div class="overlay-header">
-      <a href="{{ back_url }}" class="back-btn" aria-label="{{ _('Back') }}"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
+      <a href="{{ back_url }}" class="back-btn" aria-label="{{ _('Back') }}"><svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
       <div class="overlay-header-meta">
         <span class="overlay-stream-name">{{ display_name or streamer }}</span>
       </div>
       <div class="overlay-header-actions">
         <button type="button" class="mobile-landscape-chat-toggle" id="landscapeChatToggle" aria-label="{{ _('Expand chat') }}" aria-pressed="false" title="{{ _('Expand chat') }}">
           <span class="landscape-chat-toggle-closed-content">
-            <svg class="landscape-chat-pill-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="landscape-chat-pill-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
-            <svg class="landscape-chat-pill-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="landscape-chat-pill-arrow" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             <span class="landscape-chat-pill-text">{{ _('Chat') }}</span>
           </span>
           <span class="landscape-chat-toggle-open-content">
-            <svg class="landscape-chat-collapse-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="landscape-chat-collapse-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
             <span class="landscape-chat-collapse-text">{{ _('Fullscreen') }}</span>
@@ -68,14 +67,14 @@
     <div class="vod-details-main">
       <div class="vod-title-cluster">
         <a href="{{ back_url or url_for('index') }}" class="mobile-portrait-back-btn" aria-label="{{ _('Back to overview') }}" title="{{ _('Back') }}">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
         </a>
         <div class="vod-kicker">
           {% if is_live %}
-          <span class="twitch-live-pill">{{ _('LIVE') }}</span>
+          <span class="twitch-live-pill">{{ _('Live') }}</span>
           {% endif %}
         </div>
         <h1 class="vod-display-title">{{ display_name or streamer }}</h1>
@@ -93,22 +92,22 @@
     </div>
     <div class="vod-file-actions" aria-label="{{ _('Actions') }}">
       <button type="button" class="vod-inline-tool mobile-action-btn" id="livePlayPauseBtn" aria-label="{{ _('Pause playback') }}" title="{{ _('Pause playback') }}">
-        <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+        <svg class="icon-pause" aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
           <rect x="6" y="4" width="4" height="16" rx="1"></rect>
           <rect x="14" y="4" width="4" height="16" rx="1"></rect>
         </svg>
-        <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none">
+        <svg class="icon-play" aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none">
           <polygon points="6 4 20 12 6 20 6 4"></polygon>
         </svg>
         <span class="btn-label">{{ _('Pause') }}</span>
       </button>
 
       <button type="button" class="vod-inline-tool mobile-action-btn" id="liveMuteBtn" aria-label="{{ _('Mute') }}" title="{{ _('Mute') }}">
-        <svg class="icon-unmute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="icon-unmute" aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
         </svg>
-        <svg class="icon-mute" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <svg class="icon-mute" aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <line x1="23" y1="9" x2="17" y2="15"></line>
           <line x1="17" y1="9" x2="23" y2="15"></line>
@@ -146,7 +145,7 @@
   <script src="{{ url_for('static', filename='vod_seek_hover.js', v=ASSET_VERSION) }}" defer></script>
   <script src="{{ url_for('static', filename='vod_watch_slot.js', v=ASSET_VERSION) }}" defer></script>
   <script src="{{ url_for('static', filename='chat_emotes.js', v=ASSET_VERSION) }}" defer></script>
-  <script>
+  <script nonce="{{ csp_nonce() }}">
     // Tab switching logic: strict display toggling
     (function () {
       const tabBtns = document.querySelectorAll('.chat-tab-row [data-chat-tab]');
@@ -547,6 +546,12 @@
     video.addEventListener('play', () => { updateChat(); });
     video.addEventListener('seeked', () => { updateChat(); });
     
+    function escapeChatText(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, (ch) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[ch]);
+    }
+
     function renderMsg(msg) {
         if (!chatList) return;
         if (chatEmpty) chatEmpty.hidden = true;
@@ -555,15 +560,16 @@
         const timestamp = !isLive && Number.isFinite(Number(msg.rel))
           ? `<span class="t">${formatVodTime(msg.rel)}</span>`
           : '';
-        const message = window.StreamVaultChat ? window.StreamVaultChat.renderMessageHtml(msg) : (msg.msg || '');
+        const message = window.StreamVaultChat ? window.StreamVaultChat.renderMessageHtml(msg) : escapeChatText(msg.msg || '');
         if (msg.event) {
           div.innerHTML = `${timestamp}<span class="m">${message}</span>`;
         } else {
-          const user = window.StreamVaultChat ? window.StreamVaultChat.escapeHtml(msg.user || '') : (msg.user || '');
+          const user = window.StreamVaultChat ? window.StreamVaultChat.escapeHtml(msg.user || '') : escapeChatText(msg.user || '');
           const userColor = (window.StreamVaultChat && window.StreamVaultChat.userColor(msg.color)) || '#a970ff';
           const badges = window.StreamVaultChat ? window.StreamVaultChat.renderBadgesHtml(msg) : '';
           const userSuffix = msg.reward ? '' : ':';
-          div.innerHTML = `${timestamp}<span class="chat-badges">${badges}</span><span class="u" style="color:${userColor}">${user}${userSuffix}</span><span class="m">${message}</span>`;
+          div.innerHTML = `${timestamp}<span class="chat-badges">${badges}</span><span class="u">${user}${userSuffix}</span><span class="m">${message}</span>`;
+          div.querySelector('.u').style.color = userColor;
         }
         if (window.StreamVaultChat) window.StreamVaultChat.decorateLine(div, msg);
         chatList.appendChild(div);

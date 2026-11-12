@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>LIVE {{ display_name }} · StreamVault</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-twitch-watch page-vod {{ theme_class }} ns-platform" data-channel="{{ channel }}">
 
@@ -41,7 +40,7 @@
             {% else %}
             <iframe
               src="{{ player_url }}"
-              title="{{ _('LIVE %(name)s (without Twitch login)', name=display_name) }}"
+              title="{{ _('Live: %(name)s (without Twitch login)', name=display_name) }}"
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowfullscreen
               credentialless
@@ -53,7 +52,7 @@
           <section class="vod-details" aria-labelledby="watchTitle">
             <div class="vod-details-main">
               <div class="vod-kicker">
-                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('LIVE') }}</span>
+                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('Live') }}</span>
                 {% if monitored and not is_mobile %}<span class="twitch-monitored-pill">{{ _('Monitored') }}</span>{% endif %}
                 <span class="platform-badge platform-twitch">TW</span>
               </div>

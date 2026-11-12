@@ -6,8 +6,7 @@
     <title>StreamVault · {{ _('Maintenance') }}</title>
     <meta name="robots" content="noindex,nofollow">
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-login page-maintenance {{ theme_class }} ns-platform">
     <div class="inferno-stage" aria-hidden="true">
