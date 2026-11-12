@@ -197,13 +197,17 @@ class DefaultWiringTests(test_recorder_reliability.IsolatedBaseTest):
     def test_default_runner_resolves_the_real_tools(self):
         runner = recorder.default_runner()
         self.assertIsInstance(runner, SubprocessRunner)
+        resolved = 0
         for tool in ("streamlink", "yt-dlp", "ffmpeg"):
             with self.subTest(tool=tool):
                 try:
                     path = runner.resolve(tool)
                 except FileNotFoundError:
-                    continue  # not installed on this host: the resolver still ran
+                    continue  # tool not installed on this host
+                resolved += 1
                 self.assertTrue(os.path.isfile(path))
+        if not resolved:
+            self.skipTest("none of streamlink, yt-dlp, ffmpeg is installed here")
 
     def test_default_policy_backs_off_exponentially(self):
         policy = recorder.default_recording_policy()

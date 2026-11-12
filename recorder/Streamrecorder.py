@@ -401,7 +401,12 @@ def _storage_pause_flag_active():
     except (OSError, ValueError) as exc:
         # Unreadable or corrupt flag file: do not pause recordings because of it,
         # but make the broken signal visible.
-        throttled_log("warning", "storage-pause-flag", f"Storage pause flag {STORAGE_PAUSE_FILE} unreadable: {exc}")
+        throttled_log(
+            "warning",
+            "storage-pause-flag",
+            f"Storage pause flag {STORAGE_PAUSE_FILE} unreadable ({exc}); "
+            "falling back to the disk check only, recordings are NOT paused by the flag.",
+        )
         return False
 
 
@@ -3808,12 +3813,8 @@ def signal_handler(sig, frame):
 
 @database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def set_channel_live_flag(source_channel, live):
-    conn = database.get_db()
-    try:
+    with database.db_transaction() as conn:
         conn.execute("UPDATE channels SET live=? WHERE name=?", (1 if live else 0, source_channel))
-        conn.commit()
-    finally:
-        conn.close()
 
 
 def default_monitor_ports():
