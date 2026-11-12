@@ -126,8 +126,8 @@ def invalidate_dashboard_cache() -> bool:
         shm_path = "/dev/shm/streamrecorder_dashboard_media.json"
         if os.path.exists(shm_path):
             os.remove(shm_path)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("dashboard shm cache %s not removed: %s", shm_path, exc)
     return True
 
 
