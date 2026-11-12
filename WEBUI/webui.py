@@ -172,10 +172,13 @@ def _env_int(name, default):
         return default
 
 
-# 0 = no time-based login expiry (cookie stays valid until logout or the account is gone).
-# Browsers cap cookie lifetime near 400 days; SESSION_REFRESH_EACH_REQUEST extends it on use.
-SESSION_MAX_AGE_SEC = max(0, _env_int("VOD_SESSION_MAX_AGE_SEC", 0))
-SESSION_COOKIE_MAX_AGE_SEC = max(86400, _env_int("VOD_SESSION_COOKIE_MAX_AGE_SEC", 400 * 86400))
+# Login lifetime since sign-in and maximum idle time (default 30 days).
+# 0 disables the clock limit; logout/password change still revoke via session_version.
+SESSION_MAX_AGE_SEC = max(0, _env_int("VOD_SESSION_MAX_AGE_SEC", 30 * 86400))
+SESSION_COOKIE_MAX_AGE_SEC = max(
+    86400,
+    _env_int("VOD_SESSION_COOKIE_MAX_AGE_SEC", SESSION_MAX_AGE_SEC or 400 * 86400),
+)
 _MEDIA_HTTP_METHODS = ("GET", "HEAD", "OPTIONS")
 LOGIN_BAN_TTL_SEC = int(os.environ.get("VOD_LOGIN_BAN_TTL_SEC", "1800"))
 # OBS browser sources historically pass overlay tokens in the query string.
@@ -777,6 +780,17 @@ SEARCH_TEMPLATE = load_html_template("search.html")
 
 # Mythic+ web UI removed.
 
+SESSION_VERSION_KEY = "sv"
+
+
+def _session_version_of(sess):
+    """Version a login cookie was issued with; cookies from before versioning count as 0."""
+    try:
+        return int(sess.get(SESSION_VERSION_KEY) or 0)
+    except (TypeError, ValueError):
+        return -1
+
+
 def _get_current_user_context() -> dict | None:
     """Request-level cache for user status, role, group, and permissions in flask.g.
 
@@ -817,6 +831,11 @@ def _get_current_user_context() -> dict | None:
         else:
             g._user_context = None
             return None
+
+    # Server-side revocation: logout and password changes bump the version.
+    if _session_version_of(session) != int(user_row.get("session_version") or 0):
+        g._user_context = None
+        return None
 
     is_active = bool(user_row.get("active", True))
     if not is_active:
@@ -878,8 +897,8 @@ def resolve_session_account(username=None):
 def session_is_expired():
     """True when the login cookie must be dropped.
 
-    Default: no clock timeout. Sessions stay valid until logout, account
-    deletion, or deactivation. Optional VOD_SESSION_MAX_AGE_SEC restores a cap.
+    Sessions end on logout or password change (session_version), account
+    deletion or deactivation, and after VOD_SESSION_MAX_AGE_SEC (default 30 days).
     """
     if not session.get("logged_in"):
         return False
@@ -7545,6 +7564,7 @@ def login():
             session["last_active"] = now
             user_row = database.get_user(username)
             session["group_id"] = user_row.get("group_id") if user_row else None
+            session[SESSION_VERSION_KEY] = int(user_row.get("session_version") or 0) if user_row else 0
             session["user_permissions"] = database.get_user_permissions(username)
             # Fresh CSRF for post-login forms; old login-form token is intentionally invalid.
             session["_csrf_token"] = secrets.token_hex(16)
@@ -7580,6 +7600,8 @@ def logout():
     username = session.get("username", "unknown")
     ip = get_client_ip()
     logging.info(f"Logout: {username} from {ip}")
+    # Revoke every copy of this login, not just the cookie in this browser.
+    database.bump_session_version(username)
     session.clear()
     return redirect(url_for("login"))
 
@@ -8512,8 +8534,11 @@ def admin_user_update(username):
     else:
         # Update existing
         save_user(username, pw_hash, active=active, role=role)
+        if new_pass:
+            # A reset password must end every session that used the old one.
+            database.bump_session_version(username)
         logging.info(f"User updated: {username} by {session.get('username')}")
-    
+
     return redirect(url_for("admin_view", msg=gettext("User updated.")))
 
 
@@ -8720,7 +8745,9 @@ def api_admin_user_update(username):
     if new_pass:
         if len(new_pass) < tube_auth.MIN_PASSWORD_LENGTH:
             return jsonify({"ok": False, "error": gettext("Password must be at least %(min)s characters long.", min=tube_auth.MIN_PASSWORD_LENGTH)}), 400
-        database.set_user_password(username, generate_password_hash(new_pass))
+        new_version = database.set_user_password(username, generate_password_hash(new_pass))
+        if is_self:
+            session[SESSION_VERSION_KEY] = new_version
 
     database.set_user_active(username, active)
     database.set_user_role(username, role)
@@ -8805,7 +8832,8 @@ def api_user_change_password():
         return jsonify({"ok": False, "error": gettext("The current password is incorrect.")}), 400
 
     new_hash = generate_password_hash(new_pass)
-    database.set_user_password(username, new_hash)
+    # Revokes all other sessions; this one is re-stamped so the user stays signed in.
+    session[SESSION_VERSION_KEY] = database.set_user_password(username, new_hash)
     logging.info(f"API: User '{username}' successfully changed their password.")
     return jsonify({"ok": True, "msg": gettext("Password changed successfully.")})
 

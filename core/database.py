@@ -191,6 +191,8 @@ def init_db():
             "group_id": "INTEGER",
             "email": "TEXT DEFAULT ''",
             "updated_at": "REAL",
+            # Bumped on logout/password change; cookies carry the value they were issued with.
+            "session_version": "INTEGER NOT NULL DEFAULT 0",
         }.items():
             if column not in user_columns:
                 try:
@@ -1293,6 +1295,7 @@ def _row_to_user(row) -> dict | None:
         "terms_version": (row["terms_version"] if "terms_version" in keys else None) or "",
         "last_seen_at": float(row["last_seen_at"] or 0) if "last_seen_at" in keys else 0.0,
         "last_login_at": float(row["last_login_at"] or 0) if "last_login_at" in keys else 0.0,
+        "session_version": int(row["session_version"] or 0) if "session_version" in keys else 0,
     }
 
 
@@ -1639,16 +1642,49 @@ def set_user_role(username: str, role: str) -> None:
         conn.close()
 
 
-def set_user_password(username: str, password_hash: str) -> None:
+def set_user_password(username: str, password_hash: str) -> int:
+    """Store a new hash and revoke every existing session of the user.
+
+    Returns the new session version (0 when the user does not exist).
+    """
     conn = get_db()
     try:
         conn.execute(
-            "UPDATE users SET password_hash = ? WHERE username = ? COLLATE NOCASE",
-            (password_hash, username),
+            "UPDATE users SET password_hash = ?, "
+            "session_version = COALESCE(session_version, 0) + 1, updated_at = ? "
+            "WHERE username = ? COLLATE NOCASE",
+            (password_hash, time.time(), username),
         )
+        row = conn.execute(
+            "SELECT session_version FROM users WHERE username = ? COLLATE NOCASE",
+            (username,),
+        ).fetchone()
         conn.commit()
     finally:
         conn.close()
+    return int(row["session_version"] or 0) if row else 0
+
+
+def bump_session_version(username: str) -> int:
+    """Invalidate all login cookies of a user. Returns the new version (0 if unknown)."""
+    name = str(username or "").strip()
+    if not name:
+        return 0
+    conn = get_db()
+    try:
+        conn.execute(
+            "UPDATE users SET session_version = COALESCE(session_version, 0) + 1 "
+            "WHERE username = ? COLLATE NOCASE",
+            (name,),
+        )
+        row = conn.execute(
+            "SELECT session_version FROM users WHERE username = ? COLLATE NOCASE",
+            (name,),
+        ).fetchone()
+        conn.commit()
+    finally:
+        conn.close()
+    return int(row["session_version"] or 0) if row else 0
 
 
 def set_user_email(username: str, email: str) -> None:
