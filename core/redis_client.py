@@ -45,6 +45,8 @@ def get_redis():
     _LAST_CONNECT_TRY = now
     try:
         import redis
+        from redis.backoff import ExponentialBackoff
+        from redis.retry import Retry
         pool = redis.ConnectionPool(
             host=REDIS_HOST,
             port=REDIS_PORT,
@@ -53,6 +55,11 @@ def get_redis():
             socket_timeout=3.0,
             socket_connect_timeout=3.0,
             retry_on_timeout=True,
+            # redis-py 8 changed the defaults (RESP3, retries on connect). Pin both so an
+            # unreachable Redis still falls back to local mode quickly and older
+            # servers keep working.
+            retry=Retry(ExponentialBackoff(cap=0.5, base=0.1), 0),
+            protocol=2,
             max_connections=50,
             decode_responses=True,
         )
