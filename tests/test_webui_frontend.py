@@ -125,5 +125,48 @@ class ConfirmDialogTemplateTests(IsolatedBaseTest):
             self.assertIn(text, i18n.JS_MESSAGES)
 
 
+class OverlayTokenTransportTests(unittest.TestCase):
+    """OBS overlays read the token from #token= (or legacy ?token=) and send it only as a header."""
+
+    STATIC = TEMPLATES.parent / "static"
+
+    def test_token_comes_from_fragment_first_and_travels_as_header_only(self):
+        for name, header in (("tts_overlay.js", "X-TTS-Token"), ("alerts_overlay.js", "X-Alert-Token")):
+            with self.subTest(script=name):
+                source = (self.STATIC / name).read_text(encoding="utf-8")
+                self.assertIn('new URLSearchParams(location.hash.replace(/^#/, ""))', source)
+                self.assertRegex(source, r'const token = hashParams\.get\("token"\) \|\| queryParams\.get\("token"\)')
+                self.assertIn('"%s": token' % header, source)
+                self.assertNotRegex(source, r'searchParams\.set\("token"')
+        helper = (self.STATIC / "overlay_audio.js").read_text(encoding="utf-8")
+        self.assertIn('u.searchParams.delete("token")', helper)
+
+
+class LogoutEverywhereTemplateTests(IsolatedBaseTest):
+    """POST /logout/all is offered in the rail, the bottom nav and both mobile templates."""
+
+    def test_forms_post_with_csrf_and_confirmation(self):
+        from WEBUI import webui
+        webui.ensure_admin_user()
+        webui.app.config.update(TESTING=True)
+        client = webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        cases = (("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0", 2),
+                 ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148 Safari/604.1", 1))
+        for ua, expected in cases:
+            with self.subTest(user_agent=ua.split(" ")[1]):
+                html = client.get("/", headers={"User-Agent": ua}).get_data(as_text=True)
+                forms = re.findall(r'<form method="post" action="/logout/all"([^>]*)>\s*'
+                                   r'<input type="hidden" name="csrf_token" value="t">', html)
+                self.assertEqual(len(forms), expected)
+                for attrs in forms:
+                    self.assertIn("data-confirm=", attrs)
+        source = (TEMPLATES / "mobile_streamer.html").read_text(encoding="utf-8")
+        self.assertIn("url_for('logout_everywhere')", source)
+
+
 if __name__ == "__main__":
     unittest.main()
