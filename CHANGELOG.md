@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Breaking changes
 
+- **New minimum versions, reinstall the requirements** after updating
+  (`pip install -r requirements.txt` in the virtualenv): redis ≥ 8.1.0,
+  streamlink ≥ 8.6.3, markupsafe ≥ 3.0.4, pycryptodome ≥ 4.4.0,
+  numpy ≥ 2.2.6. StreamVault keeps redis-py 5 behaviour: RESP2 (Redis servers
+  older than 6 keep working) and one retry on timeouts only, so an unreachable
+  Redis still falls back to local mode after a single connect attempt.
 - **Sessions expire after 30 days** (`VOD_SESSION_MAX_AGE_SEC`, `0` restores
   the old unlimited behaviour). Logout ends the session in this browser;
   the new "log out everywhere" action (`POST /logout/all`) and every password
