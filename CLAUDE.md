@@ -29,9 +29,11 @@ pip install -r requirements.txt
 ```
 
 ### Running Tests
-The test suite uses Python's standard `unittest` discovery:
+The test suite uses Python's standard `unittest` discovery. The number of
+tests changes with every feature; take it from the `Ran N tests` line of
+this command, never from documentation:
 ```bash
-# Run entire test suite (all 167 tests)
+# Run entire test suite
 python -m unittest discover -s tests -p "test_*.py" -v
 
 # Run specific test modules
@@ -46,8 +48,10 @@ python -m unittest tests.test_recorder_reliability.DiskSpaceGuardTests.test_disk
 ### Syntax & Compilation Verification
 Always verify Python syntax before committing:
 ```bash
-# Lint (config in pyproject.toml; CI runs the same check)
-ruff check .
+# Lint (config in pyproject.toml; CI runs the same check). ruff is a
+# development-only dependency (pyproject extra "dev", pinned 0.17.3); run it
+# without installing it into the project venv:
+uv run --no-project --with ruff==0.17.3 ruff check .
 
 # Single file
 python -m py_compile recorder/Streamrecorder.py
@@ -81,6 +85,7 @@ nachtsilo-hub/
 ├── bin/
 │   └── streamvault             # Global bash CLI wrapper (/usr/local/bin/streamvault)
 ├── core/
+│   ├── channels.py             # Channel loaders + is_youtube_host (shared by WebUI and recorder)
 │   ├── config.py               # Env parsing, default directories (BASE_DIR, HLS_ROOT, etc.)
 │   ├── database.py             # SQLite WAL access, schema init, @db_retry, task queues
 │   ├── health.py               # Lightweight supervisorctl status parser (no heavy imports)
@@ -105,9 +110,7 @@ nachtsilo-hub/
 ├── run_transcribe.py           # Subprocess wrapper for Whisper ASR to keep worker memory clean
 ├── scripts/
 │   └── streamvault_vps.sh      # VPS deploy/rollback + Linux validation (supervisor, X-Accel, HLS RAM disk)
-└── tests/
-    ├── test_recorder_reliability.py  # 74 tests: process reaping, locking, folder safety, health, client IP, regressions
-    └── test_storage.py               # 93 tests: crypto, providers, retention, error masking
+└── tests/                      # unittest modules (test_*.py); counts: see `unittest discover`
 ```
 
 ---

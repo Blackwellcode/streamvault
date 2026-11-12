@@ -7,6 +7,58 @@ All notable changes to this project are documented here. The format follows
 
 ### Breaking changes
 
+- **Sessions expire after 30 days** (`VOD_SESSION_MAX_AGE_SEC`, `0` restores
+  the old unlimited behaviour). Logout and every password change sign the
+  account out on all devices.
+- **Overlay tokens in the query string are off by default.** The bundled
+  TTS/alert overlay pages pass `?token=`; set `OVERLAY_ALLOW_QUERY_TOKEN=true`
+  while you use them. The `/tts/api/ack` and `/alerts/api/ack` routes accept
+  POST only.
+- **Resource uploads use an allowlist** (documents, images, audio/video,
+  archives; `VOD_FILES_ALLOWED_EXTENSIONS` overrides it). Existing files with
+  other extensions are no longer served but can still be deleted.
+- **Docker programs run as an unprivileged user** (`APP_UID`, default 1000).
+  `./data` must be writable by that UID: `sudo chown -R 1000:1000 data`.
+
+### Security
+
+- Cancelling a transcription only signals a verified `run_transcribe.py`
+  process group, never PID 1 or the web worker's own group.
+- The Twitch OAuth token never falls back to the command line when its
+  private config file cannot be written.
+- Login throttling counts only form submissions, groups IPv6 clients by /64,
+  adds a per-account limit and answers with HTTP 429 and `Retry-After`.
+- Shared and downloaded resource files are always sent as
+  `attachment`/`application/octet-stream` with `nosniff`; symlinked media
+  and resource files are refused.
+- Constant-time comparison for the environment admin password; unknown
+  user names still run a hash check. `/healthz` shows disk data to admins
+  only. Client values in VOD debug logs are stripped of control characters.
+
+### Changed
+
+- `install.sh` aborts on a failing `nginx -t`, copies without databases,
+  `data/`, `demo-data/` or `.env`, runs git as the service user, keeps the
+  initial password out of the terminal and does not restart services while
+  recordings are running. `streamvault stop|restart|update` refuse the same
+  unless `--force` is given; `restart` accepts a single service.
+- `scripts/streamvault_vps.sh deploy` takes a `sqlite3 .backup` of the
+  database before touching the code.
+- The nginx example sets `Connection` via `map`, keeps security headers in
+  every location with its own `add_header`, marks protected thumbnails
+  `private` and compresses proxied CSS/JS (`gzip_proxied any`).
+- `core.channels` holds the channel helpers shared by the web UI and the
+  recorder; `core.database` no longer depends on Flask.
+
+### Fixed
+
+- Broad `except Exception: pass` handlers in the database layer, recorder,
+  worker and web UI now catch specific errors and log them.
+
+## [0.1.0] - 2026-11-09
+
+### Breaking changes
+
 - **Docker data directory.** `docker-compose.yml` now uses
   `VOD_BASE_DIR=/app/data`. Before upgrading, move archives,
   `streamrecorder.db` and the dot-directories (`.meta`, `.thumbs`, `.hls`,

@@ -178,6 +178,22 @@ class LoginThrottleTests(WebTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.webui.username_lockout_wait(user), 0)
 
+    def test_throttle_message_is_translated(self):
+        user = self.make_user()
+        for i in range(self.webui.LOGIN_USER_MAX_FAILS):
+            self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
+        client = self.webui.app.test_client()
+        with client.session_transaction() as sess:
+            sess["_csrf_token"] = "t"
+        response = client.post(
+            "/login",
+            data={"csrf_token": "t", "username": user, "password": self.PASSWORD},
+            headers={"Accept-Language": "de"},
+            environ_base={"REMOTE_ADDR": "198.51.100.50"},
+        )
+        self.assertEqual(response.status_code, 429)
+        self.assertIn("Zu viele Anmeldeversuche", response.get_data(as_text=True))
+
     def test_flask_limiter_counts_only_post(self):
         with mock.patch.object(self.webui.limiter, "enabled", True):
             self.webui.limiter.reset()

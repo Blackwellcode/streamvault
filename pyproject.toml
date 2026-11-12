@@ -3,8 +3,18 @@ name = "streamvault"
 description = "Self-hosted stream recorder, live restreamer and VOD archive"
 readme = "README.md"
 license = { file = "LICENSE" }
+authors = [{ name = "Blackwell Code" }]
 requires-python = ">=3.10"
 dynamic = ["version"]
+
+[project.optional-dependencies]
+# Runtime dependencies live in requirements.txt. These extras are optional:
+# transcription backends and error reporting.
+transcribe = ["openai-whisper"]            # TRANSCRIBE_BACKEND=whisper (default, pulls torch)
+transcribe-fast = ["faster-whisper"]       # TRANSCRIBE_BACKEND=faster_whisper (CPU, int8)
+sentry = ["sentry-sdk[flask]"]             # SENTRY_DSN
+# Development only, never installed on servers; CI pins the same version.
+dev = ["ruff==0.17.3"]
 
 [tool.ruff]
 # Production runs on the distro Python (3.10 on Ubuntu 22.04, 3.11 on Debian 12).
