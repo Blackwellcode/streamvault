@@ -183,6 +183,67 @@ class RepairRecordingTests(test_recorder_reliability.IsolatedBaseTest):
         self.assertEqual(recorder.source_error_hint(str(self.base / "missing"), "chan"), "")
 
 
+class DefaultWiringTests(test_recorder_reliability.IsolatedBaseTest):
+    """The production defaults behind the new seams are wired to the real collaborators."""
+
+    def test_default_monitor_ports_use_the_recorder_functions(self):
+        ports = recorder.default_monitor_ports()
+        self.assertIs(ports.get_config, recorder.get_source_config)
+        self.assertIs(ports.live_presence, recorder.cheap_live_presence)
+        self.assertIs(ports.sleep, recorder.interruptible_sleep)
+        self.assertEqual(ports.interval(), recorder.CHECK_INTERVAL)
+        self.assertEqual(ports.should_stop(), recorder.shutdown_requested)
+
+    def test_default_runner_resolves_the_real_tools(self):
+        runner = recorder.default_runner()
+        self.assertIsInstance(runner, SubprocessRunner)
+        for tool in ("streamlink", "yt-dlp", "ffmpeg"):
+            with self.subTest(tool=tool):
+                try:
+                    path = runner.resolve(tool)
+                except FileNotFoundError:
+                    continue  # not installed on this host: the resolver still ran
+                self.assertTrue(os.path.isfile(path))
+
+    def test_default_policy_backs_off_exponentially(self):
+        policy = recorder.default_recording_policy()
+        first = policy.on_exception()
+        for _ in range(3):
+            later = policy.on_exception()
+        self.assertGreater(later, first)
+        self.assertEqual(policy.idle_delay(), recorder.compute_idle_poll_delay())
+
+    def test_pause_flag_none_reads_the_worker_file(self):
+        import json
+        from pathlib import Path
+        from unittest import mock
+        flag = self.base / "storage_pause.json"
+        plenty = mock.Mock(total=100 * 1024 ** 3, used=10 * 1024 ** 3, free=90 * 1024 ** 3)
+        with mock.patch.object(recorder, "STORAGE_PAUSE_FILE", str(flag)), \
+                mock.patch("shutil.disk_usage", return_value=plenty):
+            self.assertFalse(recorder.disk_blocks_recording(str(self.base)))
+            flag.write_text(json.dumps({"paused": True}), encoding="utf-8")
+            self.assertTrue(recorder.disk_blocks_recording(str(self.base)))
+            self.assertFalse(recorder.disk_blocks_recording(str(self.base), pause_flag=False))
+            Path(flag).write_text("{broken", encoding="utf-8")
+            recorder.LOG_THROTTLE.pop("storage-pause-flag", None)
+            with self.assertLogs(recorder.logger, level="WARNING"):
+                self.assertFalse(recorder.disk_blocks_recording(str(self.base)))
+
+    def test_live_flag_is_written_and_connection_closed(self):
+        from core import database
+        conn = database.get_db()
+        try:
+            conn.execute("INSERT INTO channels (name, live) VALUES ('flagchan', 0)")
+            conn.commit()
+        finally:
+            conn.close()
+        recorder.set_channel_live_flag("flagchan", True)
+        self.assertIn("flagchan", database.get_channels(mode="live"))
+        recorder.set_channel_live_flag("flagchan", False)
+        self.assertNotIn("flagchan", database.get_channels(mode="live"))
+
+
 class ProcessRunnerTests(unittest.TestCase):
     def test_fake_records_commands_and_answers(self):
         done = subprocess.CompletedProcess(["x"], 0, stdout='{"url": "u", "metadata": {"title": "t"}}', stderr="")

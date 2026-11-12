@@ -189,12 +189,10 @@ def find_ffmpeg():
     for path in possible_paths:
         if os.path.isfile(path):
             return path
-    try:
-        result = subprocess.run(['which', 'ffmpeg'], capture_output=True, text=True)
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-    except (OSError, subprocess.SubprocessError) as exc:
-        logger.warning("which ffmpeg failed: %s", exc)
+    # PATH lookup in-process: no child process, nothing that can hang.
+    on_path = shutil.which("ffmpeg")
+    if on_path:
+        return on_path
     raise FileNotFoundError("FFmpeg nicht gefunden. Installiere es mit 'sudo apt install ffmpeg' oder 'sudo snap install ffmpeg'.")
 
 def find_streamlink():
@@ -400,7 +398,10 @@ def _storage_pause_flag_active():
         return bool(data.get("paused") or data.get("critical"))
     except FileNotFoundError:
         return False
-    except Exception:
+    except (OSError, ValueError) as exc:
+        # Unreadable or corrupt flag file: do not pause recordings because of it,
+        # but make the broken signal visible.
+        throttled_log("warning", "storage-pause-flag", f"Storage pause flag {STORAGE_PAUSE_FILE} unreadable: {exc}")
         return False
 
 
@@ -3805,6 +3806,16 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def set_channel_live_flag(source_channel, live):
+    conn = database.get_db()
+    try:
+        conn.execute("UPDATE channels SET live=? WHERE name=?", (1 if live else 0, source_channel))
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def default_monitor_ports():
     return LiveMonitorPorts(
         get_config=get_source_config,
@@ -3853,10 +3864,7 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None, ports=N
                 except Exception as exc:
                     logger.error(f"Discord Live-Notify fehlgeschlagen für {source_channel}: {exc}")
                 try:
-                    conn = database.get_db()
-                    conn.execute("UPDATE channels SET live=1 WHERE name=?", (source_channel,))
-                    conn.commit()
-                    conn.close()
+                    set_channel_live_flag(source_channel, True)
                 except sqlite3.Error as exc:
                     logger.error("live=1 for %s not stored: %s", source_channel, exc)
             elif not stream_live and is_live_now:
@@ -3867,10 +3875,7 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None, ports=N
                 except Exception as exc:  # Discord session cleanup is best effort
                     logger.warning("Discord live session for %s not cleared: %s", archive_channel or source_channel, exc)
                 try:
-                    conn = database.get_db()
-                    conn.execute("UPDATE channels SET live=0 WHERE name=?", (source_channel,))
-                    conn.commit()
-                    conn.close()
+                    set_channel_live_flag(source_channel, False)
                 except sqlite3.Error as exc:
                     logger.error("live=0 for %s not stored: %s", source_channel, exc)
 
