@@ -9,7 +9,7 @@ streamlink>=8.6.3
 yt-dlp>=2024.1.0
 redis>=5.0.0
 limits>=3.10.0
-markupsafe>=2.1.0
+markupsafe>=3.0.4
 gunicorn>=21.2.0; sys_platform != "win32"
 pycryptodome>=4.4.0
 numpy>=1.26.0,<3.0.0
