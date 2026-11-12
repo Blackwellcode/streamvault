@@ -9,6 +9,7 @@ from typing import Iterable, Optional
 from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
+    close_quietly,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -268,10 +269,7 @@ class S3Provider(StorageProvider):
                     break
                 yield chunk
         finally:
-            try:
-                body.close()
-            except Exception:
-                pass
+            close_quietly(body, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         key = self._key(remote_path)

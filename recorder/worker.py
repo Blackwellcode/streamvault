@@ -511,7 +511,8 @@ def read_thumbnail_frame(input_path, timestamp, width=320, height=180, http_head
     ])
     try:
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=60)
-    except Exception:
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning("Frame extraction from %s failed: %s", input_path, exc)
         return None
     expected = width * height * 3
     if result.returncode != 0 or len(result.stdout) != expected:
@@ -780,7 +781,9 @@ def _is_direct_child(parent, path):
         parent_real = os.path.realpath(parent)
         path_real = os.path.realpath(path)
         return os.path.dirname(path_real) == parent_real
-    except Exception:
+    except (OSError, TypeError, ValueError) as exc:
+        # Unresolvable means "not a direct child" (fail closed).
+        logger.warning("Path check %s under %s failed: %s", path, parent, exc)
         return False
 
 

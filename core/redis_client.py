@@ -12,6 +12,13 @@ from typing import Any, Optional, Dict
 
 logger = logging.getLogger("streamvault.redis")
 
+try:
+    from redis.exceptions import RedisError as _RedisError
+except ImportError:  # redis is optional; get_redis() then returns None
+    _RedisError = OSError
+# What a call on a connected client raises when Redis goes away.
+REDIS_ERRORS = (_RedisError, OSError)
+
 _REDIS_CLIENT = None
 _REDIS_AVAILABLE = None
 _LAST_CONNECT_TRY = 0
@@ -93,7 +100,8 @@ def is_available() -> bool:
         return False
     try:
         return bool(r.ping())
-    except Exception:
+    except REDIS_ERRORS as exc:
+        logger.warning("Redis ping failed: %s", exc)
         return False
 
 
@@ -143,8 +151,8 @@ def invalidate_dashboard_cache() -> bool:
         shm_path = "/dev/shm/streamrecorder_dashboard_media.json"
         if os.path.exists(shm_path):
             os.remove(shm_path)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("dashboard shm cache %s not removed: %s", shm_path, exc)
     return True
 
 
@@ -157,7 +165,8 @@ def delete_state(key: str) -> bool:
         full_key = f"{STATE_KEY_PREFIX}{key}"
         r.delete(full_key)
         return True
-    except Exception:
+    except REDIS_ERRORS as exc:
+        logger.warning("Redis state %s not deleted: %s", key, exc)
         return False
 
 
@@ -244,7 +253,8 @@ def get_queue_len() -> int:
         return 0
     try:
         return int(r.llen(TASK_QUEUE_KEY))
-    except Exception:
+    except REDIS_ERRORS as exc:
+        logger.warning("Redis queue length unavailable: %s", exc)
         return 0
 
 

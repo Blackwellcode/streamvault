@@ -6,6 +6,7 @@ Never includes tokens, cookies, or env secrets.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import subprocess
@@ -14,6 +15,8 @@ from pathlib import Path
 from typing import Any
 
 from core import config
+
+logger = logging.getLogger(__name__)
 
 LIVE_HLS_TTL_SEC = int(os.environ.get("LIVE_HLS_TTL_SEC", "24"))
 LIVE_WATCH_DEMAND_SEC = int(os.environ.get("LIVE_WATCH_DEMAND_SEC", "120"))
@@ -84,8 +87,8 @@ def list_candidate_channels(extra: list[str] | None = None) -> list[str]:
                 found.add(name)
             if int(conf.get("live") or 0) == 1 and name:
                 found.add(name)
-    except Exception:
-        pass
+    except database.DB_ACCESS_ERRORS as exc:
+        logger.warning("live diag: channel configs unavailable: %s", exc)
     for name in extra or []:
         if name:
             found.add(str(name).strip().lower())
@@ -173,8 +176,8 @@ def diagnose_channel(channel: str, *, logs: int = 30, helix: dict | None = None)
         if conf:
             db_live = int(conf.get("live") or 0)
             db_record = int(conf.get("record") or 0)
-    except Exception:
-        pass
+    except database.DB_ACCESS_ERRORS as exc:
+        logger.warning("live diag %s: channel config unavailable: %s", channel, exc)
 
     helix_info = (helix or {}).get(channel) if helix is not None else None
     if helix_info is None:

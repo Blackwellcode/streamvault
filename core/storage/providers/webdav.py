@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -10,6 +11,8 @@ from typing import Iterable, Optional
 from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
+    close_quietly,
+    mask_error,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -24,6 +27,7 @@ from core.storage.base import (
 )
 from core.storage import http
 
+logger = logging.getLogger(__name__)
 DAV = "{DAV:}"
 
 
@@ -185,10 +189,7 @@ class WebDAVProvider(StorageProvider):
                 os.fsync(handle.fileno())
             os.replace(tmp_path, dest_path)
         finally:
-            try:
-                response.close()
-            except Exception:
-                pass
+            close_quietly(response, provider=self.type_id)
             if os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)
@@ -209,10 +210,7 @@ class WebDAVProvider(StorageProvider):
         try:
             yield from iter_response_range(response, start, end)
         finally:
-            try:
-                response.close()
-            except Exception:
-                pass
+            close_quietly(response, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         response = self._request("DELETE", self._url(remote_path), timeout=(10, 60), retries=2)
@@ -312,5 +310,6 @@ class WebDAVProvider(StorageProvider):
             available_i = int(available) if available and available.isdigit() else 0
             used_i = int(used) if used and used.isdigit() else 0
             return {"limit": available_i + used_i, "usage": used_i}
-        except Exception:
+        except (StorageError, ET.ParseError, ValueError) as exc:
+            logger.warning("%s quota unavailable: %s", self.type_id, mask_error(exc))
             return None

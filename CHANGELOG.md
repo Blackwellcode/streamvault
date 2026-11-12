@@ -96,9 +96,23 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
-- Broad `except Exception: pass` handlers are gone from the database layer,
-  recorder, worker and clip engine; 46 such handlers remain elsewhere (18 in
-  the web UI, the rest in storage providers and API clients).
+- No broad exception handler that only passes, continues or returns a
+  constant without logging is left (database layer, recorder, worker, clip
+  engine, web UI, storage providers, API clients). The expected failures are
+  caught by class and logged, and fallback values are unchanged. Operator
+  impact:
+  - An unexpected error class (for example a `TypeError` from a code bug) is
+    no longer hidden. It now shows up as an HTTP 500 or a traceback in the
+    log.
+  - Database fallbacks catch `sqlite3.Error`, `OSError` and `ValueError`
+    (`core.database.DB_ACCESS_ERRORS`). Warnings from per-request lookups
+    are limited to one per minute and call site.
+  - The recording loop's own checks stay broad on purpose, so they can never
+    stop a recording, but they now log a throttled warning.
+  - Broad handlers that do something other than these three patterns still
+    exist and log nothing.
+- A deleted VOD or clip whose file was still on disk opened in the player:
+  the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.
 
 ## [0.1.0] - 2026-11-09

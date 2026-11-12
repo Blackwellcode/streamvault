@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import posixpath
@@ -12,6 +13,8 @@ from typing import Iterable, Optional
 from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
+    close_quietly,
+    mask_error,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -24,6 +27,7 @@ from core.storage.base import (
 )
 from core.storage import http
 
+logger = logging.getLogger(__name__)
 API = "https://api.dropboxapi.com/2"
 CONTENT = "https://content.dropboxapi.com/2"
 AUTH_URL = "https://www.dropbox.com/oauth2/authorize"
@@ -152,10 +156,7 @@ class DropboxProvider(StorageProvider):
                 timeout=(10, 60),
             )
             if response.status_code == 401 and attempt == 0:
-                try:
-                    response.close()
-                except Exception:
-                    pass
+                close_quietly(response, provider=self.type_id)
                 self._token(force=True)
                 continue
             return http.json_response(response, action, provider=self.type_id)
@@ -258,7 +259,8 @@ class DropboxProvider(StorageProvider):
                 "usage": int(data.get("used") or 0),
                 "limit": int((data.get("allocation") or {}).get("allocated") or 0),
             }
-        except Exception:
+        except (StorageError, AttributeError, TypeError, ValueError) as exc:
+            logger.warning("%s quota unavailable: %s", self.type_id, mask_error(exc))
             return None
 
     def upload_file(
@@ -369,10 +371,7 @@ class DropboxProvider(StorageProvider):
                 os.fsync(handle.fileno())
             os.replace(tmp_path, dest_path)
         finally:
-            try:
-                response.close()
-            except Exception:
-                pass
+            close_quietly(response, provider=self.type_id)
             if os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)
@@ -388,10 +387,7 @@ class DropboxProvider(StorageProvider):
         try:
             yield from iter_response_range(response, start, end)
         finally:
-            try:
-                response.close()
-            except Exception:
-                pass
+            close_quietly(response, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         try:
