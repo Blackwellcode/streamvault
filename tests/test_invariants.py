@@ -134,11 +134,10 @@ class TwitchTokenNeverInArgvTests(IsolatedBaseTest):
 
     def test_record_and_probe_commands_keep_token_out_of_argv(self):
         # The streamlink binary is an installation detail, not under test.
-        with mock.patch.object(config, "RECORDER_TWITCH_OAUTH_TOKEN", self.TOKEN), \
-                mock.patch.object(recorder, "find_streamlink", return_value="streamlink"):
+        with mock.patch.object(config, "RECORDER_TWITCH_OAUTH_TOKEN", self.TOKEN):
             for build in (recorder.build_streamlink_command, recorder.build_streamlink_probe_command):
                 with self.subTest(build=build.__name__):
-                    cmd = build("somechannel", {})
+                    cmd = build("somechannel", {}, executable="streamlink")
                     self._assert_token_absent(cmd)
                     cfg = cmd[cmd.index("--config") + 1]
                     self.assertIn(self.TOKEN, Path(cfg).read_text(encoding="utf-8"))

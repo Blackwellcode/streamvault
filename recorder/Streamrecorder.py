@@ -25,6 +25,8 @@ from multiprocessing import Process
 
 from recorder import chat_clip
 from recorder import chat_events
+from recorder.recording_policy import STATE_STARTING, RecordingPolicy
+from recorder.recording_runtime import LiveMonitorPorts, SubprocessRunner
 from core import config
 from core import database
 from core.channels import is_youtube_host, load_all_channels
@@ -402,9 +404,13 @@ def _storage_pause_flag_active():
         return False
 
 
-def disk_blocks_recording(path):
-    """True when free space is critically low — pause starting new recordings."""
-    if _storage_pause_flag_active():
+def disk_blocks_recording(path, pause_flag=None):
+    """True when free space is critically low — pause starting new recordings.
+
+    ``pause_flag`` overrides the worker's storage-pause file (None = read it).
+    """
+    paused = _storage_pause_flag_active() if pause_flag is None else bool(pause_flag)
+    if paused:
         return True
     target = path or RECORDINGS_BASE_DIR
     try:
@@ -1473,13 +1479,13 @@ def streamlink_twitch_auth_args():
     return config.streamlink_twitch_auth_args(getattr(config, "RECORDER_TWITCH_OAUTH_TOKEN", ""))
 
 
-def build_streamlink_command(source_channel, conf=None):
+def build_streamlink_command(source_channel, conf=None, executable=None):
     """Baut die gefilterte, werbefreie und anonyme Twitch-HLS-Quelle für FFmpeg."""
     conf = conf or get_source_config(source_channel)
     auth_args = streamlink_twitch_auth_args()
     has_oauth = any("--config" == arg for arg in auth_args)
     cmd = [
-        find_streamlink(),
+        executable or find_streamlink(),
         *auth_args,
     ]
     use_proxy = os.environ.get("STREAM_RECORDER_USE_PROXY", "false").lower() in ("true", "1", "yes")
@@ -1499,13 +1505,13 @@ def build_streamlink_command(source_channel, conf=None):
     ]
     return cmd
 
-def build_streamlink_probe_command(source_channel, conf=None):
+def build_streamlink_probe_command(source_channel, conf=None, executable=None):
     """Prueft vor FFmpeg, ob Streamlink einen spielbaren Stream findet (Ad-Free & Ban-Bypass)."""
     conf = conf or get_source_config(source_channel)
     auth_args = streamlink_twitch_auth_args()
     has_oauth = any("--config" == arg for arg in auth_args)
     cmd = [
-        find_streamlink(),
+        executable or find_streamlink(),
         *auth_args,
     ]
     use_proxy = os.environ.get("STREAM_RECORDER_USE_PROXY", "false").lower() in ("true", "1", "yes")
@@ -1525,10 +1531,11 @@ def build_streamlink_probe_command(source_channel, conf=None):
     ]
     return cmd
 
-def probe_streamlink_playable(source_channel, conf=None):
-    cmd = build_streamlink_probe_command(source_channel, conf)
+def probe_streamlink_playable(source_channel, conf=None, runner=None):
+    runner = runner or default_runner()
     try:
-        result = subprocess.run(
+        cmd = build_streamlink_probe_command(source_channel, conf, executable=runner.resolve("streamlink"))
+        result = runner.run(
             cmd,
             capture_output=True,
             text=True,
@@ -1556,10 +1563,10 @@ def probe_streamlink_playable(source_channel, conf=None):
         error = (result.stderr or output or "Keine spielbaren Streams gefunden").strip()
     return {"ok": False, "error": error[:500], "metadata": payload.get("metadata") if isinstance(payload, dict) else {}}
 
-def build_ytdlp_probe_command(source_channel, conf=None):
+def build_ytdlp_probe_command(source_channel, conf=None, executable=None):
     conf = conf or get_source_config(source_channel)
     return [
-        find_ytdlp(),
+        executable or find_ytdlp(),
         "--no-config",
         "--dump-single-json",
         "--no-playlist",
@@ -1569,11 +1576,11 @@ def build_ytdlp_probe_command(source_channel, conf=None):
         youtube_live_url(source_channel, conf),
     ]
 
-def build_ytdlp_command(source_channel, conf=None, live_from_start=None):
+def build_ytdlp_command(source_channel, conf=None, live_from_start=None, executable=None):
     conf = conf or get_source_config(source_channel)
     use_live_from_start = YOUTUBE_LIVE_FROM_START if live_from_start is None else bool(live_from_start)
     cmd = [
-        find_ytdlp(),
+        executable or find_ytdlp(),
         "--no-config",
         "--no-playlist",
         "--no-warnings",
@@ -1627,10 +1634,11 @@ def youtube_status_from_metadata(metadata):
         "ts": time.time(),
     }
 
-def probe_ytdlp_playable(source_channel, conf=None):
-    cmd = build_ytdlp_probe_command(source_channel, conf)
+def probe_ytdlp_playable(source_channel, conf=None, runner=None):
+    runner = runner or default_runner()
     try:
-        result = subprocess.run(
+        cmd = build_ytdlp_probe_command(source_channel, conf, executable=runner.resolve("yt-dlp"))
+        result = runner.run(
             cmd,
             capture_output=True,
             text=True,
@@ -1662,17 +1670,152 @@ def probe_ytdlp_playable(source_channel, conf=None):
     error = (result.stderr or output or "Keine spielbare YouTube-Livequelle gefunden").strip()
     return {"ok": False, "error": error[:500], "metadata": payload if isinstance(payload, dict) else {}, "platform": "youtube"}
 
-def probe_source_playable(source_channel, conf=None):
+def probe_source_playable(source_channel, conf=None, runner=None):
     conf = conf or get_source_config(source_channel)
     if conf.get("platform") == "youtube":
-        return probe_ytdlp_playable(source_channel, conf)
-    return probe_streamlink_playable(source_channel, conf)
+        return probe_ytdlp_playable(source_channel, conf, runner=runner)
+    return probe_streamlink_playable(source_channel, conf, runner=runner)
 
-def build_source_command(source_channel, conf=None):
+def build_source_command(source_channel, conf=None, runner=None):
     conf = conf or get_source_config(source_channel)
     if conf.get("platform") == "youtube":
-        return build_ytdlp_command(source_channel, conf)
-    return build_streamlink_command(source_channel, conf)
+        executable = runner.resolve("yt-dlp") if runner is not None else None
+        return build_ytdlp_command(source_channel, conf, executable=executable)
+    executable = runner.resolve("streamlink") if runner is not None else None
+    return build_streamlink_command(source_channel, conf, executable=executable)
+
+
+def build_ffmpeg_record_command(ffmpeg_path, temp_output_file, *, use_copy, filter_str=None, vaapi_device=None):
+    """FFmpeg argument list for one recording (stdin = source stream).
+
+    Copy mode remuxes into Matroska; otherwise the chat overlay ``filter_str``
+    is burned in with libx264, or h264_vaapi when ``vaapi_device`` is set.
+    """
+    cmd = [
+        ffmpeg_path, '-y',
+        '-nostdin',
+        '-nostats',
+        '-stats_period', '1',
+        '-progress', 'pipe:1',
+        '-thread_queue_size', '4096',
+        '-probesize', '512k',
+        '-analyzeduration', '5000000',
+        '-rtbufsize', '512M',
+        '-threads', FFMPEG_THREADS,
+    ]
+    if use_copy:
+        return cmd + [
+            '-i', 'pipe:0',
+            '-map', '0:v:0',
+            '-map', '0:a?',
+            '-c:v', 'copy',
+            '-c:a', 'copy',
+            '-avoid_negative_ts', 'make_zero',
+            '-fflags', '+genpts+discardcorrupt',
+            '-f', 'matroska',
+            temp_output_file,
+        ]
+    if vaapi_device:
+        cmd += ['-vaapi_device', vaapi_device]
+    cmd += [
+        '-i', 'pipe:0',
+        '-filter_complex', filter_str,
+        '-map', '[v]',
+        '-map', '0:a?',
+    ]
+    if vaapi_device:
+        cmd += ['-c:v', 'h264_vaapi', '-qp', '26']
+    else:
+        cmd += ['-c:v', 'libx264', '-preset', ENC_PRESET, '-tune', 'zerolatency', '-crf', ENC_CRF]
+    return cmd + [
+        '-vsync', '1',
+        '-af', 'aresample=async=1:min_hard_comp=0.1:first_pts=0',
+        '-pix_fmt', 'yuv420p', '-g', '60', '-keyint_min', '60',
+        '-force_key_frames', f"expr:gte(t,n_forced*{LIVE_HLS_TIME})",
+        '-c:a', 'aac', '-profile:a', 'aac_low', '-b:a', '128k', '-ar', '48000', '-ac', '2',
+        '-avoid_negative_ts', 'make_zero',
+        '-fflags', '+genpts+discardcorrupt',
+        '-f', 'mp4', '-movflags', '+faststart', temp_output_file,
+    ]
+
+
+def source_error_hint(recordings_dir, source_channel):
+    """Last lines of the source process' stderr log as a short hint ("" if none)."""
+    stderr_path = os.path.join(
+        recordings_dir,
+        f".source_stderr.{source_state_suffix(source_channel) or 'src'}.log",
+    )
+    try:
+        if not os.path.isfile(stderr_path):
+            return ""
+        with open(stderr_path, "r", encoding="utf-8", errors="replace") as handle:
+            tail = [line.strip() for line in handle.readlines()[-12:] if line.strip()]
+    except OSError as exc:
+        logger.warning("Source stderr log %s unreadable: %s", stderr_path, exc)
+        return ""
+    if not tail:
+        return ""
+    logger.error("Quellprozess-Fehler (%s):\n%s", source_channel, "\n".join(tail))
+    return " | Quelle: " + " / ".join(tail[-3:])
+
+
+def _remove_quietly(path):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except OSError as exc:
+        logger.warning("Temporary file %s not removed: %s", path, exc)
+
+
+def repair_recording(runner, ffmpeg_path, output_file):
+    """Remux a broken recording in place; True when the repaired file replaced it."""
+    logger.info("Versuche Video-Datei zu reparieren...")
+    repaired_tmp = f"{output_file}.repaired.mp4"
+    repair_cmd = [
+        ffmpeg_path, '-y', '-i', output_file,
+        '-c', 'copy', '-avoid_negative_ts', 'make_zero',
+        repaired_tmp,
+    ]
+    try:
+        res = runner.run(repair_cmd, capture_output=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        logger.warning("Video-Reparatur per FFmpeg nach 60s Timeout abgebrochen")
+        _remove_quietly(repaired_tmp)
+        return False
+    except OSError as repair_error:
+        logger.error(f"Reparatur fehlgeschlagen: {repair_error!s}")
+        _remove_quietly(repaired_tmp)
+        return False
+    if res.returncode == 0 and os.path.isfile(repaired_tmp) and os.path.getsize(repaired_tmp) > MIN_RECORD_FILE_SIZE:
+        os.replace(repaired_tmp, output_file)
+        logger.info("Video-Datei erfolgreich repariert")
+        return True
+    logger.warning(
+        "Video-Reparatur fehlgeschlagen (exit %s): %s",
+        res.returncode,
+        res.stderr[:500] if res.stderr else "Unbekannter Fehler",
+    )
+    _remove_quietly(repaired_tmp)
+    return False
+
+
+def default_runner():
+    """Production ProcessRunner (argument lists, timeouts, own session per child)."""
+    return SubprocessRunner({
+        "streamlink": find_streamlink,
+        "yt-dlp": find_ytdlp,
+        "ffmpeg": find_ffmpeg,
+    })
+
+
+def default_recording_policy():
+    return RecordingPolicy(
+        backoff=lambda failures: compute_retry_backoff(
+            failures, RETRY_DELAY, STREAM_FAILURE_RETRY_MAX, jitter=True
+        ),
+        idle_delay=compute_idle_poll_delay,
+        unplayable_delay=STREAM_LIVE_UNPLAYABLE_RETRY_SEC,
+    )
 
 def compute_retry_backoff(failures, base_delay=RETRY_DELAY, max_delay=STREAM_FAILURE_RETRY_MAX, jitter=False):
     try:
@@ -2933,16 +3076,18 @@ def remux_recording(file_path, reencode_audio=False):
             pass
     return False
 
-def record_stream(source_channel, chat_text_file, recordings_dir):
-    """Zeichnet den Stream mit Chat-Overlay in eine Videodatei auf."""
-    ffmpeg_path = find_ffmpeg()
+def record_stream(source_channel, chat_text_file, recordings_dir, runner=None, policy=None):
+    """Zeichnet den Stream mit Chat-Overlay in eine Videodatei auf.
+
+    ``runner`` (ProcessRunner) starts streamlink/yt-dlp/ffmpeg, ``policy``
+    (RecordingPolicy) makes every retry/fallback/offload decision.
+    """
+    runner = runner or default_runner()
+    policy = policy or default_recording_policy()
+    ffmpeg_path = runner.resolve("ffmpeg")
     font_path = find_font("DejaVuSans-Bold.ttf") or "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
     process = None
     source_process = None
-    offline_failures = 0
-    recording_failures = 0
-    playable_failures = 0
-    copy_fallback = False
     restart_grace_until = 0.0
     last_session_started_at = ""
     archive_channel = os.path.basename(os.path.normpath(recordings_dir)) or source_channel
@@ -2970,12 +3115,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
             cleanup_stale_recording_metadata(recordings_dir, source_channel=source_channel)
 
             if disk_blocks_recording(recordings_dir):
-                next_delay = compute_retry_backoff(
-                    max(1, recording_failures + 1),
-                    RETRY_DELAY,
-                    STREAM_FAILURE_RETRY_MAX,
-                    jitter=True,
-                )
+                next_delay = policy.on_disk_full()
                 save_recording_status(
                     recordings_dir,
                     {
@@ -3008,21 +3148,17 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
 
                 wake_check = make_live_wake_check(source_channel, conf)
                 live_info = cheap_live_presence(source_channel, conf)
-                is_live = live_info.get("live")
                 keep_trying = in_restart_grace(restart_grace_until)
-                if is_live is False and keep_trying:
+                is_live = policy.effective_presence(live_info.get("live"), keep_trying)
+                if is_live is None and live_info.get("live") is False:
                     throttled_log(
                         "info",
                         f"stream-restart-grace-{source_channel}",
                         f"{source_channel}: GQL sagt offline, Restart-Grace aktiv — versuche Stream weiter.",
                         interval=30,
                     )
-                    is_live = None
                 if is_live is False:
-                    offline_failures += 1
-                    playable_failures = 0
-                    recording_failures = 0
-                    next_delay = compute_idle_poll_delay()
+                    next_delay = policy.on_offline()
                     message = live_info.get("error") or "Kanal ist aktuell nicht live"
                     clear_current_recording(recordings_dir, source_channel=source_channel)
                     save_recording_status(
@@ -3032,7 +3168,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                             "message": message,
                             "source": source_channel,
                             "platform": conf.get("platform"),
-                            "failures": offline_failures,
+                            "failures": policy.offline_failures,
                             "checked_at": time.time(),
                             "next_retry_at": time.time() + next_delay,
                             "live_source": live_info.get("source"),
@@ -3055,13 +3191,12 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     "platform": conf.get("platform") or "twitch",
                 }
                 if should_probe_source(live_info):
-                    stream_probe = probe_source_playable(source_channel, conf)
+                    stream_probe = probe_source_playable(source_channel, conf, runner=runner)
                 if not stream_probe.get("ok"):
                     message = stream_probe.get("error") or "Keine spielbaren Streams gefunden"
                     clear_current_recording(recordings_dir, source_channel=source_channel)
-                    if is_live is True or keep_trying:
-                        playable_failures += 1
-                        next_delay = max(1, int(STREAM_LIVE_UNPLAYABLE_RETRY_SEC))
+                    verdict, next_delay = policy.on_unplayable(is_live, keep_trying)
+                    if verdict == STATE_STARTING:
                         save_recording_status(
                             recordings_dir,
                             {
@@ -3069,7 +3204,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                                 "message": "Kanal ist live, warte auf spielbaren Stream.",
                                 "source": source_channel,
                                 "platform": conf.get("platform"),
-                                "failures": playable_failures,
+                                "failures": policy.playable_failures,
                                 "checked_at": time.time(),
                                 "next_retry_at": time.time() + next_delay,
                                 "live_source": live_info.get("source"),
@@ -3085,8 +3220,6 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                         )
                         interruptible_sleep(next_delay, wake_check=wake_check)
                         continue
-                    offline_failures += 1
-                    next_delay = compute_idle_poll_delay()
                     save_recording_status(
                         recordings_dir,
                         {
@@ -3094,7 +3227,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                             "message": message,
                             "source": source_channel,
                             "platform": conf.get("platform"),
-                            "failures": offline_failures,
+                            "failures": policy.offline_failures,
                             "checked_at": time.time(),
                             "next_retry_at": time.time() + next_delay,
                             "live_source": live_info.get("source"),
@@ -3111,8 +3244,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     interruptible_sleep(next_delay, wake_check=wake_check)
                     continue
 
-                offline_failures = 0
-                playable_failures = 0
+                policy.on_playable()
 
                 # Erstelle Dateinamen mit Zeitstempel + Plattform-Tag (keine Kollision im Shared Archive)
                 timestamp = time.strftime(RECORDING_TIMESTAMP_FORMAT)
@@ -3123,7 +3255,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     timestamp,
                 )
                 use_vaapi = USE_VAAPI and get_vaapi_device() is not None
-                use_copy = bool(COPY_MODE and not use_vaapi and not copy_fallback)
+                use_copy = policy.use_copy(COPY_MODE, use_vaapi)
                 if use_copy:
                     record_file = os.path.splitext(output_file)[0] + ".mkv"
                 else:
@@ -3188,7 +3320,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     },
                 )
 
-                source_cmd = build_source_command(source_channel, conf)
+                source_cmd = build_source_command(source_channel, conf, runner=runner)
                 logger.info(
                     f"Starte {recording_metadata['platform']}-Aufnahme in: {record_file}"
                     + (" [copy/mkv]" if use_copy else "")
@@ -3201,12 +3333,11 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                     source_stderr_handle = open(source_stderr_path, "w", encoding="utf-8", errors="replace")
                 except OSError:
                     source_stderr_handle = subprocess.DEVNULL
-                source_process = subprocess.Popen(
+                source_process = runner.popen(
                     source_cmd,
                     stdout=subprocess.PIPE,
                     stderr=source_stderr_handle,
                     bufsize=0,
-                    preexec_fn=os.setsid if os.name != 'nt' else None,
                 )
                 if source_stderr_handle not in (None, subprocess.DEVNULL):
                     try:
@@ -3216,64 +3347,24 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                 if source_process.stdout is None:
                     raise RuntimeError("Streamlink stdout ist nicht verfügbar.")
 
-                ffmpeg_cmd = [
-                    ffmpeg_path, '-y',
-                    '-nostdin',
-                    '-nostats',
-                    '-stats_period', '1',
-                    '-progress', 'pipe:1',
-                    '-thread_queue_size', '4096',
-                    '-probesize', '512k',
-                    '-analyzeduration', '5000000',
-                    '-rtbufsize', '512M',
-                    '-threads', FFMPEG_THREADS,
-                ]
-                if use_copy:
-                    ffmpeg_cmd += [
-                        '-i', 'pipe:0',
-                        '-map', '0:v:0',
-                        '-map', '0:a?',
-                        '-c:v', 'copy',
-                        '-c:a', 'copy',
-                        '-avoid_negative_ts', 'make_zero',
-                        '-fflags', '+genpts+discardcorrupt',
-                        '-f', 'matroska',
-                        temp_output_file,
-                    ]
-                else:
-                    filter_str = build_filter_str(font_path, chat_text_file, viewer_text_file, use_vaapi)
-                    output_args = ['-f', 'mp4', '-movflags', '+faststart', temp_output_file]
-                    if use_vaapi:
-                        ffmpeg_cmd += ['-vaapi_device', get_vaapi_device()]
-                    ffmpeg_cmd += [
-                        '-i', 'pipe:0',
-                        '-filter_complex', filter_str,
-                        '-map', '[v]',
-                        '-map', '0:a?',
-                    ]
-                    if use_vaapi:
-                        ffmpeg_cmd += ['-c:v', 'h264_vaapi', '-qp', '26']
-                    else:
-                        ffmpeg_cmd += ['-c:v', 'libx264', '-preset', ENC_PRESET, '-tune', 'zerolatency', '-crf', ENC_CRF]
-                    ffmpeg_cmd += [
-                        '-vsync', '1',
-                        '-af', 'aresample=async=1:min_hard_comp=0.1:first_pts=0',
-                        '-pix_fmt', 'yuv420p', '-g', '60', '-keyint_min', '60',
-                        '-force_key_frames', f"expr:gte(t,n_forced*{LIVE_HLS_TIME})",
-                        '-c:a', 'aac', '-profile:a', 'aac_low', '-b:a', '128k', '-ar', '48000', '-ac', '2',
-                        '-avoid_negative_ts', 'make_zero',
-                        '-fflags', '+genpts+discardcorrupt',
-                    ] + output_args
+                ffmpeg_cmd = build_ffmpeg_record_command(
+                    ffmpeg_path,
+                    temp_output_file,
+                    use_copy=use_copy,
+                    filter_str=None if use_copy else build_filter_str(
+                        font_path, chat_text_file, viewer_text_file, use_vaapi
+                    ),
+                    vaapi_device=get_vaapi_device() if use_vaapi else None,
+                )
                 
                 try:
-                    process = subprocess.Popen(
+                    process = runner.popen(
                         ffmpeg_cmd,
                         stdin=source_process.stdout,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,
                         universal_newlines=True,
                         bufsize=1,
-                        preexec_fn=os.setsid if os.name != 'nt' else None
                     )
                 except Exception:
                     stop_process(source_process)
@@ -3408,8 +3499,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                         finalized_path = record_file
                         logger.info(f"Aufnahme erfolgreich beendet: {finalized_path}")
                         logger.info(f"Video-Datei erstellt: {os.path.getsize(finalized_path)} Bytes")
-                        recording_failures = 0
-                        copy_fallback = False
+                        policy.on_completed()
                         save_recording_status(
                             recordings_dir,
                             {
@@ -3452,13 +3542,16 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                                 discord_notify_ready=False,
                             )
                         # Never offload a file that failed integrity validation.
-                        if not test_video_file(finalized_path):
+                        integrity_ok = test_video_file(finalized_path)
+                        if not integrity_ok:
                             logger.warning("Video-Datei scheint beschädigt zu sein")
                         else:
-                            # An asynchronous remux may replace the file later; in
-                            # that case the periodic storage sync uploads the final
-                            # version instead of this intermediate file.
-                            if not (AUTO_REMUX and not SYNC_REMUX and not short_recording):
+                            if policy.upload_now(
+                                integrity_ok=integrity_ok,
+                                auto_remux=AUTO_REMUX,
+                                sync_remux=SYNC_REMUX,
+                                short_recording=short_recording,
+                            ):
                                 maybe_enqueue_storage_upload(finalized_path)
                             if (not short_recording) and AUTO_TRANSCRIBE and (
                                 finalized_path.lower().endswith(".mp4") or os.path.exists(output_file)
@@ -3482,22 +3575,18 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                         )
                     else:
                         logger.error(f"Video-Datei ist zu klein oder fehlt: {output_file}")
+                        next_delay = policy.on_empty_output(use_copy)
                         if use_copy:
-                            copy_fallback = True
                             logger.warning(
                                 "COPY_MODE lieferte keine gueltige Datei — naechster Versuch nutzt Transcode."
                             )
-                        recording_failures += 1
-                        next_delay = compute_retry_backoff(
-                            recording_failures, RETRY_DELAY, STREAM_FAILURE_RETRY_MAX, jitter=True
-                        )
                         save_recording_status(
                             recordings_dir,
                             {
                                 "state": "error",
                                 "message": "FFmpeg beendete ohne gueltige Videodatei.",
                                 "filename": os.path.basename(output_file),
-                                "failures": recording_failures,
+                                "failures": policy.recording_failures,
                                 "next_retry_at": time.time() + next_delay,
                                 "source": source_channel,
                                 "platform": conf.get("platform"),
@@ -3511,54 +3600,28 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                                 reason="empty_or_tiny_after_success_code",
                             )
                 else:
-                    source_hint = ""
-                    try:
-                        stderr_path = os.path.join(
-                            recordings_dir,
-                            f".source_stderr.{source_state_suffix(source_channel) or 'src'}.log",
-                        )
-                        if os.path.isfile(stderr_path):
-                            with open(stderr_path, "r", encoding="utf-8", errors="replace") as handle:
-                                tail = [line.strip() for line in handle.readlines()[-12:] if line.strip()]
-                            if tail:
-                                source_hint = " | Quelle: " + " / ".join(tail[-3:])
-                                logger.error(
-                                    "Quellprozess-Fehler (%s):\n%s",
-                                    source_channel,
-                                    "\n".join(tail),
-                                )
-                    except Exception:
-                        source_hint = ""
+                    source_hint = source_error_hint(recordings_dir, source_channel)
                     logger.error(f"FFmpeg beendet mit Fehlercode {process.returncode}{source_hint}")
-                    if use_copy:
+                    temp_size = 0
+                    try:
+                        if temp_output_file and os.path.exists(temp_output_file):
+                            temp_size = os.path.getsize(temp_output_file)
+                    except OSError:
                         temp_size = 0
-                        try:
-                            if temp_output_file and os.path.exists(temp_output_file):
-                                temp_size = os.path.getsize(temp_output_file)
-                        except OSError:
-                            temp_size = 0
-                        if temp_size < MIN_RECORD_FILE_SIZE:
-                            copy_fallback = True
-                            logger.warning(
-                                "COPY_MODE schnell fehlgeschlagen — naechster Versuch nutzt Transcode."
-                            )
-                    recording_failures += 1
-                    next_delay = compute_retry_backoff(
-                        recording_failures, RETRY_DELAY, STREAM_FAILURE_RETRY_MAX, jitter=True
-                    )
-                    err_msg = f"FFmpeg Fehlercode {process.returncode}"
-                    if "Requested format is not available" in source_hint:
-                        err_msg = "YouTube-Format nicht verfuegbar (live-from-start/DASH?)"
-                    elif "Invalid data found" in source_hint or process.returncode == 183:
-                        if "format" in source_hint.lower():
-                            err_msg = "YouTube-Quelle lieferte kein gueltiges Stream-Format"
+                    had_fallback = policy.copy_fallback
+                    next_delay = policy.on_ffmpeg_failed(use_copy, temp_size, MIN_RECORD_FILE_SIZE)
+                    if policy.copy_fallback and not had_fallback:
+                        logger.warning(
+                            "COPY_MODE schnell fehlgeschlagen — naechster Versuch nutzt Transcode."
+                        )
+                    err_msg = policy.error_message(process.returncode, source_hint)
                     save_recording_status(
                         recordings_dir,
                         {
                             "state": "error",
                             "message": err_msg,
                             "filename": os.path.basename(output_file),
-                            "failures": recording_failures,
+                            "failures": policy.recording_failures,
                             "next_retry_at": time.time() + next_delay,
                             "source": source_channel,
                             "platform": conf.get("platform"),
@@ -3574,17 +3637,14 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
 
             except Exception as e:
                 logger.error(f"Fehler bei der Aufnahme: {e!s}")
-                recording_failures += 1
-                next_delay = compute_retry_backoff(
-                    recording_failures, RETRY_DELAY, STREAM_FAILURE_RETRY_MAX, jitter=True
-                )
+                next_delay = policy.on_exception()
                 save_recording_status(
                     recordings_dir,
                     {
                         "state": "error",
                         "message": str(e)[:500],
                         "filename": os.path.basename(output_file) if output_file else "",
-                        "failures": recording_failures,
+                        "failures": policy.recording_failures,
                         "next_retry_at": time.time() + next_delay,
                         "source": source_channel,
                         "platform": (get_source_config(source_channel) or {}).get("platform"),
@@ -3613,43 +3673,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
                         logger.warning("Broken recording %s not removed: %s", final_output_file, exc)
 
                 if 'output_file' in locals() and output_file is not None and os.path.exists(output_file):
-                    logger.info("Versuche Video-Datei zu reparieren...")
-                    repaired_tmp = f"{output_file}.repaired.mp4"
-                    repair_cmd = [
-                        ffmpeg_path, '-y', '-i', output_file, 
-                        '-c', 'copy', '-avoid_negative_ts', 'make_zero',
-                        repaired_tmp
-                    ]
-                    try:
-                        res = subprocess.run(repair_cmd, capture_output=True, timeout=60)
-                        if res.returncode == 0 and os.path.isfile(repaired_tmp) and os.path.getsize(repaired_tmp) > MIN_RECORD_FILE_SIZE:
-                            os.replace(repaired_tmp, output_file)
-                            logger.info("Video-Datei erfolgreich repariert")
-                        else:
-                            logger.warning(
-                                "Video-Reparatur fehlgeschlagen (exit %s): %s",
-                                res.returncode,
-                                res.stderr[:500] if res.stderr else "Unbekannter Fehler",
-                            )
-                            if os.path.exists(repaired_tmp):
-                                try:
-                                    os.remove(repaired_tmp)
-                                except OSError:
-                                    pass
-                    except subprocess.TimeoutExpired:
-                        logger.warning("Video-Reparatur per FFmpeg nach 60s Timeout abgebrochen")
-                        if os.path.exists(repaired_tmp):
-                            try:
-                                os.remove(repaired_tmp)
-                            except OSError:
-                                pass
-                    except Exception as repair_error:
-                        if os.path.exists(repaired_tmp):
-                            try:
-                                os.remove(repaired_tmp)
-                            except OSError:
-                                pass
-                        logger.error(f"Reparatur fehlgeschlagen: {repair_error!s}")
+                    repair_recording(runner, ffmpeg_path, output_file)
 
             if output_file:
                 clear_current_recording(recordings_dir, os.path.basename(output_file), source_channel=source_channel)
@@ -3660,7 +3684,7 @@ def record_stream(source_channel, chat_text_file, recordings_dir):
             live_after = cheap_live_presence(source_channel, get_source_config(source_channel))
             next_delay = post_recording_retry_delay(
                 live_after,
-                recording_failures=recording_failures,
+                recording_failures=policy.recording_failures,
                 session_started_at=last_session_started_at,
             )
             logger.info(f"Warte {next_delay}s vor nächster Aufnahme...")
@@ -3748,14 +3772,18 @@ def request_shutdown(signum=None, frame=None):
     global shutdown_requested
     shutdown_requested = True
 
-def interruptible_sleep(seconds, wake_check=None):
-    """Sleep up to `seconds`, returning True if wake_check fired (e.g. EventSub live)."""
+def interruptible_sleep(seconds, wake_check=None, should_stop=None):
+    """Sleep up to `seconds`, returning True if wake_check fired (e.g. EventSub live).
+
+    ``should_stop`` defaults to the process-wide shutdown flag.
+    """
+    stop = should_stop or (lambda: shutdown_requested)
     try:
         delay = max(0.0, float(seconds or 0))
     except (TypeError, ValueError):
         delay = float(RETRY_DELAY)
     deadline = time.time() + delay
-    while not shutdown_requested and time.time() < deadline:
+    while not stop() and time.time() < deadline:
         if wake_check:
             try:
                 if wake_check():
@@ -3777,18 +3805,29 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
-def monitor_stream_live_only(source_channel, archive_channel, conf=None):
+def default_monitor_ports():
+    return LiveMonitorPorts(
+        get_config=get_source_config,
+        live_presence=cheap_live_presence,
+        should_stop=lambda: shutdown_requested,
+        sleep=interruptible_sleep,
+        interval=lambda: CHECK_INTERVAL,
+    )
+
+
+def monitor_stream_live_only(source_channel, archive_channel, conf=None, ports=None):
     """
     Monitors a streamer for Discord live notifications and Tube live-watch status
     WITHOUT recording any video/audio to disk.
     """
-    conf = conf or get_source_config(source_channel)
+    ports = ports or default_monitor_ports()
+    conf = conf or ports.get_config(source_channel)
     is_live_now = False
     logger.info(f"Live-Only Monitor aktiv für {source_channel} (Discord-Alert + Live-Stream, keine Aufnahme).")
 
-    while not shutdown_requested:
+    while not ports.should_stop():
         try:
-            current_conf = get_source_config(source_channel)
+            current_conf = ports.get_config(source_channel)
             if not current_conf:
                 logger.info(f"Kanal {source_channel} entfernt. Monitor beendet.")
                 break
@@ -3796,7 +3835,7 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
                 logger.info(f"Aufnahme für {source_channel} aktiviert. Wechsle in Aufnahmemodus.")
                 break
 
-            presence = cheap_live_presence(source_channel, current_conf)
+            presence = ports.live_presence(source_channel, current_conf)
             stream_live = presence.get("live") is True
 
             if stream_live and not is_live_now:
@@ -3835,12 +3874,12 @@ def monitor_stream_live_only(source_channel, archive_channel, conf=None):
                 except sqlite3.Error as exc:
                     logger.error("live=0 for %s not stored: %s", source_channel, exc)
 
-            interruptible_sleep(CHECK_INTERVAL)
+            ports.sleep(ports.interval())
         except (KeyboardInterrupt, SystemExit):
             break
         except Exception as exc:
             logger.error(f"Fehler im Live-Only Monitor für {source_channel}: {exc}")
-            interruptible_sleep(CHECK_INTERVAL)
+            ports.sleep(ports.interval())
 
 def run_channel(source_channel):
     """Startet Aufnahme und Chat-Prozess für einen Channel."""
