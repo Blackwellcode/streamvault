@@ -984,7 +984,16 @@ def process_transcribe(payload):
         if transcript:
             cmd.append(transcript)
         # run synchronously so worker marks task complete/failed
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3600)
+        # Own session: the runner leads its process group, so a cancel from the
+        # web UI can signal exactly this group and never the worker's own.
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=3600,
+            start_new_session=True,
+        )
         if result.returncode != 0:
             logging.error(f"Transcribe subprocess failed: {result.stderr}")
             return False

@@ -3612,6 +3612,102 @@ def transcript_lock_path(transcript_path):
     return f"{transcript_path}.lock"
 
 
+TRANSCRIBE_RUNNER_MARKER = "run_transcribe"
+
+
+def _proc_identity(pid):
+    """(cmdline, start_epoch) of a Linux process from /proc, or None if unknown.
+
+    start_epoch is None when /proc/stat or the clock tick rate is unavailable.
+    """
+    proc_dir = os.path.join("/proc", str(int(pid)))
+    try:
+        with open(os.path.join(proc_dir, "cmdline"), "rb") as fh:
+            cmdline = fh.read().replace(b"\0", b" ").decode("utf-8", "replace").strip()
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        logging.warning("Cannot read cmdline of PID %s: %s", pid, exc)
+        return None
+    start_epoch = None
+    try:
+        with open(os.path.join(proc_dir, "stat"), "r", encoding="utf-8") as fh:
+            stat_fields = fh.read().rsplit(")", 1)[1].split()
+        # Field 22 (starttime) is index 19 after the "(comm)" part.
+        start_ticks = int(stat_fields[19])
+        boot_time = None
+        with open("/proc/stat", "r", encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith("btime "):
+                    boot_time = int(line.split()[1])
+                    break
+        ticks = os.sysconf("SC_CLK_TCK")
+        if boot_time is not None and ticks > 0:
+            start_epoch = boot_time + start_ticks / float(ticks)
+    except (OSError, ValueError, IndexError) as exc:
+        logging.warning("Cannot read start time of PID %s: %s", pid, exc)
+    return cmdline, start_epoch
+
+
+def transcribe_cancel_pgid(pid, lock_mtime=None):
+    """Process group of a transcription runner that may be signalled, else None.
+
+    The PID comes from a lock file on disk, so it is untrusted: it may be stale
+    (reused by an unrelated process), 1, or the web worker's own group. Only a
+    run_transcribe.py process that leads its own process group (the worker
+    starts it with start_new_session=True) and started before the lock file was
+    written qualifies. Without POSIX process groups nothing is signalled.
+    """
+    if not hasattr(os, "killpg") or not hasattr(os, "getpgid") or not hasattr(os, "getpgrp"):
+        return None
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return None
+    if pid <= 1 or pid == os.getpid():
+        return None
+    try:
+        pgid = os.getpgid(pid)
+    except ProcessLookupError:
+        return None
+    except OSError as exc:
+        logging.warning("Cannot read process group of PID %s: %s", pid, exc)
+        return None
+    if pgid <= 1 or pgid == os.getpgrp() or pgid != pid:
+        logging.warning("Refusing to signal process group %s from transcript lock (PID %s)", pgid, pid)
+        return None
+    identity = _proc_identity(pid)
+    if identity is None:
+        return None
+    cmdline, start_epoch = identity
+    if TRANSCRIBE_RUNNER_MARKER not in cmdline:
+        logging.warning("PID %s from transcript lock is not a transcription runner", pid)
+        return None
+    if lock_mtime is not None and start_epoch is not None and start_epoch > float(lock_mtime) + 5:
+        logging.warning("PID %s started after its transcript lock was written (PID reuse)", pid)
+        return None
+    return pgid
+
+
+def read_transcript_lock_pid(lock_path):
+    """First integer token of a transcript lock file, or None."""
+    try:
+        with open(lock_path, "r", encoding="utf-8") as fh:
+            data = fh.read().strip()
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        logging.warning("Cannot read transcript lock %s: %s", lock_path, exc)
+        return None
+    if not data:
+        return None
+    try:
+        return int(data.split()[0])
+    except ValueError:
+        logging.warning("Transcript lock %s holds no PID", lock_path)
+        return None
+
+
 def get_media_duration(file_path):
     ffprobe = shutil.which("ffprobe") or "ffprobe"
     cmd = [
@@ -3708,9 +3804,9 @@ def transcribe_media_file(file_path, transcript_path=None):
         try:
             try:
                 os.write(fd, str(os.getpid()).encode())
-            except Exception:
-                # best-effort write, not critical
-                pass
+            except OSError as exc:
+                # Without a PID the job just cannot be cancelled by signal.
+                logging.warning("Could not write PID into transcript lock %s: %s", lock_path, exc)
         finally:
             os.close(fd)
     except FileExistsError:
@@ -9901,34 +9997,33 @@ def vod_transcribe_cancel(streamer, filename):
         msg = gettext("No running transcription found.")
         return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
-    # Try to read PID from lock and terminate process group
-    pid = None
+    # The PID in the lock file is untrusted: only a plausible runner group is signalled.
+    pid = read_transcript_lock_pid(lock_path)
     try:
-        with open(lock_path, 'r', encoding='utf-8') as f:
-            data = f.read().strip()
-            if data:
-                try:
-                    pid = int(data.split()[0])
-                except Exception:
-                    pid = None
-    except Exception:
-        pid = None
+        lock_mtime = os.path.getmtime(lock_path)
+    except OSError:
+        lock_mtime = None
 
     try:
         import signal
-        if pid:
+        pgid = transcribe_cancel_pgid(pid, lock_mtime) if pid else None
+        if pgid:
             try:
-                os.killpg(pid, signal.SIGTERM)
-            except Exception:
-                try:
-                    os.kill(pid, signal.SIGTERM)
-                except Exception:
-                    pass
+                os.killpg(pgid, signal.SIGTERM)
+                logging.info("Transcription process group %s terminated", pgid)
+            except ProcessLookupError:
+                logging.info("Transcription process group %s already gone", pgid)
+            except OSError as exc:
+                logging.warning("Could not terminate transcription group %s: %s", pgid, exc)
+        elif pid:
+            logging.warning("Transcript lock PID %s not signalled (not a verified runner)", pid)
         # ensure lock removed and status set
         try:
             os.remove(lock_path)
-        except Exception:
+        except FileNotFoundError:
             pass
+        except OSError as exc:
+            logging.warning("Could not remove transcript lock %s: %s", lock_path, exc)
         set_transcript_status(transcript_path, "error", 0, gettext("Transcription cancelled"), gettext("cancelled"))
         msg = gettext("Transcription cancelled.")
     except Exception as exc:

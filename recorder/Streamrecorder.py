@@ -1381,8 +1381,8 @@ def stop_process(process):
                     process.kill()
                 try:
                     process.wait(timeout=3)
-                except Exception:
-                    pass
+                except subprocess.TimeoutExpired:
+                    logger.error("Prozess %s nach SIGKILL nicht beendet.", process.pid)
         except (ProcessLookupError, OSError) as exc:
             logger.debug("Process already exited during stop: %s", exc)
         except Exception as exc:
