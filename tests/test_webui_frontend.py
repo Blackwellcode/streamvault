@@ -5,21 +5,34 @@
 - destructive actions render the shared data-confirm dialog hooks
 """
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
-import time
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from test_recorder_reliability import IsolatedBaseTest  # noqa: E402  (sets VOD_* env first)
-
-from core import config  # noqa: E402
+from webui_test_helpers import admin_test_client  # noqa: E402
 
 TEMPLATES = Path(__file__).resolve().parents[1] / "WEBUI" / "templates"
+
+
+def require_node(test):
+    """node runs the JS logic tests; in CI (CI=true) a missing node is a failure, not a skip."""
+    if shutil.which("node"):
+        return
+    if os.environ.get("CI"):
+        test.fail("node is required in CI for the JavaScript logic tests")
+    test.skipTest("node not installed")
+
+
+def run_node(script):
+    out = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=30, check=True)
+    return out.stdout
 
 
 class CssUrlFilterTests(IsolatedBaseTest):
@@ -72,8 +85,8 @@ class ChatFallbackEscapingTests(unittest.TestCase):
                 self.assertNotRegex(source, r":\s*\(msg\.(msg|user) \|\| ''\)\s*;")
                 self.assertIn("escapeChatText(", source.split("function escapeChatText", 1)[1])
 
-    @unittest.skipUnless(shutil.which("node"), "node not installed")
     def test_escape_chat_text_neutralises_markup(self):
+        require_node(self)
         payload = "<img src=x onerror=alert(1)>&\"'"
         expected = "&lt;img src=x onerror=alert(1)&gt;&amp;&quot;&#39;"
         for name in self.FILES:
@@ -88,15 +101,7 @@ class ConfirmDialogTemplateTests(IsolatedBaseTest):
     """Destructive admin actions use the shared data-confirm dialog (static/sv_confirm.js)."""
 
     def _client(self):
-        from WEBUI import webui
-        webui.ensure_admin_user()
-        webui.app.config.update(TESTING=True)
-        client = webui.app.test_client()
-        with client.session_transaction() as sess:
-            now = time.time()
-            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
-                        login_time=now, last_active=now, _csrf_token="t")
-        return client
+        return admin_test_client()
 
     def test_admin_page_renders_confirm_hooks_and_loads_the_dialog_script(self):
         html = self._client().get("/admin").get_data(as_text=True)
@@ -126,46 +131,153 @@ class ConfirmDialogTemplateTests(IsolatedBaseTest):
 
 
 class OverlayTokenTransportTests(unittest.TestCase):
-    """OBS overlays read the token from #token= (or legacy ?token=) and send it only as a header."""
+    """OBS overlays: token from #token= (legacy ?token= moved into the fragment), header only,
+    no polling without a token, 401 stops polling, errors back off."""
 
     STATIC = TEMPLATES.parent / "static"
+    COMMON = (TEMPLATES.parent / "static" / "overlay_common.js").as_posix()
 
-    def test_token_comes_from_fragment_first_and_travels_as_header_only(self):
+    def test_overlay_scripts_use_the_shared_helper_and_send_headers_only(self):
         for name, header in (("tts_overlay.js", "X-TTS-Token"), ("alerts_overlay.js", "X-Alert-Token")):
             with self.subTest(script=name):
                 source = (self.STATIC / name).read_text(encoding="utf-8")
-                self.assertIn('new URLSearchParams(location.hash.replace(/^#/, ""))', source)
-                self.assertRegex(source, r'const token = hashParams\.get\("token"\) \|\| queryParams\.get\("token"\)')
+                self.assertIn("overlay.readToken()", source)
                 self.assertIn('"%s": token' % header, source)
+                self.assertIn("overlay.createPoller(", source)
+                self.assertNotIn("setInterval(", source)
                 self.assertNotRegex(source, r'searchParams\.set\("token"')
-        helper = (self.STATIC / "overlay_audio.js").read_text(encoding="utf-8")
-        self.assertIn('u.searchParams.delete("token")', helper)
+                # no token: the script returns before any poller exists
+                guard = source.index("if (!token) {")
+                self.assertLess(guard, source.index("overlay.createPoller("))
+                self.assertIn("return;", source[guard:guard + 200])
+        for page in ("tts_overlay.html", "alerts_overlay.html"):
+            html = (self.STATIC / page).read_text(encoding="utf-8")
+            self.assertLess(html.index("/static/overlay_common.js"), html.index("_overlay.js\"></script>", html.index("/static/overlay_common.js") + 1))
+
+    def test_parse_token_prefers_fragment_and_moves_query_token_into_it(self):
+        require_node(self)
+        script = """
+const o = require(%s);
+const cases = [
+  "https://h/tts/overlay?streamer=a&token=Q#toast=0",
+  "https://h/alerts/overlay#token=F",
+  "https://h/alerts/overlay?token=Q#token=F",
+  "https://h/alerts/overlay",
+];
+process.stdout.write(JSON.stringify(cases.map(function (u) {
+  const r = o.parseToken(u);
+  return [r.token, r.fromQuery, r.cleanUrl, r.params.get("streamer"), r.params.get("toast"), r.params.has("token")];
+})));
+""" % json.dumps(self.COMMON)
+        result = json.loads(run_node(script))
+        self.assertEqual(result, [
+            ["Q", True, "https://h/tts/overlay?streamer=a#toast=0&token=Q", "a", "0", False],
+            ["F", False, "https://h/alerts/overlay#token=F", None, None, False],
+            ["F", False, "https://h/alerts/overlay#token=F", None, None, False],
+            ["", False, "https://h/alerts/overlay", None, None, False],
+        ])
+
+    def test_poller_backs_off_on_errors_and_stops_on_401(self):
+        require_node(self)
+        script = """
+const o = require(%s);
+const results = ["error", "error", "error", "error", "error", "error", "ok", "unauthorized", "ok"];
+const delays = [];
+let pending = null;
+let unauthorized = 0;
+let calls = 0;
+const poller = o.createPoller(async function () { return results[calls++]; }, {
+  interval: 1000, maxInterval: 8000,
+  schedule: function (fn, ms) { delays.push(ms); pending = fn; return delays.length; },
+  cancel: function () { pending = null; },
+  onUnauthorized: function () { unauthorized += 1; },
+});
+(async function () {
+  const flush = function () { return new Promise(function (r) { setImmediate(r); }); };
+  poller.start();
+  await flush();
+  for (let i = 0; i < 20 && pending; i++) {
+    const fn = pending; pending = null;
+    await fn();
+  }
+  await flush();
+  process.stdout.write(JSON.stringify({delays: delays, calls: calls, stopped: poller.stopped, unauthorized: unauthorized}));
+})();
+""" % json.dumps(self.COMMON)
+        result = json.loads(run_node(script))
+        self.assertEqual(result["delays"], [2000, 4000, 8000, 8000, 8000, 8000, 1000])
+        self.assertEqual(result["calls"], 8)
+        self.assertTrue(result["stopped"])
+        self.assertEqual(result["unauthorized"], 1)
 
 
 class LogoutEverywhereTemplateTests(IsolatedBaseTest):
-    """POST /logout/all is offered in the rail, the bottom nav and both mobile templates."""
+    """POST /logout/all (components/logout_everywhere.html) in the rail, the bottom nav and both
+    mobile templates, rendered with CSRF token and confirmation."""
 
-    def test_forms_post_with_csrf_and_confirmation(self):
-        from WEBUI import webui
-        webui.ensure_admin_user()
-        webui.app.config.update(TESTING=True)
-        client = webui.app.test_client()
-        with client.session_transaction() as sess:
-            now = time.time()
-            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
-                        login_time=now, last_active=now, _csrf_token="t")
-        cases = (("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0", 2),
-                 ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148 Safari/604.1", 1))
-        for ua, expected in cases:
-            with self.subTest(user_agent=ua.split(" ")[1]):
-                html = client.get("/", headers={"User-Agent": ua}).get_data(as_text=True)
-                forms = re.findall(r'<form method="post" action="/logout/all"([^>]*)>\s*'
-                                   r'<input type="hidden" name="csrf_token" value="t">', html)
+    DESKTOP = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0"
+    MOBILE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148 Safari/604.1"
+
+    def _forms(self, html):
+        return re.findall(r'<form method="post" action="/logout/all"([^>]*)>\s*'
+                          r'<input type="hidden" name="csrf_token" value="t">', html)
+
+    def test_dashboard_and_mobile_streamer_render_the_form(self):
+        (self.base / "teststreamer").mkdir()
+        client = admin_test_client()
+        cases = (("/", self.DESKTOP, 2), ("/", self.MOBILE, 1), ("/streamer/teststreamer", self.MOBILE, 1))
+        for path, ua, expected in cases:
+            with self.subTest(path=path, mobile=ua is self.MOBILE):
+                response = client.get(path, headers={"User-Agent": ua})
+                self.assertEqual(response.status_code, 200)
+                html = response.get_data(as_text=True)
+                if path.startswith("/streamer/"):
+                    self.assertIn("mobile-body", html)  # mobile_streamer.html, not the desktop page
+                forms = self._forms(html)
                 self.assertEqual(len(forms), expected)
                 for attrs in forms:
                     self.assertIn("data-confirm=", attrs)
-        source = (TEMPLATES / "mobile_streamer.html").read_text(encoding="utf-8")
-        self.assertIn("url_for('logout_everywhere')", source)
+                    self.assertIn("data-confirm-danger", attrs)
+        for name in ("components/sidebar.html", "mobile_index.html", "mobile_streamer.html"):
+            source = (TEMPLATES / name).read_text(encoding="utf-8")
+            self.assertIn("components/logout_everywhere.html", source)
+            self.assertNotIn("url_for('logout_everywhere')", source)
+
+
+class ObsOverlayPanelTests(IsolatedBaseTest):
+    """Options > Settings recommends overlay URLs with the token in the fragment."""
+
+    def test_admin_panel_shows_fragment_token_urls(self):
+        html = admin_test_client().get("/admin").get_data(as_text=True)
+        for field_id, path in (("obsTtsUrl", "/tts/overlay?streamer=CHANNEL#token=TOKEN"),
+                               ("obsAlertsUrl", "/alerts/overlay#token=TOKEN")):
+            with self.subTest(field=field_id):
+                match = re.search(r'<input id="%s"[^>]*value="([^"]+)"' % field_id, html)
+                self.assertIsNotNone(match)
+                value = match.group(1)
+                self.assertTrue(value.endswith(path), value)
+                self.assertNotIn("?token=", value)
+                self.assertNotIn("&token=", value)
+
+
+class NoNativeConfirmTests(unittest.TestCase):
+    def test_templates_use_the_confirmation_dialog(self):
+        for path in TEMPLATES.rglob("*.html"):
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(template=path.name):
+                self.assertNotRegex(source, r"(?<![\w.])confirm\(|window\.confirm\(")
+
+
+class StorageProviderFieldIdTests(unittest.TestCase):
+    """Add and edit provider modals render the same fields; their ids must differ."""
+
+    def test_field_ids_are_prefixed_with_the_modal_container(self):
+        source = (TEMPLATES / "storage.html").read_text(encoding="utf-8")
+        self.assertIn("const id = idPrefix + '-cfg_' + key;", source)
+        self.assertIn("return fieldMarkup(field, values || {}, containerId);", source)
+        self.assertIn("<label for=\"' + id + '\">", source)
+        self.assertIn("renderFields('add-provider-fields'", source)
+        self.assertIn("renderFields('edit-provider-fields'", source)
 
 
 if __name__ == "__main__":

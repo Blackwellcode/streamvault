@@ -985,15 +985,9 @@ class ContentSecurityPolicyTests(IsolatedBaseTest):
     """The CSP is enforced by default and inline scripts run only with the request nonce."""
 
     def _get(self, path):
-        from WEBUI import webui
-        webui.ensure_admin_user()
-        webui.app.config.update(TESTING=True)
-        client = webui.app.test_client()
-        with client.session_transaction() as sess:
-            now = time.time()
-            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
-                        login_time=now, last_active=now, _csrf_token="t")
-        return client.get(path)
+        from webui_test_helpers import admin_test_client
+
+        return admin_test_client().get(path)
 
     def _inline_scripts(self, html):
         from html.parser import HTMLParser
