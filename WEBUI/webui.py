@@ -459,6 +459,17 @@ BLUEPRINTS = (
 # routes and the application-wide hooks.
 app = core_bp
 
+
+@app.after_request
+def _private_page_headers(response):
+    """Pages marked with ``g.private_page`` (OBS overlays) never leak their URL
+    or land in a cache. Registered before set_security_headers, so Flask runs it
+    afterwards and its Referrer-Policy wins."""
+    if getattr(g, "private_page", False):
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
 os.makedirs(config.FILES_DIR, exist_ok=True)
 
 # DB Init beim Start
@@ -12413,13 +12424,11 @@ def _tts_streamer_from_request():
 @overlays_bp.route("/tts/overlay")
 @limiter.limit("120 per minute")
 def tts_overlay():
-    from core import tts_service
-
-    if not tts_service.token_ok_for(_tts_token_from_request(), _tts_streamer_from_request()):
-        abort(401)
-    from core import config
-    path = os.path.join(config.APP_DIR, "WEBUI", "static", "tts_overlay.html")
-    return send_file(path, mimetype="text/html; charset=utf-8")
+    """Static overlay shell for OBS (no data in it). OBS cannot send headers, so the
+    page itself needs no token; every /tts/api/* call still requires one."""
+    g.private_page = True
+    path = os.path.join(os.path.dirname(__file__), "static", "tts_overlay.html")
+    return send_file(path, mimetype="text/html; charset=utf-8", max_age=0)
 
 
 @overlays_bp.route("/tts/api/next")
@@ -12515,12 +12524,10 @@ def tts_audio(filename):
 @overlays_bp.route("/alerts/overlay")
 @limiter.limit("120 per minute")
 def alerts_overlay():
-    from core import alert_sounds
-
-    if not alert_sounds.token_ok(_alert_token_from_request()):
-        abort(401)
+    """Static overlay shell for OBS (no data in it); /alerts/api/* still needs the token."""
+    g.private_page = True
     path = os.path.join(os.path.dirname(__file__), "static", "alerts_overlay.html")
-    return send_file(path, mimetype="text/html; charset=utf-8")
+    return send_file(path, mimetype="text/html; charset=utf-8", max_age=0)
 
 
 @overlays_bp.route("/alerts/api/next")

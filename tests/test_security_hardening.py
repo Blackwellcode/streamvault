@@ -407,6 +407,35 @@ class SmallHardeningTests(WebTestBase):
         with self.webui.app.test_request_context("/alerts/api/next", headers={"X-Alert-Token": "secret"}):
             self.assertEqual(self.webui._alert_token_from_request(), "secret")
 
+    def test_overlay_pages_load_without_token_but_never_leak_their_url(self):
+        client = self.webui.app.test_client()
+        for path in ("/tts/overlay", "/alerts/overlay"):
+            with self.subTest(path=path):
+                response = client.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.headers["Content-Type"].startswith("text/html"))
+                self.assertEqual(response.headers.get("Referrer-Policy"), "no-referrer")
+                self.assertEqual(response.headers.get("Cache-Control"), "no-store")
+                body = response.get_data(as_text=True)
+                response.close()
+                # Static shell: no server-side values (secret key, accounts, paths) in it.
+                for secret in (config.VOD_PASS, os.environ.get("VOD_SECRET_KEY", "x" * 40), str(self.base)):
+                    self.assertNotIn(secret, body)
+
+    def test_overlay_apis_still_require_the_token(self):
+        from core import alert_sounds, tts_service
+        client = self.webui.app.test_client()
+        self.assertEqual(client.get("/alerts/api/next").status_code, 401)
+        self.assertEqual(client.get("/tts/api/next?streamer=streamer").status_code, 401)
+        with mock.patch.object(alert_sounds, "token_ok", side_effect=lambda t: t == "good"), \
+                mock.patch.object(alert_sounds, "claim_next", return_value=None):
+            self.assertEqual(client.get("/alerts/api/next", headers={"X-Alert-Token": "good"}).status_code, 200)
+            self.assertEqual(client.get("/alerts/api/next", headers={"X-Alert-Token": "bad"}).status_code, 401)
+        with mock.patch.object(tts_service, "token_ok_for", side_effect=lambda t, s: t == "good"), \
+                mock.patch.object(tts_service, "claim_next", return_value=None):
+            ok = client.get("/tts/api/next?streamer=streamer", headers={"X-TTS-Token": "good"})
+            self.assertEqual(ok.status_code, 200)
+
     def test_anonymous_healthz_has_no_disk_data(self):
         response = self.webui.app.test_client().get("/healthz")
         self.assertIn(response.status_code, (200, 503))
