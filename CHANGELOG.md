@@ -8,8 +8,9 @@ All notable changes to this project are documented here. The format follows
 ### Breaking changes
 
 - **Sessions expire after 30 days** (`VOD_SESSION_MAX_AGE_SEC`, `0` restores
-  the old unlimited behaviour). Logout and every password change sign the
-  account out on all devices.
+  the old unlimited behaviour). Logout ends the session in this browser;
+  the new "log out everywhere" action (`POST /logout/all`) and every password
+  change sign the account out on all devices.
 - **Overlay tokens in the query string are off by default.** The bundled
   TTS/alert overlay pages pass `?token=`; set `OVERLAY_ALLOW_QUERY_TOKEN=true`
   while you use them. The `/tts/api/ack` and `/alerts/api/ack` routes accept
@@ -19,6 +20,10 @@ All notable changes to this project are documented here. The format follows
   other extensions are no longer served but can still be deleted.
 - **Docker programs run as an unprivileged user** (`APP_UID`, default 1000).
   `./data` must be writable by that UID: `sudo chown -R 1000:1000 data`.
+- **`/metrics` needs an admin session or `METRICS_TOKEN`**; other signed-in
+  users get HTTP 403. `/healthz` shows disk data to admins only.
+- **`streamvault stop|restart|update` exit with status 1** while recordings
+  are running or when the archive cannot be scanned; `--force` overrides.
 
 ### Security
 
@@ -26,24 +31,38 @@ All notable changes to this project are documented here. The format follows
   process group, never PID 1 or the web worker's own group.
 - The Twitch OAuth token never falls back to the command line when its
   private config file cannot be written.
-- Login throttling counts only form submissions, groups IPv6 clients by /64,
-  adds a per-account limit and answers with HTTP 429 and `Retry-After`.
+- Login throttling counts only form submissions and groups IPv6 clients by
+  /64. Failed logins are counted per account and network
+  (`VOD_LOGIN_USER_MAX_FAILS`, default 10 per hour); an account-wide safety
+  net (`VOD_LOGIN_USER_GLOBAL_MAX_FAILS`, default 100) only slows networks
+  that already failed, so a correct password from a clean network always
+  works and nobody can lock an account by failing on purpose. Throttled
+  requests get HTTP 429 with `Retry-After`.
+- Session revocation uses a random per-account token instead of a counter.
 - Shared and downloaded resource files are always sent as
   `attachment`/`application/octet-stream` with `nosniff`; symlinked media
   and resource files are refused.
-- Constant-time comparison for the environment admin password; unknown
-  user names still run a hash check. `/healthz` shows disk data to admins
-  only. Client values in VOD debug logs are stripped of control characters.
+- Constant-time comparison for the environment admin password; unknown,
+  inactive and environment accounts all pay the same password-hash cost.
+  Client values in VOD debug logs are stripped of control characters.
+- Live-only accounts can no longer open the live clip editor.
 
 ### Changed
 
+- `create_app()` builds the web app; routes are grouped into 12 blueprints
+  whose endpoint names are unchanged (`url_for` keeps working). Caches shared
+  between workers go through `core.cache` (Redis in production).
+- The recorder's decisions live in `RecordingPolicy`; processes start through
+  a `ProcessRunner`. Every child now starts in its own session
+  (`start_new_session=True`), replacing the former `preexec_fn=os.setsid`.
 - `install.sh` aborts on a failing `nginx -t`, copies without databases,
-  `data/`, `demo-data/` or `.env`, runs git as the service user, keeps the
+  `data/`, `demo-data/` or `.env` (shared list in
+  `scripts/deploy-excludes.txt`), runs git as the service user, keeps the
   initial password out of the terminal and does not restart services while
-  recordings are running. `streamvault stop|restart|update` refuse the same
-  unless `--force` is given; `restart` accepts a single service.
+  recordings are running. `streamvault restart` accepts a single service.
 - `scripts/streamvault_vps.sh deploy` takes a `sqlite3 .backup` of the
-  database before touching the code.
+  database and checks it with `PRAGMA integrity_check` before touching the
+  code.
 - The nginx example sets `Connection` via `map`, keeps security headers in
   every location with its own `add_header`, marks protected thumbnails
   `private` and compresses proxied CSS/JS (`gzip_proxied any`).
@@ -52,8 +71,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
-- Broad `except Exception: pass` handlers in the database layer, recorder,
-  worker and web UI now catch specific errors and log them.
+- Broad `except Exception: pass` handlers are gone from the database layer,
+  recorder, worker and clip engine; 46 such handlers remain elsewhere (18 in
+  the web UI, the rest in storage providers and API clients).
+- A fresh database no longer logs a bogus `users.role` migration warning.
 
 ## [0.1.0] - 2026-11-09
 
