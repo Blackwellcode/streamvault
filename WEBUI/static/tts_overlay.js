@@ -1,10 +1,13 @@
 /* TTS overlay (OBS browser source). External file: the enforced CSP blocks inline scripts.
    Auth: token from ?token= of the overlay URL, sent to the API only as X-TTS-Token header. */
 (function () {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token") || "";
-    const streamer = params.get("streamer") || "";
-    const showToast = params.get("toast") !== "0";
+    // OBS cannot send headers: the token sits in the URL fragment (#token=..., never sent to
+    // the server) or, for older URLs, in ?token=. It is passed to the API only as a header.
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(location.search);
+    const token = hashParams.get("token") || queryParams.get("token") || "";
+    const streamer = queryParams.get("streamer") || hashParams.get("streamer") || "";
+    const showToast = (queryParams.get("toast") || hashParams.get("toast")) !== "0";
     const statusEl = document.getElementById("status");
     const toastEl = document.getElementById("toast");
     const userEl = toastEl.querySelector(".user");

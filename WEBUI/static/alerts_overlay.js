@@ -1,7 +1,11 @@
 /* Alert sound overlay (OBS browser source). External file: the enforced CSP blocks inline scripts.
    Auth: token from ?token= of the overlay URL, sent to the API only as X-Alert-Token header. */
 (function () {
-    const token = new URLSearchParams(location.search).get("token") || "";
+    // OBS cannot send headers: the token sits in the URL fragment (#token=..., never sent to
+    // the server) or, for older URLs, in ?token=. It is passed to the API only as a header.
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(location.search);
+    const token = hashParams.get("token") || queryParams.get("token") || "";
     const hud = document.getElementById("hud");
     const player = document.getElementById("player");
     const AUTH_HEADERS = { "X-Alert-Token": token };

@@ -448,6 +448,14 @@
 
             <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
               <div class="panel">
+                <h3>{{ _('OBS overlays') }}</h3>
+                <p class="muted" style="margin:0 0 10px; font-size:12px;">{{ _('Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line.') }}</p>
+                <label for="obsTtsUrl" style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Text-to-speech overlay') }}</label>
+                <input id="obsTtsUrl" type="text" readonly value="{{ url_for('tts_overlay', _external=True) }}?streamer=CHANNEL#token=TOKEN" style="width:100%; box-sizing:border-box; margin-bottom:10px; font-family:var(--ns-font-mono);">
+                <label for="obsAlertsUrl" style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Alert sound overlay') }}</label>
+                <input id="obsAlertsUrl" type="text" readonly value="{{ url_for('alerts_overlay', _external=True) }}#token=TOKEN" style="width:100%; box-sizing:border-box; font-family:var(--ns-font-mono);">
+              </div>
+              <div class="panel">
                 <h3>{{ _('Clip settings') }}</h3>
                 <p class="muted" style="margin:0 0 10px; font-size:12px;">{{ _('Instant clip parameters and hotkey in the web player.') }}</p>
                 <form method="post" action="{{ url_for('admin_clip_settings') }}" style="margin:0;">
