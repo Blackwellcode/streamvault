@@ -106,9 +106,14 @@ def init_db():
         c.execute("UPDATE channels SET platform='twitch' WHERE platform IS NULL OR platform=''")
         c.execute("UPDATE channels SET archive_name=name WHERE archive_name IS NULL OR archive_name=''")
 
-        # Migration: role Spalte zu users hinzufuegen falls fehlt
+        # Migration: role Spalte zu users hinzufuegen falls fehlt (nur bestehende Tabelle;
+        # eine neue Tabelle wird weiter unten bereits mit role angelegt)
+        has_users = c.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
+        ).fetchone()
         try:
-            c.execute("SELECT role FROM users LIMIT 1")
+            if has_users:
+                c.execute("SELECT role FROM users LIMIT 1")
         except sqlite3.OperationalError:
             try:
                 c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'admin'")

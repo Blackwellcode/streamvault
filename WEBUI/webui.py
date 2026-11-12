@@ -37,6 +37,7 @@ from functools import wraps
 
 import yt_dlp
 from flask import (
+    Blueprint,
     Flask,
     Response,
     abort,
@@ -60,12 +61,14 @@ from werkzeug.utils import safe_join, secure_filename
 
 # `_` is used as a throwaway name throughout this module, so translations use the
 # full names (both are extracted by pybabel by default).
+from flask.blueprints import BlueprintSetupState
 from flask_babel import gettext, lazy_gettext, ngettext
 from recorder import chat_events
 from recorder import clip_engine
 from WEBUI import i18n as ui_i18n
 from core import config
 from core import database
+from core.cache import RedisCache
 from core.channels import is_youtube_host, load_channels, load_live_channels
 from core import twitch_api
 from core.health import (
@@ -366,27 +369,82 @@ def load_secret_key():
         logging.error("Secret key not persisted to %s (sessions will not survive restarts or span workers): %s", key_path, exc)
     return key
 
-app = Flask(__name__)
-app.secret_key = load_secret_key()
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_SECURE=os.environ.get("VOD_SECURE_COOKIES", "true").lower() == "true",
-    SESSION_COOKIE_PATH="/",
-    PERMANENT_SESSION_LIFETIME=timedelta(seconds=SESSION_COOKIE_MAX_AGE_SEC),
-    SESSION_REFRESH_EACH_REQUEST=True,
-)
-ui_i18n.init_app(app)
-
 # ============ SECURITY: Flask-Limiter Setup ============
-# Rate limiting to prevent brute force and DoS attacks
+# Rate limiting to prevent brute force and DoS attacks. Bound to the Flask app
+# in create_app(); the decorators below only record their limits.
 limiter = Limiter(
-    app=app,
     key_func=lambda: get_client_ip(),
     default_limits=["5000 per day", "1000 per hour"],
     storage_uri=RATELIMIT_STORAGE_URI,
 )
 # ========================================================
+
+
+class _FlatSetupState(BlueprintSetupState):
+    """Registers blueprint routes under their bare endpoint name (no "bp." prefix)."""
+
+    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
+        if self.url_prefix is not None:
+            rule = "/".join((self.url_prefix.rstrip("/"), rule.lstrip("/"))) if rule else self.url_prefix
+        options.setdefault("subdomain", self.subdomain)
+        if endpoint is None:
+            endpoint = view_func.__name__
+        defaults = self.url_defaults
+        if "defaults" in options:
+            defaults = dict(defaults, **options.pop("defaults"))
+        self.app.add_url_rule(rule, endpoint, view_func, defaults=defaults, **options)
+
+
+class FlatBlueprint(Blueprint):
+    """Feature blueprint whose endpoints keep their historic names.
+
+    url_for("vod_view") etc. keep working in templates and code; the blueprint
+    groups routes for registration, not for naming.
+    """
+
+    def make_setup_state(self, app, options, first_registration=False):
+        return _FlatSetupState(self, app, options, first_registration)
+
+
+class _AppSurface(FlatBlueprint):
+    """Stand-in for ``app`` while webui.py loads: request hooks registered on it
+    apply to the whole application, exactly like the former module-level Flask app."""
+
+    def before_request(self, f):
+        return self.before_app_request(f)
+
+    def after_request(self, f):
+        return self.after_app_request(f)
+
+    def teardown_request(self, f):
+        return self.teardown_app_request(f)
+
+    def context_processor(self, f):
+        return self.app_context_processor(f)
+
+    def errorhandler(self, code_or_exception):
+        return self.app_errorhandler(code_or_exception)
+
+
+core_bp = _AppSurface("core", __name__)
+auth_bp = FlatBlueprint("auth", __name__)
+admin_bp = FlatBlueprint("admin", __name__)
+storage_bp = FlatBlueprint("storage", __name__)
+users_bp = FlatBlueprint("users", __name__)
+channels_bp = FlatBlueprint("channels", __name__)
+vod_bp = FlatBlueprint("vod", __name__)
+clip_bp = FlatBlueprint("clip", __name__)
+live_bp = FlatBlueprint("live", __name__)
+overlays_bp = FlatBlueprint("overlays", __name__)
+files_bp = FlatBlueprint("files", __name__)
+shares_bp = FlatBlueprint("shares", __name__)
+BLUEPRINTS = (
+    core_bp, auth_bp, admin_bp, storage_bp, users_bp, channels_bp,
+    vod_bp, clip_bp, live_bp, overlays_bp, files_bp, shares_bp,
+)
+# Until create_app() runs at the end of this module, ``app`` collects the core
+# routes and the application-wide hooks.
+app = core_bp
 
 os.makedirs(config.FILES_DIR, exist_ok=True)
 
@@ -432,6 +490,9 @@ ensure_login_attempts_schema()
 
 # Logging konfigurieren (verhindert Encoding-Crashes bei print)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Cache shared by all gunicorn workers (core.cache interface; MemoryCache in tests).
+SHARED_CACHE = RedisCache()
 
 METADATA_CACHE = {"mtime": 0, "data": {}}
 CHAT_INDEX_CACHE = {}
@@ -5155,17 +5216,13 @@ def list_streamers():
     if now - STREAMER_CACHE["ts"] < STREAMER_CACHE_TTL and STREAMER_CACHE.get("token") == token:
         return STREAMER_CACHE["data"]
 
-    # Shared Redis cache across all Gunicorn workers
-    try:
-        from core import redis_client
-        cached_streamers = redis_client.get_state("streamers_list")
-        if isinstance(cached_streamers, list) and cached_streamers:
-            STREAMER_CACHE["ts"] = now
-            STREAMER_CACHE["token"] = token
-            STREAMER_CACHE["data"] = cached_streamers
-            return cached_streamers
-    except ImportError as exc:
-        logging.warning("Redis client unavailable for streamer cache: %s", exc)
+    # Shared cache across all Gunicorn workers
+    cached_streamers = SHARED_CACHE.get("streamers_list")
+    if isinstance(cached_streamers, list) and cached_streamers:
+        STREAMER_CACHE["ts"] = now
+        STREAMER_CACHE["token"] = token
+        STREAMER_CACHE["data"] = cached_streamers
+        return cached_streamers
 
     streamers = []
     live_channels = set(load_live_channels())
@@ -5351,11 +5408,7 @@ def list_streamers():
     STREAMER_CACHE["ts"] = now
     STREAMER_CACHE["token"] = token
     STREAMER_CACHE["data"] = streamers
-    try:
-        from core import redis_client
-        redis_client.set_state("streamers_list", streamers, ex=60)
-    except ImportError as exc:
-        logging.warning("Redis client unavailable for streamer cache: %s", exc)
+    SHARED_CACHE.set("streamers_list", streamers, ttl=60)
     return streamers
 
 def get_metadata_cache():
@@ -7376,7 +7429,7 @@ def _terms_required_response():
     return redirect(url_for("agb_view", next=nxt))
 
 
-@app.route("/agb", methods=["GET"])
+@auth_bp.route("/agb", methods=["GET"])
 def agb_view():
     from core import tube_terms
 
@@ -7401,7 +7454,7 @@ def agb_view():
     )
 
 
-@app.route("/datenschutz", methods=["GET"])
+@auth_bp.route("/datenschutz", methods=["GET"])
 def datenschutz_view():
     from core import tube_terms
 
@@ -7468,13 +7521,13 @@ def _accept_terms_from_request():
     return redirect(url_for("index"))
 
 
-@app.route("/agb/accept", methods=["POST"])
+@auth_bp.route("/agb/accept", methods=["POST"])
 @login_required
 def agb_accept():
     return _accept_terms_from_request()
 
 
-@app.route("/regeln", methods=["GET"])
+@auth_bp.route("/regeln", methods=["GET"])
 def regeln_view():
     nxt = request.args.get("next") or ""
     if session.get("logged_in"):
@@ -7486,7 +7539,7 @@ def regeln_view():
     return redirect(url_for("login", next=url_for("agb_view")))
 
 
-@app.route("/regeln/accept", methods=["POST"])
+@auth_bp.route("/regeln/accept", methods=["POST"])
 @login_required
 def regeln_accept():
     return _accept_terms_from_request()
@@ -7630,7 +7683,6 @@ def generate_csrf_token():
         session["_csrf_token"] = secrets.token_hex(16)
     return session["_csrf_token"]
 
-app.jinja_env.globals["csrf_token"] = generate_csrf_token
 
 
 @app.context_processor
@@ -7674,8 +7726,8 @@ def inject_theme_context():
     }
 
 
-@app.route("/wartung")
-@app.route("/maintenance")
+@auth_bp.route("/wartung")
+@auth_bp.route("/maintenance")
 def maintenance():
     """Public WIP / maintenance landing; admins are sent back into the app."""
     if maintenance_mode_enabled() and current_user_is_admin():
@@ -7704,7 +7756,7 @@ def login_throttled_response(wait_sec):
     return response
 
 
-@app.route("/login", methods=["GET", "POST"])
+@auth_bp.route("/login", methods=["GET", "POST"])
 # Only submissions count; viewing the form must not lock anyone out. IPv6 is grouped per /64.
 @limiter.limit("10 per minute", methods=["POST"], key_func=lambda: login_rate_key(get_client_ip()))
 def login():
@@ -7793,7 +7845,7 @@ def login():
     return render_template_string(LOGIN_TEMPLATE, error=error)
 
 
-@app.route("/logout", methods=["POST"])
+@auth_bp.route("/logout", methods=["POST"])
 @login_required  # Ensure user is logged in before logout
 def logout():
     """Secure logout with CSRF protection (POST only)."""
@@ -7806,7 +7858,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/language", methods=["POST"])
+@auth_bp.route("/language", methods=["POST"])
 @limiter.limit("60 per hour")
 def language_update():
     """Remember the chosen UI language; also reachable from the login page."""
@@ -7837,7 +7889,7 @@ def theme_update():
     return redirect(target)
 
 
-@app.route("/admin", methods=["GET", "POST"])
+@admin_bp.route("/admin", methods=["GET", "POST"])
 @admin_required
 @limiter.limit("100 per hour")  # SECURITY: Rate limit admin panel
 def admin_view():
@@ -7907,7 +7959,7 @@ def admin_view():
         return gettext("Error loading the admin panel. Please try again later."), 500
 
 
-@app.route("/admin/traffic")
+@admin_bp.route("/admin/traffic")
 @admin_required
 @limiter.limit("60 per hour")
 def admin_traffic_view():
@@ -7966,7 +8018,7 @@ def _storage_redirect_uri():
     return absolute_public_url(url_for("storage_oauth_callback"))
 
 
-@app.route("/admin/storage")
+@storage_bp.route("/admin/storage")
 @admin_required
 @limiter.limit("120 per hour")
 def admin_storage_view():
@@ -7989,7 +8041,7 @@ def admin_storage_view():
         return gettext("Error loading cloud storage management."), 500
 
 
-@app.route("/admin/storage/settings", methods=["POST"])
+@storage_bp.route("/admin/storage/settings", methods=["POST"])
 @admin_required
 @limiter.limit("60 per hour")
 def admin_storage_settings():
@@ -8013,7 +8065,7 @@ def admin_storage_settings():
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/providers/add", methods=["POST"])
+@storage_bp.route("/admin/storage/providers/add", methods=["POST"])
 @admin_required
 @limiter.limit("30 per hour")
 def admin_storage_provider_add():
@@ -8042,7 +8094,7 @@ def admin_storage_provider_add():
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/providers/<int:provider_id>/update", methods=["POST"])
+@storage_bp.route("/admin/storage/providers/<int:provider_id>/update", methods=["POST"])
 @admin_required
 @limiter.limit("60 per hour")
 def admin_storage_provider_update(provider_id):
@@ -8068,7 +8120,7 @@ def admin_storage_provider_update(provider_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/providers/<int:provider_id>/delete", methods=["POST"])
+@storage_bp.route("/admin/storage/providers/<int:provider_id>/delete", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")
 def admin_storage_provider_delete(provider_id):
@@ -8082,7 +8134,7 @@ def admin_storage_provider_delete(provider_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/providers/<int:provider_id>/test", methods=["POST"])
+@storage_bp.route("/admin/storage/providers/<int:provider_id>/test", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")
 def admin_storage_provider_test(provider_id):
@@ -8096,7 +8148,7 @@ def admin_storage_provider_test(provider_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/providers/<int:provider_id>/check", methods=["POST"])
+@storage_bp.route("/admin/storage/providers/<int:provider_id>/check", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")
 def admin_storage_provider_check(provider_id):
@@ -8108,7 +8160,7 @@ def admin_storage_provider_check(provider_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/providers/<int:provider_id>/oauth/start")
+@storage_bp.route("/admin/storage/providers/<int:provider_id>/oauth/start")
 @admin_required
 @limiter.limit("30 per hour")
 def admin_storage_oauth_start(provider_id):
@@ -8119,7 +8171,7 @@ def admin_storage_oauth_start(provider_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/oauth/callback")
+@storage_bp.route("/admin/storage/oauth/callback")
 @admin_required
 @limiter.limit("30 per hour")
 def storage_oauth_callback():
@@ -8140,7 +8192,7 @@ def storage_oauth_callback():
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/sync", methods=["POST"])
+@storage_bp.route("/admin/storage/sync", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")
 def admin_storage_sync():
@@ -8156,7 +8208,7 @@ def admin_storage_sync():
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/cleanup", methods=["POST"])
+@storage_bp.route("/admin/storage/cleanup", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")
 def admin_storage_cleanup():
@@ -8171,7 +8223,7 @@ def admin_storage_cleanup():
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/objects/<int:object_id>/upload", methods=["POST"])
+@storage_bp.route("/admin/storage/objects/<int:object_id>/upload", methods=["POST"])
 @admin_required
 @limiter.limit("60 per hour")
 def admin_storage_object_upload(object_id):
@@ -8192,7 +8244,7 @@ def admin_storage_object_upload(object_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/objects/<int:object_id>/restore", methods=["POST"])
+@storage_bp.route("/admin/storage/objects/<int:object_id>/restore", methods=["POST"])
 @admin_required
 @limiter.limit("30 per hour")
 def admin_storage_object_restore(object_id):
@@ -8206,7 +8258,7 @@ def admin_storage_object_restore(object_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/objects/<int:object_id>/delete-remote", methods=["POST"])
+@storage_bp.route("/admin/storage/objects/<int:object_id>/delete-remote", methods=["POST"])
 @admin_required
 @limiter.limit("30 per hour")
 def admin_storage_object_delete_remote(object_id):
@@ -8220,7 +8272,7 @@ def admin_storage_object_delete_remote(object_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/objects/<int:object_id>/delete-local", methods=["POST"])
+@storage_bp.route("/admin/storage/objects/<int:object_id>/delete-local", methods=["POST"])
 @admin_required
 @limiter.limit("30 per hour")
 def admin_storage_object_delete_local(object_id):
@@ -8234,7 +8286,7 @@ def admin_storage_object_delete_local(object_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/storage/objects/<int:object_id>/forget", methods=["POST"])
+@storage_bp.route("/admin/storage/objects/<int:object_id>/forget", methods=["POST"])
 @admin_required
 @limiter.limit("30 per hour")
 def admin_storage_object_forget(object_id):
@@ -8248,19 +8300,19 @@ def admin_storage_object_forget(object_id):
         return _storage_redirect(error=_storage_error(exc))
 
 
-@app.route("/admin/unban/<ip>", methods=["POST"])
+@admin_bp.route("/admin/unban/<ip>", methods=["POST"])
 @admin_required
 def admin_unban(ip):
     unban_ip(ip)
     return redirect(url_for("admin_view"))
 
-@app.route("/admin/ban/<ip>", methods=["POST"])
+@admin_bp.route("/admin/ban/<ip>", methods=["POST"])
 @admin_required
 def admin_ban_ip(ip):
     ban_ip(ip, ttl_sec=0)  # permanent admin ban
     return redirect(url_for("admin_view"))
 
-@app.route("/admin/remux_all", methods=["POST"])
+@admin_bp.route("/admin/remux_all", methods=["POST"])
 @admin_required
 def admin_remux_all():
     try:
@@ -8270,7 +8322,7 @@ def admin_remux_all():
         return redirect(url_for("admin_view", error=gettext("Remux job could not be started: %(error)s", error=e)))
 
 
-@app.route("/streamer/<streamer>/visibility", methods=["POST"])
+@channels_bp.route("/streamer/<streamer>/visibility", methods=["POST"])
 @admin_required
 def streamer_visibility_update(streamer):
     abort_hidden_streamer(streamer)
@@ -8292,7 +8344,7 @@ def streamer_visibility_update(streamer):
         return redirect(url_for("streamer_view", streamer=archive, msg=gettext("Visibility could not be saved.")))
 
 
-@app.route("/admin/share/revoke/<token>", methods=["POST"])
+@admin_bp.route("/admin/share/revoke/<token>", methods=["POST"])
 @admin_required
 def admin_share_revoke(token):
     if revoke_share(token):
@@ -8300,12 +8352,12 @@ def admin_share_revoke(token):
     return redirect(url_for("admin_view", error=gettext("Share not found.")))
 
 
-@app.route("/admin/chat", methods=["GET", "POST"])
+@admin_bp.route("/admin/chat", methods=["GET", "POST"])
 @admin_required
 def chat_tracker():
     return redirect(url_for("index"))
 
-@app.route("/admin/ban/manual", methods=["POST"])
+@admin_bp.route("/admin/ban/manual", methods=["POST"])
 @admin_required
 def admin_ban_manual():
     ip = request.form.get("ban_ip", "").strip()
@@ -8313,7 +8365,7 @@ def admin_ban_manual():
         ban_ip(ip, ttl_sec=0)  # permanent admin ban
     return redirect(url_for("admin_view"))
 
-@app.route("/admin/users/add", methods=["POST"])
+@users_bp.route("/admin/users/add", methods=["POST"])
 @admin_required
 @limiter.limit("50 per hour")  # SECURITY: Rate limit user creation
 def admin_user_add():
@@ -8360,7 +8412,7 @@ def admin_user_add():
         logging.error(f"Failed to create user {username}: {e}")
         return redirect(url_for("admin_view", error=gettext("Error creating the user.")))
 
-@app.route("/admin/users/update/<username>", methods=["POST"])
+@users_bp.route("/admin/users/update/<username>", methods=["POST"])
 @admin_required
 @limiter.limit("50 per hour")  # SECURITY: Rate limit user updates
 def admin_user_update(username):
@@ -8434,7 +8486,7 @@ def admin_user_update(username):
     return redirect(url_for("admin_view", msg=gettext("User updated.")))
 
 
-@app.route("/admin/users/delete/<username>", methods=["POST"])
+@users_bp.route("/admin/users/delete/<username>", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")  # SECURITY: Rate limit user deletion (strict)
 def admin_user_delete(username):
@@ -8451,7 +8503,7 @@ def admin_user_delete(username):
 # RBAC: USER & GROUP MANAGEMENT (UI & API)
 # ==============================================================================
 
-@app.route("/admin/users", methods=["GET"])
+@users_bp.route("/admin/users", methods=["GET"])
 @manage_users_required
 def admin_users_view():
     raw_users = database.list_users()
@@ -8504,7 +8556,7 @@ def admin_users_view():
     )
 
 
-@app.route("/api/admin/users", methods=["GET"])
+@users_bp.route("/api/admin/users", methods=["GET"])
 @manage_users_required
 def api_admin_users_list():
     raw_users = database.list_users()
@@ -8533,7 +8585,7 @@ def api_admin_users_list():
     return jsonify({"ok": True, "users": users_out})
 
 
-@app.route("/api/admin/users", methods=["POST"])
+@users_bp.route("/api/admin/users", methods=["POST"])
 @manage_users_required
 @limiter.limit("50 per hour")
 def api_admin_user_create():
@@ -8589,8 +8641,8 @@ def api_admin_user_create():
     }), 201
 
 
-@app.route("/api/admin/users/<username>", methods=["PUT"])
-@app.route("/api/admin/users/<username>/update", methods=["POST"])
+@users_bp.route("/api/admin/users/<username>", methods=["PUT"])
+@users_bp.route("/api/admin/users/<username>/update", methods=["POST"])
 @manage_users_required
 @limiter.limit("50 per hour")
 def api_admin_user_update(username):
@@ -8670,8 +8722,8 @@ def api_admin_user_update(username):
     return jsonify({"ok": True, "msg": gettext("User '%(username)s' updated successfully.", username=username)})
 
 
-@app.route("/api/admin/users/<username>", methods=["DELETE"])
-@app.route("/api/admin/users/<username>/delete", methods=["POST"])
+@users_bp.route("/api/admin/users/<username>", methods=["DELETE"])
+@users_bp.route("/api/admin/users/<username>/delete", methods=["POST"])
 @manage_users_required
 @limiter.limit("20 per hour")
 def api_admin_user_delete(username):
@@ -8691,7 +8743,7 @@ def api_admin_user_delete(username):
     return jsonify({"ok": True, "msg": gettext("User '%(username)s' has been deleted.", username=username)})
 
 
-@app.route("/api/user/change-password", methods=["POST"])
+@users_bp.route("/api/user/change-password", methods=["POST"])
 @login_required
 @limiter.limit("10 per hour")
 def api_user_change_password():
@@ -8730,7 +8782,7 @@ def api_user_change_password():
     return jsonify({"ok": True, "msg": gettext("Password changed successfully.")})
 
 
-@app.route("/api/admin/groups", methods=["GET"])
+@users_bp.route("/api/admin/groups", methods=["GET"])
 @manage_users_required
 def api_admin_groups_list():
     raw_groups = database.list_user_groups()
@@ -8745,7 +8797,7 @@ def api_admin_groups_list():
     return jsonify({"ok": True, "groups": raw_groups})
 
 
-@app.route("/api/admin/groups", methods=["POST"])
+@users_bp.route("/api/admin/groups", methods=["POST"])
 @manage_users_required
 @limiter.limit("50 per hour")
 def api_admin_group_create():
@@ -8769,8 +8821,8 @@ def api_admin_group_create():
         return jsonify({"ok": False, "error": gettext("Internal server error while creating the group.")}), 500
 
 
-@app.route("/api/admin/groups/<int:group_id>", methods=["PUT"])
-@app.route("/api/admin/groups/<int:group_id>/update", methods=["POST"])
+@users_bp.route("/api/admin/groups/<int:group_id>", methods=["PUT"])
+@users_bp.route("/api/admin/groups/<int:group_id>/update", methods=["POST"])
 @manage_users_required
 @limiter.limit("50 per hour")
 def api_admin_group_update(group_id):
@@ -8791,8 +8843,8 @@ def api_admin_group_update(group_id):
         return jsonify({"ok": False, "error": gettext("Internal server error while updating the group.")}), 500
 
 
-@app.route("/api/admin/groups/<int:group_id>", methods=["DELETE"])
-@app.route("/api/admin/groups/<int:group_id>/delete", methods=["POST"])
+@users_bp.route("/api/admin/groups/<int:group_id>", methods=["DELETE"])
+@users_bp.route("/api/admin/groups/<int:group_id>/delete", methods=["POST"])
 @manage_users_required
 @limiter.limit("20 per hour")
 def api_admin_group_delete(group_id):
@@ -8845,9 +8897,9 @@ def _parse_vod_access_form_streamers():
     return cleaned
 
 
-@app.route("/admin/vod-access/defaults", methods=["POST"])
-@app.route("/admin/vod-access/role", methods=["POST"])
-@app.route("/admin/vod-access/role/<role>", methods=["POST"])
+@admin_bp.route("/admin/vod-access/defaults", methods=["POST"])
+@admin_bp.route("/admin/vod-access/role", methods=["POST"])
+@admin_bp.route("/admin/vod-access/role/<role>", methods=["POST"])
 @admin_required
 @limiter.limit("60 per hour")
 def admin_vod_access_role(role=None):
@@ -8875,7 +8927,7 @@ def admin_vod_access_role(role=None):
     return redirect(url_for("admin_view", msg=gettext("Member VOD access saved.")))
 
 
-@app.route("/admin/users/approve/<username>", methods=["POST"])
+@users_bp.route("/admin/users/approve/<username>", methods=["POST"])
 @admin_required
 @limiter.limit("50 per hour")
 def admin_user_approve(username):
@@ -8893,7 +8945,7 @@ def admin_user_approve(username):
         return redirect(url_for("admin_view", error=str(exc)))
 
 
-@app.route("/admin/users/deny/<username>", methods=["POST"])
+@users_bp.route("/admin/users/deny/<username>", methods=["POST"])
 @admin_required
 @limiter.limit("50 per hour")
 def admin_user_deny(username):
@@ -8914,7 +8966,7 @@ def admin_user_deny(username):
         return redirect(url_for("admin_view", error=str(exc)))
 
 
-@app.route("/channels/add", methods=["POST"])
+@channels_bp.route("/channels/add", methods=["POST"])
 @admin_required
 def channels_add():
     source = parse_channel_source_input(
@@ -8955,7 +9007,7 @@ def channels_add():
 
     return redirect(url_for("channels_view", channels_msg=msg))
 
-@app.route("/channels/remove/<channel>", methods=["POST"])
+@channels_bp.route("/channels/remove/<channel>", methods=["POST"])
 @admin_required
 def channels_remove(channel):
     name = normalize_channel_name(channel)
@@ -8966,7 +9018,7 @@ def channels_remove(channel):
         return redirect(url_for("channels_view", channels_msg=gettext("%(name)s removed.", name=name)))
     return redirect(url_for("channels_view", channels_msg=gettext("Channel not found.")))
 
-@app.route("/live/watch", methods=["POST"])
+@live_bp.route("/live/watch", methods=["POST"])
 @login_required
 def live_watch():
     """Start anonymous HLS watch for any Twitch channel (recording optional)."""
@@ -8990,7 +9042,7 @@ def live_watch():
         return redirect(url_for("index", channels_msg=gettext("Live start failed.")))
     return redirect(url_for("twitch_watch", channel=channel))
 
-@app.route("/live/viewers/<streamer>")
+@live_bp.route("/live/viewers/<streamer>")
 @login_required
 def live_viewers(streamer):
     safe_dir = streamer_dir(streamer)
@@ -9005,7 +9057,7 @@ def live_viewers(streamer):
     except Exception:
         return Response("{}", 200, mimetype="application/json")
 
-@app.route("/channels/restart", methods=["POST"])
+@channels_bp.route("/channels/restart", methods=["POST"])
 @admin_required
 def channels_restart():
     try:
@@ -9035,7 +9087,7 @@ def channels_restart():
     return redirect(url_for("channels_view", channels_msg=msg))
 
 
-@app.route("/live/control/start/<streamer>", methods=["POST"])
+@live_bp.route("/live/control/start/<streamer>", methods=["POST"])
 @admin_required
 def live_control_start(streamer):
     channel = normalize_channel_name(streamer)
@@ -9045,7 +9097,7 @@ def live_control_start(streamer):
     return redirect(url_for("live_view", streamer=channel))
 
 
-@app.route("/live/control/stop/<streamer>", methods=["POST"])
+@live_bp.route("/live/control/stop/<streamer>", methods=["POST"])
 @admin_required
 def live_control_stop(streamer):
     channel = normalize_channel_name(streamer)
@@ -9077,16 +9129,16 @@ def _load_shared_dashboard_media():
     now = time.time()
     expected_base = os.path.abspath(str(getattr(config, "BASE_DIR", "") or ""))
 
-    # 1. Primary: Redis (TTL enforced natively & checked)
-    try:
-        from core import redis_client
-        cached_redis = redis_client.get_state("dashboard_media")
-        if isinstance(cached_redis, dict) and cached_redis.get("recent_vods"):
-            if not cached_redis.get("base_dir") or cached_redis.get("base_dir") == expected_base:
-                if (now - float(cached_redis.get("ts", 0))) <= 120.0:
-                    return cached_redis
-    except Exception as exc:
-        logging.warning("Failed to load dashboard media from Redis: %s", exc)
+    # 1. Primary: shared cache (TTL enforced by the backend and checked here)
+    cached_redis = SHARED_CACHE.get("dashboard_media")
+    if isinstance(cached_redis, dict) and cached_redis.get("recent_vods"):
+        if not cached_redis.get("base_dir") or cached_redis.get("base_dir") == expected_base:
+            try:
+                fresh = (now - float(cached_redis.get("ts", 0))) <= 120.0
+            except (TypeError, ValueError):
+                fresh = False
+            if fresh:
+                return cached_redis
 
     # 2. Secondary fallback: shm (Strict TTL check <= 120s)
     try:
@@ -9119,12 +9171,8 @@ def _save_shared_dashboard_media(data):
     payload = dict(data)
     payload["base_dir"] = os.path.abspath(str(getattr(config, "BASE_DIR", "") or ""))
 
-    # 1. Primary: Redis with 120s TTL
-    try:
-        from core import redis_client
-        redis_client.set_state("dashboard_media", payload, ex=120)
-    except Exception as exc:
-        logging.warning("Failed to save dashboard media to Redis: %s", exc)
+    # 1. Primary: shared cache with 120s TTL
+    SHARED_CACHE.set("dashboard_media", payload, ttl=120)
 
     # 2. Secondary: shm file
     try:
@@ -9477,7 +9525,7 @@ def api_dashboard_recent_vods():
     })
 
 
-@app.route("/channels")
+@channels_bp.route("/channels")
 @admin_required
 def channels_view():
     all_configs = database.list_channel_configs()
@@ -9500,7 +9548,7 @@ def channels_view():
         channels_msg=request.args.get("channels_msg"),
     )
 
-@app.route("/streamer/<streamer>")
+@channels_bp.route("/streamer/<streamer>")
 @login_required
 def streamer_view(streamer):
     if is_system_backup_slug(streamer):
@@ -9707,7 +9755,7 @@ def streamer_view(streamer):
         folder_visibility=streamer_visibility(archive_key),
     )
 
-@app.route("/streamer/<streamer>/download_all", methods=["POST"])
+@channels_bp.route("/streamer/<streamer>/download_all", methods=["POST"])
 @admin_required
 def streamer_download_all(streamer):
     threading.Thread(target=run_vod_download_task, args=(streamer,)).start()
@@ -9744,7 +9792,7 @@ def api_global_search():
         "videos": g_res.get("videos", [])[:10],
     })
 
-@app.route("/vod/<streamer>/<filename>")
+@vod_bp.route("/vod/<streamer>/<filename>")
 @login_required
 def vod_view(streamer, filename):
     if maintenance_mode_enabled("vod") and not current_user_bypasses_maintenance():
@@ -9885,7 +9933,7 @@ def vod_view(streamer, filename):
     )
 
 
-@app.route("/vod/transcribe/status/<streamer>/<filename>")
+@vod_bp.route("/vod/transcribe/status/<streamer>/<filename>")
 @login_required
 def vod_transcribe_status(streamer, filename):
     abort_vod_denied()
@@ -9905,7 +9953,7 @@ def vod_transcribe_status(streamer, filename):
     return jsonify(status)
 
 
-@app.route("/vod/transcribe/cancel/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/vod/transcribe/cancel/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def vod_transcribe_cancel(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "vod")
@@ -9952,7 +10000,7 @@ def vod_transcribe_cancel(streamer, filename):
     return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
 
-@app.route("/vod/transcribe/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/vod/transcribe/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def vod_transcribe(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "vod")
@@ -9983,7 +10031,7 @@ def vod_transcribe(streamer, filename):
     return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
 
-@app.route("/vod/transcript/<streamer>/<filename>")
+@vod_bp.route("/vod/transcript/<streamer>/<filename>")
 @login_required
 def vod_transcript_download(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "vod")
@@ -9995,7 +10043,7 @@ def vod_transcript_download(streamer, filename):
     return send_file(transcript_path, mimetype="text/plain", as_attachment=True, download_name=os.path.basename(transcript_path))
 
 
-@app.route("/vod/remux/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/vod/remux/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def vod_remux(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "vod")
@@ -10008,7 +10056,7 @@ def vod_remux(streamer, filename):
     return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
 
-@app.route("/clip/<streamer>/<filename>")
+@clip_bp.route("/clip/<streamer>/<filename>")
 @login_required
 def clip_view(streamer, filename):
     abort_vod_denied()
@@ -10100,7 +10148,7 @@ def clip_view(streamer, filename):
     )
 
 
-@app.route("/thumb/<streamer>/<filename>")
+@vod_bp.route("/thumb/<streamer>/<filename>")
 @login_required
 def thumb_view(streamer, filename):
     abort_vod_denied()
@@ -10134,7 +10182,7 @@ def thumb_view(streamer, filename):
     return Response(svg, mimetype="image/svg+xml", headers={"Cache-Control": "no-cache"})
 
 
-@app.route("/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
+@vod_bp.route("/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def media(streamer, filename):
     abort_vod_denied()
@@ -10169,7 +10217,7 @@ def log_safe(value, limit=120):
     return text[:limit]
 
 
-@app.route("/api/vod/debug", methods=["POST"])
+@vod_bp.route("/api/vod/debug", methods=["POST"])
 @login_required
 @limiter.limit("30 per minute")
 def vod_debug_ingest():
@@ -10213,7 +10261,7 @@ def vod_debug_ingest():
     return jsonify({"ok": True, "accepted": len(events)})
 
 
-@app.route("/api/vod/slot", methods=["POST"])
+@vod_bp.route("/api/vod/slot", methods=["POST"])
 @login_required
 @limiter.limit("60 per minute")
 def vod_slot_claim():
@@ -10231,7 +10279,7 @@ def vod_slot_claim():
     return resp
 
 
-@app.route("/api/vod/slot/heartbeat", methods=["POST"])
+@vod_bp.route("/api/vod/slot/heartbeat", methods=["POST"])
 @login_required
 @limiter.limit("120 per minute")
 def vod_slot_heartbeat():
@@ -10244,7 +10292,7 @@ def vod_slot_heartbeat():
     return resp
 
 
-@app.route("/api/vod/slot/release", methods=["POST"])
+@vod_bp.route("/api/vod/slot/release", methods=["POST"])
 @login_required
 @limiter.limit("60 per minute")
 def vod_slot_release():
@@ -10252,7 +10300,7 @@ def vod_slot_release():
     return jsonify(result)
 
 
-@app.route("/download/<streamer>/<filename>")
+@vod_bp.route("/download/<streamer>/<filename>")
 @login_required
 def download(streamer, filename):
     if not downloads_enabled():
@@ -10266,7 +10314,7 @@ def download(streamer, filename):
     abort(404)
 
 
-@app.route("/clip/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
+@clip_bp.route("/clip/media/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def clip_media(streamer, filename):
     abort_vod_denied()
@@ -10280,7 +10328,7 @@ def clip_media(streamer, filename):
     return send_mp4_with_range(file_path)
 
 
-@app.route("/clip/download/<streamer>/<filename>")
+@clip_bp.route("/clip/download/<streamer>/<filename>")
 @login_required
 def clip_download(streamer, filename):
     if not downloads_enabled():
@@ -10679,7 +10727,7 @@ def set_security_headers(response):
     return response
 
 
-@app.route("/share/create/<streamer>/<filename>", methods=["POST"])
+@shares_bp.route("/share/create/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def share_create(streamer, filename):
     if not public_shares_enabled():
@@ -10711,7 +10759,7 @@ def share_create(streamer, filename):
     return redirect(url_for("streamer_view", streamer=streamer, share_link=link))
 
 
-@app.route("/vod/delete/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/vod/delete/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def vod_delete(streamer, filename):
     success = delete_video_file(streamer, filename, is_clip=False)
@@ -10723,7 +10771,7 @@ def vod_delete(streamer, filename):
     return redirect(url_for("streamer_view", streamer=streamer, msg=msg))
 
 
-@app.route("/vod/rename/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/vod/rename/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def vod_rename(streamer, filename):
     new_name = request.form.get("new_name") or request.form.get("filename") or ""
@@ -10739,7 +10787,7 @@ def vod_rename(streamer, filename):
     return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
 
 
-@app.route("/vod/info/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/vod/info/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def vod_info_update(streamer, filename):
     title = request.form.get("title")
@@ -10763,7 +10811,7 @@ def vod_info_update(streamer, filename):
     return redirect(url_for(target, streamer=streamer, filename=filename, msg=msg))
 
 
-@app.route("/clip/delete/<streamer>/<filename>", methods=["POST"])
+@clip_bp.route("/clip/delete/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def clip_delete(streamer, filename):
     success = delete_video_file(streamer, filename, is_clip=True)
@@ -10775,7 +10823,7 @@ def clip_delete(streamer, filename):
     return redirect(url_for("streamer_view", streamer=streamer, msg=msg))
 
 
-@app.route("/clip/rename/<streamer>/<filename>", methods=["POST"])
+@clip_bp.route("/clip/rename/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def clip_rename(streamer, filename):
     new_name = request.form.get("new_name") or request.form.get("filename") or ""
@@ -10792,7 +10840,7 @@ def clip_rename(streamer, filename):
 
 
 
-@app.route("/clip/discord/<streamer>/<filename>", methods=["POST"])
+@clip_bp.route("/clip/discord/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def clip_discord_upload(streamer, filename):
     return Response(
@@ -10801,7 +10849,7 @@ def clip_discord_upload(streamer, filename):
         mimetype="application/json",
     )
 
-@app.route("/public/<token>")
+@shares_bp.route("/public/<token>")
 def public_view(token):
     if not public_shares_enabled():
         abort(404)
@@ -10864,7 +10912,7 @@ def public_view(token):
     )
 
 
-@app.route("/public/media/<token>")
+@shares_bp.route("/public/media/<token>")
 def public_media(token):
     if not public_shares_enabled():
         abort(404)
@@ -10883,7 +10931,7 @@ def public_media(token):
     return send_mp4_with_range(file_path, accel_path=accel_path)
 
 
-@app.route("/public/download/<token>")
+@shares_bp.route("/public/download/<token>")
 def public_download(token):
     if not public_shares_enabled() or not downloads_enabled():
         abort(404)
@@ -10902,7 +10950,7 @@ def public_download(token):
     return send_mp4_with_range(file_path, accel_path=accel_path, attachment_name=filename)
 
 
-@app.route("/chat/vod/<streamer>/<filename>")
+@vod_bp.route("/chat/vod/<streamer>/<filename>")
 @login_required
 def chat_vod(streamer, filename):
     abort_vod_denied()
@@ -11052,7 +11100,7 @@ def chat_badges(streamer):
     return resp
 
 
-@app.route("/admin/badges/sync", methods=["POST"])
+@admin_bp.route("/admin/badges/sync", methods=["POST"])
 @admin_required
 def admin_badges_sync():
     force = str(request.form.get("force") or request.args.get("force") or "").lower() in (
@@ -11077,7 +11125,7 @@ def admin_badges_sync():
     })
 
 
-@app.route("/admin/badges/status")
+@admin_bp.route("/admin/badges/status")
 @admin_required
 def admin_badges_status():
     return jsonify({"ok": True, **twitch_badge_library_stats()})
@@ -11131,7 +11179,7 @@ def _live_chat_log_path(streamer):
     return None
 
 
-@app.route("/chat/live/<streamer>")
+@live_bp.route("/chat/live/<streamer>")
 @media_login_required
 def chat_live(streamer):
     abort_hidden_streamer(streamer)
@@ -11185,7 +11233,7 @@ def chat_live(streamer):
     return Response(json.dumps(items, ensure_ascii=False), 200, mimetype="application/json")
 
 
-@app.route("/editor/<streamer>/<filename>")
+@clip_bp.route("/editor/<streamer>/<filename>")
 @login_required
 def editor_view(streamer, filename):
     abort_vod_denied()
@@ -11201,7 +11249,7 @@ def editor_view(streamer, filename):
         initial_time=request.args.get("t", 0)
     )
 
-@app.route("/editor/live/<streamer>")
+@clip_bp.route("/editor/live/<streamer>")
 @login_required
 def editor_live_view(streamer):
     abort_hidden_streamer(streamer)
@@ -11217,7 +11265,7 @@ def editor_live_view(streamer):
         initial_time=request.args.get("t", 0)
     )
 
-@app.route("/clip/vod/<streamer>/<filename>", methods=["POST"])
+@clip_bp.route("/clip/vod/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def clip_vod(streamer, filename):
     wants_json = (
@@ -11320,7 +11368,7 @@ def clip_vod(streamer, filename):
     return respond(False, err, status=500)
 
 
-@app.route("/clip/live/<streamer>", methods=["POST"])
+@clip_bp.route("/clip/live/<streamer>", methods=["POST"])
 @admin_required
 def clip_live(streamer):
     wants_json = (
@@ -11427,7 +11475,7 @@ def _clip_job_payload(job):
     return payload
 
 
-@app.route("/clip/instant/<streamer>", methods=["POST"])
+@clip_bp.route("/clip/instant/<streamer>", methods=["POST"])
 @admin_required
 @limiter.limit("30 per minute")
 def clip_instant(streamer):
@@ -11499,7 +11547,7 @@ def clip_instant(streamer):
     return Response(json.dumps(payload), status=status, mimetype="application/json")
 
 
-@app.route("/clip/job/<job_id>")
+@clip_bp.route("/clip/job/<job_id>")
 @login_required
 def clip_job(job_id):
     job = clip_engine.get_job(job_id)
@@ -11509,7 +11557,7 @@ def clip_job(job_id):
     return Response(json.dumps(_clip_job_payload(job)), status=200, mimetype="application/json")
 
 
-@app.route("/admin/clip-settings", methods=["POST"])
+@admin_bp.route("/admin/clip-settings", methods=["POST"])
 @admin_required
 def admin_clip_settings():
     saved = clip_engine.save_settings({
@@ -11524,7 +11572,7 @@ def admin_clip_settings():
     return redirect(url_for("admin_view", msg=gettext("Clip settings saved.")))
 
 
-@app.route("/admin/maintenance", methods=["POST"])
+@admin_bp.route("/admin/maintenance", methods=["POST"])
 @admin_required
 @limiter.limit("20 per hour")
 def admin_maintenance():
@@ -11580,7 +11628,7 @@ def admin_maintenance():
     return redirect(url_for("admin_view", msg=msg))
 
 
-@app.route("/hls/<streamer>/<filename>", methods=["GET"])
+@vod_bp.route("/hls/<streamer>/<filename>", methods=["GET"])
 @login_required
 def hls_view(streamer, filename):
     abort_vod_denied()
@@ -11600,7 +11648,7 @@ def hls_view(streamer, filename):
     )
 
 
-@app.route("/hls/generate/<streamer>/<filename>", methods=["POST"])
+@vod_bp.route("/hls/generate/<streamer>/<filename>", methods=["POST"])
 @admin_required
 def hls_generate(streamer, filename):
     file_path = resolve_media_path(streamer, filename, "vod")
@@ -11611,7 +11659,7 @@ def hls_generate(streamer, filename):
     return redirect(url_for("hls_view", streamer=streamer, filename=filename))
 
 
-@app.route("/hls/playlist/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
+@vod_bp.route("/hls/playlist/<streamer>/<filename>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def hls_playlist(streamer, filename):
     abort_vod_denied()
@@ -11638,7 +11686,7 @@ def hls_playlist(streamer, filename):
     return hls_playlist_response("".join(output), live=False)
 
 
-@app.route("/hls/segment/<streamer>/<filename>/<segment>", methods=_MEDIA_HTTP_METHODS)
+@vod_bp.route("/hls/segment/<streamer>/<filename>/<segment>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def hls_segment(streamer, filename, segment):
     abort_vod_denied()
@@ -11681,15 +11729,15 @@ def _recording_logins_set():
     return logins
 
 
-@app.route("/live")
+@live_bp.route("/live")
 @login_required
 def twitch_live_hub():
     # Browse hub (Entdecken / Zuletzt angesehen) removed — keep route as bookmark-safe redirect.
     return redirect(url_for("index"))
 
 
-@app.route("/api/live/debug")
-@app.route("/api/live/debug/<streamer>")
+@live_bp.route("/api/live/debug")
+@live_bp.route("/api/live/debug/<streamer>")
 @admin_required
 def api_live_debug(streamer=None):
     """Admin-only live-watch diagnostics (no secrets)."""
@@ -11715,7 +11763,7 @@ def api_live_debug(streamer=None):
     return jsonify({"ok": True, "report": report})
 
 
-@app.route("/api/live/client-debug", methods=["POST"])
+@live_bp.route("/api/live/client-debug", methods=["POST"])
 @login_required
 def api_live_client_debug():
     """Receive sanitized proxy-player telemetry from the watch page."""
@@ -11748,7 +11796,7 @@ def api_live_client_debug():
     return jsonify({"ok": True})
 
 
-@app.route("/api/live/ready/<streamer>")
+@live_bp.route("/api/live/ready/<streamer>")
 @login_required
 def api_live_ready(streamer):
     """Poll whether the anonymous livebot HLS proxy is ready for playback."""
@@ -11781,7 +11829,7 @@ def api_live_ready(streamer):
     })
 
 
-@app.route("/live/watch/<channel>")
+@live_bp.route("/live/watch/<channel>")
 @login_required
 def twitch_watch(channel):
     if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
@@ -11963,7 +12011,7 @@ def api_twitch_stream(login):
     return jsonify({"ok": True, "stream": stream})
 
 
-@app.route("/live/<streamer>")
+@live_bp.route("/live/<streamer>")
 @login_required
 def live_view(streamer):
     if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
@@ -12020,7 +12068,7 @@ def live_view(streamer):
     return resp
 
 
-@app.route("/live/obs/<streamer>")
+@live_bp.route("/live/obs/<streamer>")
 @login_required
 def live_obs(streamer):
     """Fullscreen picture and sound for an OBS browser source."""
@@ -12042,7 +12090,7 @@ def live_obs(streamer):
     resp.headers["Pragma"] = "no-cache"
     return resp
 
-@app.route("/chat/obs/<streamer>")
+@live_bp.route("/chat/obs/<streamer>")
 @login_required
 def chat_obs(streamer):
     """Fullscreen transparent chat overlay for an OBS browser source."""
@@ -12060,7 +12108,7 @@ def chat_obs(streamer):
 
 
 
-@app.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
+@live_bp.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def live_playlist(streamer):
     abort_hidden_streamer(streamer)
@@ -12085,7 +12133,7 @@ def live_playlist(streamer):
     return hls_playlist_response("".join(output), live=True)
 
 
-@app.route("/live/segment/<streamer>/<segment>", methods=_MEDIA_HTTP_METHODS)
+@live_bp.route("/live/segment/<streamer>/<segment>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def live_segment(streamer, segment):
     abort_hidden_streamer(streamer)
@@ -12123,12 +12171,12 @@ def live_segment(streamer, segment):
         resp = send_from_directory(live_dir, segment, as_attachment=False, conditional=True, mimetype=mime)
     return apply_hls_delivery_headers(resp, live=True)
 
-@app.route("/files")
+@files_bp.route("/files")
 @admin_required
 def files_view():
     return redirect(url_for("index"))
 
-@app.route("/files/upload", methods=["POST"])
+@files_bp.route("/files/upload", methods=["POST"])
 @admin_required
 def files_upload():
     if 'file' not in request.files:
@@ -12153,7 +12201,7 @@ def files_upload():
         
     return redirect(url_for('index', msg=gettext("File was uploaded.")))
 
-@app.route("/files/download/<path:filename>")
+@files_bp.route("/files/download/<path:filename>")
 @admin_required
 def files_download(filename):
     if not downloads_enabled():
@@ -12163,7 +12211,7 @@ def files_download(filename):
         abort(404)
     return send_resource_attachment(path)
 
-@app.route("/files/update", methods=["POST"])
+@files_bp.route("/files/update", methods=["POST"])
 @admin_required
 def files_update():
     filename = request.form.get("filename")
@@ -12177,7 +12225,7 @@ def files_update():
         save_resources(res)
     return redirect(url_for("index"))
 
-@app.route("/files/delete/<filename>", methods=["POST"])
+@files_bp.route("/files/delete/<filename>", methods=["POST"])
 @admin_required
 def files_delete(filename):
     success = False
@@ -12200,7 +12248,7 @@ def files_delete(filename):
         
     return redirect(url_for("index"))
 
-@app.route("/files/share/<filename>", methods=["POST"])
+@files_bp.route("/files/share/<filename>", methods=["POST"])
 @admin_required
 def files_share_create(filename):
     if not public_shares_enabled():
@@ -12221,7 +12269,7 @@ def files_share_create(filename):
 
     return redirect(url_for("index", share_link=link, shared_file=filename))
 
-@app.route("/links/add", methods=["POST"])
+@files_bp.route("/links/add", methods=["POST"])
 @admin_required
 def links_add():
     title = request.form.get("title", "").strip()
@@ -12234,7 +12282,7 @@ def links_add():
         save_resources(res)
     return redirect(url_for("index"))
 
-@app.route("/links/remove", methods=["POST"])
+@files_bp.route("/links/remove", methods=["POST"])
 @admin_required
 def links_remove():
     url = request.form.get("url")
@@ -12311,7 +12359,7 @@ def _tts_streamer_from_request():
     return name
 
 
-@app.route("/tts/overlay")
+@overlays_bp.route("/tts/overlay")
 @limiter.limit("120 per minute")
 def tts_overlay():
     from core import tts_service
@@ -12323,7 +12371,7 @@ def tts_overlay():
     return send_file(path, mimetype="text/html; charset=utf-8")
 
 
-@app.route("/tts/api/next")
+@overlays_bp.route("/tts/api/next")
 @limiter.limit("300 per minute")
 def tts_api_next():
     from core import tts_service
@@ -12352,7 +12400,7 @@ def tts_api_next():
     )
 
 
-@app.route("/tts/api/ack", methods=["POST"])
+@overlays_bp.route("/tts/api/ack", methods=["POST"])
 @limiter.limit("300 per minute")
 def tts_api_ack():
     from core import tts_service
@@ -12370,7 +12418,7 @@ def tts_api_ack():
     return jsonify({"ok": ok})
 
 
-@app.route("/tts/api/skipcheck")
+@overlays_bp.route("/tts/api/skipcheck")
 @limiter.limit("300 per minute")
 def tts_api_skipcheck():
     from core import tts_service
@@ -12384,7 +12432,7 @@ def tts_api_skipcheck():
     return jsonify({"skip": tts_service.should_skip_playing(streamer, item_id)})
 
 
-@app.route("/tts/api/status")
+@overlays_bp.route("/tts/api/status")
 @limiter.limit("60 per minute")
 def tts_api_status():
     from core import tts_service
@@ -12394,7 +12442,7 @@ def tts_api_status():
     return jsonify(tts_service.queue_status(_tts_streamer_from_request()))
 
 
-@app.route("/tts/audio/<path:filename>")
+@overlays_bp.route("/tts/audio/<path:filename>")
 @limiter.limit("300 per minute")
 def tts_audio(filename):
     from core import tts_service
@@ -12413,7 +12461,7 @@ def tts_audio(filename):
     return send_file(path, mimetype="audio/mpeg", conditional=True)
 
 
-@app.route("/alerts/overlay")
+@overlays_bp.route("/alerts/overlay")
 @limiter.limit("120 per minute")
 def alerts_overlay():
     from core import alert_sounds
@@ -12424,7 +12472,7 @@ def alerts_overlay():
     return send_file(path, mimetype="text/html; charset=utf-8")
 
 
-@app.route("/alerts/api/next")
+@overlays_bp.route("/alerts/api/next")
 @limiter.limit("300 per minute")
 def alerts_api_next():
     from core import alert_sounds
@@ -12452,7 +12500,7 @@ def alerts_api_next():
     )
 
 
-@app.route("/alerts/api/ack", methods=["POST"])
+@overlays_bp.route("/alerts/api/ack", methods=["POST"])
 @limiter.limit("300 per minute")
 def alerts_api_ack():
     from core import alert_sounds
@@ -12468,7 +12516,7 @@ def alerts_api_ack():
     return jsonify({"ok": alert_sounds.ack(item_id)})
 
 
-@app.route("/alerts/audio/<path:filename>")
+@overlays_bp.route("/alerts/audio/<path:filename>")
 @limiter.limit("300 per minute")
 def alerts_audio(filename):
     from core import alert_sounds
@@ -12505,7 +12553,7 @@ def healthz():
     }), code
 
 
-@app.route("/metrics")
+@admin_bp.route("/metrics")
 @limiter.exempt
 def metrics():
     """Prometheus text metrics. Login required, or METRICS_TOKEN via X-Metrics-Token / Authorization Bearer."""
@@ -12556,7 +12604,7 @@ def stop_recording_route(streamer):
     return redirect(url_for('streamer_view', streamer=archive))
 
 
-@app.route("/channels/source_record/<channel>", methods=["POST"])
+@channels_bp.route("/channels/source_record/<channel>", methods=["POST"])
 @admin_required
 def source_record_toggle(channel):
     name = normalize_channel_name(channel) or str(channel or "").strip()
@@ -12736,7 +12784,7 @@ if not _IMPORT_ONLY:
 
 
 
-@app.route("/banner/<streamer>")
+@channels_bp.route("/banner/<streamer>")
 @login_required
 def streamer_banner_file(streamer):
     abort_vod_denied()
@@ -12750,7 +12798,7 @@ def streamer_banner_file(streamer):
     return resp
 
 
-@app.route("/streamer/<streamer>/banner/update", methods=["POST"])
+@channels_bp.route("/streamer/<streamer>/banner/update", methods=["POST"])
 @admin_required
 def streamer_banner_update(streamer):
     abort_vod_denied()
@@ -12827,7 +12875,7 @@ def streamer_banner_update(streamer):
     return redirect(url_for("streamer_view", streamer=streamer))
 
 
-@app.route("/admin/banner/update", methods=["POST"])
+@admin_bp.route("/admin/banner/update", methods=["POST"])
 @admin_required
 def admin_banner_update():
     streamer = request.form.get("streamer", "").strip()
@@ -12905,7 +12953,7 @@ def admin_banner_update():
     return redirect(url_for("admin_view", tab="banners"))
 
 
-@app.route("/admin/backups/download/<filename>")
+@admin_bp.route("/admin/backups/download/<filename>")
 @admin_required
 def admin_backup_download(filename):
     clean = secure_filename(filename)
@@ -12918,7 +12966,7 @@ def admin_backup_download(filename):
     abort(404)
 
 
-@app.route("/admin/backups/create", methods=["POST"])
+@admin_bp.route("/admin/backups/create", methods=["POST"])
 @admin_required
 def admin_backup_create():
     # Operator-provided script that writes streamrecorder_*.tar.gz into BACKUP_DIR.
@@ -12941,7 +12989,7 @@ def admin_backup_create():
         return redirect(url_for("admin_view", tab="backups", error=gettext("Backup error: %(error)s", error=str(exc)[:100])))
 
 
-@app.route("/admin/backups/delete/<filename>", methods=["POST"])
+@admin_bp.route("/admin/backups/delete/<filename>", methods=["POST"])
 @admin_required
 def admin_backup_delete(filename):
     clean = secure_filename(filename)
@@ -12961,7 +13009,7 @@ def admin_backup_delete(filename):
     return redirect(url_for("admin_view", tab="backups", error=gettext("Backup %(name)s could not be deleted.", name=clean)))
 
 
-@app.route("/avatar/<streamer>")
+@channels_bp.route("/avatar/<streamer>")
 @login_required
 def streamer_avatar_file(streamer):
     abort_vod_denied()
@@ -12975,7 +13023,7 @@ def streamer_avatar_file(streamer):
     return resp
 
 
-@app.route("/streamer/<streamer>/avatar/update", methods=["POST"])
+@channels_bp.route("/streamer/<streamer>/avatar/update", methods=["POST"])
 @admin_required
 def streamer_avatar_update(streamer):
     abort_vod_denied()
@@ -13050,6 +13098,31 @@ def streamer_avatar_update(streamer):
         return redirect(url_for("streamer_view", streamer=streamer, msg=gettext("Custom profile picture removed.")))
 
     return redirect(url_for("streamer_view", streamer=streamer))
+
+
+def create_app(settings=None):
+    """Build the Flask application. ``settings`` override config values (tests)."""
+    flask_app = Flask(__name__)
+    flask_app.secret_key = load_secret_key()
+    flask_app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=os.environ.get("VOD_SECURE_COOKIES", "true").lower() == "true",
+        SESSION_COOKIE_PATH="/",
+        PERMANENT_SESSION_LIFETIME=timedelta(seconds=SESSION_COOKIE_MAX_AGE_SEC),
+        SESSION_REFRESH_EACH_REQUEST=True,
+    )
+    if settings:
+        flask_app.config.update(settings)
+    ui_i18n.init_app(flask_app)
+    limiter.init_app(flask_app)
+    flask_app.jinja_env.globals["csrf_token"] = generate_csrf_token
+    for blueprint in BLUEPRINTS:
+        flask_app.register_blueprint(blueprint)
+    return flask_app
+
+
+app = create_app()
 
 
 if __name__ == "__main__":
