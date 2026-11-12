@@ -6,7 +6,7 @@
 
 {% block header_actions %}
   <a href="{{ url_for('admin_view') }}" class="ns-btn ns-btn-secondary">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     {{ _('Options') }}
   </a>
   <a href="{{ url_for('index') }}" class="ns-btn ns-btn-secondary">
@@ -19,43 +19,45 @@
   <section class="ns-card-panel" style="margin-bottom: 28px;">
     <div class="ns-panel-head">
       <h2>{{ _('Add new channel') }}</h2>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Twitch or YouTube supported') }}</span>
+      <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Twitch or YouTube supported') }}</span>
     </div>
 
-    <form method="post" action="{{ url_for('channels_add') }}" style="display: flex; flex-direction: column; gap: 14px;">
+    <form id="add-channel-form" method="post" action="{{ url_for('channels_add') }}" style="display: flex; flex-direction: column; gap: 14px;">
       <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex: 2; min-width: min(260px, 100%);">
-          <input name="channel" placeholder="{{ _('Twitch name (e.g. shroud) or YouTube URL / @handle...') }}" required class="ns-input-field" style="width: 100%;">
+          <label for="add-channel-name" class="sr-only">{{ _('Channel') }}</label>
+          <input id="add-channel-name" name="channel" placeholder="{{ _('Twitch name (e.g. shroud) or YouTube URL / @handle…') }}" required class="ns-input-field" style="width: 100%;">
         </div>
         <div style="flex: 1; min-width: 200px;">
-          <input name="archive_name" placeholder="{{ _('Target archive folder (optional)') }}" class="ns-input-field" style="width: 100%;">
+          <label for="add-channel-archive" class="sr-only">{{ _('Target archive folder (optional)') }}</label>
+          <input id="add-channel-archive" name="archive_name" placeholder="{{ _('Target archive folder (optional)') }}" class="ns-input-field" style="width: 100%;">
         </div>
         <button type="submit" class="ns-btn ns-btn-primary" style="white-space: nowrap;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {{ _('Add channel') }}
         </button>
       </div>
 
       <!-- Betriebsmodus Auswahl -->
-      <div style="background: rgba(11, 18, 32, 0.65); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-        <span style="font-size: 12px; font-weight: 700; color: #BB78FF;">{{ _('OPERATING MODE:') }}</span>
+      <fieldset style="margin: 0; min-width: 0; background: rgba(11, 18, 32, 0.65); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+        <legend style="float: left; padding: 0; font-size: 12px; font-weight: 700; color: #BB78FF;">{{ _('Operating mode') }}</legend>
         <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #FFF; cursor: pointer; margin: 0;">
           <input type="radio" name="mode" value="record" checked style="accent-color: #BB78FF; cursor: pointer;">
-          <span>🔴 <strong>{{ _('Full mode:') }}</strong> {{ _('Recording + live stream & Discord notification') }}</span>
+          <span><span aria-hidden="true">🔴</span> <strong>{{ _('Full mode:') }}</strong> {{ _('Recording + live stream & Discord notification') }}</span>
         </label>
         <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A2AEC8; cursor: pointer; margin: 0;">
           <input type="radio" name="mode" value="live_only" style="accent-color: #48D6A2; cursor: pointer;">
-          <span>📡 <strong>{{ _('Live & Discord only:') }}</strong> {{ _('Notification + live stream (no recording)') }}</span>
+          <span><span aria-hidden="true">📡</span> <strong>{{ _('Live & Discord only:') }}</strong> {{ _('Notification + live stream (no recording)') }}</span>
         </label>
-      </div>
+      </fieldset>
     </form>
     <p style="margin: 10px 0 0; font-size: 12px; color: var(--ns-text-muted);">
       {{ _('Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer.') }}
     </p>
 
     {% if channels_msg %}
-    <div style="margin-top: 16px; padding: 12px 16px; border-radius: var(--ns-radius-md); background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd; font-size: 13px;">
+    <div role="status" style="margin-top: 16px; padding: 12px 16px; border-radius: var(--ns-radius-md); background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd; font-size: 13px;">
       {{ channels_msg }}
     </div>
     {% endif %}
@@ -85,38 +87,38 @@
             </span>
             <strong style="font-size: 13px; color: var(--ns-text-primary);">{{ c.name }}</strong>
             {% if c.archive_name and c.archive_name != c.name %}
-            <span style="font-size: 11px; color: var(--ns-text-muted);">→ {{ c.archive_name }}</span>
+            <span style="font-size: 12px; color: var(--ns-text-muted);">→ {{ c.archive_name }}</span>
             {% endif %}
 
             <!-- Mode Badge & Quick Toggle -->
             {% if c.record %}
-            <span style="font-size: 10px; font-weight: 700; color: #F04458; background: rgba(240,68,88,0.15); border: 1px solid rgba(240,68,88,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('VODs are recorded to disk') }}">
-              🔴 {{ _('RECORDING') }}
+            <span style="font-size: 12px; font-weight: 700; color: var(--nebula-status-live-text); background: rgba(240,68,88,0.15); border: 1px solid rgba(240,68,88,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('VODs are recorded to disk') }}">
+              <span aria-hidden="true">🔴</span> {{ _('Recording') }}
             </span>
             <form method="post" action="{{ url_for('source_record_toggle', channel=c.name) }}" style="margin: 0;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="enabled" value="0">
-              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 7px; font-size: 10px;" title="{{ _('Disable recording (live & Discord only)') }}">
+              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 10px; font-size: 12px; min-height: 28px;" title="{{ _('Disable recording (live & Discord only)') }}">
                 {{ _('Switch to live only') }}
               </button>
             </form>
             {% else %}
-            <span style="font-size: 10px; font-weight: 700; color: #48D6A2; background: rgba(72,214,162,0.15); border: 1px solid rgba(72,214,162,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('Live stream and Discord alerts only, no disk recording') }}">
-              📡 {{ _('LIVE & DISCORD ONLY') }}
+            <span style="font-size: 12px; font-weight: 700; color: #48D6A2; background: rgba(72,214,162,0.15); border: 1px solid rgba(72,214,162,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('Live stream and Discord alerts only, no disk recording') }}">
+              <span aria-hidden="true">📡</span> {{ _('Live & Discord only') }}
             </span>
             <form method="post" action="{{ url_for('source_record_toggle', channel=c.name) }}" style="margin: 0;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="enabled" value="1">
-              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 7px; font-size: 10px;" title="{{ _('Enable recording for this channel') }}">
+              <button type="submit" class="ns-btn ns-btn-secondary" style="padding: 2px 10px; font-size: 12px; min-height: 28px;" title="{{ _('Enable recording for this channel') }}">
                 {{ _('Enable recording') }}
               </button>
             </form>
             {% endif %}
 
-            <form method="post" action="{{ url_for('channels_remove', channel=c.name) }}" style="margin: 0; display: flex; align-items: center;">
+            <form method="post" action="{{ url_for('channels_remove', channel=c.name) }}" style="margin: 0; display: flex; align-items: center;" data-confirm="{{ _('Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive.', name=c.name) }}" data-confirm-ok="{{ _('Remove channel') }}" data-confirm-danger>
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="ns-action-btn-mini" style="width: 22px; height: 22px; color: #ef4444; border: none; background: transparent; cursor: pointer;" title="{{ _('Remove channel') }}" onclick='return confirm({{ _("Really remove channel %(name)s?", name=c.name|safe)|tojson }});'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button type="submit" class="ns-action-btn-mini" style="width: 28px; height: 28px; color: var(--nebula-status-live-text); border: none; background: transparent; cursor: pointer;" title="{{ _('Remove channel') }}" aria-label="{{ _('Remove channel') }} {{ c.name }}">
+                <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </form>
           </div>
@@ -132,12 +134,12 @@
         <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--ns-radius-md); background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-subtle);">
           <strong style="font-size: 13px; color: var(--ns-text-primary);">{{ c }}</strong>
           {% if channel_archives and channel_archives.get(c) and channel_archives.get(c) != c %}
-          <span style="font-size: 11px; color: var(--ns-text-muted);">→ {{ channel_archives.get(c) }}</span>
+          <span style="font-size: 12px; color: var(--ns-text-muted);">→ {{ channel_archives.get(c) }}</span>
           {% endif %}
-          <form method="post" action="{{ url_for('channels_remove', channel=c) }}" style="margin: 0;">
+          <form method="post" action="{{ url_for('channels_remove', channel=c) }}" style="margin: 0;" data-confirm="{{ _('Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive.', name=c) }}" data-confirm-ok="{{ _('Remove channel') }}" data-confirm-danger>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="ns-action-btn-mini" style="width: 22px; height: 22px; color: #ef4444; border: none; background: transparent; cursor: pointer;" title="{{ _('Remove') }}" onclick='return confirm({{ _("Remove channel %(name)s?", name=c|safe)|tojson }});'>
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button type="submit" class="ns-action-btn-mini" style="width: 28px; height: 28px; color: var(--nebula-status-live-text); border: none; background: transparent; cursor: pointer;" title="{{ _('Remove channel') }}" aria-label="{{ _('Remove channel') }} {{ c }}">
+              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </form>
         </div>
@@ -146,7 +148,8 @@
     </div>
     {% else %}
     <div class="ns-card-panel" style="text-align: center; padding: 32px; color: var(--ns-text-muted);">
-      {{ _('No monitored channels configured.') }}
+      <p style="margin: 0 0 8px;">{{ _('No channels are monitored yet.') }}</p>
+      <a href="#add-channel-name" style="color: var(--nebula-accent-text); font-weight: 600;">{{ _('Add the first channel above') }}</a>
     </div>
     {% endif %}
   </section>

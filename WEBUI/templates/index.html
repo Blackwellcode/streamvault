@@ -6,7 +6,7 @@
 
 {% block content %}
   {% if channels_msg %}
-  <div style="padding: 12px 16px; margin-bottom: 20px; border-radius: var(--ns-radius-md); background: rgba(77,99,255,0.15); border: 1px solid rgba(77,99,255,0.35); color: #69C9FF;">
+  <div role="status" style="padding: 12px 16px; margin-bottom: 20px; border-radius: var(--ns-radius-md); background: rgba(77,99,255,0.15); border: 1px solid rgba(77,99,255,0.35); color: #69C9FF;">
     {{ channels_msg }}
   </div>
   {% endif %}
@@ -25,7 +25,7 @@
         <div class="nebula-hero-content">
           {% if hero_item.is_live %}
           <div class="nebula-live-badge" style="margin-bottom: 14px;">
-            <span class="nebula-live-dot"></span> {{ _('LIVE NOW') }}
+            <span class="nebula-live-dot" aria-hidden="true"></span> {{ _('Live now') }}
           </div>
           {% else %}
           <div class="nebula-hero-badge">{{ _('FEATURED VOD') }}</div>
@@ -54,7 +54,7 @@
           
           <div style="display:flex; align-items:center; gap:12px;">
             <a href="{{ hero_item.watch_url }}" class="ns-btn ns-btn-primary" style="padding: 10px 24px; font-size: 15px;">
-              {% if hero_item.is_live %}{{ _('WATCH LIVE') }}{% else %}{{ _('Watch now') }}{% endif %}
+              {% if hero_item.is_live %}{{ _('Watch live') }}{% else %}{{ _('Watch now') }}{% endif %}
             </a>
           </div>
         </div>
@@ -68,7 +68,7 @@
             {% endif %}
             {% if not is_mobile %}
             <div class="nebula-hero-play-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
             </div>
             {% endif %}
           </a>
@@ -77,8 +77,8 @@
       </section>
       {% elif not live_channels and not is_mobile %}
       <div class="nebula-empty-live-banner" style="padding: 36px 24px; text-align: center; background: var(--nebula-bg-surface); border: 1px dashed var(--nebula-border); border-radius: 16px; margin-bottom: 24px;">
-        <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.7;">📡</div>
-        <h3 style="color: #FFF; font-size: 18px; margin-bottom: 6px;">{{ _('No live stream active') }}</h3>
+        <div aria-hidden="true" style="font-size: 32px; margin-bottom: 10px; opacity: 0.7;">📡</div>
+        <h2 style="color: #FFF; font-size: 18px; margin-bottom: 6px;">{{ _('No live stream active') }}</h2>
         <p style="color: var(--nebula-text-muted); font-size: 13px; margin: 0;">{{ _('All streamers are currently offline. Past broadcasts can be watched in the archive.') }}</p>
       </div>
       {% endif %}
@@ -87,7 +87,7 @@
       {% if can_access_vods %}
       <section aria-label="{{ _('VOD archive') }}">
         <div class="nebula-section-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <h3 class="nebula-section-title" style="margin:0;">{{ _('Latest VODs') }}</h3>
+          <h2 class="nebula-section-title" style="margin:0;">{{ _('Latest VODs') }}</h2>
           {% if vod_total_pages is defined and vod_total_pages > 1 %}
           <div class="ns-pagination-inline" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#A2AEC8;">
             <span>{{ _('Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)', page=vod_page, pages=vod_total_pages, count=vod_total_count) }}</span>
@@ -105,7 +105,7 @@
           <a href="{{ url_for('vod_view', streamer=vod.streamer_name, filename=vod.name) }}" class="nebula-vod-card">
             <div class="nebula-vod-thumb-box">
               {% if vod.thumb_url %}
-              <img src="{{ vod.thumb_url }}" alt="{{ vod.title or vod.name }}" class="nebula-vod-thumb-img" loading="lazy" decoding="async">
+              <img src="{{ vod.thumb_url }}" alt="" class="nebula-vod-thumb-img" {% if loop.index <= 2 %}{% if loop.first %}fetchpriority="high" {% endif %}loading="eager"{% else %}loading="lazy" decoding="async"{% endif %}>
               {% else %}
               <div style="width:100%; height:100%; background: linear-gradient(135deg, #111A2B 0%, #151F33 100%); display:flex; align-items:center; justify-content:center; color:#A2AEC8; font-weight:700; font-size:16px;">{{ vod.streamer_name }}</div>
               {% endif %}
@@ -116,13 +116,13 @@
               {% if not is_mobile %}
               <div class="nebula-vod-play-overlay">
                 <div class="nebula-vod-play-circle">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 </div>
               </div>
               {% endif %}
             </div>
             <div class="nebula-vod-body">
-              <h4 class="nebula-vod-title">{{ vod.title or vod.name }}</h4>
+              <h3 class="nebula-vod-title">{{ vod.title or vod.name }}</h3>
               <div class="nebula-vod-footer">
                 <span>{{ vod.category or 'VOD' }}</span>
                 <span>{{ vod.date_str or '' }}</span>
@@ -130,7 +130,10 @@
             </div>
           </a>
           {% else %}
-          <div style="grid-column: 1/-1; padding: 32px; text-align: center; color: var(--nebula-text-muted); background: var(--nebula-bg-surface); border-radius: 12px; border: 1px dashed var(--nebula-border);">{{ _('No VODs available in the archive') }}</div>
+          <div style="grid-column: 1/-1; padding: 32px; text-align: center; color: var(--nebula-text-muted); background: var(--nebula-bg-surface); border-radius: 12px; border: 1px dashed var(--nebula-border);">
+            <p style="margin: 0 0 8px;">{{ _('No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live.') }}</p>
+            {% if session.user_role == 'admin' %}<a href="{{ url_for('channels_view') }}" style="color: var(--nebula-accent-text); font-weight: 600;">{{ _('Add a channel to record') }}</a>{% endif %}
+          </div>
           {% endfor %}
         </div>
         {% if vod_total_pages is defined and vod_total_pages > 1 %}
@@ -163,7 +166,7 @@
       <div class="nebula-side-widget">
         <div class="nebula-widget-head" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
           <h3>{{ _('Channels') }}</h3>
-          <a href="{{ url_for('channels_view') }}" style="font-size:11px; color:#69C9FF; text-decoration:none; font-weight:600;">{{ _('Manage streamers') }}</a>
+          <a href="{{ url_for('channels_view') }}" style="font-size:12px; color:#69C9FF; text-decoration:none; font-weight:600;">{{ _('Manage streamers') }}</a>
         </div>
         <div class="nebula-category-list ns-compact-streamer-list">
           {% for s in streamers[:6] %}
@@ -233,11 +236,11 @@
             <span class="ns-telemetry-stat">{{ _('Storage: <strong>%(pct)s%%</strong>', pct=storage.pct|int) }}</span>
             <span class="ns-telemetry-stat">{{ _('<strong>%(free)s</strong> free', free=storage.free_str) }}</span>
           </div>
-          <div class="ns-meter-track" role="progressbar" aria-valuenow="{{ storage.pct|int }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="ns-meter-track" role="progressbar" aria-label="{{ _('Storage usage') }}" aria-valuenow="{{ storage.pct|int }}" aria-valuemin="0" aria-valuemax="100">
             <div id="bar-disk" class="ns-meter-fill" style="width: {{ storage.pct|int }}%;"></div>
           </div>
         </div>
-        <div style="font-size:11px; color:var(--nebula-text-muted);">
+        <div style="font-size:12px; color:var(--nebula-text-muted);">
           {{ _('Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs', channels=streamers|length, vods=dashboard.vod_count) }}
         </div>
       </div>
@@ -251,8 +254,8 @@
         </div>
         <form action="/live/watch" method="post" style="display:flex; gap:8px; margin-top:8px;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="text" name="channel" placeholder="{{ _('Twitch channel name...') }}" required style="flex:1; min-width:0; padding:7px 10px; background:rgba(11,18,32,0.8); border:1px solid #26344F; border-radius:6px; color:#FFF; font-size:12px;">
-          <button type="submit" style="padding:7px 12px; font-size:12px; font-weight:600; background:var(--nebula-accent, #4D63FF); color:#FFF; border:none; border-radius:6px; cursor:pointer; flex-shrink:0;">{{ _('Watch') }}</button>
+          <input type="text" name="channel" placeholder="{{ _('Twitch channel name…') }}" aria-label="{{ _('Twitch channel name') }}" required style="flex:1; min-width:0; padding:7px 10px; background:rgba(11,18,32,0.8); border:1px solid var(--nebula-field-edge); border-radius:6px; color:#FFF; font-size:13px;">
+          <button type="submit" style="padding:7px 12px; font-size:13px; font-weight:600; background:var(--nebula-accent-primary); color:#FFF; border:none; border-radius:6px; cursor:pointer; flex-shrink:0;">{{ _('Watch') }}</button>
         </form>
       </div>
       {% endif %}

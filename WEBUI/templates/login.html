@@ -33,7 +33,7 @@
         </form>
 
         {% if error %}
-        <div class="error" style="margin-top:16px; padding:10px 14px; background:rgba(240,68,88,0.15); border:1px solid rgba(240,68,88,0.4); border-radius:8px; color:#F04458; font-size:13px;">
+        <div class="error" role="alert" style="margin-top:16px; padding:10px 14px; background:rgba(240,68,88,0.15); border:1px solid rgba(240,68,88,0.4); border-radius:8px; color:#F2667A; font-size:13px;">
           {{ error }}
         </div>
         {% endif %}
@@ -50,7 +50,7 @@
       </div>
     </main>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       (function () {
         var form = document.getElementById("login-form");
         var btn = document.getElementById("login-submit");

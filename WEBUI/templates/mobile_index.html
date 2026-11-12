@@ -2,7 +2,7 @@
 <html lang="{{ html_lang }}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>StreamVault · Mobile</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
   {% include 'components/styles.html' %}
@@ -29,9 +29,10 @@
 
 
 
-<main class="mobile-shell">
+<main class="mobile-shell" id="main-content">
+  <h1 class="sr-only">{{ _('Dashboard') }}</h1>
   {% if channels_msg %}
-  <div style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.35); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #C5D2F6; margin-bottom: 18px;">
+  <div role="status" style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.35); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #C5D2F6; margin-bottom: 18px;">
     {{ channels_msg }}
   </div>
   {% endif %}
@@ -58,7 +59,7 @@
         </div>
         <h2 style="font-size: 15px; font-weight: 600; line-height: 1.35; color: #F3F5FC; margin: 0 0 14px 0;">{{ hero_item.title }}</h2>
         <a href="{{ hero_item.watch_url }}" class="ns-btn ns-btn-primary" style="display: block; text-align: center; padding: 10px 0; font-size: 14px; font-weight: 700; box-sizing: border-box;">
-          {% if hero_item.is_live %}{{ _('WATCH LIVE') }}{% else %}{{ _('Watch now') }}{% endif %}
+          {% if hero_item.is_live %}{{ _('Watch live') }}{% else %}{{ _('Watch now') }}{% endif %}
         </a>
       </div>
     </div>
@@ -68,7 +69,7 @@
   <!-- 3. Streamer List -->
   <section style="margin-bottom: 28px;">
     <div style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-      <span>{% if can_access_vods %}{{ _('My streamers') }}{% else %}{{ _('Live now') }}{% endif %}</span>
+      <h2 style="font-size: inherit; font-weight: inherit; margin: 0;">{% if can_access_vods %}{{ _('My streamers') }}{% else %}{{ _('Live now') }}{% endif %}</h2>
       <span style="font-size: 12px; color: var(--nebula-text-muted, #75839D);">{{ ngettext('%(num)d channel', '%(num)d channels', streamers|length) }}</span>
     </div>
 
@@ -106,11 +107,11 @@
 
           {% if s.twitch_live or s.online %}
           <a href="{{ url_for('twitch_watch', channel=(s.twitch_login or s.name)) }}" class="ns-btn ns-btn-primary" style="padding: 7px 12px; font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
-            {{ _('WATCH LIVE') }}
+            {{ _('Watch live') }}
           </a>
           {% elif can_access_vods %}
-          <a href="{{ url_for('streamer_view', streamer=s.name) }}" style="color: #75839D; padding: 8px; flex-shrink: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <a href="{{ url_for('streamer_view', streamer=s.name) }}" aria-label="{{ _('Open streamer %(name)s', name=s.name) }}" style="color: var(--nebula-text-muted); padding: 12px; flex-shrink: 0;">
+            <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </a>
           {% endif %}
         </div>
@@ -124,7 +125,7 @@
   {% if can_access_vods and recent_vods %}
   <section style="margin-bottom: 24px;">
     <div style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-      <span>{{ _('Latest VODs') }}</span>
+      <h2 style="font-size: inherit; font-weight: inherit; margin: 0;">{{ _('Latest VODs') }}</h2>
       {% if vod_total_pages is defined and vod_total_pages > 1 %}
       <span data-vod-page-counter style="font-size: 12px; font-weight: 500; color: #A2AEC8;">{{ _('Page %(page)s / %(total)s', page=vod_page, total=vod_total_pages) }}</span>
       {% endif %}
@@ -143,9 +144,9 @@
           {% endif %}
         </div>
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;">
-          <h4 style="font-size: 13px; font-weight: 600; color: #FFF; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ vod.title or vod.name }}</h4>
+          <h3 style="font-size: 13px; font-weight: 600; color: #FFF; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ vod.title or vod.name }}</h3>
           <div style="font-size: 11px; color: #BB78FF; margin-bottom: 2px;">{{ vod.streamer_name }}</div>
-          <div style="font-size: 10px; color: #75839D;">{{ vod.date_str or '' }}</div>
+          <div style="font-size: 10px; color: var(--nebula-text-muted);">{{ vod.date_str or '' }}</div>
         </div>
       </a>
       {% endfor %}
@@ -173,22 +174,29 @@
 </main>
 
 <!-- NEBULA Mobile Bottom Navigation -->
-<div class="mobile-global-nav" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
-  <a href="{{ url_for('index') }}" class="active" style="color: #4D63FF;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+<nav class="mobile-global-nav" aria-label="{{ _('Main navigation') }}" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
+  <a href="{{ url_for('index') }}" class="active" aria-current="page">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>{{ _('Home') }}</span>
   </a>
-  <a href="{{ url_for('twitch_live_hub') }}" style="color: #75839D;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+  <a href="{{ url_for('twitch_live_hub') }}" style="color: var(--nebula-text-muted);">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
     <span>{{ _('Live') }}</span>
   </a>
   {% if session.user_role == 'admin' %}
-  <a href="{{ url_for('channels_view') }}" style="color: #75839D;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <a href="{{ url_for('channels_view') }}" style="color: var(--nebula-text-muted);">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>{{ _('Streamer') }}</span>
   </a>
   {% endif %}
-</div>
+  <form method="post" action="{{ url_for('logout') }}" class="sv-bottom-nav__logout">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      <span>{{ _('Log out') }}</span>
+    </button>
+  </form>
+</nav>
 
 {% include 'components/js_i18n.html' %}
 <script src="{{ url_for('static', filename='dashboard_live.js', v=ASSET_VERSION) }}"></script>

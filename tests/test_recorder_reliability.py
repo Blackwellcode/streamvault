@@ -906,9 +906,14 @@ class LegalPagesTests(IsolatedBaseTest):
 
 
 class ClipEditorShareXssTests(IsolatedBaseTest):
-    """?clip_name= lands in the Share button's onclick; it must stay a JS string."""
+    """?clip_name= lands in the Share button's data-clip-name; it must stay plain data.
 
-    def _share_onclick(self, clip_name):
+    Under the enforced CSP (script-src-attr 'none') the button has no onclick; the
+    listener reads data-clip-name. The value must round-trip exactly and the page
+    must not contain any inline event handler the payload could have created.
+    """
+
+    def _share_clip_name(self, clip_name):
         from html.parser import HTMLParser
         from urllib.parse import quote
 
@@ -925,24 +930,24 @@ class ClipEditorShareXssTests(IsolatedBaseTest):
         )
         self.assertEqual(response.status_code, 200)
 
-        handlers = []
+        share_values = []
+        inline_handlers = []
 
-        class OnclickCollector(HTMLParser):
+        class ShareCollector(HTMLParser):
             # HTMLParser decodes entities in attribute values exactly like a
-            # browser does before the onclick body reaches the JS engine.
+            # browser does before the listener reads the data attribute.
             def handle_starttag(self, tag, attrs):
-                value = dict(attrs).get("onclick") or ""
-                if value.startswith("shareClip("):
-                    handlers.append(value)
+                attr_map = dict(attrs)
+                inline_handlers.extend(name for name in attr_map if name.startswith("on"))
+                if attr_map.get("id") == "btnShareClip":
+                    share_values.append(attr_map.get("data-clip-name"))
 
-        OnclickCollector().feed(response.get_data(as_text=True))
-        self.assertEqual(len(handlers), 1)
-        return handlers[0]
+        ShareCollector().feed(response.get_data(as_text=True))
+        self.assertEqual(inline_handlers, [])
+        self.assertEqual(len(share_values), 1)
+        return share_values[0]
 
     def test_clip_name_cannot_break_out_of_the_share_handler(self):
-        import json
-        import re
-
         payloads = (
             "a');console.log('SVPOC');//",
             'a");console.log("SVPOC");//',
@@ -952,13 +957,52 @@ class ClipEditorShareXssTests(IsolatedBaseTest):
         )
         for payload in payloads:
             with self.subTest(payload=payload):
-                handler = self._share_onclick(payload)
-                match = re.fullmatch(r"shareClip\((.*)\)", handler, flags=re.DOTALL)
-                if match is None:
-                    self.fail(f"unexpected Share handler: {handler!r}")
-                # The single argument must be one string literal that evaluates
-                # to exactly the payload; anything else means code ran outside it.
-                self.assertEqual(json.loads(match.group(1)), payload)
+                # The attribute must decode to exactly the payload; anything else
+                # means the payload escaped the attribute into markup.
+                self.assertEqual(self._share_clip_name(payload), payload)
+
+
+class ContentSecurityPolicyTests(IsolatedBaseTest):
+    """The CSP is enforced by default and inline scripts run only with the request nonce."""
+
+    def _get(self, path):
+        from WEBUI import webui
+        webui.ensure_admin_user()
+        webui.app.config.update(TESTING=True)
+        client = webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        return client.get(path)
+
+    def test_policy_is_enforced_with_nonce_and_without_unsafe_inline_scripts(self):
+        import re
+
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("VOD_CSP_ENFORCE", None)
+            response = self._get("/admin")
+        self.assertEqual(response.status_code, 200)
+        policy = response.headers.get("Content-Security-Policy")
+        self.assertIsNotNone(policy)
+        script_src = re.search(r"script-src ([^;]*);", policy).group(1)
+        self.assertNotIn("'unsafe-inline'", script_src)
+        self.assertIn("script-src-attr 'none'", policy)
+        nonce = re.search(r"'nonce-([^']+)'", script_src).group(1)
+        html = response.get_data(as_text=True)
+        inline = re.findall(r"<script(?![^>]*\bsrc=)([^>]*)>", html)
+        self.assertTrue(inline)
+        for attrs in inline:
+            if 'nonce="' in attrs:
+                self.assertIn('nonce="%s"' % nonce, attrs)
+        for host in ("https://api.betterttv.net", "https://api.frankerfacez.com", "https://7tv.io", "https://api.ivr.fi"):
+            self.assertIn(host, policy)
+
+    def test_report_only_when_explicitly_disabled(self):
+        with mock.patch.dict(os.environ, {"VOD_CSP_ENFORCE": "false"}):
+            response = self._get("/admin")
+        self.assertIsNone(response.headers.get("Content-Security-Policy"))
+        self.assertIsNotNone(response.headers.get("Content-Security-Policy-Report-Only"))
 
 
 class ClientIpTests(unittest.TestCase):

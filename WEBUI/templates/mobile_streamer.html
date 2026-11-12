@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>{{ display_name or streamer }} · StreamVault Mobile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   {% include 'components/styles.html' %}
 </head>
 <body class="mobile-body {{ theme_class }} ns-platform" style="background:#070B14; color:#F3F5FC; padding-bottom:80px; overflow-x:hidden;">
@@ -11,8 +11,8 @@
 <!-- Mobile Header -->
 <div class="mobile-header" style="background: rgba(7, 11, 20, 0.95); border-bottom: 1px solid var(--nebula-border, #26344F); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);">
   <div style="display: flex; align-items: center; gap: 12px;">
-    <a href="{{ url_for('index') }}" class="mobile-back" aria-label="{{ _('Back to overview') }}" style="color: #A2AEC8; display: flex; align-items: center;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <a href="{{ url_for('index') }}" class="mobile-back" aria-label="{{ _('Back to overview') }}" style="color: #A2AEC8; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -11px;">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </a>
     <h1 style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">{{ display_name or streamer }}</h1>
   </div>
@@ -52,18 +52,18 @@
       {% endif %}
     {% endif %}
     {% if session.user_role == 'admin' %}
-    <form method="post" action="{{ url_for('streamer_download_all', streamer=streamer) }}" style="margin:0;">
+    <form method="post" action="{{ url_for('streamer_download_all', streamer=streamer) }}" style="margin:0;" data-confirm="{{ _('Download all VODs of this streamer as one archive? This can take a while for large channels.') }}" data-confirm-ok="{{ _('Download all') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="ns-btn ns-btn-secondary" style="padding: 8px 12px; font-size: 13px;" onclick='return confirm({{ _("Download all VODs?")|tojson }})'>{{ _('Download all') }}</button>
+      <button class="ns-btn ns-btn-secondary" style="padding: 8px 12px; font-size: 13px;">{{ _('Download all') }}</button>
     </form>
     {% endif %}
   </div>
 
   <!-- Search & Filter Row -->
-  <form method="get" style="display: flex; gap: 8px; margin-bottom: 16px;">
+  <form method="get" role="search" style="display: flex; gap: 8px; margin-bottom: 16px;">
     <input type="hidden" name="type" value="{{ current_type }}">
-    <input name="q" placeholder="{{ _('Search...') }}" value="{{ q or '' }}" style="flex: 1; padding: 8px 12px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
-    <select name="sort" onchange="this.form.submit()" style="padding: 8px 10px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
+    <input name="q" type="search" aria-label="{{ _('Search') }}" placeholder="{{ _('Search…') }}" value="{{ q or '' }}" style="flex: 1; padding: 8px 12px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
+    <select name="sort" data-autosubmit aria-label="{{ _('Sort') }}" style="padding: 8px 10px; background: #111A2B; border: 1px solid #26344F; border-radius: 8px; color: #FFF; font-size: 13px;">
       <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ _('Newest') }}</option>
       <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>{{ _('Oldest') }}</option>
       <option value="size_desc" {% if sort == 'size_desc' %}selected{% endif %}>{{ _('Largest') }}</option>
@@ -101,7 +101,7 @@
     {% for f in files %}
     <div style="background: var(--nebula-bg-surface, #111A2B); border: 1px solid var(--nebula-border, #26344F); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.4);">
       <a href="{{ url_for('vod_view' if f.route == 'vod' else 'clip_view', streamer=streamer, filename=f.name) }}" style="display: block; position: relative; aspect-ratio: 16 / 9; background: #0B1220; overflow: hidden;">
-        <img src="{{ f.thumb_url }}" alt="" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/thumb_fallback.jpg') }}'">
+        <img src="{{ f.thumb_url }}" alt="" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" data-fallback-src="{{ url_for('static', filename='img/thumb_fallback.jpg') }}">
         {% if f.duration_str %}
         <span style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); color: #FFF; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-family: var(--ns-font-mono);">{{ f.duration_str }}</span>
         {% endif %}
@@ -128,7 +128,10 @@
           <a href="{{ url_for('download' if f.route == 'vod' else 'clip_download', streamer=streamer, filename=f.name) }}" class="ns-btn ns-btn-secondary" style="padding: 6px 12px; font-size: 12px;">{{ _('Download') }}</a>
           {% endif %}
           {% if session.user_role == 'admin' %}
-          <button onclick="deleteItem(this, '{{ url_for('vod_delete' if f.route == 'vod' else 'clip_delete', streamer=streamer, filename=f.name) }}')" class="ns-btn nebula-btn-danger" style="padding: 6px 12px; font-size: 12px;">{{ _('Delete') }}</button>
+          <form method="post" action="{{ url_for('vod_delete' if f.route == 'vod' else 'clip_delete', streamer=streamer, filename=f.name) }}" style="margin:0;" data-confirm="{{ _('Delete %(name)s? The file is removed from the archive and cannot be restored.', name=f.name) }}" data-confirm-ok="{{ _('Delete') }}" data-confirm-danger>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="ns-btn nebula-btn-danger" style="padding: 6px 12px; font-size: 12px;">{{ _('Delete') }}</button>
+          </form>
           {% endif %}
         </div>
       </div>
@@ -159,22 +162,45 @@
 </main>
 
 <!-- NEBULA Mobile Bottom Navigation -->
-<div class="mobile-global-nav" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
-  <a href="{{ url_for('index') }}" style="color: #75839D;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+<nav class="mobile-global-nav" aria-label="{{ _('Main navigation') }}" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
+  <a href="{{ url_for('index') }}" style="color: var(--nebula-text-muted);">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>{{ _('Home') }}</span>
   </a>
-  <a href="{{ url_for('twitch_live_hub') }}" style="color: #75839D;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+  <a href="{{ url_for('twitch_live_hub') }}" style="color: var(--nebula-text-muted);">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
     <span>{{ _('Live') }}</span>
   </a>
   {% if session.user_role == 'admin' %}
-  <a href="{{ url_for('channels_view') }}" class="active" style="color: #4D63FF;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <a href="{{ url_for('channels_view') }}" class="active" aria-current="page">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>{{ _('Streamer') }}</span>
   </a>
   {% endif %}
-</div>
+  <form method="post" action="{{ url_for('logout') }}" class="sv-bottom-nav__logout">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      <span>{{ _('Log out') }}</span>
+    </button>
+  </form>
+</nav>
+<script nonce="{{ csp_nonce() }}">
+  (function () {
+    document.querySelectorAll('select[data-autosubmit]').forEach(function (sel) {
+      sel.addEventListener('change', function () { if (sel.form) sel.form.submit(); });
+    });
+    document.querySelectorAll('img[data-fallback-src]').forEach(function (img) {
+      function useFallback() {
+        var fb = img.getAttribute('data-fallback-src');
+        img.removeAttribute('data-fallback-src');
+        if (fb) img.src = fb;
+      }
+      if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) useFallback();
+      else img.addEventListener('error', useFallback, { once: true });
+    });
+  })();
+</script>
 
 </body>
 </html>
