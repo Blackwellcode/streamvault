@@ -525,7 +525,8 @@ def salvage_temp_recording(temp_path, output_file, reason="", source_channel=Non
                 os.replace(temp_path, dest)
                 final_path = dest
                 break
-            except Exception:
+            except OSError as exc:
+                logger.warning("Salvage move to %s failed: %s", dest, exc)
                 continue
         if final_path is None:
             # NEVER silently delete large .part files
@@ -811,7 +812,9 @@ def load_current_recording(recordings_dir, source_channel=None):
             if info_source and info_source != source_channel:
                 return None
         return data
-    except Exception:
+    except (OSError, ValueError) as exc:
+        throttled_log("warning", f"current-recording:{path}",
+                      f"Recording pointer {path} unreadable: {exc}")
         return None
 
 def save_current_recording(recordings_dir, info, source_channel=None):
@@ -977,7 +980,11 @@ def is_process_running(pid):
         return False
     except PermissionError:
         return True
-    except Exception:
+    except Exception as exc:
+        # Kept broad on purpose: this runs inside the recorder's lock logic and
+        # must never raise; an unusable PID (TypeError, OverflowError) means
+        # "not running".
+        logger.warning("PID %r not checkable, treating as not running: %s", pid, exc)
         return False
     return True
 
@@ -1261,7 +1268,9 @@ def parse_recording_timestamp(filename, source_channel=None, archive_channel=Non
     for fmt in (RECORDING_TIMESTAMP_FORMAT, LEGACY_RECORDING_TIMESTAMP_FORMAT):
         try:
             return time.mktime(time.strptime(timestamp, fmt))
-        except Exception:
+        except (ValueError, OverflowError) as exc:
+            # Trying the next format is the point of this loop; only debug.
+            logger.debug("Recording timestamp %s is not %s: %s", timestamp, fmt, exc)
             continue
     return None
 
@@ -1902,7 +1911,11 @@ def should_emit_deferred_live_notify(source_channel, conf, recording_metadata=No
     """False when the source already flipped offline (leftover playlist)."""
     try:
         info = cheap_live_presence(source_channel, conf)
-    except Exception:
+    except Exception as exc:
+        # Kept broad on purpose: a presence-check failure must not stop the
+        # recording loop; the notification is sent as before.
+        throttled_log("warning", f"presence:{source_channel}",
+                      f"Live presence check for {source_channel} failed, notifying anyway: {exc}")
         return True
     return info.get("live") is not False
 
@@ -1915,7 +1928,11 @@ def source_eventsub_is_live(source_channel, conf=None):
     try:
         login = twitch_login_from_source(source_channel, conf)
         return twitch_eventsub.is_live(login)
-    except Exception:
+    except Exception as exc:
+        # Kept broad on purpose: called from the recording loop's wake check;
+        # "unknown" (None) is the safe answer.
+        throttled_log("warning", f"eventsub:{source_channel}",
+                      f"EventSub state for {source_channel} unavailable: {exc}")
         return None
 
 
@@ -1974,7 +1991,11 @@ def _helix_live_status(source_channel, conf=None):
             return None
         login = twitch_login_from_source(source_channel, conf)
         stream = twitch_api.get_stream(login, monitored=True)
-    except Exception:
+    except Exception as exc:
+        # Kept broad on purpose: Helix is a fallback inside the recording loop;
+        # "unknown" (None) keeps the loop running.
+        throttled_log("warning", f"helix-live:{source_channel}",
+                      f"Helix live status for {source_channel} unavailable: {exc}")
         return None
     if not isinstance(stream, dict) or not stream.get("is_live"):
         return None
@@ -2172,7 +2193,10 @@ def format_chat_content(chat_history):
                     line = " " * len(prefix) + word
             lines.append(line)
         return "\n".join(lines[-maxlines:]) + "\n"
-    except Exception:
+    except Exception as exc:
+        # Kept broad on purpose: overlay text runs next to a live recording and
+        # an empty overlay is better than a crash.
+        throttled_log("warning", "chat-overlay", f"Chat overlay text not built: {exc}")
         return ""
 
 def write_chat_text(chat_history, output_path):

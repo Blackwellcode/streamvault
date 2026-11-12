@@ -50,6 +50,7 @@ def ensure_chat_chunks(
 
     chunks: Dict[int, List[Dict[str, Any]]] = {}
     total_messages = 0
+    skipped = 0
 
     try:
         with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -59,7 +60,10 @@ def ensure_chat_chunks(
                     continue
                 try:
                     data = json.loads(line)
-                except Exception:
+                except ValueError:
+                    data = None
+                if not isinstance(data, dict):
+                    skipped += 1
                     continue
 
                 rel = data.get("rel")
@@ -78,6 +82,13 @@ def ensure_chat_chunks(
                     chunks[chunk_idx] = []
                 chunks[chunk_idx].append(data)
                 total_messages += 1
+
+        # One bad line is normally the half-written tail of a log that is still
+        # being appended to (debug); more than one means a damaged file.
+        if skipped > 1:
+            logger.warning("chat chunks %s: %d unreadable lines skipped", log_path, skipped)
+        elif skipped:
+            logger.debug("chat chunks %s: 1 unreadable line skipped", log_path)
 
         # Write out each chunk as compact static JSON
         max_chunk = max(chunks.keys()) if chunks else -1

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import json
 import os
 import posixpath
@@ -13,6 +14,7 @@ from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
     close_quietly,
+    mask_error,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -25,6 +27,7 @@ from core.storage.base import (
 )
 from core.storage import http
 
+logger = logging.getLogger(__name__)
 API = "https://api.dropboxapi.com/2"
 CONTENT = "https://content.dropboxapi.com/2"
 AUTH_URL = "https://www.dropbox.com/oauth2/authorize"
@@ -256,7 +259,8 @@ class DropboxProvider(StorageProvider):
                 "usage": int(data.get("used") or 0),
                 "limit": int((data.get("allocation") or {}).get("allocated") or 0),
             }
-        except Exception:
+        except (StorageError, AttributeError, TypeError, ValueError) as exc:
+            logger.warning("%s quota unavailable: %s", self.type_id, mask_error(exc))
             return None
 
     def upload_file(

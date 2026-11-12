@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 import urllib.parse
@@ -11,6 +12,7 @@ from flask_babel import lazy_gettext
 
 from core.storage.base import (
     close_quietly,
+    mask_error,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -26,6 +28,7 @@ from core.storage.base import (
 )
 from core.storage import http
 
+logger = logging.getLogger(__name__)
 GRAPH = "https://graph.microsoft.com/v1.0"
 AUTH_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
 TOKEN_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
@@ -201,7 +204,8 @@ class OneDriveProvider(StorageProvider):
             data = http.json_response(response, "OneDrive-Quota", provider=self.type_id)
             quota = data.get("quota") or {}
             return {"limit": int(quota.get("total") or 0), "usage": int(quota.get("used") or 0)}
-        except Exception:
+        except (StorageError, AttributeError, TypeError, ValueError) as exc:
+            logger.warning("%s quota unavailable: %s", self.type_id, mask_error(exc))
             return None
 
     def upload_file(

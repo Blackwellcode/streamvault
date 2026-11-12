@@ -440,5 +440,27 @@ class TwitchWatchFallbackTests(IsolatedBaseTest):
 
 
 
+
+
+class RedisErrorLoggingTests(unittest.TestCase):
+    def test_delete_state_logs_redis_errors(self):
+        client = mock.Mock()
+        client.delete.side_effect = redis_client.REDIS_ERRORS[0]("connection lost")
+        with mock.patch.object(redis_client, "get_redis", return_value=client), \
+                self.assertLogs("streamvault.redis", level="WARNING"):
+            self.assertFalse(redis_client.delete_state("k"))
+
+
+class StorageQuotaErrorTests(unittest.TestCase):
+    def test_dropbox_quota_failure_is_logged_and_none(self):
+        from core.storage.base import StorageError
+        from core.storage.providers.dropbox import DropboxProvider
+        provider = DropboxProvider({})
+        with mock.patch.object(provider, "_rpc", side_effect=StorageError("quota endpoint down")), \
+                self.assertLogs(level="WARNING") as logs:
+            self.assertIsNone(provider.quota())
+        self.assertTrue(any("quota endpoint down" in line for line in logs.output))
+
+
 if __name__ == "__main__":
     unittest.main()

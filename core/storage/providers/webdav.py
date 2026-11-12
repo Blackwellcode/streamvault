@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -11,6 +12,7 @@ from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
     close_quietly,
+    mask_error,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -25,6 +27,7 @@ from core.storage.base import (
 )
 from core.storage import http
 
+logger = logging.getLogger(__name__)
 DAV = "{DAV:}"
 
 
@@ -307,5 +310,6 @@ class WebDAVProvider(StorageProvider):
             available_i = int(available) if available and available.isdigit() else 0
             used_i = int(used) if used and used.isdigit() else 0
             return {"limit": available_i + used_i, "usage": used_i}
-        except Exception:
+        except (StorageError, ET.ParseError, ValueError) as exc:
+            logger.warning("%s quota unavailable: %s", self.type_id, mask_error(exc))
             return None
