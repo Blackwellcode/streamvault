@@ -133,5 +133,60 @@ class SessionRevocationTests(WebTestBase):
         self.assertEqual(client.get("/admin").status_code, 302)
 
 
+class LoginThrottleTests(WebTestBase):
+    def test_ipv6_addresses_share_their_64(self):
+        key = self.webui.login_rate_key
+        self.assertEqual(key("2001:db8:1:2::1"), key("2001:db8:1:2:ffff::9"))
+        self.assertEqual(key("2001:db8:1:2::1"), "2001:db8:1:2::/64")
+        self.assertNotEqual(key("2001:db8:1:2::1"), key("2001:db8:1:3::1"))
+        self.assertEqual(key("::ffff:192.0.2.5"), "192.0.2.5")
+        self.assertEqual(key("192.0.2.5"), "192.0.2.5")
+
+    def test_rotating_ipv6_inside_one_64_gets_blocked(self):
+        user = self.make_user()
+        statuses = []
+        for i in range(self.webui.LOGIN_IP_MAX_FAILS + 1):
+            _, response = self.login(user, password="wrong", ip=f"2001:db8:aa:bb::{i + 1:x}")
+            statuses.append(response.status_code)
+        self.assertEqual(statuses[-1], 429)
+        # Even the right password from another address in the same /64 is refused.
+        _, response = self.login(user, ip="2001:db8:aa:bb::ffff")
+        self.assertEqual(response.status_code, 429)
+        self.assertIn("Retry-After", response.headers)
+
+    def test_failures_from_many_addresses_lock_the_account_name(self):
+        user = self.make_user()
+        limit = self.webui.LOGIN_USER_MAX_FAILS
+        for i in range(limit):
+            _, response = self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
+            self.assertNotEqual(response.status_code, 429, f"attempt {i + 1}")
+        _, response = self.login(user, ip="198.51.100.200")
+        self.assertEqual(response.status_code, 429)
+        wait = int(response.headers["Retry-After"])
+        self.assertGreater(wait, 0)
+        self.assertLessEqual(wait, self.webui.LOGIN_USER_WINDOW_SEC)
+        self.assertIn("Too many login attempts", response.get_data(as_text=True))
+        # Other accounts are not affected.
+        _, response = self.login(config.VOD_USER, password=config.VOD_PASS, ip="198.51.100.201")
+        self.assertEqual(response.status_code, 302)
+
+    def test_successful_login_resets_the_name_counter(self):
+        user = self.make_user()
+        for i in range(self.webui.LOGIN_USER_MAX_FAILS - 1):
+            self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
+        _, response = self.login(user, ip="198.51.100.9")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.webui.username_lockout_wait(user), 0)
+
+    def test_flask_limiter_counts_only_post(self):
+        with mock.patch.object(self.webui.limiter, "enabled", True):
+            self.webui.limiter.reset()
+            client = self.webui.app.test_client()
+            for _ in range(15):
+                response = client.get("/login", environ_base={"REMOTE_ADDR": "192.0.2.77"})
+                self.assertEqual(response.status_code, 200)
+            self.webui.limiter.reset()
+
+
 if __name__ == "__main__":
     unittest.main()

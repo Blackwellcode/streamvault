@@ -253,6 +253,8 @@ def init_db():
         c.execute("CREATE TABLE IF NOT EXISTS login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, username TEXT, success INTEGER, ts REAL)")
         c.execute("CREATE TABLE IF NOT EXISTS login_attempts (ip TEXT NOT NULL, ts REAL NOT NULL)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_ts ON login_attempts(ip, ts)")
+        c.execute("CREATE TABLE IF NOT EXISTS login_user_attempts (username TEXT NOT NULL, ts REAL NOT NULL)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_login_user_attempts ON login_user_attempts(username, ts)")
         c.execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, payload TEXT, status TEXT DEFAULT 'pending', created_at REAL, updated_at REAL)")
         task_columns = {row["name"] for row in c.execute("PRAGMA table_info(tasks)").fetchall()}
         for column, definition in {

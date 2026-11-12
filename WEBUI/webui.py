@@ -60,7 +60,7 @@ from werkzeug.utils import safe_join, secure_filename
 
 # `_` is used as a throwaway name throughout this module, so translations use the
 # full names (both are extracted by pybabel by default).
-from flask_babel import gettext, lazy_gettext
+from flask_babel import gettext, lazy_gettext, ngettext
 from recorder import chat_events
 from recorder import clip_engine
 from WEBUI import i18n as ui_i18n
@@ -414,6 +414,12 @@ def ensure_login_attempts_schema():
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_ts ON login_attempts(ip, ts)"
         )
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS login_user_attempts (username TEXT NOT NULL, ts REAL NOT NULL)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_login_user_attempts ON login_user_attempts(username, ts)"
+        )
         conn.commit()
     finally:
         conn.close()
@@ -487,43 +493,131 @@ def get_client_ip():
             return last_hop
     return remote
 
+LOGIN_IP_MAX_FAILS = max(1, _env_int("VOD_LOGIN_IP_MAX_FAILS", 5))
+LOGIN_IP_WINDOW_SEC = max(60, _env_int("VOD_LOGIN_IP_WINDOW_SEC", 300))
+LOGIN_USER_MAX_FAILS = max(1, _env_int("VOD_LOGIN_USER_MAX_FAILS", 10))
+LOGIN_USER_WINDOW_SEC = max(60, _env_int("VOD_LOGIN_USER_WINDOW_SEC", 3600))
+
+
+def login_rate_key(ip):
+    """Address key for login throttling: IPv6 clients are grouped by their /64.
+
+    One subscriber usually controls a whole /64, so per-address counting would
+    let them rotate addresses freely. IPv4-mapped IPv6 counts as IPv4.
+    """
+    try:
+        addr = ipaddress.ip_address(str(ip or "").strip())
+    except ValueError:
+        return str(ip or "")
+    if addr.version == 6:
+        if addr.ipv4_mapped is not None:
+            return str(addr.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return str(addr)
+
+
+def _login_username_key(username):
+    return str(username or "").strip().lower()[:128]
+
+
 def check_rate_limit(ip):
-    """Return True if IP is under the failed-login threshold (shared via SQLite)."""
+    """Return True if the address key is under the failed-login threshold (shared via SQLite)."""
     now = time.time()
-    cutoff = now - 300  # last 5 minutes
+    cutoff = now - LOGIN_IP_WINDOW_SEC
     conn = database.get_db()
     try:
         conn.execute("DELETE FROM login_attempts WHERE ts <= ?", (cutoff,))
         row = conn.execute(
             "SELECT COUNT(*) AS c FROM login_attempts WHERE ip=? AND ts > ?",
-            (ip, cutoff),
+            (login_rate_key(ip), cutoff),
         ).fetchone()
         conn.commit()
         count = int(row["c"] if row is not None else 0)
-        return count < 5
+        return count < LOGIN_IP_MAX_FAILS
     finally:
         conn.close()
 
 
-def add_login_attempt(ip):
+def username_lockout_wait(username):
+    """Seconds until the next login attempt for this account is allowed (0 = now)."""
+    key = _login_username_key(username)
+    if not key:
+        return 0
+    now = time.time()
+    cutoff = now - LOGIN_USER_WINDOW_SEC
+    conn = database.get_db()
+    try:
+        conn.execute("DELETE FROM login_user_attempts WHERE ts <= ?", (cutoff,))
+        rows = conn.execute(
+            "SELECT ts FROM login_user_attempts WHERE username=? AND ts > ? ORDER BY ts DESC LIMIT ?",
+            (key, cutoff, LOGIN_USER_MAX_FAILS),
+        ).fetchall()
+        conn.commit()
+    finally:
+        conn.close()
+    if len(rows) < LOGIN_USER_MAX_FAILS:
+        return 0
+    # The oldest of the newest N failures must leave the window first.
+    return max(1, int(math.ceil(float(rows[-1]["ts"]) + LOGIN_USER_WINDOW_SEC - now)))
+
+
+def add_login_attempt(ip, username=None):
+    now = time.time()
     conn = database.get_db()
     try:
         conn.execute(
             "INSERT INTO login_attempts (ip, ts) VALUES (?, ?)",
-            (ip, time.time()),
+            (login_rate_key(ip), now),
         )
+        key = _login_username_key(username)
+        if key:
+            conn.execute(
+                "INSERT INTO login_user_attempts (username, ts) VALUES (?, ?)",
+                (key, now),
+            )
         conn.commit()
     finally:
         conn.close()
 
 
-def clear_login_attempts(ip):
+def clear_login_attempts(ip, username=None):
     conn = database.get_db()
     try:
-        conn.execute("DELETE FROM login_attempts WHERE ip=?", (ip,))
+        conn.execute("DELETE FROM login_attempts WHERE ip=?", (login_rate_key(ip),))
+        key = _login_username_key(username)
+        if key:
+            conn.execute("DELETE FROM login_user_attempts WHERE username=?", (key,))
         conn.commit()
     finally:
         conn.close()
+
+
+def ban_remaining_seconds(ip):
+    """Remaining lockout of an address (exact or its /64), 0 if none, -1 if permanent."""
+    keys = {str(ip or ""), login_rate_key(ip)}
+    conn = database.get_db()
+    try:
+        rows = conn.execute(
+            "SELECT expires_at FROM bans WHERE ip IN (%s)" % ",".join("?" * len(keys)),
+            tuple(keys),
+        ).fetchall()
+    except sqlite3.OperationalError as exc:
+        if "no such table" in str(exc).lower():
+            logging.warning("Ban table missing (database not initialised): %s", exc)
+            return 0
+        logging.error("Database error checking bans: %s", exc)
+        raise
+    finally:
+        conn.close()
+    now = time.time()
+    remaining = 0
+    for row in rows:
+        expires_at = row["expires_at"]
+        if expires_at is None or expires_at <= 0:
+            return -1
+        remaining = max(remaining, int(math.ceil(float(expires_at) - now)))
+    return max(0, remaining)
+
 
 def load_bans():
     conn = database.get_db()
@@ -7510,16 +7604,32 @@ def maintenance():
     return render_template_string(MAINTENANCE_TEMPLATE), 503
 
 
+def login_throttled_response(wait_sec):
+    """429 login page that tells the user how long to wait (wait_sec < 0 = permanent ban)."""
+    if wait_sec < 0:
+        message = gettext("Your IP has been blocked. Please contact the administrator.")
+        response = make_response(render_template_string(LOGIN_TEMPLATE, error=message), 429)
+        return response
+    minutes = max(1, int(math.ceil(wait_sec / 60.0)))
+    message = ngettext(
+        "Too many login attempts. Please try again in %(num)d minute.",
+        "Too many login attempts. Please try again in %(num)d minutes.",
+        minutes,
+    )
+    response = make_response(render_template_string(LOGIN_TEMPLATE, error=message), 429)
+    response.headers["Retry-After"] = str(max(1, int(wait_sec)))
+    return response
+
+
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("10 per minute")  # SECURITY: Rate limit login attempts (10 per minute)
+# Only submissions count; viewing the form must not lock anyone out. IPv6 is grouped per /64.
+@limiter.limit("10 per minute", methods=["POST"], key_func=lambda: login_rate_key(get_client_ip()))
 def login():
     error = None
     ip = get_client_ip()
-    if is_banned(ip):
-        return render_template_string(
-            LOGIN_TEMPLATE,
-            error=gettext("Your IP has been temporarily blocked. Please try again later."),
-        )
+    ban_wait = ban_remaining_seconds(ip)
+    if ban_wait:
+        return login_throttled_response(ban_wait)
 
     # Already authenticated (e.g. duplicate submit after session rotation).
     if session.get("logged_in"):
@@ -7540,11 +7650,18 @@ def login():
         password = request.form.get("password")
 
         if not check_rate_limit(ip):
-            logging.warning(f"LOGIN RATELIMIT EXCEEDED: {ip}")
-            ban_ip(ip)  # temporary lockout via LOGIN_BAN_TTL_SEC
+            rate_key = login_rate_key(ip)
+            logging.warning("LOGIN RATELIMIT EXCEEDED: %s", rate_key)
+            ban_ip(rate_key)  # temporary lockout via LOGIN_BAN_TTL_SEC (whole /64 for IPv6)
             log_login_attempt(ip, username, False)
-            error = gettext("Too many attempts. IP temporarily blocked. Please try again later.")
-            return render_template_string(LOGIN_TEMPLATE, error=error)
+            return login_throttled_response(LOGIN_BAN_TTL_SEC)
+
+        user_wait = username_lockout_wait(username)
+        if user_wait:
+            # Distributed guessing against one account: throttle the name, not the address.
+            logging.warning("LOGIN USER RATELIMIT: %r from %s", _login_username_key(username), ip)
+            log_login_attempt(ip, username, False)
+            return login_throttled_response(user_wait)
 
         role = authenticate_user(username, password)
         if role:
@@ -7569,7 +7686,7 @@ def login():
             # Fresh CSRF for post-login forms; old login-form token is intentionally invalid.
             session["_csrf_token"] = secrets.token_hex(16)
 
-            clear_login_attempts(ip)
+            clear_login_attempts(ip, username)
             log_login_attempt(ip, username, True)
             try:
                 user_traffic.record(username, "login")
@@ -7587,7 +7704,7 @@ def login():
             return redirect(login_redirect_target())
 
         logging.warning(f"LOGIN FAILED: {ip} (user: {username})")
-        add_login_attempt(ip)
+        add_login_attempt(ip, username)
         log_login_attempt(ip, username, False)
         error = gettext("Login failed.")
     return render_template_string(LOGIN_TEMPLATE, error=error)
