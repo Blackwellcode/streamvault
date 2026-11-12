@@ -86,24 +86,60 @@ class SessionRevocationTests(WebTestBase):
 
     def test_login_stamps_session_version(self):
         user = self.make_user()
-        database.bump_session_version(user)
+        token = database.bump_session_version(user)
+        self.assertRegex(token, r"^[0-9a-f]{32}$")
         client, response = self.login(user)
         self.assertEqual(response.status_code, 302)
         with client.session_transaction() as sess:
-            self.assertEqual(sess.get("sv"), 1)
+            self.assertEqual(sess.get("sv"), token)
 
-    def test_logout_revokes_a_copied_cookie(self):
+    def test_session_tokens_are_random_and_never_reused(self):
+        user = self.make_user()
+        seen = {database.bump_session_version(user) for _ in range(5)}
+        self.assertEqual(len(seen), 5)
+        self.assertNotIn("", seen)
+        self.assertEqual(database.bump_session_version("no-such-user"), "")
+
+    def test_logout_everywhere_revokes_a_copied_cookie(self):
         user = self.make_user()
         client, _ = self.login(user)
         stolen = self.clone(client, self.webui.app)
         self.assertEqual(stolen.get("/admin").status_code, 200)
         with client.session_transaction() as sess:
             token = sess["_csrf_token"]
-        client.post("/logout", data={"csrf_token": token})
+        response = client.post("/logout/all", data={"csrf_token": token})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(self.logged_in(client))
         response = stolen.get("/admin")
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login", response.headers["Location"])
         self.assertFalse(self.logged_in(stolen))
+
+    def test_plain_logout_ends_only_this_browser(self):
+        user = self.make_user()
+        client, _ = self.login(user, ip="198.51.100.21")
+        other, _ = self.login(user, ip="198.51.100.22")
+        with client.session_transaction() as sess:
+            token = sess["_csrf_token"]
+        client.post("/logout", data={"csrf_token": token})
+        self.assertFalse(self.logged_in(client))
+        self.assertEqual(other.get("/admin").status_code, 200)
+        self.assertTrue(self.logged_in(other))
+
+    def test_admin_form_password_change_keeps_own_session_and_ends_others(self):
+        user = self.make_user()
+        client, _ = self.login(user, ip="198.51.100.23")
+        other, _ = self.login(user, ip="198.51.100.24")
+        with client.session_transaction() as sess:
+            token = sess["_csrf_token"]
+        response = client.post(
+            f"/admin/users/update/{user}",
+            data={"csrf_token": token, "new_pass": "Another-Horse-44", "role": "admin", "active": "1"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(client.get("/admin").status_code, 200)
+        self.assertEqual(other.get("/admin").status_code, 302)
+        self.assertFalse(self.logged_in(other))
 
     def test_password_change_revokes_other_sessions_but_keeps_current(self):
         user = self.make_user()
@@ -154,21 +190,47 @@ class LoginThrottleTests(WebTestBase):
         self.assertEqual(response.status_code, 429)
         self.assertIn("Retry-After", response.headers)
 
-    def test_failures_from_many_addresses_lock_the_account_name(self):
+    def test_failures_for_one_account_from_one_network_are_throttled(self):
         user = self.make_user()
-        limit = self.webui.LOGIN_USER_MAX_FAILS
-        for i in range(limit):
+        # Below the per-address ban (5) so the account counter is what triggers.
+        with mock.patch.object(self.webui, "LOGIN_USER_MAX_FAILS", 3):
+            for i in range(3):
+                _, response = self.login(user, password="wrong", ip="203.0.113.7")
+                self.assertNotEqual(response.status_code, 429, f"attempt {i + 1}")
+            _, response = self.login(user, ip="203.0.113.7")
+            self.assertEqual(response.status_code, 429)
+            wait = int(response.headers["Retry-After"])
+            self.assertGreater(wait, 0)
+            self.assertLessEqual(wait, self.webui.LOGIN_USER_WINDOW_SEC)
+            self.assertIn("Too many login attempts", response.get_data(as_text=True))
+            # The owner on another network is not affected.
+            _, response = self.login(user, ip="198.51.100.200")
+            self.assertEqual(response.status_code, 302)
+            # Other accounts are not affected either.
+            _, response = self.login(config.VOD_USER, password=config.VOD_PASS, ip="203.0.113.8")
+            self.assertEqual(response.status_code, 302)
+
+    def test_failures_from_many_networks_cannot_lock_the_owner_out(self):
+        user = self.make_user()
+        for i in range(self.webui.LOGIN_USER_MAX_FAILS + 5):
             _, response = self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
             self.assertNotEqual(response.status_code, 429, f"attempt {i + 1}")
         _, response = self.login(user, ip="198.51.100.200")
-        self.assertEqual(response.status_code, 429)
-        wait = int(response.headers["Retry-After"])
-        self.assertGreater(wait, 0)
-        self.assertLessEqual(wait, self.webui.LOGIN_USER_WINDOW_SEC)
-        self.assertIn("Too many login attempts", response.get_data(as_text=True))
-        # Other accounts are not affected.
-        _, response = self.login(config.VOD_USER, password=config.VOD_PASS, ip="198.51.100.201")
         self.assertEqual(response.status_code, 302)
+        self.assertTrue(self.logged_in(_))
+
+    def test_account_wide_safety_net_only_slows_networks_that_failed(self):
+        user = self.make_user()
+        with mock.patch.object(self.webui, "LOGIN_USER_GLOBAL_MAX_FAILS", 6):
+            for i in range(6):
+                self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
+            # A network that already failed is throttled once the account-wide net is full ...
+            _, response = self.login(user, password="wrong", ip="203.0.113.1")
+            self.assertEqual(response.status_code, 429)
+            # ... a clean network still gets through with the right password.
+            client, response = self.login(user, ip="198.51.100.77")
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(self.logged_in(client))
 
     def test_successful_login_resets_the_name_counter(self):
         user = self.make_user()
@@ -180,8 +242,8 @@ class LoginThrottleTests(WebTestBase):
 
     def test_throttle_message_is_translated(self):
         user = self.make_user()
-        for i in range(self.webui.LOGIN_USER_MAX_FAILS):
-            self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
+        for _ in range(self.webui.LOGIN_IP_MAX_FAILS):
+            self.login(user, password="wrong", ip="198.51.100.50")
         client = self.webui.app.test_client()
         with client.session_transaction() as sess:
             sess["_csrf_token"] = "t"
@@ -287,6 +349,28 @@ class SmallHardeningTests(WebTestBase):
         with mock.patch.object(self.webui, "check_password_hash", return_value=False) as check:
             self.assertIsNone(self.webui.authenticate_user("nobody-here", "pw"))
         check.assert_called_once()
+
+    def test_inactive_and_env_accounts_also_pay_the_hash_cost(self):
+        user = self.make_user("sleepy")
+        self.webui.save_user(user, generate_password_hash(self.PASSWORD), active=False, role="admin")
+        with mock.patch.object(self.webui, "check_password_hash", return_value=False) as check:
+            self.assertIsNone(self.webui.authenticate_user(user, self.PASSWORD))
+        check.assert_called_once()
+        with mock.patch.object(self.webui, "load_users", return_value={}), \
+                mock.patch.object(self.webui, "check_password_hash", return_value=False) as check:
+            self.assertEqual(self.webui.authenticate_user(config.VOD_USER, config.VOD_PASS), "admin")
+            self.assertIsNone(self.webui.authenticate_user(config.VOD_USER, "wrong"))
+        self.assertEqual(check.call_count, 2)
+
+    def test_metrics_need_an_admin_or_the_token(self):
+        viewer = self.make_user("metricsviewer", role="viewer")
+        client = self.webui.app.test_client()
+        self.assertEqual(client.get("/metrics").status_code, 401)
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="viewer", username=viewer,
+                        login_time=now, last_active=now, _csrf_token="t")
+        self.assertEqual(client.get("/metrics").status_code, 403)
 
     def test_ack_endpoints_reject_get(self):
         client = self.webui.app.test_client()

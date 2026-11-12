@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import secrets
 import sqlite3
 import time
 
@@ -80,6 +81,27 @@ def db_transaction():
         raise
     finally:
         conn.close()
+
+def ensure_login_user_attempts_table(cursor) -> None:
+    """Failed logins per (account, network); ``net`` is the /64 or IPv4 address."""
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS login_user_attempts "
+        "(username TEXT NOT NULL, net TEXT NOT NULL DEFAULT '', ts REAL NOT NULL)"
+    )
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(login_user_attempts)").fetchall()}
+    if "net" not in columns:
+        try:
+            cursor.execute("ALTER TABLE login_user_attempts ADD COLUMN net TEXT NOT NULL DEFAULT ''")
+        except sqlite3.OperationalError as exc:
+            logger.warning("Migration login_user_attempts.net skipped: %s", exc)
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_login_user_attempts ON login_user_attempts(username, ts)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_login_user_attempts_net "
+        "ON login_user_attempts(username, net, ts)"
+    )
+
 
 def init_db():
     conn = get_db()
@@ -209,8 +231,9 @@ def init_db():
             "group_id": "INTEGER",
             "email": "TEXT DEFAULT ''",
             "updated_at": "REAL",
-            # Bumped on logout/password change; cookies carry the value they were issued with.
-            "session_version": "INTEGER NOT NULL DEFAULT 0",
+            # Random token, replaced on "log out everywhere" and password changes;
+            # cookies carry the value they were issued with.
+            "session_version": "TEXT NOT NULL DEFAULT ''",
         }.items():
             if column not in user_columns:
                 try:
@@ -271,8 +294,7 @@ def init_db():
         c.execute("CREATE TABLE IF NOT EXISTS login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, username TEXT, success INTEGER, ts REAL)")
         c.execute("CREATE TABLE IF NOT EXISTS login_attempts (ip TEXT NOT NULL, ts REAL NOT NULL)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_ts ON login_attempts(ip, ts)")
-        c.execute("CREATE TABLE IF NOT EXISTS login_user_attempts (username TEXT NOT NULL, ts REAL NOT NULL)")
-        c.execute("CREATE INDEX IF NOT EXISTS idx_login_user_attempts ON login_user_attempts(username, ts)")
+        ensure_login_user_attempts_table(c)
         c.execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, payload TEXT, status TEXT DEFAULT 'pending', created_at REAL, updated_at REAL)")
         task_columns = {row["name"] for row in c.execute("PRAGMA table_info(tasks)").fetchall()}
         for column, definition in {
@@ -1315,7 +1337,7 @@ def _row_to_user(row) -> dict | None:
         "terms_version": (row["terms_version"] if "terms_version" in keys else None) or "",
         "last_seen_at": float(row["last_seen_at"] or 0) if "last_seen_at" in keys else 0.0,
         "last_login_at": float(row["last_login_at"] or 0) if "last_login_at" in keys else 0.0,
-        "session_version": int(row["session_version"] or 0) if "session_version" in keys else 0,
+        "session_version": str(row["session_version"] or "") if "session_version" in keys else "",
     }
 
 
@@ -1662,49 +1684,49 @@ def set_user_role(username: str, role: str) -> None:
         conn.close()
 
 
-def set_user_password(username: str, password_hash: str) -> int:
+@db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def set_user_password(username: str, password_hash: str) -> str:
     """Store a new hash and revoke every existing session of the user.
 
-    Returns the new session version (0 when the user does not exist).
+    Returns the new session token ("" when the user does not exist).
     """
+    token = secrets.token_hex(16)
     conn = get_db()
     try:
-        conn.execute(
-            "UPDATE users SET password_hash = ?, "
-            "session_version = COALESCE(session_version, 0) + 1, updated_at = ? "
+        conn.execute("BEGIN IMMEDIATE")
+        cur = conn.execute(
+            "UPDATE users SET password_hash = ?, session_version = ?, updated_at = ? "
             "WHERE username = ? COLLATE NOCASE",
-            (password_hash, time.time(), username),
+            (password_hash, token, time.time(), username),
         )
-        row = conn.execute(
-            "SELECT session_version FROM users WHERE username = ? COLLATE NOCASE",
-            (username,),
-        ).fetchone()
         conn.commit()
     finally:
         conn.close()
-    return int(row["session_version"] or 0) if row else 0
+    return token if cur.rowcount else ""
 
 
-def bump_session_version(username: str) -> int:
-    """Invalidate all login cookies of a user. Returns the new version (0 if unknown)."""
+@db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def bump_session_version(username: str) -> str:
+    """Invalidate all login cookies of a user. Returns the new token ("" if unknown).
+
+    The token is random rather than a counter, so a value seen once (in an old
+    cookie) can never become valid again.
+    """
     name = str(username or "").strip()
     if not name:
-        return 0
+        return ""
+    token = secrets.token_hex(16)
     conn = get_db()
     try:
-        conn.execute(
-            "UPDATE users SET session_version = COALESCE(session_version, 0) + 1 "
-            "WHERE username = ? COLLATE NOCASE",
-            (name,),
+        conn.execute("BEGIN IMMEDIATE")
+        cur = conn.execute(
+            "UPDATE users SET session_version = ? WHERE username = ? COLLATE NOCASE",
+            (token, name),
         )
-        row = conn.execute(
-            "SELECT session_version FROM users WHERE username = ? COLLATE NOCASE",
-            (name,),
-        ).fetchone()
         conn.commit()
     finally:
         conn.close()
-    return int(row["session_version"] or 0) if row else 0
+    return token if cur.rowcount else ""
 
 
 def set_user_email(username: str, email: str) -> None:

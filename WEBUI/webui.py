@@ -41,8 +41,10 @@ from flask import (
     Flask,
     Response,
     abort,
+    current_app,
     flash,
     g,
+    has_app_context,
     has_request_context,
     jsonify,
     make_response,
@@ -177,7 +179,8 @@ def _env_int(name, default):
 
 
 # Login lifetime since sign-in and maximum idle time (default 30 days).
-# 0 disables the clock limit; logout/password change still revoke via session_version.
+# 0 disables the clock limit; "log out everywhere" and password changes still
+# revoke every cookie via session_version.
 SESSION_MAX_AGE_SEC = max(0, _env_int("VOD_SESSION_MAX_AGE_SEC", 30 * 86400))
 SESSION_COOKIE_MAX_AGE_SEC = max(
     86400,
@@ -402,6 +405,15 @@ class FlatBlueprint(Blueprint):
     groups routes for registration, not for naming.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.route_endpoints = set()
+
+    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
+        # Remember which endpoints belong to this feature (role checks, tests).
+        self.route_endpoints.add(endpoint or getattr(view_func, "__name__", rule))
+        super().add_url_rule(rule, endpoint, view_func, **options)
+
     def make_setup_state(self, app, options, first_registration=False):
         return _FlatSetupState(self, app, options, first_registration)
 
@@ -474,12 +486,7 @@ def ensure_login_attempts_schema():
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_ts ON login_attempts(ip, ts)"
         )
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS login_user_attempts (username TEXT NOT NULL, ts REAL NOT NULL)"
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_login_user_attempts ON login_user_attempts(username, ts)"
-        )
+        database.ensure_login_user_attempts_table(conn)
         conn.commit()
     finally:
         conn.close()
@@ -558,8 +565,13 @@ def get_client_ip():
 
 LOGIN_IP_MAX_FAILS = max(1, _env_int("VOD_LOGIN_IP_MAX_FAILS", 5))
 LOGIN_IP_WINDOW_SEC = max(60, _env_int("VOD_LOGIN_IP_WINDOW_SEC", 300))
+# Failed logins for one account from one network (/64 or IPv4 address).
 LOGIN_USER_MAX_FAILS = max(1, _env_int("VOD_LOGIN_USER_MAX_FAILS", 10))
 LOGIN_USER_WINDOW_SEC = max(60, _env_int("VOD_LOGIN_USER_WINDOW_SEC", 3600))
+# Safety net across all networks. It only slows down networks that already
+# failed for this account: a correct password from a clean network always works,
+# so nobody can lock an account by failing on purpose.
+LOGIN_USER_GLOBAL_MAX_FAILS = max(1, _env_int("VOD_LOGIN_USER_GLOBAL_MAX_FAILS", 100))
 
 
 def login_rate_key(ip):
@@ -583,12 +595,18 @@ def _login_username_key(username):
     return str(username or "").strip().lower()[:128]
 
 
+def _login_username_key(username):
+    return str(username or "").strip().lower()[:128]
+
+
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def check_rate_limit(ip):
     """Return True if the address key is under the failed-login threshold (shared via SQLite)."""
     now = time.time()
     cutoff = now - LOGIN_IP_WINDOW_SEC
     conn = database.get_db()
     try:
+        conn.execute("BEGIN IMMEDIATE")
         conn.execute("DELETE FROM login_attempts WHERE ts <= ?", (cutoff,))
         row = conn.execute(
             "SELECT COUNT(*) AS c FROM login_attempts WHERE ip=? AND ts > ?",
@@ -601,55 +619,84 @@ def check_rate_limit(ip):
         conn.close()
 
 
-def username_lockout_wait(username):
-    """Seconds until the next login attempt for this account is allowed (0 = now)."""
+def _wait_until_window_frees(rows, limit, now):
+    """Seconds until fewer than ``limit`` failures remain in the window (0 = allowed)."""
+    if len(rows) < limit:
+        return 0
+    # The oldest of the newest ``limit`` failures must leave the window first.
+    return max(1, int(math.ceil(float(rows[limit - 1]["ts"]) + LOGIN_USER_WINDOW_SEC - now)))
+
+
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def username_lockout_wait(username, ip=None):
+    """Seconds until ``username`` may try again from ``ip`` (0 = now).
+
+    * Per (account, network): LOGIN_USER_MAX_FAILS per window.
+    * Account-wide: LOGIN_USER_GLOBAL_MAX_FAILS per window, applied only to
+      networks with failures of their own for this account. ``ip=None`` asks
+      for the account-wide figure alone.
+    """
     key = _login_username_key(username)
     if not key:
         return 0
+    net = login_rate_key(ip) if ip is not None else None
     now = time.time()
     cutoff = now - LOGIN_USER_WINDOW_SEC
     conn = database.get_db()
     try:
+        conn.execute("BEGIN IMMEDIATE")
         conn.execute("DELETE FROM login_user_attempts WHERE ts <= ?", (cutoff,))
-        rows = conn.execute(
+        account_rows = conn.execute(
             "SELECT ts FROM login_user_attempts WHERE username=? AND ts > ? ORDER BY ts DESC LIMIT ?",
-            (key, cutoff, LOGIN_USER_MAX_FAILS),
+            (key, cutoff, LOGIN_USER_GLOBAL_MAX_FAILS),
         ).fetchall()
+        pair_rows = []
+        if net is not None:
+            pair_rows = conn.execute(
+                "SELECT ts FROM login_user_attempts WHERE username=? AND net=? AND ts > ? "
+                "ORDER BY ts DESC LIMIT ?",
+                (key, net, cutoff, LOGIN_USER_MAX_FAILS),
+            ).fetchall()
         conn.commit()
     finally:
         conn.close()
-    if len(rows) < LOGIN_USER_MAX_FAILS:
-        return 0
-    # The oldest of the newest N failures must leave the window first.
-    return max(1, int(math.ceil(float(rows[-1]["ts"]) + LOGIN_USER_WINDOW_SEC - now)))
+    pair_wait = _wait_until_window_frees(pair_rows, LOGIN_USER_MAX_FAILS, now)
+    account_wait = _wait_until_window_frees(account_rows, LOGIN_USER_GLOBAL_MAX_FAILS, now)
+    if net is not None and not pair_rows:
+        account_wait = 0  # clean network: the account-wide net never blocks it
+    return max(pair_wait, account_wait)
 
 
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def add_login_attempt(ip, username=None):
     now = time.time()
+    net = login_rate_key(ip)
     conn = database.get_db()
     try:
-        conn.execute(
-            "INSERT INTO login_attempts (ip, ts) VALUES (?, ?)",
-            (login_rate_key(ip), now),
-        )
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute("INSERT INTO login_attempts (ip, ts) VALUES (?, ?)", (net, now))
         key = _login_username_key(username)
         if key:
             conn.execute(
-                "INSERT INTO login_user_attempts (username, ts) VALUES (?, ?)",
-                (key, now),
+                "INSERT INTO login_user_attempts (username, net, ts) VALUES (?, ?, ?)",
+                (key, net, now),
             )
         conn.commit()
     finally:
         conn.close()
 
 
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def clear_login_attempts(ip, username=None):
+    """After a successful login: forget this network's failures (address and account)."""
+    net = login_rate_key(ip)
     conn = database.get_db()
     try:
-        conn.execute("DELETE FROM login_attempts WHERE ip=?", (login_rate_key(ip),))
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute("DELETE FROM login_attempts WHERE ip=?", (net,))
         key = _login_username_key(username)
         if key:
-            conn.execute("DELETE FROM login_user_attempts WHERE username=?", (key,))
+            conn.execute("DELETE FROM login_user_attempts WHERE username=? AND net=?", (key, net))
         conn.commit()
     finally:
         conn.close()
@@ -898,6 +945,8 @@ def authenticate_user(username, password):
         if u.lower() == username.lower():
             if not data.get("active", True):
                 logging.warning(f"Login attempt for inactive user: {u}")
+                # Same hash cost as a real check: timing must not reveal inactive accounts.
+                check_password_hash(_DUMMY_PASSWORD_HASH, password)
                 return None
 
             # Only accept properly hashed passwords
@@ -914,6 +963,9 @@ def authenticate_user(username, password):
     allow_env = bool(getattr(config, "VOD_ALLOW_ENV_LOGIN", False))
     if (allow_env or not active_db_users) and config.VOD_USER and config.VOD_PASS:
         if username.lower() == config.VOD_USER.lower():
+            # The env password is compared in constant time; the hash check keeps
+            # the response time equal to a database account's.
+            check_password_hash(_DUMMY_PASSWORD_HASH, password)
             return "admin" if _env_password_matches(password) else None
 
     check_password_hash(_DUMMY_PASSWORD_HASH, password)
@@ -954,11 +1006,9 @@ SESSION_VERSION_KEY = "sv"
 
 
 def _session_version_of(sess):
-    """Version a login cookie was issued with; cookies from before versioning count as 0."""
-    try:
-        return int(sess.get(SESSION_VERSION_KEY) or 0)
-    except (TypeError, ValueError):
-        return -1
+    """Session token a login cookie was issued with; cookies from before tokens carry ""."""
+    value = sess.get(SESSION_VERSION_KEY)
+    return value if isinstance(value, str) else ""
 
 
 def translated_error(exc):
@@ -1010,7 +1060,9 @@ def _get_current_user_context() -> dict | None:
             return None
 
     # Server-side revocation: logout and password changes bump the version.
-    if _session_version_of(session) != int(user_row.get("session_version") or 0):
+    if not secrets.compare_digest(
+        _session_version_of(session), str(user_row.get("session_version") or "")
+    ):
         g._user_context = None
         return None
 
@@ -1074,8 +1126,9 @@ def resolve_session_account(username=None):
 def session_is_expired():
     """True when the login cookie must be dropped.
 
-    Sessions end on logout or password change (session_version), account
-    deletion or deactivation, and after VOD_SESSION_MAX_AGE_SEC (default 30 days).
+    Sessions end on logout (this browser), "log out everywhere" or a password
+    change (all browsers, session_version), account deletion or deactivation,
+    and after VOD_SESSION_MAX_AGE_SEC (default 30 days).
     """
     if not session.get("logged_in"):
         return False
@@ -7791,9 +7844,10 @@ def login():
             log_login_attempt(ip, username, False)
             return login_throttled_response(LOGIN_BAN_TTL_SEC)
 
-        user_wait = username_lockout_wait(username)
+        user_wait = username_lockout_wait(username, ip)
         if user_wait:
-            # Distributed guessing against one account: throttle the name, not the address.
+            # Repeated failures for this account from this network (or a flood across
+            # networks from a network that already failed): throttle, never lock out.
             logging.warning("LOGIN USER RATELIMIT: %r from %s", _login_username_key(username), ip)
             log_login_attempt(ip, username, False)
             return login_throttled_response(user_wait)
@@ -7816,7 +7870,7 @@ def login():
             session["last_active"] = now
             user_row = database.get_user(username)
             session["group_id"] = user_row.get("group_id") if user_row else None
-            session[SESSION_VERSION_KEY] = int(user_row.get("session_version") or 0) if user_row else 0
+            session[SESSION_VERSION_KEY] = str(user_row.get("session_version") or "") if user_row else ""
             session["user_permissions"] = database.get_user_permissions(username)
             # Fresh CSRF for post-login forms; old login-form token is intentionally invalid.
             session["_csrf_token"] = secrets.token_hex(16)
@@ -7852,7 +7906,16 @@ def logout():
     username = session.get("username", "unknown")
     ip = get_client_ip()
     logging.info(f"Logout: {username} from {ip}")
-    # Revoke every copy of this login, not just the cookie in this browser.
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@auth_bp.route("/logout/all", methods=["POST"])
+@login_required
+def logout_everywhere():
+    """Sign this account out on every device (also copied or stolen cookies)."""
+    username = session.get("username", "unknown")
+    logging.info("Logout everywhere: %s from %s", username, get_client_ip())
     database.bump_session_version(username)
     session.clear()
     return redirect(url_for("login"))
@@ -7869,7 +7932,7 @@ def language_update():
     if locale:
         resp.set_cookie(
             ui_i18n.LANG_COOKIE, locale, max_age=365 * 86400, samesite="Lax",
-            secure=app.config["SESSION_COOKIE_SECURE"], httponly=True,
+            secure=current_app.config["SESSION_COOKIE_SECURE"], httponly=True,
         )
     else:
         resp.delete_cookie(ui_i18n.LANG_COOKIE)  # "automatic": follow the browser again
@@ -8479,8 +8542,11 @@ def admin_user_update(username):
         # Update existing
         save_user(username, pw_hash, active=active, role=role)
         if new_pass:
-            # A reset password must end every session that used the old one.
-            database.bump_session_version(username)
+            # A reset password must end every session that used the old one;
+            # an admin changing their own password stays signed in here.
+            new_token = database.bump_session_version(username)
+            if username.lower() == (session.get("username") or "").lower():
+                session[SESSION_VERSION_KEY] = new_token
         logging.info(f"User updated: {username} by {session.get('username')}")
 
     return redirect(url_for("admin_view", msg=gettext("User updated.")))
@@ -9038,7 +9104,7 @@ def live_watch():
     try:
         add_live_channel(channel)
     except Exception:
-        app.logger.exception("Could not enable live proxy for %s", channel)
+        current_app.logger.exception("Could not enable live proxy for %s", channel)
         return redirect(url_for("index", channels_msg=gettext("Live start failed.")))
     return redirect(url_for("twitch_watch", channel=channel))
 
@@ -9115,7 +9181,7 @@ _DASHBOARD_SHM_PATH = "/dev/shm/streamrecorder_dashboard_media.json"
 _TEST_FIXTURE_STREAMERS = frozenset({"hiddenchan", "publicchan", "cloudchan", "alpha", "beta", "gamma", "demochan"})
 
 def _is_production_base_dir() -> bool:
-    if app.config.get("TESTING"):
+    if has_app_context() and current_app.config.get("TESTING"):
         return False
     base = os.path.abspath(str(getattr(config, "BASE_DIR", "") or ""))
     env_base = str(os.environ.get("VOD_BASE_DIR") or "")
@@ -9249,9 +9315,10 @@ def _compute_dashboard_media_sync(streamers=None):
         "category_counts": category_counts,
     }
 
-def _refresh_dashboard_media_bg(streamers=None):
+def _refresh_dashboard_media_bg(flask_app, streamers=None):
+    """Runs in a thread: no request/app context, so the app is passed in."""
     try:
-        with app.test_request_context("/"):
+        with flask_app.test_request_context("/"):
             data = _compute_dashboard_media_sync()
             _save_shared_dashboard_media(data)
             with _DASHBOARD_MEDIA_LOCK:
@@ -9292,7 +9359,11 @@ def get_nebula_dashboard_media(streamers, live_channels):
             category_counts = dict(cached.get("category_counts") or {})
             if (now - cached.get("ts", 0) > 60.0) and not _DASHBOARD_MEDIA_CACHE.get("refreshing"):
                 _DASHBOARD_MEDIA_CACHE["refreshing"] = True
-                threading.Thread(target=_refresh_dashboard_media_bg, daemon=True).start()
+                threading.Thread(
+                    target=_refresh_dashboard_media_bg,
+                    args=(current_app._get_current_object(),),
+                    daemon=True,
+                ).start()
         else:
             with _DASHBOARD_MEDIA_LOCK:
                 data = _compute_dashboard_media_sync()
@@ -11252,6 +11323,8 @@ def editor_view(streamer, filename):
 @clip_bp.route("/editor/live/<streamer>")
 @login_required
 def editor_live_view(streamer):
+    # The editor exists to cut clips; live-only accounts may watch, not clip.
+    abort_vod_denied()
     abort_hidden_streamer(streamer)
     return render_template_string(
         CLIP_EDITOR_TEMPLATE,
@@ -11438,7 +11511,7 @@ def clip_live(streamer):
         add_live_channel(live_key)
         touch_live_heartbeat(live_key)
     except Exception:
-        app.logger.exception("Could not enable live HLS for live clip %s", live_key)
+        current_app.logger.exception("Could not enable live HLS for live clip %s", live_key)
 
     _, playlist = live_paths(live_key)
     recording = clip_engine.find_active_recording_file(archive_dir, live_key)
@@ -11522,7 +11595,7 @@ def clip_instant(streamer):
             add_live_channel(live_key)
             touch_live_heartbeat(live_key)
         except Exception:
-            app.logger.exception("Could not enable live HLS for instant clip %s", live_key)
+            current_app.logger.exception("Could not enable live HLS for instant clip %s", live_key)
         _, playlist = live_paths(live_key)
         recording = clip_engine.find_active_recording_file(archive_dir, live_key)
         job = clip_engine.enqueue_live_instant(
@@ -11791,7 +11864,7 @@ def api_live_client_debug():
     try:
         live_watch_diag.append_client_debug(event)
     except Exception:
-        app.logger.exception("live client-debug append failed")
+        current_app.logger.exception("live client-debug append failed")
         return jsonify({"ok": False}), 500
     return jsonify({"ok": True})
 
@@ -11893,7 +11966,7 @@ def twitch_watch(channel):
         try:
             add_live_channel(proxy_key)
         except Exception:
-            app.logger.exception("Could not enable live proxy for %s", proxy_key)
+            current_app.logger.exception("Could not enable live proxy for %s", proxy_key)
         touch_live_heartbeat(proxy_key)
         hls_available = live_playlist_fresh(proxy_key)
 
@@ -12032,7 +12105,7 @@ def live_view(streamer):
     try:
         add_live_channel(channel)
     except Exception:
-        app.logger.exception("Could not enable live channel for studio %s", channel)
+        current_app.logger.exception("Could not enable live channel for studio %s", channel)
     touch_live_heartbeat(channel)
     ready = live_playlist_exists(channel)
     playlist_url = url_for("live_playlist", streamer=channel)
@@ -12079,7 +12152,7 @@ def live_obs(streamer):
     try:
         add_live_channel(channel)
     except Exception:
-        app.logger.exception("Could not enable live proxy for obs %s", channel)
+        current_app.logger.exception("Could not enable live proxy for obs %s", channel)
     touch_live_heartbeat(channel)
     playlist_url = url_for("live_playlist", streamer=channel)
     resp = make_response(render_template_string(
@@ -12556,7 +12629,7 @@ def healthz():
 @admin_bp.route("/metrics")
 @limiter.exempt
 def metrics():
-    """Prometheus text metrics. Login required, or METRICS_TOKEN via X-Metrics-Token / Authorization Bearer."""
+    """Prometheus text metrics. Admin session, or METRICS_TOKEN via X-Metrics-Token / Authorization Bearer."""
     token = METRICS_TOKEN
     provided = (
         request.headers.get("X-Metrics-Token")
@@ -12569,6 +12642,9 @@ def metrics():
     logged_in = bool(session.get("logged_in") and not session_is_expired())
     if not token_ok and not logged_in:
         return abort(401)
+    if not token_ok and not current_user_is_admin():
+        # Disk and queue figures are operator data, like /healthz details.
+        return abort(403)
     body = render_prometheus_metrics()
     return Response(body, mimetype="text/plain; version=0.0.4; charset=utf-8")
 
