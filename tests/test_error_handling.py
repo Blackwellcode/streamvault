@@ -192,5 +192,103 @@ class DeletedMediaTombstoneTests(IsolatedBaseTest):
 
 
 
+class WebuiLookupFailureTests(IsolatedBaseTest):
+    """Web UI lookups that used to swallow every error now log specific ones."""
+
+    def setUp(self):
+        super().setUp()
+        from werkzeug.security import generate_password_hash
+
+        from WEBUI import webui
+        self.webui = webui
+        patcher = mock.patch.object(webui, "BASE_DIR", str(self.base))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        webui.ensure_admin_user()
+        webui.save_user("plainviewer", generate_password_hash("Role-Test-Pass-1"), role="viewer")
+        archive = self.base / "streamer"
+        archive.mkdir()
+        (archive / "vod.mp4").write_bytes(b"\0" * 32)
+        self.locked = sqlite3.OperationalError("database is locked")
+
+    def _viewer_request(self):
+        ctx = self.webui.app.test_request_context("/")
+        ctx.push()
+        self.addCleanup(ctx.pop)
+        now = time.time()
+        self.webui.session.update(logged_in=True, user_role="viewer", username="plainviewer",
+                                  login_time=now, last_active=now)
+
+    def test_maintenance_bypass_check_failure_is_logged_and_denied(self):
+        from core import site_maintenance
+        self._viewer_request()
+        with mock.patch.object(site_maintenance, "is_user_exempt", side_effect=OSError("state unreadable")), \
+                self.assertLogs(level="WARNING") as logs:
+            self.assertFalse(self.webui.current_user_bypasses_maintenance())
+        self.assertTrue(any("state unreadable" in line for line in logs.output))
+
+    def test_viewer_access_check_survives_channel_lookup_failure(self):
+        self._viewer_request()
+        expected = self.webui.can_view_streamer("streamer")
+        with mock.patch.object(self.webui, "related_archive_slugs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING") as logs:
+            self.assertEqual(self.webui.can_view_streamer("streamer"), expected)
+        self.assertTrue(any("database is locked" in line for line in logs.output))
+
+    def test_streamer_folders_survive_channel_config_failure(self):
+        with mock.patch.object(self.webui.database, "list_channel_configs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING"):
+            rows = self.webui.list_all_streamer_folders()
+        self.assertIn("streamer", [row["name"] for row in rows])
+
+    def test_media_path_resolves_when_alias_lookup_fails(self):
+        with mock.patch.object(self.webui, "related_archive_slugs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING"):
+            resolved = self.webui.resolve_media_path("streamer", "vod.mp4", "vod")
+        self.assertEqual(os.path.normpath(resolved), os.path.normpath(str(self.base / "streamer" / "vod.mp4")))
+
+    def test_vod_access_candidates_survive_failures(self):
+        with mock.patch.object(self.webui, "list_streamers", side_effect=OSError("archive unreadable")), \
+                mock.patch.object(self.webui.database, "list_vod_access_defaults", side_effect=self.locked), \
+                self.assertLogs(level="WARNING") as logs:
+            self.assertEqual(self.webui._vod_access_candidate_slugs(), [])
+        self.assertEqual(len(logs.output), 2)
+
+    def test_recording_logins_survive_database_error(self):
+        with mock.patch.object(self.webui.database, "list_channel_configs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING"):
+            self.assertEqual(self.webui._recording_logins_set(), set())
+
+    def test_twitch_profile_lookup_failure_is_logged(self):
+        offline = urllib.error.URLError("offline")
+        with mock.patch.object(self.webui.urllib.request, "urlopen", side_effect=offline), \
+                self.assertLogs(level="WARNING"):
+            self.assertEqual(self.webui.get_twitch_profile_and_banner("someone"), (None, None))
+
+    def test_twitch_profile_unexpected_payload_is_no_profile(self):
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = b'{"data": null}'
+        with mock.patch.object(self.webui.urllib.request, "urlopen", return_value=response):
+            self.assertEqual(self.webui.get_twitch_profile_and_banner("someone"), (None, None))
+
+    def test_twitch_user_id_failure_is_logged_and_cached_as_unknown(self):
+        self.webui.TWITCH_USER_ID_CACHE.pop("someone", None)
+        self.addCleanup(self.webui.TWITCH_USER_ID_CACHE.pop, "someone", None)
+        with mock.patch.object(self.webui.urllib.request, "urlopen", side_effect=TimeoutError("slow")), \
+                self.assertLogs(level="WARNING"):
+            self.assertIsNone(self.webui.get_twitch_user_id("someone"))
+        self.assertIsNone(self.webui.TWITCH_USER_ID_CACHE["someone"]["id"])
+
+    def test_delete_still_removes_file_and_writes_tombstone_when_alias_lookup_fails(self):
+        self._viewer_request()
+        with mock.patch.object(self.webui, "related_archive_slugs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING") as logs:
+            self.assertTrue(self.webui.delete_video_file("streamer", "vod.mp4", False))
+        # media lookup, tombstone aliases, thumbnail aliases
+        self.assertEqual(sum("database is locked" in line for line in logs.output), 3)
+        self.assertFalse((self.base / "streamer" / "vod.mp4").exists())
+        self.assertTrue(self.webui.database.is_deleted_media(streamer="streamer", filename="vod.mp4"))
+
+
 if __name__ == "__main__":
     unittest.main()

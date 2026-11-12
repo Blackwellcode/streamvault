@@ -3,6 +3,7 @@
 import bisect
 import glob
 import hashlib
+import http.client
 import ipaddress
 import json
 import logging
@@ -1721,8 +1722,8 @@ def current_user_bypasses_maintenance() -> bool:
         username = session.get("username")
         if username and site_maintenance.is_user_exempt(username, current_user_role()):
             return True
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logging.warning("Maintenance bypass check failed, treating user as not exempt: %s", exc)
     return False
 
 
@@ -2580,16 +2581,16 @@ def list_all_streamer_folders():
                 folders.add(name)
             if arch and not is_system_backup_slug(arch):
                 folders.add(arch)
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Folder list without channel configs (database error): %s", exc)
 
     rows = []
     profiles = load_profiles()
     configs = {}
     try:
         configs = {c.get("name"): c for c in database.list_channel_configs()}
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Folder list cannot mark stream channels (database error): %s", exc)
 
     for f in sorted(folders, key=lambda s: s.lower()):
         p_data = profiles.get(f) or {}
@@ -2649,6 +2650,13 @@ def list_system_backups():
     return sorted(items.values(), key=lambda x: x["mtime"], reverse=True)
 
 
+def _twitch_gql_user(data):
+    """The `data.user` object of a Twitch GQL answer, or None for any other shape."""
+    inner = data.get("data") if isinstance(data, dict) else None
+    user = inner.get("user") if isinstance(inner, dict) else None
+    return user if isinstance(user, dict) and user else None
+
+
 def get_twitch_profile_and_banner(channel):
     query = {
         "query": """
@@ -2674,11 +2682,12 @@ def get_twitch_profile_and_banner(channel):
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-            if data and "data" in data and data["data"].get("user"):
-                u = data["data"]["user"]
-                return u.get("profileImageURL"), u.get("bannerImageURL")
-    except Exception:
-        pass
+    except (OSError, ValueError, http.client.HTTPException) as exc:
+        logging.warning("Twitch profile lookup for %s failed: %s", channel, exc)
+        return None, None
+    user = _twitch_gql_user(data)
+    if user:
+        return user.get("profileImageURL"), user.get("bannerImageURL")
     return None, None
 
 def get_twitch_profile_image(channel):
@@ -2747,12 +2756,14 @@ def get_twitch_user_id(channel):
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            user_id = data.get("data", {}).get("user", {}).get("id") if isinstance(data, dict) else None
-            if user_id:
-                TWITCH_USER_ID_CACHE[login] = {"id": str(user_id), "ts": now}
-                return str(user_id)
-    except Exception:
-        pass
+    except (OSError, ValueError, http.client.HTTPException) as exc:
+        logging.warning("Twitch user id lookup for %s failed: %s", login, exc)
+        data = None
+    user = _twitch_gql_user(data)
+    user_id = user.get("id") if user else None
+    if user_id:
+        TWITCH_USER_ID_CACHE[login] = {"id": str(user_id), "ts": now}
+        return str(user_id)
     TWITCH_USER_ID_CACHE[login] = {"id": None, "ts": now}
     return None
 
@@ -4756,23 +4767,20 @@ def can_view_streamer(streamer):
         return False
 
     candidates = {str(streamer).strip().lower()}
-    try:
-        norm = normalize_channel_name(streamer)
-        if norm:
-            candidates.add(norm.lower())
-    except Exception:
-        pass
+    norm = normalize_channel_name(streamer)
+    if norm:
+        candidates.add(norm.lower())
     try:
         arch = archive_name_for(streamer)
         if arch:
             candidates.add(arch.lower())
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Access check for %s without archive name (database error): %s", streamer, exc)
     try:
         for s in related_archive_slugs(streamer) or []:
             candidates.add(str(s).strip().lower())
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Access check for %s without archive aliases (database error): %s", streamer, exc)
 
     # 1. Check disabled_channels (Folder explicitly shut off / disabled)
     disabled_set = ctx.get("disabled_channels") or set()
@@ -5780,8 +5788,8 @@ def read_media_sidecar_metadata(media_path):
                             m_w = re.search(r"(?:Neuer Status|Stream-Titel):\s*(.+)$", msg, re.IGNORECASE)
                             if m_w and not title:
                                 title = m_w.group(1).strip()
-            except Exception:
-                pass
+            except OSError as exc:
+                logging.warning("Title from chat log of %s unavailable: %s", media_path, exc)
 
         return {
             "title": clean_metadata_label(title, 180),
@@ -6228,8 +6236,8 @@ def resolve_media_path(streamer, filename, route):
         candidates.append(streamer)
     try:
         candidates.extend(related_archive_slugs(streamer))
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Media lookup for %s without archive aliases (database error): %s", streamer, exc)
     seen = set()
     files_dir = getattr(config, "FILES_DIR", None) or os.path.join(BASE_DIR, "files")
     for cand in candidates:
@@ -7074,8 +7082,8 @@ def delete_video_file(streamer, filename, is_clip):
     tombstone_slugs = set()
     try:
         tombstone_slugs.update(related_archive_slugs(streamer) or [])
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("Tombstone for %s/%s without archive aliases (database error): %s", streamer, filename, exc)
     primary = archive_name_for(streamer) or str(streamer or "").strip()
     if primary:
         tombstone_slugs.add(primary)
@@ -7106,8 +7114,8 @@ def delete_video_file(streamer, filename, is_clip):
                 _td, alt_path, alt_lock = thumb_paths(slug, filename)
                 paths_to_clear.add(alt_path)
                 paths_to_clear.add(alt_lock)
-        except Exception:
-            pass
+        except sqlite3.Error as exc:
+            logging.warning("Thumbnails of %s/%s under alias folders kept (database error): %s", streamer, filename, exc)
         for path in paths_to_clear:
             if not path:
                 continue
@@ -8951,13 +8959,13 @@ def _vod_access_candidate_slugs():
             name = str((item or {}).get("name") or "").strip()
             if name:
                 found.add(database._normalize_vod_access_slug(name) or name.rstrip("_").lower())
-    except Exception:
-        pass
+    except (OSError, sqlite3.Error) as exc:
+        logging.warning("VOD access candidates without archive folders: %s", exc)
     try:
         for slug in database.list_vod_access_defaults():
             found.add(slug)
-    except Exception:
-        pass
+    except sqlite3.Error as exc:
+        logging.warning("VOD access candidates without stored defaults: %s", exc)
     return sorted(s for s in found if s)
 
 
@@ -11862,8 +11870,8 @@ def _recording_logins_set():
             login = twitch_api.normalize_login(conf.get("name"))
             if login and current_recording_info(login) is not None:
                 logins.add(login)
-    except Exception:
-        pass
+    except (sqlite3.Error, OSError) as exc:
+        logging.warning("Recording channel list unavailable: %s", exc)
     return logins
 
 
@@ -11997,7 +12005,8 @@ def twitch_watch(channel):
         conf = database.get_channel_config(login)
         if conf:
             archive_name = normalize_channel_name(conf.get("archive_name")) or login
-    except Exception:
+    except sqlite3.Error as exc:
+        logging.warning("Live watch %s: channel config unavailable: %s", login, exc)
         archive_name = ""
     if not archive_name:
         try:
@@ -12005,8 +12014,8 @@ def twitch_watch(channel):
                 if twitch_api.normalize_login(conf.get("name")) == login:
                     archive_name = normalize_channel_name(conf.get("archive_name")) or login
                     break
-        except Exception:
-            pass
+        except sqlite3.Error as exc:
+            logging.warning("Live watch %s: channel list unavailable: %s", login, exc)
 
     # Default: Twitch embed without account cookies (iframe credentialless ≈ Incognito).
     # Optional ?proxy=1 for server HLS when embed is blocked or unsupported.
