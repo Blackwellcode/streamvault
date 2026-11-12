@@ -1,4 +1,5 @@
-/* Accessibility helpers — Phase 6 */
+/* Accessibility layer. Linked LAST (components/styles.html) so focus, target size and
+   dialog rules win over legacy !important declarations in style.css / tube_design_system.css. */
 .sr-only {
   position: absolute !important;
   width: 1px !important;
@@ -11,7 +12,273 @@
   border: 0 !important;
 }
 
-:focus-visible {
-  outline: 2px solid var(--tube-accent, #f2e58d);
-  outline-offset: 2px;
+/* One focus language: outline in --nebula-focus-ring (>= 3:1 on every surface). */
+:focus-visible,
+:where(a, button, input, select, textarea, summary, [tabindex], [role="button"], [role="tab"], [contenteditable="true"]):focus-visible {
+  outline: 2px solid var(--nebula-focus-ring) !important;
+  outline-offset: 2px !important;
+}
+:where(input, select, textarea):focus-visible {
+  outline-offset: 1px !important;
+}
+.vod-cb-btn:focus-visible,
+.vod-control-bar button:focus-visible,
+.mobile-player button:focus-visible,
+#vodPlayer:focus-visible {
+  outline: 2px solid var(--nebula-focus-ring) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(7, 11, 20, 0.85) !important;
+}
+
+/* Skip link */
+.sv-skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2147483000;
+  padding: 10px 16px;
+  border-radius: var(--nebula-radius-sm);
+  background: var(--nebula-bg-card);
+  color: var(--nebula-text-main);
+  font: 600 14px/1.2 var(--nebula-font-sans);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.sv-skip-link:focus,
+.sv-skip-link:focus-visible {
+  transform: none;
+}
+main[tabindex="-1"]:focus {
+  outline: none !important;
+}
+
+/* Form fields: visible edges (>= 3:1, WCAG 1.4.11) */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="color"]), select, textarea) {
+  border-color: var(--nebula-field-edge) !important;
+}
+
+/* Target size (WCAG 2.5.8): 20px box + 2px margin keeps a 24px spacing circle free. */
+input[type="checkbox"],
+input[type="radio"] {
+  inline-size: 20px !important;
+  block-size: 20px !important;
+  min-inline-size: 20px !important;
+  margin: 2px !important;
+  accent-color: var(--nebula-accent-primary);
+  cursor: pointer;
+}
+.vod-channel-link,
+.nebula-streamer-link,
+.ns-module-link,
+.sidebar-link {
+  min-block-size: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+button, [role="button"], input[type="submit"], input[type="button"] {
+  touch-action: manipulation;
+}
+
+/* Dialogs (native <dialog>) */
+.sv-dialog {
+  inline-size: min(440px, calc(100vw - 32px));
+  max-block-size: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--nebula-border-bright);
+  border-radius: var(--nebula-radius-lg);
+  background: var(--nebula-bg-surface);
+  color: var(--nebula-text-main);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  overflow: auto;
+}
+.sv-dialog::backdrop {
+  background: rgba(4, 8, 16, 0.82);
+}
+.sv-dialog--wide {
+  inline-size: min(640px, calc(100vw - 32px));
+}
+.sv-dialog__head,
+.sv-dialog__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--nebula-bg-card);
+}
+.sv-dialog__head {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--nebula-border);
+}
+.sv-dialog__foot {
+  justify-content: flex-end;
+  border-top: 1px solid var(--nebula-border);
+}
+.sv-dialog__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nebula-accent-text);
+}
+.sv-dialog__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--nebula-text-main);
+}
+.sv-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+.sv-dialog__form {
+  margin: 0;
+}
+.sv-dialog__close {
+  min-inline-size: 32px;
+  min-block-size: 32px;
+  border: none;
+  border-radius: var(--nebula-radius-sm);
+  background: transparent;
+  color: var(--nebula-text-secondary);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.sv-dialog__close:hover {
+  background: var(--nebula-bg-hover);
+  color: var(--nebula-text-main);
+}
+.sv-confirm__msg {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nebula-text-secondary);
+}
+.sv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sv-field > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nebula-text-secondary);
+}
+.sv-field > :is(input, select, textarea) {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--nebula-field-edge);
+  border-radius: var(--nebula-radius-sm);
+  background: var(--nebula-bg-deep);
+  color: var(--nebula-text-main);
+  font-size: 14px;
+}
+
+/* Buttons used by dialogs and confirmations */
+.sv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-block-size: 36px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--nebula-radius-sm);
+  font: 600 13px/1.2 var(--nebula-font-sans);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.sv-btn--primary {
+  background: var(--nebula-accent-primary);
+  color: var(--nebula-text-on-accent);
+}
+.sv-btn--primary:hover {
+  background: var(--nebula-accent-primary-hover);
+}
+.sv-btn--secondary {
+  background: transparent;
+  border-color: var(--nebula-field-edge);
+  color: var(--nebula-text-main);
+}
+.sv-btn--secondary:hover {
+  background: var(--nebula-bg-hover);
+}
+.sv-btn--danger {
+  background: var(--nebula-danger-bg);
+  color: var(--nebula-text-on-accent);
+}
+.sv-btn--danger:hover {
+  background: var(--nebula-danger-bg-hover);
+}
+.sv-btn--danger-outline {
+  background: transparent;
+  border-color: var(--nebula-status-live-text);
+  color: var(--nebula-status-live-text);
+}
+.sv-btn--danger-outline:hover {
+  background: rgba(240, 68, 88, 0.12);
+}
+.sv-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alerts */
+.sv-alert {
+  padding: 10px 14px;
+  border-radius: var(--nebula-radius-sm);
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+}
+.sv-alert--error {
+  background: rgba(240, 68, 88, 0.15);
+  border-color: rgba(240, 68, 88, 0.45);
+  color: var(--nebula-status-live-text);
+}
+.sv-alert--success {
+  background: rgba(72, 214, 162, 0.12);
+  border-color: rgba(72, 214, 162, 0.45);
+  color: var(--nebula-status-success);
+}
+
+/* Bottom navigation <= 768px for desktop-UA pages (rail is hidden there) */
+.sv-bottom-nav__logout {
+  display: flex;
+  flex: 1 1 0;
+  margin: 0;
+}
+.sv-bottom-nav__logout > button {
+  inline-size: 100%;
+}
+.mobile-global-nav a.active,
+.mobile-global-nav a[aria-current="page"] {
+  color: var(--nebula-accent-text) !important;
+}
+.mobile-global-nav a.active svg {
+  stroke: var(--nebula-accent-text) !important;
+}
+.mobile-global-nav span {
+  font-size: 12px;
+}
+
+body .mobile-global-nav .sv-bottom-nav__logout > button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--nebula-text-muted) !important;
+  font-size: 12px !important;
+  min-height: 48px !important;
+  padding: 4px 6px !important;
+  margin: 0 !important;
+}
+body .mobile-global-nav .sv-bottom-nav__logout > button:hover { color: var(--nebula-text-main) !important; }
+
+/* PWA install banner (injected by webui.py) sits above the bottom navigation, not on it. */
+@media (max-width: 768px) {
+  body:has(.mobile-global-nav) .ns-pwa-install {
+    bottom: calc(var(--sv-bottom-nav-h) + 8px + env(safe-area-inset-bottom, 0px));
+  }
 }

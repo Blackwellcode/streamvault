@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ _('Sign in') }} &middot; StreamVault</title>
     <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
-  <body class="page-login {{ theme_class }} ns-platform" style="background:#070B14; margin:0; padding:0; overflow-x:hidden;">
+  <body class="page-login {{ theme_class }} ns-platform" style="background:var(--nebula-bg-root); margin:0; padding:0; overflow-x:hidden;">
     <main class="nebula-login-wrapper">
       <div class="nebula-login-modal">
         <!-- Logo Glyph -->
@@ -23,23 +22,23 @@
         <form method="post" class="login-form" id="login-form" style="display:flex; flex-direction:column; gap:12px; text-align:left; margin-top:20px;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div>
-            <label for="username" style="display:block; font-size:12px; font-weight:600; color:#A2AEC8; margin-bottom:4px;">{{ _('Username') }}</label>
-            <input id="username" name="username" placeholder="{{ _('Username') }}" autocomplete="username" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid #26344F; border-radius:8px; color:#FFF; font-size:14px;">
+            <label for="username" style="display:block; font-size:12px; font-weight:600; color:var(--nebula-text-secondary); margin-bottom:4px;">{{ _('Username') }}</label>
+            <input id="username" name="username" placeholder="{{ _('Username') }}" autocomplete="username" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid var(--nebula-border); border-radius:8px; color:#FFF; font-size:14px;">
           </div>
           <div>
-            <label for="password" style="display:block; font-size:12px; font-weight:600; color:#A2AEC8; margin-bottom:4px;">{{ _('Password') }}</label>
-            <input id="password" name="password" type="password" placeholder="{{ _('Password') }}" autocomplete="current-password" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid #26344F; border-radius:8px; color:#FFF; font-size:14px;">
+            <label for="password" style="display:block; font-size:12px; font-weight:600; color:var(--nebula-text-secondary); margin-bottom:4px;">{{ _('Password') }}</label>
+            <input id="password" name="password" type="password" placeholder="{{ _('Password') }}" autocomplete="current-password" required style="width:100%; box-sizing:border-box; padding:10px 14px; background:rgba(11,18,32,0.8); border:1px solid var(--nebula-border); border-radius:8px; color:#FFF; font-size:14px;">
           </div>
           <button type="submit" id="login-submit" style="width:100%; padding:12px; margin-top:6px; font-size:14px; font-weight:700;">{{ _('Sign in') }}</button>
         </form>
 
         {% if error %}
-        <div class="error" style="margin-top:16px; padding:10px 14px; background:rgba(240,68,88,0.15); border:1px solid rgba(240,68,88,0.4); border-radius:8px; color:#F04458; font-size:13px;">
+        <div class="error" role="alert" style="margin-top:16px; padding:10px 14px; background:rgba(240,68,88,0.15); border:1px solid rgba(240,68,88,0.4); border-radius:8px; color:#F2667A; font-size:13px;">
           {{ error }}
         </div>
         {% endif %}
 
-        <div class="login-register-hint registrierung-info" style="font-size:12px; color:#A2AEC8; margin-top:16px; margin-bottom:12px; text-align:center;">
+        <div class="login-register-hint registrierung-info" style="font-size:12px; color:var(--nebula-text-secondary); margin-top:16px; margin-bottom:12px; text-align:center;">
           {{ _('No account yet? Accounts are issued by the administrators of this instance.') }}
         </div>
         <div class="nebula-login-footer-tag">
@@ -51,7 +50,7 @@
       </div>
     </main>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       (function () {
         var form = document.getElementById("login-form");
         var btn = document.getElementById("login-submit");

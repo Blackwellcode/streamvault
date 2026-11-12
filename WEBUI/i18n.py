@@ -143,6 +143,10 @@ JS_MESSAGES = (
     N_("Progress"),
     N_("Volume"),
     N_("Start playback"),
+    # static/sv_confirm.js (confirmation dialog)
+    N_("Please confirm"),
+    N_("Confirm"),
+    N_("Cancel"),
 )
 
 

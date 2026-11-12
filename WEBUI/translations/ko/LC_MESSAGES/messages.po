@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-12 15:41+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -181,9 +181,6 @@ msgstr "복원이 이미 실행 중입니다."
 msgid "A saved value is kept if the field is left empty."
 msgstr "필드를 비워 두면 저장된 값이 유지됩니다."
 
-msgid "ACTIVE (locked)"
-msgstr "활성 (잠김)"
-
 msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
 msgstr "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner 또는 S3 호환 엔드포인트."
 
@@ -195,6 +192,9 @@ msgstr "약관 동의"
 
 msgid "Account active (access allowed)"
 msgstr "계정 활성 (접근 허용)"
+
+msgid "Accounts"
+msgstr "계정"
 
 msgid "Action"
 msgstr "작업"
@@ -208,6 +208,9 @@ msgstr "계정 즉시 활성화"
 msgid "Active"
 msgstr "활성"
 
+msgid "Active (locked)"
+msgstr "활성 (잠김)"
+
 msgid "Active shares"
 msgstr "활성 공유"
 
@@ -220,6 +223,9 @@ msgstr "활성: 새 스트림이 자동으로 허용됩니다. 아래에서 개�
 msgid "Actively monitored by the recorder core"
 msgstr "레코더 코어가 실시간 모니터링 중"
 
+msgid "Add a channel to record"
+msgstr "녹화할 채널 추가"
+
 msgid "Add channel"
 msgstr "채널 추가"
 
@@ -228,6 +234,9 @@ msgstr "새 채널 추가"
 
 msgid "Add provider"
 msgstr "공급자 추가"
+
+msgid "Add the first channel above"
+msgstr "위에서 첫 채널 추가"
 
 msgid "Addressing"
 msgstr "주소 지정"
@@ -240,6 +249,9 @@ msgstr "관리자 제어"
 
 msgid "Admins only"
 msgstr "관리자 전용"
+
+msgid "Alert sound overlay"
+msgstr "알림음 오버레이"
 
 msgid "All"
 msgstr "전체"
@@ -480,26 +492,26 @@ msgstr "버퍼가 아직 짧습니다 — 클립 구간도 함께 늘어납니�
 msgid "Buffer:"
 msgstr "버퍼:"
 
-msgid "Buffering..."
-msgstr "버퍼링 중..."
+msgid "Buffering…"
+msgstr "버퍼링 중…"
 
 msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
 msgstr "기본적으로 자동 업로드나 삭제는 하지 않습니다. 필요한 기능만 신중하게 켜세요."
 
-msgid "CHANGE"
-msgstr "변경"
-
-msgid "CHANNEL MANAGEMENT (ADMIN)"
-msgstr "채널 관리 (관리자)"
-
 msgid "Cancel"
 msgstr "취소"
+
+msgid "Category"
+msgstr "카테고리"
 
 msgid "Category search failed."
 msgstr "카테고리 검색에 실패했습니다."
 
 msgid "Category search is currently unavailable."
 msgstr "카테고리 검색을 현재 사용할 수 없습니다."
+
+msgid "Change"
+msgstr "변경"
 
 msgid "Change banner"
 msgstr "배너 변경"
@@ -515,6 +527,9 @@ msgstr "채널 작업"
 
 msgid "Channel archive & recording metrics"
 msgstr "채널 아카이브 및 녹화 지표"
+
+msgid "Channel management (admin)"
+msgstr "채널 관리 (관리자)"
 
 msgid "Channel not found."
 msgstr "채널을 찾을 수 없습니다."
@@ -572,11 +587,11 @@ msgstr "정리 작업이 대기열에 추가되었습니다 (작업 #%(task)s)."
 msgid "Clear filters"
 msgstr "필터 지우기"
 
-msgid "Click to change password"
-msgstr "클릭하여 비밀번호 변경"
-
 msgid "Clip"
 msgstr "클립"
+
+msgid "Clip Editor"
+msgstr "클립 편집기"
 
 msgid "Clip URL is missing on this page."
 msgstr "이 페이지에 클립 URL이 없습니다."
@@ -662,6 +677,9 @@ msgstr "녹화 채널 설정 및 아카이브 할당 관리"
 msgid "Configured streamers & sources"
 msgstr "설정된 스트리머 및 소스"
 
+msgid "Confirm"
+msgstr "확인"
+
 msgid "Connect account"
 msgstr "계정 연결"
 
@@ -683,6 +701,9 @@ msgstr "연결 정상"
 msgid "Connection failed"
 msgstr "연결 실패"
 
+msgid "Connection failed. Check your network and try again."
+msgstr "연결에 실패했습니다. 네트워크를 확인한 뒤 다시 시도하세요."
+
 msgid "Connection lost — reconnecting…"
 msgstr "연결 끊김 — 다시 연결 중…"
 
@@ -698,6 +719,9 @@ msgstr "제어판"
 
 msgid "Control the global maintenance mode or lock individual platform areas."
 msgstr "전체 점검 모드를 제어하거나 특정 플랫폼 영역을 잠급니다."
+
+msgid "Copied"
+msgstr "복사됨"
 
 msgid "Copy"
 msgstr "복사"
@@ -815,6 +839,14 @@ msgstr "기본 대상"
 msgid "Delete"
 msgstr "삭제"
 
+#, python-format
+msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
+msgstr "%(name)s을(를) 삭제하시겠습니까? 파일이 아카이브에서 제거되며 복구할 수 없습니다."
+
+#, python-format
+msgid "Delete backup %(name)s? This cannot be undone."
+msgstr "백업 %(name)s을(를) 삭제하시겠습니까? 되돌릴 수 없습니다."
+
 msgid "Delete folder"
 msgstr "폴더 삭제"
 
@@ -832,6 +864,12 @@ msgstr "로컬에서 삭제"
 
 msgid "Delete permanently"
 msgstr "영구 삭제"
+
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "이 스트리머 폴더와 모든 녹화를 삭제하시겠습니까? 되돌릴 수 없습니다."
+
+msgid "Delete this video? The file is removed from the archive and cannot be restored."
+msgstr "이 동영상을 삭제하시겠습니까? 파일이 아카이브에서 제거되며 복구할 수 없습니다."
 
 msgid "Delete user"
 msgstr "사용자 삭제"
@@ -913,8 +951,8 @@ msgstr "TXT 다운로드"
 msgid "Download all"
 msgstr "모두 다운로드"
 
-msgid "Download all VODs?"
-msgstr "모든 VOD를 다운로드할까요?"
+msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
+msgstr "이 스트리머의 모든 VOD를 하나의 아카이브로 다운로드하시겠습니까? 큰 채널은 시간이 걸릴 수 있습니다."
 
 msgid "Download archive & VODs"
 msgstr "아카이브 및 VOD 다운로드"
@@ -933,7 +971,7 @@ msgstr "모든 VOD 다운로드를 백그라운드에서 시작했습니다."
 
 #, python-format
 msgid "Downloading... %(percent)s"
-msgstr "다운로드 중... %(percent)s"
+msgstr "다운로드 중… %(percent)s"
 
 #, python-format
 msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
@@ -984,6 +1022,9 @@ msgstr "이메일 주소"
 msgid "Email address (optional)"
 msgstr "이메일 주소 (선택)"
 
+msgid "Emotes"
+msgstr "이모트"
+
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr "비워 두면 AWS. R2, B2, Wasabi, MinIO 등은 S3 엔드포인트를 입력하세요."
 
@@ -998,6 +1039,9 @@ msgstr "즉시 활성화"
 
 msgid "Enable maintenance mode"
 msgstr "점검 모드 켜기"
+
+msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
+msgstr "점검 모드를 켜시겠습니까? 허용 목록의 사용자를 제외한 모두가 점검을 끝낼 때까지 점검 페이지를 보게 됩니다."
 
 msgid "Enable recording"
 msgstr "녹화 켜기"
@@ -1096,6 +1140,9 @@ msgstr "오류:"
 msgid "Error: %(error)s"
 msgstr "오류: %(error)s"
 
+msgid "Everywhere"
+msgstr "모든 기기"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "이 그룹의 기존 멤버는 기본 그룹 <strong>Viewer</strong>에 자동으로 배정됩니다."
 
@@ -1112,10 +1159,7 @@ msgid "Exported by StreamVault"
 msgstr "StreamVault에서 내보냄"
 
 msgid "Extracting audio..."
-msgstr "오디오 추출 중..."
-
-msgid "FEATURED VOD"
-msgstr "추천 VOD"
+msgstr "오디오 추출 중…"
 
 msgid "Failed"
 msgstr "실패"
@@ -1125,6 +1169,9 @@ msgstr "빠름"
 
 msgid "Feature permissions"
 msgstr "기능 권한"
+
+msgid "Featured VOD"
+msgstr "추천 VOD"
 
 msgid "Featured highlight"
 msgstr "추천 하이라이트"
@@ -1156,8 +1203,11 @@ msgstr "파일을 업로드했습니다."
 msgid "Filter"
 msgstr "필터"
 
-msgid "Filter chat..."
-msgstr "채팅 필터..."
+msgid "Filter chat"
+msgstr "채팅 필터"
+
+msgid "Filter chat…"
+msgstr "채팅 필터…"
 
 msgid "First"
 msgstr "처음"
@@ -1435,19 +1485,6 @@ msgstr "7월"
 msgid "June"
 msgstr "6월"
 
-msgid "LIVE"
-msgstr "LIVE"
-
-#, python-format
-msgid "LIVE %(name)s (without Twitch login)"
-msgstr "LIVE %(name)s (Twitch 로그인 불필요)"
-
-msgid "LIVE & DISCORD ONLY"
-msgstr "라이브 및 DISCORD 전용"
-
-msgid "LIVE NOW"
-msgstr "지금 LIVE"
-
 msgid "Language"
 msgstr "언어"
 
@@ -1496,11 +1533,14 @@ msgstr "링크 복사됨:"
 msgid "Live"
 msgstr "라이브"
 
+msgid "Live & Discord only"
+msgstr "라이브 및 DISCORD 전용"
+
 msgid "Live & Discord only:"
 msgstr "라이브 및 Discord 전용:"
 
 msgid "Live (recovering...)"
-msgstr "라이브 (복구 중...)"
+msgstr "라이브 (복구 중…)"
 
 msgid "Live channels"
 msgstr "라이브 채널"
@@ -1535,8 +1575,8 @@ msgstr "라이브 스트림과 Discord 알림만, 디스크 녹화 없음"
 msgid "Live stream highlight"
 msgstr "라이브 스트림 하이라이트"
 
-msgid "Live stream is currently unavailable. Searching for stream..."
-msgstr "현재 라이브 스트림을 사용할 수 없습니다. 스트림 검색 중..."
+msgid "Live stream is currently unavailable. Searching for stream…"
+msgstr "현재 라이브 스트림을 사용할 수 없습니다. 스트림 검색 중…"
 
 msgid "Live stream not available."
 msgstr "라이브 스트림을 사용할 수 없습니다."
@@ -1553,6 +1593,10 @@ msgstr "라이브 시청"
 msgid "Live-only"
 msgstr "라이브 전용"
 
+#, python-format
+msgid "Live: %(name)s (without Twitch login)"
+msgstr "LIVE %(name)s (Twitch 로그인 불필요)"
+
 msgid "Load"
 msgstr "부하"
 
@@ -1563,7 +1607,7 @@ msgid "Loading chat…"
 msgstr "채팅 불러오는 중…"
 
 msgid "Loading model..."
-msgstr "모델 불러오는 중..."
+msgstr "모델 불러오는 중…"
 
 msgid "Loading streams…"
 msgstr "스트림 불러오는 중…"
@@ -1593,6 +1637,9 @@ msgstr "<strong>모바일 버전</strong> 잠금"
 msgid "Log out"
 msgstr "로그아웃"
 
+msgid "Log out everywhere"
+msgstr "모든 기기에서 로그아웃"
+
 msgid "Login"
 msgstr "로그인"
 
@@ -1604,6 +1651,9 @@ msgstr "로그인에 실패했습니다."
 
 msgid "MP4 check not possible"
 msgstr "MP4 검사 불가"
+
+msgid "Main navigation"
+msgstr "주 메뉴"
 
 msgid "Maintenance"
 msgstr "점검 중"
@@ -1670,6 +1720,9 @@ msgstr "메시지"
 msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
 msgstr "모바일 라이브가 일시적으로 비활성화되었습니다. 데스크톱 또는 설치된 앱을 이용하세요."
 
+msgid "Mods"
+msgstr "모더레이터"
+
 msgid "Monitored"
 msgstr "모니터링 중"
 
@@ -1691,9 +1744,6 @@ msgstr "네트워크 오류"
 msgid "Network error while loading streams."
 msgstr "스트림을 불러오는 중 네트워크 오류가 발생했습니다."
 
-msgid "Network error:"
-msgstr "네트워크 오류:"
-
 msgid "Network is back — reconnecting…"
 msgstr "네트워크 복구됨 — 다시 연결 중…"
 
@@ -1712,8 +1762,8 @@ msgstr "새 비밀번호 (변경하지 않으려면 비워 두기)"
 msgid "New password * (min. 8 characters)"
 msgstr "새 비밀번호 * (최소 8자)"
 
-msgid "New password..."
-msgstr "새 비밀번호..."
+msgid "New password…"
+msgstr "새 비밀번호…"
 
 msgid "New user"
 msgstr "새 사용자"
@@ -1736,8 +1786,8 @@ msgstr "Nextcloud, ownCloud, Hetzner Storage Box 또는 앱 비밀번호를 사�
 msgid "No (self-signed only)"
 msgstr "아니요 (자체 서명 인증서만)"
 
-msgid "No VODs available in the archive"
-msgstr "아카이브에 VOD가 없습니다"
+msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
+msgstr "아직 VOD가 없습니다. 모니터링 중인 채널이 방송을 시작하면 녹화가 여기에 자동으로 표시됩니다."
 
 msgid "No acceptances yet."
 msgstr "아직 동의 내역이 없습니다."
@@ -1771,6 +1821,9 @@ msgstr "백업이 없습니다."
 
 msgid "No badges received from Twitch."
 msgstr "Twitch에서 받은 배지가 없습니다."
+
+msgid "No channels are monitored yet."
+msgstr "아직 모니터링 중인 채널이 없습니다."
 
 msgid "No chat"
 msgstr "채팅 없음"
@@ -1811,9 +1864,6 @@ msgstr "모니터링 중인 Twitch 채널이 없습니다."
 
 msgid "No monitored Twitch channels. Add streamers under Streamers."
 msgstr "모니터링 중인 Twitch 채널이 없습니다. 스트리머 메뉴에서 스트리머를 추가하세요."
-
-msgid "No monitored channels configured."
-msgstr "모니터링 채널이 설정되지 않았습니다."
 
 msgid "No recently watched streams yet."
 msgstr "최근 시청한 스트림이 없습니다."
@@ -1869,29 +1919,14 @@ msgstr "OAuth 안내"
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "OAuth 상태 토큰에는 강력한 VOD_SECRET_KEY가 필요합니다."
 
+msgid "OBS overlays"
+msgstr "OBS 오버레이"
+
 msgid "OFF (normal operation)"
 msgstr "꺼짐 (정상 운영)"
 
-msgid "OFFLINE"
-msgstr "오프라인"
-
 msgid "OK"
 msgstr "확인"
-
-msgid "ONLINE"
-msgstr "온라인"
-
-msgid "OPERATING MODE:"
-msgstr "운영 모드:"
-
-msgid "OPTION A: UPLOAD IMAGE FILE"
-msgstr "옵션 A: 이미지 파일 업로드"
-
-msgid "OPTION A: UPLOAD PROFILE PICTURE"
-msgstr "옵션 A: 프로필 사진 업로드"
-
-msgid "OPTION B: USE IMAGE URL"
-msgstr "옵션 B: 이미지 URL 사용"
 
 msgid "OR"
 msgstr "또는"
@@ -1918,6 +1953,9 @@ msgstr "오래된 순"
 msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
 msgstr "OneDrive / Microsoft 365 (Microsoft Graph, OAuth 2.0)."
 
+msgid "Online"
+msgstr "온라인"
+
 msgid "Only after a successful upload and optional cloud verification."
 msgstr "업로드 성공 및 선택적 클라우드 확인 후에만."
 
@@ -1938,6 +1976,22 @@ msgstr "클립 열기"
 
 msgid "Open editor"
 msgstr "편집기 열기"
+
+#, python-format
+msgid "Open streamer %(name)s"
+msgstr "스트리머 %(name)s 열기"
+
+msgid "Operating mode"
+msgstr "운영 모드:"
+
+msgid "Option A: upload image file"
+msgstr "옵션 A: 이미지 파일 업로드"
+
+msgid "Option A: upload profile picture"
+msgstr "옵션 A: 프로필 사진 업로드"
+
+msgid "Option B: use image URL"
+msgstr "옵션 B: 이미지 URL 사용"
 
 msgid "Option sections"
 msgstr "옵션 섹션"
@@ -2049,6 +2103,9 @@ msgstr "재생할 수 없음"
 msgid "Player error — reconnecting…"
 msgstr "플레이어 오류 — 다시 연결 중…"
 
+msgid "Please confirm"
+msgstr "확인해 주세요"
+
 msgid "Please enter a name for the storage provider."
 msgstr "스토리지 공급자 이름을 입력하세요."
 
@@ -2099,10 +2156,10 @@ msgid "Private video and stream archive console."
 msgstr "비공개 동영상 및 스트림 아카이브 콘솔."
 
 msgid "Processing video (this may take a while)..."
-msgstr "동영상 처리 중 (시간이 걸릴 수 있음)..."
+msgstr "동영상 처리 중 (시간이 걸릴 수 있음)…"
 
 msgid "Processing video..."
-msgstr "동영상 처리 중..."
+msgstr "동영상 처리 중…"
 
 msgid "Profile picture reset to default."
 msgstr "프로필 사진을 기본값으로 재설정했습니다."
@@ -2147,8 +2204,8 @@ msgstr "공급자"
 msgid "Public link created:"
 msgstr "공개 링크를 만들었습니다:"
 
-msgid "Purpose of this user group..."
-msgstr "이 사용자 그룹의 용도..."
+msgid "Purpose of this user group…"
+msgstr "이 사용자 그룹의 용도…"
 
 msgid "Quality"
 msgstr "화질"
@@ -2162,21 +2219,11 @@ msgstr "대기열을 읽을 수 없음"
 msgid "Quiet"
 msgstr "조용"
 
-msgid "RECORDING"
-msgstr "녹화 중"
-
-msgid "RECORDING ACTIVE"
-msgstr "녹화 활성"
-
 msgid "Ready"
 msgstr "준비됨"
 
 msgid "Real-time stream error — reconnecting…"
 msgstr "실시간 스트림 오류 — 다시 연결 중…"
-
-#, python-format
-msgid "Really delete backup %(name)s?"
-msgstr "백업 %(name)s을(를) 삭제하시겠습니까?"
 
 msgid "Really delete file?"
 msgstr "파일을 삭제하시겠습니까?"
@@ -2187,27 +2234,14 @@ msgstr "클라우드 파일을 삭제하시겠습니까? 로컬 사본은 유지
 msgid "Really delete the local file? The cloud copy is kept."
 msgstr "로컬 파일을 삭제하시겠습니까? 클라우드 사본은 유지됩니다."
 
-msgid "Really delete?"
-msgstr "삭제하시겠습니까?"
-
-#, python-format
-msgid "Really remove channel %(name)s?"
-msgstr "채널 %(name)s을(를) 제거하시겠습니까?"
-
 msgid "Really remove the provider? The cloud files are kept."
 msgstr "공급자를 제거하시겠습니까? 클라우드 파일은 유지됩니다."
-
-msgid "Really rename the file?"
-msgstr "파일 이름을 변경하시겠습니까?"
 
 msgid "Really reset the custom banner and switch to the default?"
 msgstr "사용자 지정 배너를 재설정하고 기본값으로 바꾸시겠습니까?"
 
 msgid "Really reset the custom profile picture and switch to the default?"
 msgstr "사용자 지정 프로필 사진을 재설정하고 기본값으로 바꾸시겠습니까?"
-
-msgid "Really revoke this share?"
-msgstr "이 공유를 취소하시겠습니까?"
 
 msgid "Really stop the recording?"
 msgstr "녹화를 중지하시겠습니까?"
@@ -2217,6 +2251,9 @@ msgstr "최근 작업 오류"
 
 msgid "Recently watched"
 msgstr "최근 시청"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "브라우저 소스용 권장 URL입니다. TOKEN을 TTS_OVERLAY_TOKEN 또는 ALERT_OVERLAY_TOKEN 값으로 바꾸세요. # 뒤의 부분은 OBS에 남고 서버에는 요청 헤더로만 전달되며 로그에는 남지 않습니다."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "권장. 불완전한 업로드로 인한 데이터 손실을 방지합니다."
@@ -2235,6 +2272,9 @@ msgstr "녹화"
 
 msgid "Recording + live stream & Discord notification"
 msgstr "녹화 + 라이브 스트림 및 Discord 알림"
+
+msgid "Recording active"
+msgstr "녹화 활성"
 
 msgid "Recording disabled (live & Discord only)"
 msgstr "녹화 꺼짐 (라이브 및 Discord만)"
@@ -2285,8 +2325,8 @@ msgid "Remove channel"
 msgstr "채널 제거"
 
 #, python-format
-msgid "Remove channel %(name)s?"
-msgstr "채널 %(name)s을(를) 제거할까요?"
+msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
+msgstr "채널 %(name)s을(를) 제거하시겠습니까? 모니터링이 중지되며 기존 녹화는 아카이브에 남습니다."
 
 msgid "Remove only the database entry?"
 msgstr "데이터베이스 항목만 제거할까요?"
@@ -2300,6 +2340,9 @@ msgstr "리먹스 작업을 시작했습니다. 진행 상황은 관리자 패�
 
 msgid "Rename file"
 msgstr "파일 이름 변경"
+
+msgid "Rename the file? Existing links and shares to the old file name stop working."
+msgstr "파일 이름을 바꾸시겠습니까? 이전 파일 이름으로 된 링크와 공유는 더 이상 작동하지 않습니다."
 
 msgid "Renamed."
 msgstr "이름을 변경했습니다."
@@ -2326,6 +2369,9 @@ msgstr "다시 시작하지 못했습니다."
 msgid "Restart services"
 msgstr "서비스 다시 시작"
 
+msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
+msgstr "지금 레코더와 채팅 로거를 다시 시작하시겠습니까? 진행 중인 녹화가 몇 초간 중단됩니다."
+
 msgid "Restore"
 msgstr "복원"
 
@@ -2341,6 +2387,9 @@ msgstr "재생 계속"
 
 msgid "Revoke"
 msgstr "취소"
+
+msgid "Revoke this share? The link stops working immediately."
+msgstr "이 공유를 취소하시겠습니까? 링크가 즉시 작동하지 않습니다."
 
 #, python-format
 msgid "Role access '%(slug)s' added."
@@ -2373,9 +2422,6 @@ msgstr "실행 중…"
 
 msgid "S3-compatible"
 msgstr "S3 호환"
-
-msgid "START"
-msgstr "시작"
 
 msgid "Safety migration:"
 msgstr "안전 마이그레이션:"
@@ -2430,10 +2476,7 @@ msgid "Saving transcript failed: %(error)s"
 msgstr "스크립트 저장 실패: %(error)s"
 
 msgid "Saving transcript..."
-msgstr "스크립트 저장 중..."
-
-msgid "Saving..."
-msgstr "저장 중..."
+msgstr "스크립트 저장 중…"
 
 msgid "Saving…"
 msgstr "저장 중…"
@@ -2441,8 +2484,8 @@ msgstr "저장 중…"
 msgid "Search"
 msgstr "검색"
 
-msgid "Search VODs, streamers or games..."
-msgstr "VOD, 스트리머, 게임 검색..."
+msgid "Search VODs, streamers or games…"
+msgstr "VOD, 스트리머, 게임 검색…"
 
 msgid "Search category"
 msgstr "카테고리 검색"
@@ -2453,8 +2496,11 @@ msgstr "카테고리 / 게임 검색…"
 msgid "Search failed."
 msgstr "검색에 실패했습니다."
 
-msgid "Search recordings (title, date, game)..."
-msgstr "녹화 검색 (제목, 날짜, 게임)..."
+msgid "Search recordings"
+msgstr "녹화 검색"
+
+msgid "Search recordings (title, date, game)…"
+msgstr "녹화 검색 (제목, 날짜, 게임)…"
 
 msgid "Search results"
 msgstr "검색 결과"
@@ -2465,20 +2511,20 @@ msgstr "스트리머 또는 채널 검색…"
 msgid "Search streamers"
 msgstr "스트리머 검색"
 
-msgid "Search term (e.g. player name, chat message, date)..."
-msgstr "검색어 (예: 플레이어 이름, 채팅 메시지, 날짜)..."
+msgid "Search term (e.g. player name, chat message, date)…"
+msgstr "검색어 (예: 플레이어 이름, 채팅 메시지, 날짜)…"
 
-msgid "Search user, email or group..."
-msgstr "사용자, 이메일, 그룹 검색..."
+msgid "Search user, email or group…"
+msgstr "사용자, 이메일, 그룹 검색…"
 
-msgid "Search..."
-msgstr "검색..."
-
-msgid "Searching for stream..."
-msgstr "스트림 검색 중..."
+msgid "Searching for stream…"
+msgstr "스트림 검색 중…"
 
 msgid "Searching…"
 msgstr "검색 중…"
+
+msgid "Search…"
+msgstr "검색…"
 
 msgid "Seconds after trigger"
 msgstr "트리거 후 초"
@@ -2569,8 +2615,20 @@ msgstr "내비게이션, 사이드바, 스트리머 카드에 표시됩니다."
 msgid "Sign in"
 msgstr "로그인"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "모든 기기에서 로그아웃하시겠습니까? 현재 세션을 포함해 이 계정의 모든 세션이 종료됩니다."
+
 msgid "Size"
 msgstr "크기"
+
+msgid "Skip to content"
+msgstr "본문으로 건너뛰기"
+
+msgid "Sort"
+msgstr "정렬"
+
+msgid "Sort order"
+msgstr "정렬 순서"
 
 msgid "Sound"
 msgstr "소리"
@@ -2613,7 +2671,7 @@ msgid "Starting"
 msgstr "시작 중"
 
 msgid "Starting download..."
-msgstr "다운로드 시작 중..."
+msgstr "다운로드 시작 중…"
 
 msgid "Status"
 msgstr "상태"
@@ -2651,6 +2709,9 @@ msgstr "스토리지 공급자를 찾을 수 없습니다."
 
 msgid "Storage providers"
 msgstr "스토리지 공급자"
+
+msgid "Storage usage"
+msgstr "저장 공간 사용량"
 
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
@@ -2712,6 +2773,9 @@ msgstr "스트리머, VOD 및 채팅 기록"
 
 msgid "Subfolder"
 msgstr "하위 폴더"
+
+msgid "Subs"
+msgstr "구독자"
 
 msgid "Success"
 msgstr "성공"
@@ -2799,6 +2863,9 @@ msgstr "약관 버전이 만료되었습니다 — 페이지를 새로고침하�
 
 msgid "Test"
 msgstr "테스트"
+
+msgid "Text-to-speech overlay"
+msgstr "음성 변환 오버레이"
 
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "양해해 주셔서 감사합니다. 권한이 있는 사용자는 로그인 페이지에서 로그인할 수 있습니다."
@@ -2912,8 +2979,10 @@ msgstr "오늘 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "지금 재생 중인 VOD가 너무 많습니다. 라이브에는 영향이 없습니다. 몇 분 후 다시 시도하세요 — 누군가 플레이어를 닫으면 자리가 납니다."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "시도 횟수가 너무 많습니다. IP가 일시적으로 차단되었습니다. 나중에 다시 시도하세요."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "로그인 시도가 너무 많습니다. %(num)d분 후에 다시 시도하세요."
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "인기 스트림을 현재 사용할 수 없습니다. 모니터링 채널이나 검색을 이용하세요."
@@ -2966,6 +3035,9 @@ msgstr "스크립트 완료"
 msgid "Transcript missing despite finished status"
 msgstr "완료 상태이지만 스크립트가 없음"
 
+msgid "Transcript progress"
+msgstr "자막 변환 진행률"
+
 msgid "Transcription cancelled"
 msgstr "스크립트 생성 취소됨"
 
@@ -2989,7 +3061,7 @@ msgid "Transcription queued in the worker. The result appears on the next page l
 msgstr "스크립트 생성이 워커 대기열에 추가되었습니다. 완료 후 다음 로드 시 결과가 표시됩니다."
 
 msgid "Transcription running..."
-msgstr "스크립트 생성 중..."
+msgstr "스크립트 생성 중…"
 
 msgid "Transcription timed out"
 msgstr "스크립트 생성 시간 초과"
@@ -3006,8 +3078,11 @@ msgstr "Twitch / 기본값"
 msgid "Twitch badge library synchronized."
 msgstr "Twitch 배지 라이브러리를 동기화했습니다."
 
-msgid "Twitch channel name..."
-msgstr "Twitch 채널 이름..."
+msgid "Twitch channel name"
+msgstr "Twitch 채널 이름"
+
+msgid "Twitch channel name…"
+msgstr "Twitch 채널 이름…"
 
 msgid "Twitch live chat"
 msgstr "Twitch 라이브 채팅"
@@ -3015,8 +3090,8 @@ msgstr "Twitch 라이브 채팅"
 msgid "Twitch live stream"
 msgstr "Twitch 라이브 스트림"
 
-msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
-msgstr "Twitch 이름 (예: shroud) 또는 YouTube URL / @핸들..."
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle…"
+msgstr "Twitch 이름 (예: shroud) 또는 YouTube URL / @핸들…"
 
 msgid "Twitch or YouTube supported"
 msgstr "Twitch 또는 YouTube 지원"
@@ -3234,12 +3309,6 @@ msgstr "공개 대상:"
 msgid "Volume"
 msgstr "볼륨"
 
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "경고: 이 스트리머와 모든 녹화를 영구 삭제하시겠습니까?"
-
-msgid "WATCH LIVE"
-msgstr "라이브 시청"
-
 msgid "Waiting for server stream…"
 msgstr "서버 스트림 대기 중…"
 
@@ -3251,6 +3320,9 @@ msgstr "시청"
 
 msgid "Watch latest video"
 msgstr "최신 동영상 보기"
+
+msgid "Watch live"
+msgstr "라이브 시청"
 
 msgid "Watch now"
 msgstr "지금 시청"
@@ -3308,8 +3380,8 @@ msgstr "사용자 관리 권한이 없는 그룹으로 자신을 이동할 수 �
 msgid "You have accepted version %(version)s."
 msgstr "버전 %(version)s에 동의했습니다."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "IP가 일시적으로 차단되었습니다. 나중에 다시 시도하세요."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "IP가 차단되었습니다. 관리자에게 문의하세요."
 
 msgid "Your browser does not support the video tag."
 msgstr "브라우저가 video 태그를 지원하지 않습니다."
@@ -3353,11 +3425,11 @@ msgstr "예: VIP 아카이브"
 msgid "e.g. alice, bob"
 msgstr "예: alice, bob"
 
-msgid "e.g. john_doe"
-msgstr "예: hong_gildong"
-
 msgid "e.g. channel_name"
 msgstr "예: channel_name"
+
+msgid "e.g. john_doe"
+msgstr "예: hong_gildong"
 
 #, python-format
 msgid "effective from %(date)s"

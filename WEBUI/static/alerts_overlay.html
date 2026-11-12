@@ -19,71 +19,7 @@
 <body>
   <div id="hud"></div>
   <audio id="player" preload="auto"></audio>
-  <script>
-    const token = new URLSearchParams(location.search).get("token") || "";
-    const hud = document.getElementById("hud");
-    const player = document.getElementById("player");
-    let busy = false;
-    let currentId = null;
-
-    function url(path) {
-      const u = new URL(path, location.origin);
-      u.searchParams.set("token", token);
-      return u.pathname + u.search;
-    }
-
-    async function ack(id) {
-      if (!id) return;
-      try {
-        await fetch(url("/alerts/api/ack?id=" + encodeURIComponent(id)), { method: "POST" });
-      } catch (e) {}
-    }
-
-    async function tick() {
-      if (busy) return;
-      try {
-        const res = await fetch(url("/alerts/api/next"));
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data || !data.item) return;
-        const item = data.item;
-        busy = true;
-        currentId = item.id;
-        hud.textContent = "🔔 " + (item.label || item.event);
-        hud.classList.add("show");
-        player.src = item.audio_url;
-        await player.play();
-      } catch (e) {
-        hud.textContent = "click once to unlock audio";
-        hud.classList.add("show");
-        busy = false;
-        currentId = null;
-      }
-    }
-
-    player.addEventListener("ended", async () => {
-      const id = currentId;
-      currentId = null;
-      busy = false;
-      hud.classList.remove("show");
-      await ack(id);
-      tick();
-    });
-
-    player.addEventListener("error", async () => {
-      const id = currentId;
-      currentId = null;
-      busy = false;
-      hud.classList.remove("show");
-      await ack(id);
-    });
-
-    window.addEventListener("pointerdown", () => {
-      player.play().catch(() => {});
-    }, { once: true });
-
-    setInterval(tick, 900);
-    tick();
-  </script>
+  <script src="/static/overlay_common.js"></script>
+  <script src="/static/alerts_overlay.js"></script>
 </body>
 </html>

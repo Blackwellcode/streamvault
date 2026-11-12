@@ -3493,6 +3493,27 @@ def is_allowed_url(url):
         return False
     return True
 
+
+_CSS_URL_FORBIDDEN = frozenset("'\"()\\<> \t\r\n\f")
+
+
+def css_url(value):
+    """Return value if it is safe inside CSS url('...'), else "" (audit S8, banner/hero images).
+
+    Accepted: a same-origin path ("/static/..."), or an https URL that is_allowed_url()
+    accepts. Rejected: quotes, parentheses, backslashes, angle brackets and whitespace,
+    which could close the url() token and inject CSS.
+    """
+    text = str(value or "").strip()
+    if not text or any(ch in _CSS_URL_FORBIDDEN for ch in text):
+        return ""
+    if text.startswith("/") and not text.startswith("//"):
+        return text
+    if text.lower().startswith("https://") and is_allowed_url(text):
+        return text
+    return ""
+
+
 def is_safe_next(target):
     if not target:
         return False
@@ -10748,6 +10769,52 @@ def favicon():
     return app_icon_response(32)
 
 
+def csp_nonce():
+    """Per-request nonce for inline <script> blocks (templates: nonce="{{ csp_nonce() }}")."""
+    if not has_request_context():
+        return ""
+    nonce = getattr(g, "csp_nonce_value", None)
+    if not nonce:
+        nonce = secrets.token_urlsafe(18)
+        g.csp_nonce_value = nonce
+    return nonce
+
+
+app.add_app_template_global(csp_nonce, "csp_nonce")
+app.add_app_template_filter(css_url, "css_url")
+
+_CSP_INJECTED_SCRIPT_HASHES = []
+
+
+def csp_injected_script_hashes():
+    """sha256 sources for the static inline scripts that inject_mobile_app_head() adds.
+
+    Hashed from mobile_app_head_tags() itself (trusted server code), never from the
+    response body, so injected markup cannot whitelist itself.
+    """
+    if not _CSP_INJECTED_SCRIPT_HASHES:
+        import base64
+
+        for body in re.findall(r"<script>(.*?)</script>", mobile_app_head_tags(), flags=re.S):
+            digest = hashlib.sha256(body.encode("utf-8")).digest()
+            _CSP_INJECTED_SCRIPT_HASHES.append("'sha256-" + base64.b64encode(digest).decode("ascii") + "'")
+    return _CSP_INJECTED_SCRIPT_HASHES
+
+
+# Third-party hosts the UI talks to (chat emotes: BTTV/FFZ/7TV, sub emotes: ivr.fi;
+# clip editor slider: cdnjs). Keep in sync with static/chat_emotes.js.
+CSP_SCRIPT_HOSTS = "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
+CSP_STYLE_HOSTS = "https://fonts.googleapis.com https://cdnjs.cloudflare.com"
+# Images: any https source. Admins may set custom banner/avatar URLs on arbitrary
+# hosts (streamer page); images cannot execute script, the CSS url() value is
+# filtered by css_url(). Twitch/emote CDNs are covered by https:.
+CSP_IMG_HOSTS = "https:"
+CSP_CONNECT_HOSTS = (
+    "https://*.googleapis.com https://clients3.google.com "
+    "https://api.betterttv.net https://api.frankerfacez.com https://7tv.io https://api.ivr.fi"
+)
+
+
 @app.after_request
 def set_security_headers(response):
     response = inject_mobile_app_head(response)
@@ -10765,24 +10832,29 @@ def set_security_headers(response):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     # HSTS is set once by nginx (avoid duplicate Strict-Transport-Security headers).
-    # Default is Report-Only. Set VOD_CSP_ENFORCE=true after overlay/player QA.
+    # Enforced by default; VOD_CSP_ENFORCE=false falls back to Report-Only.
+    # Inline <script> blocks need nonce="{{ csp_nonce() }}"; inline event handlers
+    # (onclick= ...) are blocked, so templates bind events with addEventListener.
     # worker-src / media blob: cover live clip overlay + HLS blob URLs.
+    script_src = " ".join(["'self'", "'nonce-" + csp_nonce() + "'", *csp_injected_script_hashes(), CSP_SCRIPT_HOSTS])
     csp = (
         "default-src 'self'; "
         "base-uri 'self'; "
         "form-action 'self'; "
         "frame-ancestors 'self'; "
+        "object-src 'none'; "
         "frame-src 'self' https://player.twitch.tv https://www.twitch.tv; "
         "child-src 'self' blob: https://player.twitch.tv https://www.twitch.tv; "
         "worker-src 'self' blob:; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "script-src " + script_src + "; "
+        "script-src-attr 'none'; "
+        "style-src 'self' 'unsafe-inline' " + CSP_STYLE_HOSTS + "; "
         "font-src 'self' https://fonts.gstatic.com data:; "
-        "img-src 'self' data: blob: https://static-cdn.jtvnw.net https://badges.twitch.tv https://cdn.discordapp.com; "
+        "img-src 'self' data: blob: " + CSP_IMG_HOSTS + "; "
         "media-src 'self' blob:; "
-        "connect-src 'self' blob: https://*.googleapis.com https://clients3.google.com;"
+        "connect-src 'self' blob: " + CSP_CONNECT_HOSTS + ";"
     )
-    header = "Content-Security-Policy" if os.environ.get("VOD_CSP_ENFORCE", "false").lower() in ("true", "1", "yes") else "Content-Security-Policy-Report-Only"
+    header = "Content-Security-Policy" if os.environ.get("VOD_CSP_ENFORCE", "true").lower() in ("true", "1", "yes") else "Content-Security-Policy-Report-Only"
     response.headers.setdefault(header, csp)
     return response
 

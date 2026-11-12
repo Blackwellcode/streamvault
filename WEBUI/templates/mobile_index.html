@@ -2,15 +2,14 @@
 <html lang="{{ html_lang }}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>StreamVault · Mobile</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="/static/style.css?v={{ asset_version }}">
-  <link rel="stylesheet" href="/static/css/tube_design_system.css?v={{ asset_version }}">
+  {% include 'components/styles.html' %}
   <style>
     body {
-      background: var(--nebula-bg-base, #070B14);
-      color: var(--nebula-text-primary, #F3F5FC);
+      background: var(--nebula-bg-base);
+      color: var(--nebula-text-primary);
       font-family: var(--ns-font-sans);
       margin: 0;
       padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
@@ -30,9 +29,10 @@
 
 
 
-<main class="mobile-shell">
+<main class="mobile-shell" id="main-content">
+  <h1 class="sr-only">{{ _('Dashboard') }}</h1>
   {% if channels_msg %}
-  <div style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.35); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #C5D2F6; margin-bottom: 18px;">
+  <div role="status" style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.35); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #C5D2F6; margin-bottom: 18px;">
     {{ channels_msg }}
   </div>
   {% endif %}
@@ -40,26 +40,26 @@
   <!-- 1. Mobile Featured Hero -->
   {% if hero_item and hero_item.is_live %}
   <section style="margin-bottom: 24px;">
-    <div style="position: relative; border-radius: 16px; overflow: hidden; background: #111A2B; border: 1px solid var(--nebula-border, #26344F); box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
-      <div style="position: relative; aspect-ratio: 16 / 9; width: 100%; background: #070B14; overflow: hidden;">
+    <div style="position: relative; border-radius: 16px; overflow: hidden; background: var(--nebula-bg-surface); border: 1px solid var(--nebula-border); box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+      <div style="position: relative; aspect-ratio: 16 / 9; width: 100%; background: var(--nebula-bg-root); overflow: hidden;">
         {% if hero_item.thumbnail or hero_item.thumbnail_url %}
         <img src="{{ hero_item.thumbnail or hero_item.thumbnail_url }}" decoding="async" alt="{{ hero_item.title }}" style="width: 100%; height: 100%; object-fit: cover;">
         {% endif %}
-        <div style="position: absolute; inset: 0; background: linear-gradient(to top, #111A2B 0%, rgba(17, 26, 43, 0.4) 60%, transparent 100%);"></div>
+        <div style="position: absolute; inset: 0; background: linear-gradient(to top, var(--nebula-bg-surface) 0%, rgba(17, 26, 43, 0.4) 60%, transparent 100%);"></div>
         {% if hero_item.is_live %}
-        <span style="position: absolute; top: 12px; left: 12px; background: #F04458; color: #FFF; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(240, 68, 88, 0.6); display: inline-flex; align-items: center; gap: 5px;">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: #FFF;"></span> {{ _('LIVE') }}
+        <span style="position: absolute; top: 12px; left: 12px; background: var(--nebula-status-live); color: #FFF; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(240, 68, 88, 0.6); display: inline-flex; align-items: center; gap: 5px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #FFF;"></span> {{ _('Live') }}
         </span>
         {% endif %}
       </div>
-      <div style="padding: 14px 16px 16px 16px; background: #111A2B;">
+      <div style="padding: 14px 16px 16px 16px; background: var(--nebula-bg-surface);">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
           <span style="font-weight: 700; color: #FFF; font-size: 14px;">{{ hero_item.streamer }}</span>
-          <span style="padding: 2px 8px; background: rgba(187, 120, 255, 0.15); color: #BB78FF; border-radius: 4px; font-size: 11px;">{{ hero_item.category }}</span>
+          <span style="padding: 2px 8px; background: rgba(187, 120, 255, 0.15); color: var(--nebula-accent-highlight); border-radius: 4px; font-size: 12px;">{{ hero_item.category }}</span>
         </div>
-        <h2 style="font-size: 15px; font-weight: 600; line-height: 1.35; color: #F3F5FC; margin: 0 0 14px 0;">{{ hero_item.title }}</h2>
+        <h2 style="font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--nebula-text-main); margin: 0 0 14px 0;">{{ hero_item.title }}</h2>
         <a href="{{ hero_item.watch_url }}" class="ns-btn ns-btn-primary" style="display: block; text-align: center; padding: 10px 0; font-size: 14px; font-weight: 700; box-sizing: border-box;">
-          {% if hero_item.is_live %}{{ _('WATCH LIVE') }}{% else %}{{ _('Watch now') }}{% endif %}
+          {% if hero_item.is_live %}{{ _('Watch live') }}{% else %}{{ _('Watch now') }}{% endif %}
         </a>
       </div>
     </div>
@@ -69,33 +69,33 @@
   <!-- 3. Streamer List -->
   <section style="margin-bottom: 28px;">
     <div style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-      <span>{% if can_access_vods %}{{ _('My streamers') }}{% else %}{{ _('Live now') }}{% endif %}</span>
-      <span style="font-size: 12px; color: var(--nebula-text-muted, #75839D);">{{ ngettext('%(num)d channel', '%(num)d channels', streamers|length) }}</span>
+      <h2 style="font-size: inherit; font-weight: inherit; margin: 0;">{% if can_access_vods %}{{ _('My streamers') }}{% else %}{{ _('Live now') }}{% endif %}</h2>
+      <span style="font-size: 12px; color: var(--nebula-text-muted);">{{ ngettext('%(num)d channel', '%(num)d channels', streamers|length) }}</span>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 10px;">
       {% for s in streamers %}
       {% if can_access_vods or s.twitch_live or s.live or s.online %}
-      <div style="background: var(--nebula-bg-surface, #111A2B); border: 1px solid var(--nebula-border, #26344F); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: var(--nebula-bg-surface); border: 1px solid var(--nebula-border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <a href="{% if can_access_vods %}{{ url_for('streamer_view', streamer=s.name) }}{% else %}{{ url_for('twitch_watch', channel=(s.twitch_login or s.name)) }}{% endif %}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; flex: 1; min-width: 0;">
             <div style="position: relative; flex-shrink: 0;">
               {% if s.avatar_url %}
-              <img src="{{ s.avatar_url }}" loading="lazy" decoding="async" alt="{{ s.name }}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #3B4E73;">
+              <img src="{{ s.avatar_url }}" loading="lazy" decoding="async" alt="{{ s.name }}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--nebula-border-bright);">
               {% else %}
-              <div style="width: 42px; height: 42px; border-radius: 50%; background: #151F33; border: 1.5px solid #3B4E73; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFF; font-size: 15px;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--nebula-bg-card); border: 1.5px solid var(--nebula-border-bright); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFF; font-size: 15px;">
                 {{ s.name[:1]|upper }}
               </div>
               {% endif %}
               {% if s.twitch_live or s.online %}
-              <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #F04458; border: 2px solid #070B14; box-shadow: 0 0 6px #F04458;"></span>
+              <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--nebula-status-live); border: 2px solid var(--nebula-bg-root); box-shadow: 0 0 6px var(--nebula-status-live);"></span>
               {% endif %}
             </div>
             <div style="min-width: 0; flex: 1;">
               <div style="font-weight: 700; font-size: 15px; color: #FFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ s.display_name or s.name }}</div>
-              <div style="font-size: 12px; color: var(--nebula-text-secondary, #A2AEC8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <div style="font-size: 12px; color: var(--nebula-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 {% if s.twitch_live %}
-                <span style="color: #F04458; font-weight: 600;">{{ _('Live on Twitch') }}</span>
+                <span style="color: var(--nebula-status-live); font-weight: 600;">{{ _('Live on Twitch') }}</span>
                 {% elif can_access_vods %}
                 <span>{{ s.count }} VODs</span>
                 {% else %}
@@ -106,12 +106,12 @@
           </a>
 
           {% if s.twitch_live or s.online %}
-          <a href="{{ url_for('twitch_watch', channel=(s.twitch_login or s.name)) }}" class="ns-btn ns-btn-primary" style="padding: 7px 12px; font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
-            {{ _('WATCH LIVE') }}
+          <a href="{{ url_for('twitch_watch', channel=(s.twitch_login or s.name)) }}" class="ns-btn ns-btn-primary" style="padding: 7px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; flex-shrink: 0;">
+            {{ _('Watch live') }}
           </a>
           {% elif can_access_vods %}
-          <a href="{{ url_for('streamer_view', streamer=s.name) }}" style="color: #75839D; padding: 8px; flex-shrink: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <a href="{{ url_for('streamer_view', streamer=s.name) }}" aria-label="{{ _('Open streamer %(name)s', name=s.name) }}" style="color: var(--nebula-text-muted); padding: 12px; flex-shrink: 0;">
+            <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </a>
           {% endif %}
         </div>
@@ -125,28 +125,28 @@
   {% if can_access_vods and recent_vods %}
   <section style="margin-bottom: 24px;">
     <div style="font-size: 15px; font-weight: 700; color: #FFF; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-      <span>{{ _('Latest VODs') }}</span>
+      <h2 style="font-size: inherit; font-weight: inherit; margin: 0;">{{ _('Latest VODs') }}</h2>
       {% if vod_total_pages is defined and vod_total_pages > 1 %}
-      <span data-vod-page-counter style="font-size: 12px; font-weight: 500; color: #A2AEC8;">{{ _('Page %(page)s / %(total)s', page=vod_page, total=vod_total_pages) }}</span>
+      <span data-vod-page-counter style="font-size: 12px; font-weight: 500; color: var(--nebula-text-secondary);">{{ _('Page %(page)s / %(total)s', page=vod_page, total=vod_total_pages) }}</span>
       {% endif %}
     </div>
     <div id="mobileVodList" data-vod-page="{{ vod_page }}" data-top-vod="{{ recent_vods[0].name if recent_vods else '' }}" style="display: flex; flex-direction: column; gap: 14px;">
       {% for vod in recent_vods %}
-      <a href="{{ url_for('vod_view', streamer=vod.streamer_name, filename=vod.name) }}" style="display: flex; gap: 12px; background: var(--nebula-bg-surface, #111A2B); border: 1px solid var(--nebula-border, #26344F); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; padding: 10px; box-sizing: border-box;">
-        <div style="position: relative; width: 120px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #0B1220; flex-shrink: 0;">
+      <a href="{{ url_for('vod_view', streamer=vod.streamer_name, filename=vod.name) }}" style="display: flex; gap: 12px; background: var(--nebula-bg-surface); border: 1px solid var(--nebula-border); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; padding: 10px; box-sizing: border-box;">
+        <div style="position: relative; width: 120px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--nebula-bg-deep); flex-shrink: 0;">
           {% if vod.thumb_url %}
-          <img src="{{ vod.thumb_url }}" loading="lazy" decoding="async" alt="{{ vod.title or vod.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+          <img src="{{ vod.thumb_url }}" {% if loop.index <= 3 %}{% if loop.first %}fetchpriority="high" {% endif %}loading="eager"{% else %}loading="lazy" decoding="async"{% endif %} alt="{{ vod.title or vod.name }}" style="width: 100%; height: 100%; object-fit: cover;">
           {% else %}
-          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A2AEC8; font-weight: 700;">VOD</div>
+          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--nebula-text-secondary); font-weight: 700;">VOD</div>
           {% endif %}
           {% if vod.duration_str %}
-          <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); color: #FFF; font-size: 10px; padding: 1px 4px; border-radius: 3px; font-family: var(--ns-font-mono);">{{ vod.duration_str }}</span>
+          <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); color: #FFF; font-size: 12px; padding: 1px 4px; border-radius: 3px; font-family: var(--ns-font-mono);">{{ vod.duration_str }}</span>
           {% endif %}
         </div>
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;">
-          <h4 style="font-size: 13px; font-weight: 600; color: #FFF; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ vod.title or vod.name }}</h4>
-          <div style="font-size: 11px; color: #BB78FF; margin-bottom: 2px;">{{ vod.streamer_name }}</div>
-          <div style="font-size: 10px; color: #75839D;">{{ vod.date_str or '' }}</div>
+          <h3 style="font-size: 13px; font-weight: 600; color: #FFF; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ vod.title or vod.name }}</h3>
+          <div style="font-size: 12px; color: var(--nebula-accent-highlight); margin-bottom: 2px;">{{ vod.streamer_name }}</div>
+          <div style="font-size: 12px; color: var(--nebula-text-muted);">{{ vod.date_str or '' }}</div>
         </div>
       </a>
       {% endfor %}
@@ -174,21 +174,29 @@
 </main>
 
 <!-- NEBULA Mobile Bottom Navigation -->
-<div class="mobile-global-nav" style="border-top: 1px solid #26344F; background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
-  <a href="{{ url_for('index') }}" class="active" style="color: #4D63FF;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+<div class="mobile-global-nav" role="navigation" aria-label="{{ _('Main navigation') }}" style="border-top: 1px solid var(--nebula-border); background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
+  <a href="{{ url_for('index') }}" class="active" aria-current="page">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>{{ _('Home') }}</span>
   </a>
-  <a href="{{ url_for('twitch_live_hub') }}" style="color: #75839D;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+  <a href="{{ url_for('twitch_live_hub') }}" style="color: var(--nebula-text-muted);">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
     <span>{{ _('Live') }}</span>
   </a>
   {% if session.user_role == 'admin' %}
-  <a href="{{ url_for('channels_view') }}" style="color: #75839D;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <a href="{{ url_for('channels_view') }}" style="color: var(--nebula-text-muted);">
+    <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>{{ _('Streamer') }}</span>
   </a>
   {% endif %}
+  <form method="post" action="{{ url_for('logout') }}" class="sv-bottom-nav__logout">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">
+      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      <span>{{ _('Log out') }}</span>
+    </button>
+  </form>
+  {% with logout_all_variant = 'nav' %}{% include 'components/logout_everywhere.html' %}{% endwith %}
 </div>
 
 {% include 'components/js_i18n.html' %}

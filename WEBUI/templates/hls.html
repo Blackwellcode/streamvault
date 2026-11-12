@@ -4,8 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HLS {{ filename }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-hls {{ theme_class }} ns-platform">
     <header>
@@ -43,7 +42,7 @@
       {% include 'components/js_i18n.html' %}
       <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
-      <script>
+      <script nonce="{{ csp_nonce() }}">
         const video = document.getElementById('player');
         window.StreamVaultMediaSession && window.StreamVaultMediaSession.attach(video);
         const src = {{ (playlist_url or url_for('hls_playlist', streamer=streamer, filename=filename))|tojson }};

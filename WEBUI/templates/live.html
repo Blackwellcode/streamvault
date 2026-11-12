@@ -4,8 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>LIVE {{ streamer }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-live {{ theme_class }} ns-platform">
 
@@ -27,7 +26,7 @@
     <div class="content">
       <div class="main-col">
         <div style="flex-shrink:0;">
-            <div class="note" id="liveNote" style="display: {% if ready %}none{% else %}block{% endif %};">{{ _('Live stream is currently unavailable. Searching for stream...') }}</div>
+            <div class="note" id="liveNote" style="display: {% if ready %}none{% else %}block{% endif %};">{{ _('Live stream is currently unavailable. Searching for stream…') }}</div>
         </div>
         
         <div class="player-wrapper" style="position: relative;">
@@ -48,7 +47,7 @@
           ></video>
           
           <button id="unmuteOverlay" class="btn-primary" style="display:none; position:absolute; top:20px; right:20px; z-index:10; background:rgba(255,82,82,0.9); padding:8px 16px; border-radius:4px; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-            &#128263; {{ _('Unmute') }}
+            <span aria-hidden="true">&#128263;</span> {{ _('Unmute') }}
           </button>
         </div>
         
@@ -56,7 +55,7 @@
           <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:12px;">
                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);">
-                 <span>&#128101;</span>
+                 <span aria-hidden="true">&#128101;</span>
                  <span id="viewerCount" style="color: var(--accent-2); font-weight: 600;">-</span> {{ _('viewers') }}
                </div>
             </div>
@@ -85,9 +84,9 @@
             </form>
             
             <div style="text-align:right; margin-left:auto; display:flex; flex-direction:column; justify-content:center;">
-              <div id="hlsStatus" style="color:var(--muted); font-size:11px; font-family:monospace;">HLS: init...</div>
+              <div id="hlsStatus" style="color:var(--muted); font-size:12px; font-family:monospace;">HLS: init...</div>
               {% if ready %}
-                <div style="font-size:9px; color:#2ecc71; font-weight:600; letter-spacing:0.5px;">● LIVE</div>
+                <div style="font-size:12px; color:#2ecc71; font-weight:600; letter-spacing:0.5px;">● LIVE</div>
               {% endif %}
             </div>
           </div>
@@ -178,7 +177,7 @@
       <script src="{{ url_for('static', filename='media_session.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='chat_emotes.js', v=ASSET_VERSION) }}"></script>
       <script src="{{ url_for('static', filename='live_clip_overlay.js', v=ASSET_VERSION) }}"></script>
-      <script>
+      <script nonce="{{ csp_nonce() }}">
         const video = document.getElementById('player');
         window.StreamVaultMediaSession && window.StreamVaultMediaSession.attach(video, {live: true});
         window.CLIP_SETTINGS = {{ clip_settings|tojson }};
@@ -352,7 +351,7 @@
                         }
                     }
                     if(liveNote) liveNote.style.display = 'block';
-                    setStatus({{ _('Searching for stream...')|tojson }});
+                    setStatus({{ _('Searching for stream…')|tojson }});
                     return;
                 }
                 const probe = src + (src.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
@@ -362,7 +361,7 @@
                     initPlayer();
                 } else {
                     if(liveNote) liveNote.style.display = 'block';
-                    setStatus({{ _('Searching for stream...')|tojson }});
+                    setStatus({{ _('Searching for stream…')|tojson }});
                 }
             } catch(e) {
                 if(liveNote) liveNote.style.display = 'block';
@@ -373,7 +372,7 @@
         checkStream();
 
         video.addEventListener('playing', () => setStatus('Live'));
-        video.addEventListener('waiting', () => setStatus({{ _('Buffering...')|tojson }}));
+        video.addEventListener('waiting', () => setStatus({{ _('Buffering…')|tojson }}));
         const chatList = document.getElementById('chatList');
         const chatToggle = document.getElementById('chatAutoToggle');
         let autoScroll = true;

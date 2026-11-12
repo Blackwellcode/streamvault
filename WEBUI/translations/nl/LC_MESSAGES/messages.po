@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-12 15:41+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -187,9 +187,6 @@ msgstr "Er loopt al een herstel."
 msgid "A saved value is kept if the field is left empty."
 msgstr "Een opgeslagen waarde blijft behouden als het veld leeg blijft."
 
-msgid "ACTIVE (locked)"
-msgstr "ACTIEF (vergrendeld)"
-
 msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
 msgstr "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner of elk S3-compatibel endpoint."
 
@@ -201,6 +198,9 @@ msgstr "Voorwaarden accepteren"
 
 msgid "Account active (access allowed)"
 msgstr "Account actief (toegang toegestaan)"
+
+msgid "Accounts"
+msgstr "Accounts"
 
 msgid "Action"
 msgstr "Actie"
@@ -214,6 +214,9 @@ msgstr "Account direct activeren"
 msgid "Active"
 msgstr "Actief"
 
+msgid "Active (locked)"
+msgstr "ACTIEF (vergrendeld)"
+
 msgid "Active shares"
 msgstr "Actieve deelacties"
 
@@ -226,6 +229,9 @@ msgstr "Actief: nieuwe streams worden automatisch vrijgegeven. Hieronder kun je 
 msgid "Actively monitored by the recorder core"
 msgstr "Actief bewaakt door de recorder-kern"
 
+msgid "Add a channel to record"
+msgstr "Kanaal toevoegen om op te nemen"
+
 msgid "Add channel"
 msgstr "Kanaal toevoegen"
 
@@ -234,6 +240,9 @@ msgstr "Nieuw kanaal toevoegen"
 
 msgid "Add provider"
 msgstr "Provider toevoegen"
+
+msgid "Add the first channel above"
+msgstr "Voeg hierboven het eerste kanaal toe"
 
 msgid "Addressing"
 msgstr "Adressering"
@@ -246,6 +255,9 @@ msgstr "Adminbeheer"
 
 msgid "Admins only"
 msgstr "Alleen admins"
+
+msgid "Alert sound overlay"
+msgstr "Overlay voor meldingsgeluiden"
 
 msgid "All"
 msgstr "Alle"
@@ -486,26 +498,26 @@ msgstr "Buffer is nog kort — het clipvenster groeit mee."
 msgid "Buffer:"
 msgstr "Buffer:"
 
-msgid "Buffering..."
-msgstr "Bufferen..."
+msgid "Buffering…"
+msgstr "Bufferen…"
 
 msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
 msgstr "Standaard wordt er niets automatisch geüpload of verwijderd. Schakel deze functies bewust in."
 
-msgid "CHANGE"
-msgstr "WIJZIGEN"
-
-msgid "CHANNEL MANAGEMENT (ADMIN)"
-msgstr "KANAALBEHEER (ADMIN)"
-
 msgid "Cancel"
 msgstr "Annuleren"
+
+msgid "Category"
+msgstr "Categorie"
 
 msgid "Category search failed."
 msgstr "Zoeken naar categorie mislukt."
 
 msgid "Category search is currently unavailable."
 msgstr "Zoeken naar categorie is momenteel niet beschikbaar."
+
+msgid "Change"
+msgstr "Wijzigen"
 
 msgid "Change banner"
 msgstr "Banner wijzigen"
@@ -521,6 +533,9 @@ msgstr "Kanaalacties"
 
 msgid "Channel archive & recording metrics"
 msgstr "Kanaalarchief & opnamestatistieken"
+
+msgid "Channel management (admin)"
+msgstr "Kanaalbeheer (admin)"
 
 msgid "Channel not found."
 msgstr "Kanaal niet gevonden."
@@ -578,11 +593,11 @@ msgstr "Opschoning in wachtrij (taak #%(task)s)."
 msgid "Clear filters"
 msgstr "Filters wissen"
 
-msgid "Click to change password"
-msgstr "Klik om wachtwoord te wijzigen"
-
 msgid "Clip"
 msgstr "Clip"
+
+msgid "Clip Editor"
+msgstr "Clipeditor"
 
 msgid "Clip URL is missing on this page."
 msgstr "Clip-URL ontbreekt op deze pagina."
@@ -668,6 +683,9 @@ msgstr "Opnamekanalen configureren en archieftoewijzingen beheren"
 msgid "Configured streamers & sources"
 msgstr "Geconfigureerde streamers & bronnen"
 
+msgid "Confirm"
+msgstr "Bevestigen"
+
 msgid "Connect account"
 msgstr "Account koppelen"
 
@@ -689,6 +707,9 @@ msgstr "Verbinding OK"
 msgid "Connection failed"
 msgstr "Verbinding mislukt"
 
+msgid "Connection failed. Check your network and try again."
+msgstr "Verbinding mislukt. Controleer je netwerk en probeer het opnieuw."
+
 msgid "Connection lost — reconnecting…"
 msgstr "Verbinding verbroken — opnieuw verbinden…"
 
@@ -704,6 +725,9 @@ msgstr "Configuratiescherm"
 
 msgid "Control the global maintenance mode or lock individual platform areas."
 msgstr "Beheer de globale onderhoudsmodus of vergrendel afzonderlijke onderdelen van het platform."
+
+msgid "Copied"
+msgstr "Gekopieerd"
 
 msgid "Copy"
 msgstr "Kopiëren"
@@ -821,6 +845,14 @@ msgstr "Standaarddoel"
 msgid "Delete"
 msgstr "Verwijderen"
 
+#, python-format
+msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
+msgstr "%(name)s verwijderen? Het bestand wordt uit het archief verwijderd en kan niet worden hersteld."
+
+#, python-format
+msgid "Delete backup %(name)s? This cannot be undone."
+msgstr "Back-up %(name)s verwijderen? Dit kan niet ongedaan worden gemaakt."
+
 msgid "Delete folder"
 msgstr "Map verwijderen"
 
@@ -838,6 +870,12 @@ msgstr "Lokaal verwijderen"
 
 msgid "Delete permanently"
 msgstr "Definitief verwijderen"
+
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "De map van deze streamer en alle opnames verwijderen? Dit kan niet ongedaan worden gemaakt."
+
+msgid "Delete this video? The file is removed from the archive and cannot be restored."
+msgstr "Deze video verwijderen? Het bestand wordt uit het archief verwijderd en kan niet worden hersteld."
 
 msgid "Delete user"
 msgstr "Gebruiker verwijderen"
@@ -919,8 +957,8 @@ msgstr "TXT downloaden"
 msgid "Download all"
 msgstr "Alles downloaden"
 
-msgid "Download all VODs?"
-msgstr "Alle VOD's downloaden?"
+msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
+msgstr "Alle VOD’s van deze streamer als één archief downloaden? Bij grote kanalen kan dat even duren."
 
 msgid "Download archive & VODs"
 msgstr "Archief & VOD's downloaden"
@@ -939,7 +977,7 @@ msgstr "Download van alle VOD's op de achtergrond gestart."
 
 #, python-format
 msgid "Downloading... %(percent)s"
-msgstr "Downloaden... %(percent)s"
+msgstr "Downloaden… %(percent)s"
 
 #, python-format
 msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
@@ -990,6 +1028,9 @@ msgstr "E-mailadres"
 msgid "Email address (optional)"
 msgstr "E-mailadres (optioneel)"
 
+msgid "Emotes"
+msgstr "Emotes"
+
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr "Leeg = AWS. Vul voor R2, B2, Wasabi, MinIO enz. het S3-endpoint in."
 
@@ -1004,6 +1045,9 @@ msgstr "Direct inschakelen"
 
 msgid "Enable maintenance mode"
 msgstr "Onderhoudsmodus inschakelen"
+
+msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
+msgstr "Onderhoudsmodus inschakelen? Iedereen behalve toegestane gebruikers ziet de onderhoudspagina tot je hem beëindigt."
 
 msgid "Enable recording"
 msgstr "Opname inschakelen"
@@ -1102,6 +1146,9 @@ msgstr "Fout:"
 msgid "Error: %(error)s"
 msgstr "Fout: %(error)s"
 
+msgid "Everywhere"
+msgstr "Overal"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "Bestaande leden van deze groep worden automatisch toegewezen aan de standaardgroep <strong>Viewer</strong>."
 
@@ -1118,10 +1165,7 @@ msgid "Exported by StreamVault"
 msgstr "Geëxporteerd door StreamVault"
 
 msgid "Extracting audio..."
-msgstr "Audio extraheren..."
-
-msgid "FEATURED VOD"
-msgstr "UITGELICHTE VOD"
+msgstr "Audio extraheren…"
 
 msgid "Failed"
 msgstr "Mislukt"
@@ -1131,6 +1175,9 @@ msgstr "Snel"
 
 msgid "Feature permissions"
 msgstr "Functierechten"
+
+msgid "Featured VOD"
+msgstr "Uitgelichte vod"
 
 msgid "Featured highlight"
 msgstr "Uitgelicht hoogtepunt"
@@ -1162,8 +1209,11 @@ msgstr "Bestand is geüpload."
 msgid "Filter"
 msgstr "Filteren"
 
-msgid "Filter chat..."
-msgstr "Chat filteren..."
+msgid "Filter chat"
+msgstr "Chat filteren"
+
+msgid "Filter chat…"
+msgstr "Chat filteren…"
 
 msgid "First"
 msgstr "Eerste"
@@ -1441,19 +1491,6 @@ msgstr "juli"
 msgid "June"
 msgstr "juni"
 
-msgid "LIVE"
-msgstr "LIVE"
-
-#, python-format
-msgid "LIVE %(name)s (without Twitch login)"
-msgstr "LIVE %(name)s (zonder Twitch-login)"
-
-msgid "LIVE & DISCORD ONLY"
-msgstr "ALLEEN LIVE & DISCORD"
-
-msgid "LIVE NOW"
-msgstr "NU LIVE"
-
 msgid "Language"
 msgstr "Taal"
 
@@ -1502,11 +1539,14 @@ msgstr "Link gekopieerd:"
 msgid "Live"
 msgstr "Live"
 
+msgid "Live & Discord only"
+msgstr "Alleen live & discord"
+
 msgid "Live & Discord only:"
 msgstr "Alleen live & Discord:"
 
 msgid "Live (recovering...)"
-msgstr "Live (herstellen...)"
+msgstr "Live (herstellen…)"
 
 msgid "Live channels"
 msgstr "Livekanalen"
@@ -1541,8 +1581,8 @@ msgstr "Alleen livestream en Discord-meldingen, geen opname op schijf"
 msgid "Live stream highlight"
 msgstr "Hoogtepunt van de livestream"
 
-msgid "Live stream is currently unavailable. Searching for stream..."
-msgstr "Livestream is momenteel niet beschikbaar. Stream wordt gezocht..."
+msgid "Live stream is currently unavailable. Searching for stream…"
+msgstr "Livestream is momenteel niet beschikbaar. Stream wordt gezocht…"
 
 msgid "Live stream not available."
 msgstr "Livestream niet beschikbaar."
@@ -1559,6 +1599,10 @@ msgstr "Live kijken"
 msgid "Live-only"
 msgstr "Alleen live"
 
+#, python-format
+msgid "Live: %(name)s (without Twitch login)"
+msgstr "LIVE %(name)s (zonder Twitch-login)"
+
 msgid "Load"
 msgstr "Belasting"
 
@@ -1569,7 +1613,7 @@ msgid "Loading chat…"
 msgstr "Chat laden…"
 
 msgid "Loading model..."
-msgstr "Model laden..."
+msgstr "Model laden…"
 
 msgid "Loading streams…"
 msgstr "Streams laden…"
@@ -1599,6 +1643,9 @@ msgstr "<strong>Mobiele versie</strong> vergrendelen"
 msgid "Log out"
 msgstr "Uitloggen"
 
+msgid "Log out everywhere"
+msgstr "Overal afmelden"
+
 msgid "Login"
 msgstr "Inloggen"
 
@@ -1610,6 +1657,9 @@ msgstr "Inloggen mislukt."
 
 msgid "MP4 check not possible"
 msgstr "MP4-controle niet mogelijk"
+
+msgid "Main navigation"
+msgstr "Hoofdnavigatie"
 
 msgid "Maintenance"
 msgstr "Onderhoud"
@@ -1676,6 +1726,9 @@ msgstr "Bericht"
 msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
 msgstr "Mobiel live kijken is tijdelijk uitgeschakeld. Gebruik de desktopversie of de geïnstalleerde app."
 
+msgid "Mods"
+msgstr "Mods"
+
 msgid "Monitored"
 msgstr "Bewaakt"
 
@@ -1697,9 +1750,6 @@ msgstr "Netwerkfout"
 msgid "Network error while loading streams."
 msgstr "Netwerkfout bij laden van streams."
 
-msgid "Network error:"
-msgstr "Netwerkfout:"
-
 msgid "Network is back — reconnecting…"
 msgstr "Netwerk is terug — opnieuw verbinden…"
 
@@ -1718,8 +1768,8 @@ msgstr "Nieuw wachtwoord (leeg laten om niet te wijzigen)"
 msgid "New password * (min. 8 characters)"
 msgstr "Nieuw wachtwoord * (min. 8 tekens)"
 
-msgid "New password..."
-msgstr "Nieuw wachtwoord..."
+msgid "New password…"
+msgstr "Nieuw wachtwoord…"
 
 msgid "New user"
 msgstr "Nieuwe gebruiker"
@@ -1742,8 +1792,8 @@ msgstr "Nextcloud, ownCloud, Hetzner Storage Box of elke WebDAV-server met een a
 msgid "No (self-signed only)"
 msgstr "Nee (alleen zelfondertekend)"
 
-msgid "No VODs available in the archive"
-msgstr "Geen VOD's beschikbaar in het archief"
+msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
+msgstr "Nog geen VOD’s. Opnames verschijnen hier automatisch zodra een bewaakt kanaal live gaat."
 
 msgid "No acceptances yet."
 msgstr "Nog geen acceptaties."
@@ -1777,6 +1827,9 @@ msgstr "Geen back-ups beschikbaar."
 
 msgid "No badges received from Twitch."
 msgstr "Geen badges ontvangen van Twitch."
+
+msgid "No channels are monitored yet."
+msgstr "Er worden nog geen kanalen bewaakt."
 
 msgid "No chat"
 msgstr "Geen chat"
@@ -1817,9 +1870,6 @@ msgstr "Geen bewaakte Twitch-kanalen."
 
 msgid "No monitored Twitch channels. Add streamers under Streamers."
 msgstr "Geen bewaakte Twitch-kanalen. Voeg streamers toe onder Streamers."
-
-msgid "No monitored channels configured."
-msgstr "Geen bewaakte kanalen geconfigureerd."
 
 msgid "No recently watched streams yet."
 msgstr "Nog geen onlangs bekeken streams."
@@ -1875,29 +1925,14 @@ msgstr "OAuth-opmerking"
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "OAuth-statustokens vereisen een sterke VOD_SECRET_KEY."
 
+msgid "OBS overlays"
+msgstr "OBS-overlays"
+
 msgid "OFF (normal operation)"
 msgstr "UIT (normaal bedrijf)"
 
-msgid "OFFLINE"
-msgstr "OFFLINE"
-
 msgid "OK"
 msgstr "OK"
-
-msgid "ONLINE"
-msgstr "ONLINE"
-
-msgid "OPERATING MODE:"
-msgstr "BEDRIJFSMODUS:"
-
-msgid "OPTION A: UPLOAD IMAGE FILE"
-msgstr "OPTIE A: AFBEELDINGSBESTAND UPLOADEN"
-
-msgid "OPTION A: UPLOAD PROFILE PICTURE"
-msgstr "OPTIE A: PROFIELFOTO UPLOADEN"
-
-msgid "OPTION B: USE IMAGE URL"
-msgstr "OPTIE B: AFBEELDINGS-URL GEBRUIKEN"
 
 msgid "OR"
 msgstr "OF"
@@ -1924,6 +1959,9 @@ msgstr "Oudste eerst"
 msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
 msgstr "OneDrive / Microsoft 365 via Microsoft Graph met OAuth 2.0."
 
+msgid "Online"
+msgstr "Online"
+
 msgid "Only after a successful upload and optional cloud verification."
 msgstr "Alleen na een geslaagde upload en optionele cloudverificatie."
 
@@ -1944,6 +1982,22 @@ msgstr "Clip openen"
 
 msgid "Open editor"
 msgstr "Editor openen"
+
+#, python-format
+msgid "Open streamer %(name)s"
+msgstr "Streamer %(name)s openen"
+
+msgid "Operating mode"
+msgstr "Bedrijfsmodus:"
+
+msgid "Option A: upload image file"
+msgstr "Optie a: afbeeldingsbestand uploaden"
+
+msgid "Option A: upload profile picture"
+msgstr "Optie a: profielfoto uploaden"
+
+msgid "Option B: use image URL"
+msgstr "Optie b: afbeeldings-url gebruiken"
 
 msgid "Option sections"
 msgstr "Optiesecties"
@@ -2055,6 +2109,9 @@ msgstr "Afspelen niet beschikbaar"
 msgid "Player error — reconnecting…"
 msgstr "Spelerfout — opnieuw verbinden…"
 
+msgid "Please confirm"
+msgstr "Bevestig alsjeblieft"
+
 msgid "Please enter a name for the storage provider."
 msgstr "Voer een naam in voor de opslagprovider."
 
@@ -2105,10 +2162,10 @@ msgid "Private video and stream archive console."
 msgstr "Privéconsole voor video- en streamarchief."
 
 msgid "Processing video (this may take a while)..."
-msgstr "Video verwerken (dit kan even duren)..."
+msgstr "Video verwerken (dit kan even duren)…"
 
 msgid "Processing video..."
-msgstr "Video verwerken..."
+msgstr "Video verwerken…"
 
 msgid "Profile picture reset to default."
 msgstr "Profielfoto teruggezet naar standaard."
@@ -2153,8 +2210,8 @@ msgstr "Providers"
 msgid "Public link created:"
 msgstr "Openbare link aangemaakt:"
 
-msgid "Purpose of this user group..."
-msgstr "Doel van deze gebruikersgroep..."
+msgid "Purpose of this user group…"
+msgstr "Doel van deze gebruikersgroep…"
 
 msgid "Quality"
 msgstr "Kwaliteit"
@@ -2168,21 +2225,11 @@ msgstr "Wachtrij niet leesbaar"
 msgid "Quiet"
 msgstr "Stil"
 
-msgid "RECORDING"
-msgstr "OPNAME"
-
-msgid "RECORDING ACTIVE"
-msgstr "OPNAME ACTIEF"
-
 msgid "Ready"
 msgstr "Klaar"
 
 msgid "Real-time stream error — reconnecting…"
 msgstr "Fout in realtime stream — opnieuw verbinden…"
-
-#, python-format
-msgid "Really delete backup %(name)s?"
-msgstr "Back-up %(name)s echt verwijderen?"
 
 msgid "Really delete file?"
 msgstr "Bestand echt verwijderen?"
@@ -2193,27 +2240,14 @@ msgstr "Cloudbestand echt verwijderen? Een lokale kopie blijft behouden."
 msgid "Really delete the local file? The cloud copy is kept."
 msgstr "Lokaal bestand echt verwijderen? De cloudkopie blijft behouden."
 
-msgid "Really delete?"
-msgstr "Echt verwijderen?"
-
-#, python-format
-msgid "Really remove channel %(name)s?"
-msgstr "Kanaal %(name)s echt verwijderen?"
-
 msgid "Really remove the provider? The cloud files are kept."
 msgstr "Provider echt verwijderen? De cloudbestanden blijven behouden."
-
-msgid "Really rename the file?"
-msgstr "Bestand echt hernoemen?"
 
 msgid "Really reset the custom banner and switch to the default?"
 msgstr "Aangepaste banner echt resetten en overschakelen naar de standaard?"
 
 msgid "Really reset the custom profile picture and switch to the default?"
 msgstr "Aangepaste profielfoto echt resetten en overschakelen naar de standaard?"
-
-msgid "Really revoke this share?"
-msgstr "Deze deelactie echt intrekken?"
 
 msgid "Really stop the recording?"
 msgstr "Opname echt stoppen?"
@@ -2223,6 +2257,9 @@ msgstr "Recente taakfouten"
 
 msgid "Recently watched"
 msgstr "Onlangs bekeken"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "Aanbevolen URL's voor de browserbron. Vervang TOKEN door de waarde van TTS_OVERLAY_TOKEN of ALERT_OVERLAY_TOKEN. Het deel na # blijft in OBS en bereikt de server alleen als request-header, nooit in een logregel."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "Aanbevolen. Voorkomt gegevensverlies door onvolledige uploads."
@@ -2241,6 +2278,9 @@ msgstr "Opname"
 
 msgid "Recording + live stream & Discord notification"
 msgstr "Opname + livestream & Discord-melding"
+
+msgid "Recording active"
+msgstr "Opname actief"
 
 msgid "Recording disabled (live & Discord only)"
 msgstr "Opname uitgeschakeld (alleen live & Discord)"
@@ -2291,8 +2331,8 @@ msgid "Remove channel"
 msgstr "Kanaal verwijderen"
 
 #, python-format
-msgid "Remove channel %(name)s?"
-msgstr "Kanaal %(name)s verwijderen?"
+msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
+msgstr "Kanaal %(name)s verwijderen? Het bewaken stopt; bestaande opnames blijven in het archief."
 
 msgid "Remove only the database entry?"
 msgstr "Alleen het database-item verwijderen?"
@@ -2306,6 +2346,9 @@ msgstr "Remuxtaak gestart. De voortgang wordt in het adminpaneel getoond."
 
 msgid "Rename file"
 msgstr "Bestand hernoemen"
+
+msgid "Rename the file? Existing links and shares to the old file name stop working."
+msgstr "Bestand hernoemen? Bestaande links en shares naar de oude bestandsnaam werken dan niet meer."
 
 msgid "Renamed."
 msgstr "Hernoemd."
@@ -2332,6 +2375,9 @@ msgstr "Herstarten mislukt."
 msgid "Restart services"
 msgstr "Services herstarten"
 
+msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
+msgstr "Recorder en chatlogger nu herstarten? Lopende opnames worden een paar seconden onderbroken."
+
 msgid "Restore"
 msgstr "Herstellen"
 
@@ -2347,6 +2393,9 @@ msgstr "Afspelen hervatten"
 
 msgid "Revoke"
 msgstr "Intrekken"
+
+msgid "Revoke this share? The link stops working immediately."
+msgstr "Deze share intrekken? De link werkt meteen niet meer."
 
 #, python-format
 msgid "Role access '%(slug)s' added."
@@ -2379,9 +2428,6 @@ msgstr "Bezig…"
 
 msgid "S3-compatible"
 msgstr "S3-compatibel"
-
-msgid "START"
-msgstr "START"
 
 msgid "Safety migration:"
 msgstr "Veiligheidsmigratie:"
@@ -2436,10 +2482,7 @@ msgid "Saving transcript failed: %(error)s"
 msgstr "Transcript opslaan mislukt: %(error)s"
 
 msgid "Saving transcript..."
-msgstr "Transcript opslaan..."
-
-msgid "Saving..."
-msgstr "Opslaan..."
+msgstr "Transcript opslaan…"
 
 msgid "Saving…"
 msgstr "Opslaan…"
@@ -2447,8 +2490,8 @@ msgstr "Opslaan…"
 msgid "Search"
 msgstr "Zoeken"
 
-msgid "Search VODs, streamers or games..."
-msgstr "Zoek VOD's, streamers of games..."
+msgid "Search VODs, streamers or games…"
+msgstr "Zoek VOD's, streamers of games…"
 
 msgid "Search category"
 msgstr "Categorie zoeken"
@@ -2459,8 +2502,11 @@ msgstr "Categorie / game zoeken…"
 msgid "Search failed."
 msgstr "Zoeken mislukt."
 
-msgid "Search recordings (title, date, game)..."
-msgstr "Opnames zoeken (titel, datum, game)..."
+msgid "Search recordings"
+msgstr "Opnames zoeken"
+
+msgid "Search recordings (title, date, game)…"
+msgstr "Opnames zoeken (titel, datum, game)…"
 
 msgid "Search results"
 msgstr "Zoekresultaten"
@@ -2471,19 +2517,19 @@ msgstr "Streamer of kanaal zoeken…"
 msgid "Search streamers"
 msgstr "Streamers zoeken"
 
-msgid "Search term (e.g. player name, chat message, date)..."
-msgstr "Zoekterm (bijv. spelernaam, chatbericht, datum)..."
+msgid "Search term (e.g. player name, chat message, date)…"
+msgstr "Zoekterm (bijv. spelernaam, chatbericht, datum)…"
 
-msgid "Search user, email or group..."
-msgstr "Gebruiker, e-mail of groep zoeken..."
+msgid "Search user, email or group…"
+msgstr "Gebruiker, e-mail of groep zoeken…"
 
-msgid "Search..."
-msgstr "Zoeken..."
-
-msgid "Searching for stream..."
-msgstr "Stream zoeken..."
+msgid "Searching for stream…"
+msgstr "Stream zoeken…"
 
 msgid "Searching…"
+msgstr "Zoeken…"
+
+msgid "Search…"
 msgstr "Zoeken…"
 
 msgid "Seconds after trigger"
@@ -2575,8 +2621,20 @@ msgstr "Wordt getoond in de navigatie, de zijbalk en op streamerkaarten."
 msgid "Sign in"
 msgstr "Inloggen"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "Op alle apparaten afmelden? Elke sessie van dit account eindigt, ook deze."
+
 msgid "Size"
 msgstr "Grootte"
+
+msgid "Skip to content"
+msgstr "Naar inhoud springen"
+
+msgid "Sort"
+msgstr "Sorteren"
+
+msgid "Sort order"
+msgstr "Sorteervolgorde"
 
 msgid "Sound"
 msgstr "Geluid"
@@ -2619,7 +2677,7 @@ msgid "Starting"
 msgstr "Start op"
 
 msgid "Starting download..."
-msgstr "Download starten..."
+msgstr "Download starten…"
 
 msgid "Status"
 msgstr "Status"
@@ -2657,6 +2715,9 @@ msgstr "Opslagprovider niet gevonden."
 
 msgid "Storage providers"
 msgstr "Opslagproviders"
+
+msgid "Storage usage"
+msgstr "Opslaggebruik"
 
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
@@ -2718,6 +2779,9 @@ msgstr "Streamers, VOD's & chatgeschiedenis"
 
 msgid "Subfolder"
 msgstr "Submap"
+
+msgid "Subs"
+msgstr "Subs"
 
 msgid "Success"
 msgstr "Gelukt"
@@ -2805,6 +2869,9 @@ msgstr "Versie van de voorwaarden verouderd — laad de pagina opnieuw en accept
 
 msgid "Test"
 msgstr "Testen"
+
+msgid "Text-to-speech overlay"
+msgstr "Tekst-naar-spraak-overlay"
 
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "Bedankt voor je begrip. Bevoegde gebruikers kunnen inloggen via de inlogpagina."
@@ -2918,8 +2985,11 @@ msgstr "Vandaag, %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "Er worden momenteel te veel VOD's afgespeeld. Live is niet getroffen. Probeer het over een paar minuten opnieuw — er komt een plek vrij zodra iemand de speler sluit."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "Te veel pogingen. IP tijdelijk geblokkeerd. Probeer het later opnieuw."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "Te veel inlogpogingen. Probeer het over %(num)d minuut opnieuw."
+msgstr[1] "Te veel inlogpogingen. Probeer het over %(num)d minuten opnieuw."
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "Topstreams zijn momenteel niet beschikbaar. Gebruik bewaakte kanalen of de zoekfunctie."
@@ -2972,6 +3042,9 @@ msgstr "Transcript voltooid"
 msgid "Transcript missing despite finished status"
 msgstr "Transcript ontbreekt ondanks voltooide status"
 
+msgid "Transcript progress"
+msgstr "Voortgang transcriptie"
+
 msgid "Transcription cancelled"
 msgstr "Transcriptie geannuleerd"
 
@@ -2995,7 +3068,7 @@ msgid "Transcription queued in the worker. The result appears on the next page l
 msgstr "Transcriptie in de wachtrij van de worker geplaatst. Het resultaat verschijnt na afronding bij het volgende laden van de pagina."
 
 msgid "Transcription running..."
-msgstr "Transcriptie bezig..."
+msgstr "Transcriptie bezig…"
 
 msgid "Transcription timed out"
 msgstr "Time-out bij transcriptie"
@@ -3012,8 +3085,11 @@ msgstr "Twitch / standaard"
 msgid "Twitch badge library synchronized."
 msgstr "Twitch-badgebibliotheek gesynchroniseerd."
 
-msgid "Twitch channel name..."
-msgstr "Twitch-kanaalnaam..."
+msgid "Twitch channel name"
+msgstr "Naam van Twitch-kanaal"
+
+msgid "Twitch channel name…"
+msgstr "Twitch-kanaalnaam…"
 
 msgid "Twitch live chat"
 msgstr "Twitch-livechat"
@@ -3021,8 +3097,8 @@ msgstr "Twitch-livechat"
 msgid "Twitch live stream"
 msgstr "Twitch-livestream"
 
-msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
-msgstr "Twitch-naam (bijv. shroud) of YouTube-URL / @handle..."
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle…"
+msgstr "Twitch-naam (bijv. shroud) of YouTube-URL / @handle…"
 
 msgid "Twitch or YouTube supported"
 msgstr "Twitch of YouTube ondersteund"
@@ -3240,12 +3316,6 @@ msgstr "Zichtbaar voor:"
 msgid "Volume"
 msgstr "Volume"
 
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "WAARSCHUWING: Wil je deze streamer en alle opnames definitief verwijderen?"
-
-msgid "WATCH LIVE"
-msgstr "LIVE KIJKEN"
-
 msgid "Waiting for server stream…"
 msgstr "Wachten op serverstream…"
 
@@ -3257,6 +3327,9 @@ msgstr "Bekijken"
 
 msgid "Watch latest video"
 msgstr "Nieuwste video bekijken"
+
+msgid "Watch live"
+msgstr "Live kijken"
 
 msgid "Watch now"
 msgstr "Nu bekijken"
@@ -3314,8 +3387,8 @@ msgstr "Je kunt jezelf niet naar een groep zonder rechten voor gebruikersbeheer 
 msgid "You have accepted version %(version)s."
 msgstr "Je hebt versie %(version)s geaccepteerd."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "Je IP is tijdelijk geblokkeerd. Probeer het later opnieuw."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "Je IP-adres is geblokkeerd. Neem contact op met de beheerder."
 
 msgid "Your browser does not support the video tag."
 msgstr "Je browser ondersteunt de video-tag niet."
@@ -3359,11 +3432,11 @@ msgstr "bijv. VIP-archief"
 msgid "e.g. alice, bob"
 msgstr "bijv. alice, bob"
 
-msgid "e.g. john_doe"
-msgstr "bijv. jan_jansen"
-
 msgid "e.g. channel_name"
 msgstr "bijv. channel_name"
+
+msgid "e.g. john_doe"
+msgstr "bijv. jan_jansen"
 
 #, python-format
 msgid "effective from %(date)s"

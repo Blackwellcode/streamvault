@@ -7,14 +7,22 @@
     <title>{% block title %}StreamVault{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" id="sv-ui-fonts" href="{{ UI_FONTS_HREF }}" media="print">
+    <script nonce="{{ csp_nonce() }}">
+      (function () {
+        var l = document.getElementById('sv-ui-fonts');
+        if (!l) return;
+        if (l.sheet) { l.media = 'all'; return; }
+        l.addEventListener('load', function () { l.media = 'all'; }, { once: true });
+      })();
+    </script>
     <noscript><link rel="stylesheet" href="{{ UI_FONTS_HREF }}"></noscript>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
     {% include 'components/js_i18n.html' %}
     {% block head %}{% endblock %}
   </head>
   <body class="ns-platform page-{{ request.endpoint or 'index' }} {{ theme_class }}">
+    <a class="sv-skip-link" href="#main-content">{{ _('Skip to content') }}</a>
     {% include 'components/sidebar.html' %}
     
     <div class="ns-app-main">
@@ -27,9 +35,10 @@
         
         {% if not is_mobile %}
         <div class="ns-search-box">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <form action="{{ url_for('search_view') }}" method="get" style="display:flex; width:100%; margin:0;">
-            <input type="search" name="q" placeholder="{{ _('Search VODs, streamers or games...') }}" autocomplete="off">
+          <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <form action="{{ url_for('search_view') }}" method="get" role="search" style="display:flex; width:100%; margin:0;">
+            <label for="sv-global-search" class="sr-only">{{ _('Search') }}</label>
+            <input type="search" id="sv-global-search" name="q" placeholder="{{ _('Search VODs, streamers or games…') }}" autocomplete="off">
           </form>
         </div>
         {% endif %}
@@ -40,14 +49,14 @@
       </header>
       {% endif %}
 
-      <main class="ns-workspace-content">
+      <main class="ns-workspace-content" id="main-content" tabindex="-1">
         {% block content %}{% endblock %}
       </main>
     </div>
 
     {% block scripts %}{% endblock %}
     <!-- Ultra-Low-Latency Click Feedback & Speculative Navigation -->
-    <script type="speculationrules">
+    <script type="speculationrules" nonce="{{ csp_nonce() }}">
     {
       "prefetch": [
         {
@@ -74,7 +83,7 @@
       ]
     }
     </script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     (function(){
       if (!('ontouchstart' in window) && !window.PointerEvent) return;
       var activeEl = null;
@@ -97,7 +106,7 @@
     </script>
   
     <!-- Universal High-Performance Speculative Prefetcher (Mobile, TV & Desktop) -->
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     (function() {
       var prefetched = new Set();
       function prefetchUrl(url) {
@@ -134,133 +143,111 @@
 
     {% if session.username and not is_mobile %}
     <!-- MODAL: CHANGE OWN PASSWORD -->
-    <div id="self-password-modal" style="display: none; position: fixed; inset: 0; background: rgba(4, 8, 16, 0.94); z-index: 99999; align-items: center; justify-content: center; padding: 16px;">
-      <div style="width: 100%; max-width: 440px; background: #0E1626; border: 1px solid #26344F; border-radius: 16px; box-shadow: 0 24px 64px rgba(0,0,0,0.8), 0 0 32px rgba(77,99,255,0.15); overflow: hidden; animation: selfPwFadeIn 0.15s ease;">
-        <div style="background: #141E33; padding: 16px 20px; border-bottom: 1px solid #26344F; display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4D63FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #FFF;">{{ _('Change password') }}</h3>
-          </div>
-          <button type="button" onclick="closeSelfPasswordModal()" style="background: transparent; border: none; color: #75839D; font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;">&times;</button>
+    <dialog id="self-password-modal" class="sv-dialog" aria-labelledby="self-pw-title">
+      <div class="sv-dialog__head">
+        <div class="sv-dialog__title-row">
+          <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h2 id="self-pw-title" class="sv-dialog__title">{{ _('Change password') }}</h2>
         </div>
-        <form id="form-self-password" onsubmit="handleSelfPasswordSubmit(event)" style="margin: 0;">
-          <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
-            <div id="self-pw-alert" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;"></div>
-            
-            <div>
-              <label style="display: block; font-size: 12px; font-weight: 600; color: #A2AEC8; margin-bottom: 6px;">{{ _('Current password') }} *</label>
-              <input type="password" id="self-pw-current" required autocomplete="current-password" placeholder="{{ _('Enter current password') }}" style="width: 100%; box-sizing: border-box; background: rgba(11,18,32,0.8); border: 1px solid #26344F; border-radius: 8px; padding: 10px 14px; color: #FFF; font-size: 14px; outline: none;">
-            </div>
-
-            <div>
-              <label style="display: block; font-size: 12px; font-weight: 600; color: #A2AEC8; margin-bottom: 6px;">{{ _('New password * (min. 8 characters)') }}</label>
-              <input type="password" id="self-pw-new" required minlength="8" autocomplete="new-password" placeholder="{{ _('At least 8 characters') }}" style="width: 100%; box-sizing: border-box; background: rgba(11,18,32,0.8); border: 1px solid #26344F; border-radius: 8px; padding: 10px 14px; color: #FFF; font-size: 14px; outline: none;">
-            </div>
-
-            <div>
-              <label style="display: block; font-size: 12px; font-weight: 600; color: #A2AEC8; margin-bottom: 6px;">{{ _('Repeat new password') }} *</label>
-              <input type="password" id="self-pw-confirm" required minlength="8" autocomplete="new-password" placeholder="{{ _('Repeat password') }}" style="width: 100%; box-sizing: border-box; background: rgba(11,18,32,0.8); border: 1px solid #26344F; border-radius: 8px; padding: 10px 14px; color: #FFF; font-size: 14px; outline: none;">
-            </div>
-          </div>
-          <div style="background: #141E33; padding: 14px 20px; border-top: 1px solid #26344F; display: flex; justify-content: flex-end; gap: 10px;">
-            <button type="button" onclick="closeSelfPasswordModal()" style="padding: 8px 16px; background: transparent; border: 1px solid #26344F; border-radius: 8px; color: #A2AEC8; font-size: 13px; font-weight: 600; cursor: pointer;">{{ _('Cancel') }}</button>
-            <button type="submit" id="self-pw-submit-btn" style="padding: 8px 18px; background: #4D63FF; border: none; border-radius: 8px; color: #FFF; font-size: 13px; font-weight: 600; cursor: pointer;">{{ _('Save password') }}</button>
-          </div>
-        </form>
+        <button type="button" class="sv-dialog__close" data-self-pw-close aria-label="{{ _('Close') }}">&times;</button>
       </div>
-    </div>
-    <style>
-      @keyframes selfPwFadeIn { from { opacity: 0; transform: scale(0.97) translateY(-6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    </style>
-    <script>
-      function openSelfPasswordModal() {
-        var m = document.getElementById('self-password-modal');
-        if (!m) return;
-        m.style.display = 'flex';
-        var alertBox = document.getElementById('self-pw-alert');
-        if (alertBox) alertBox.style.display = 'none';
+      <form id="form-self-password" class="sv-dialog__form">
+        <div class="sv-dialog__body">
+          <div id="self-pw-alert" class="sv-alert" role="alert" hidden></div>
+          <input type="text" name="username" value="{{ session.username }}" autocomplete="username" readonly hidden>
+          <div class="sv-field">
+            <label for="self-pw-current">{{ _('Current password') }} *</label>
+            <input type="password" id="self-pw-current" required autocomplete="current-password" placeholder="{{ _('Enter current password') }}">
+          </div>
+          <div class="sv-field">
+            <label for="self-pw-new">{{ _('New password * (min. 8 characters)') }}</label>
+            <input type="password" id="self-pw-new" required minlength="8" autocomplete="new-password" placeholder="{{ _('At least 8 characters') }}">
+          </div>
+          <div class="sv-field">
+            <label for="self-pw-confirm">{{ _('Repeat new password') }} *</label>
+            <input type="password" id="self-pw-confirm" required minlength="8" autocomplete="new-password" placeholder="{{ _('Repeat password') }}">
+          </div>
+        </div>
+        <div class="sv-dialog__foot">
+          <button type="button" class="sv-btn sv-btn--secondary" data-self-pw-close>{{ _('Cancel') }}</button>
+          <button type="submit" id="self-pw-submit-btn" class="sv-btn sv-btn--primary">{{ _('Save password') }}</button>
+        </div>
+      </form>
+    </dialog>
+    <script nonce="{{ csp_nonce() }}">
+      (function () {
+        var dlg = document.getElementById('self-password-modal');
+        if (!dlg) return;
         var form = document.getElementById('form-self-password');
-        if (form) form.reset();
-        setTimeout(function() {
-          var curr = document.getElementById('self-pw-current');
-          if (curr) curr.focus();
-        }, 50);
-      }
-      function closeSelfPasswordModal() {
-        var m = document.getElementById('self-password-modal');
-        if (m) m.style.display = 'none';
-      }
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeSelfPasswordModal();
-      });
-      var selfModalBackdrop = document.getElementById('self-password-modal');
-      if (selfModalBackdrop) {
-        selfModalBackdrop.addEventListener('click', function(e) {
-          if (e.target === selfModalBackdrop) closeSelfPasswordModal();
-        });
-      }
-      async function handleSelfPasswordSubmit(e) {
-        e.preventDefault();
         var alertBox = document.getElementById('self-pw-alert');
         var submitBtn = document.getElementById('self-pw-submit-btn');
-        var currentPass = document.getElementById('self-pw-current').value;
-        var newPass = document.getElementById('self-pw-new').value;
-        var confirmPass = document.getElementById('self-pw-confirm').value;
+        var opener = null;
 
-        if (newPass !== confirmPass) {
-          alertBox.style.display = 'block';
-          alertBox.style.background = 'rgba(240,68,88,0.15)';
-          alertBox.style.border = '1px solid rgba(240,68,88,0.4)';
-          alertBox.style.color = '#F04458';
-          alertBox.textContent = {{ _('The passwords do not match.')|tojson }};
-          return;
+        function showAlert(kind, text) {
+          alertBox.hidden = false;
+          alertBox.className = 'sv-alert sv-alert--' + kind;
+          alertBox.textContent = text;
         }
 
-        submitBtn.disabled = true;
-        submitBtn.textContent = {{ _('Saving...')|tojson }};
+        window.openSelfPasswordModal = function () {
+          if (typeof dlg.showModal !== 'function' || !dlg.isConnected) return;
+          opener = document.activeElement;
+          alertBox.hidden = true;
+          form.reset();
+          if (!dlg.open) dlg.showModal();
+          document.getElementById('self-pw-current').focus();
+        };
+        window.closeSelfPasswordModal = function () {
+          if (dlg.open) dlg.close();
+        };
+        dlg.addEventListener('close', function () {
+          if (opener && typeof opener.focus === 'function') opener.focus();
+          opener = null;
+        });
+        dlg.addEventListener('click', function (e) {
+          if (e.target === dlg || (e.target.closest && e.target.closest('[data-self-pw-close]'))) window.closeSelfPasswordModal();
+        });
+        document.addEventListener('click', function (e) {
+          var t = e.target.closest && e.target.closest('[data-open-self-password]');
+          if (t) { e.preventDefault(); window.openSelfPasswordModal(); }
+        });
 
-        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        try {
-          var resp = await fetch('/api/user/change-password', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken,
-            },
-            body: JSON.stringify({
-              current_password: currentPass,
-              new_password: newPass,
-              csrf_token: csrfToken
-            })
-          });
-          var data = await resp.json();
-          alertBox.style.display = 'block';
-          if (resp.ok && data.ok) {
-            alertBox.style.background = 'rgba(34,197,94,0.15)';
-            alertBox.style.border = '1px solid rgba(34,197,94,0.4)';
-            alertBox.style.color = '#4ADE80';
-            alertBox.textContent = data.msg || {{ _('Password changed successfully.')|tojson }};
-            document.getElementById('form-self-password').reset();
-            setTimeout(function() {
-              closeSelfPasswordModal();
-            }, 1400);
-          } else {
-            alertBox.style.background = 'rgba(240,68,88,0.15)';
-            alertBox.style.border = '1px solid rgba(240,68,88,0.4)';
-            alertBox.style.color = '#F04458';
-            alertBox.textContent = data.error || {{ _('Error changing the password.')|tojson }};
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          var currentPass = document.getElementById('self-pw-current').value;
+          var newPass = document.getElementById('self-pw-new').value;
+          var confirmPass = document.getElementById('self-pw-confirm').value;
+          if (newPass !== confirmPass) {
+            showAlert('error', {{ _('The passwords do not match.')|tojson }});
+            document.getElementById('self-pw-confirm').focus();
+            return;
           }
-        } catch (err) {
-          alertBox.style.display = 'block';
-          alertBox.style.background = 'rgba(240,68,88,0.15)';
-          alertBox.style.border = '1px solid rgba(240,68,88,0.4)';
-          alertBox.style.color = '#F04458';
-          alertBox.textContent = {{ _('Network error:')|tojson }} + ' ' + err.message;
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = {{ _('Save password')|tojson }};
-        }
-      }
+          submitBtn.disabled = true;
+          submitBtn.textContent = {{ _('Saving…')|tojson }};
+          var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+          var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+          try {
+            var resp = await fetch('/api/user/change-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+              body: JSON.stringify({ current_password: currentPass, new_password: newPass, csrf_token: csrfToken })
+            });
+            var data = await resp.json();
+            if (resp.ok && data.ok) {
+              showAlert('success', data.msg || {{ _('Password changed successfully.')|tojson }});
+              form.reset();
+              setTimeout(window.closeSelfPasswordModal, 1400);
+            } else {
+              showAlert('error', data.error || {{ _('Error changing the password.')|tojson }});
+            }
+          } catch (err) {
+            showAlert('error', {{ _('Connection failed. Check your network and try again.')|tojson }});
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = {{ _('Save password')|tojson }};
+          }
+        });
+      })();
     </script>
     {% endif %}
   </body>

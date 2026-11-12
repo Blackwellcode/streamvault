@@ -16,6 +16,7 @@
   --nebula-border: #26344F;           /* Feine, dezente Konturen */
   --nebula-border-subtle: rgba(38, 52, 79, 0.6);
   --nebula-border-bright: #3B4E73;
+  --nebula-field-edge: #66789C;       /* Formularfeld-Kanten: >= 3:1 auf allen Flaechen (WCAG 1.4.11) */
   --nebula-border-glow: rgba(77, 99, 255, 0.4); /* Cosmic Glow */
 
   /* Primary & Accent Spectrum */
@@ -24,16 +25,23 @@
   --nebula-accent-highlight: #BB78FF; /* Violetter Highlight-Akzent */
   --nebula-accent-magenta: #E45DC5;   /* Dezenter Magenta-Akzent */
   --nebula-accent-cyan: #69C9FF;      /* Sekundärer Cyan-Akzent */
+  --nebula-accent-text: #8494FF;      /* Akzent als Textfarbe: >= 5:1 auf allen Flaechen */
+  --nebula-focus-ring: #8494FF;       /* Einheitliche Fokusfarbe (>= 3:1 auf allen Flaechen) */
 
   /* Status Colors */
   --nebula-status-live: #F04458;      /* Live-Anzeige (Red) */
   --nebula-status-success: #48D6A2;   /* Erfolgsstatus (Green/Mint) */
   --nebula-status-warning: #F2BC61;   /* Warnung (Amber/Gold) */
+  --nebula-status-live-text: #F2667A; /* Live/Fehler als Text: >= 4.5:1 auf allen Flaechen */
+  --nebula-danger-bg: #D42A40;        /* Danger-Buttons: Weiss darauf 4.99:1 */
+  --nebula-danger-bg-hover: #BC2236;
+  --nebula-accent-primary-hover: #3F55F0;
+  --nebula-text-on-accent: #FFFFFF;   /* Text auf Primaer-/Danger-Flaechen (4.62:1 / 4.99:1) */
 
   /* Typography Colors */
   --nebula-text-main: #F3F5FC;        /* Haupttext (Strahlendes Eisweiß) */
   --nebula-text-secondary: #A2AEC8;   /* Sekundärtext */
-  --nebula-text-muted: #75839D;       /* Dezenter Text / Metadaten */
+  --nebula-text-muted: #8A97B0;       /* Dezenter Text / Metadaten: >= 4.5:1 auf allen Flaechen (vorher #75839D, 3.62:1 auf active) */
   --nebula-text-inverse: #070B14;     /* Kontrasttext auf Akzenten */
 
   /* Typography Stacks */
@@ -41,12 +49,14 @@
   --nebula-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
   /* Gradients & Glows */
-  --nebula-gradient-primary: linear-gradient(135deg, #4D63FF 0%, #9365FF 100%);
+  --nebula-gradient-primary: linear-gradient(135deg, #4D63FF 0%, #4D63FF 100%); /* Vollton: Weiss 4.62:1 (Verlaufsende #9365FF hatte 3.79:1) */
   --nebula-gradient-hero: linear-gradient(180deg, rgba(7, 11, 20, 0) 0%, rgba(7, 11, 20, 0.95) 100%);
   --nebula-gradient-cosmic: radial-gradient(circle at 50% 0%, rgba(147, 101, 255, 0.15) 0%, rgba(7, 11, 20, 0) 70%);
   --nebula-glow-blue: 0 0 20px rgba(77, 99, 255, 0.35);
   --nebula-glow-purple: 0 0 20px rgba(147, 101, 255, 0.35);
   --nebula-glow-live: 0 0 12px rgba(240, 68, 88, 0.55);
+  --nebula-shadow-brand: 0 2px 10px rgba(77, 99, 255, 0.3);
+  --nebula-scrim: rgba(0, 0, 0, 0.85);       /* Badges ueber Thumbnails */
 
   /* Geometry & Rhythm */
   --nebula-radius-xs: 4px;
@@ -54,12 +64,27 @@
   --nebula-radius-md: 12px;
   --nebula-radius-lg: 16px;
   --nebula-radius-full: 9999px;
+  --nebula-radius-xl: 24px;
+  /* Type scale (restyle 2026-11-12): every px font-size in the stylesheets maps here */
+  --sv-text-xs: 12px;
+  --sv-text-sm: 13px;
+  --sv-text-md: 14px;
+  --sv-text-base: 16px;
+  --sv-text-lg: 18px;
+  --sv-text-xl: 20px;
+  --sv-text-2xl: 24px;
+  --sv-text-3xl: 28px;
+  --sv-text-4xl: 32px;
+  --sv-text-5xl: 40px;
+  --sv-text-6xl: 48px;
   --nebula-rail-width: 72px;
+  --sv-bottom-nav-h: 64px;            /* Hoehe der unteren Navigationsleiste ohne safe-area */
+  --sv-min-text: 12px;                /* Mindestschriftgroesse fuer Labels/Metadaten */
 
   /* 2. NAMESPACE MAPPINGS FOR SYSTEM INTEGRATION */
   /* --ns-* mappings */
   --ns-bg-canvas: var(--nebula-bg-root);
-  --ns-bg-sidebar: var(--nebula-bg-root);
+  --ns-bg-sidebar: var(--nebula-bg-deep, #0B1220);
   --ns-bg-surface: var(--nebula-bg-surface);
   --ns-bg-surface-raised: var(--nebula-bg-card);
   --ns-bg-surface-hover: var(--nebula-bg-hover);
@@ -67,7 +92,7 @@
   --ns-border-subtle: var(--nebula-border);
   --ns-border-medium: var(--nebula-border-bright);
   --ns-border-strong: var(--nebula-border-glow);
-  --ns-border-focus: var(--nebula-accent-primary);
+  --ns-border-focus: var(--nebula-focus-ring);
   --ns-text-primary: var(--nebula-text-main);
   --ns-text-secondary: var(--nebula-text-secondary);
   --ns-text-muted: var(--nebula-text-muted);
@@ -77,11 +102,13 @@
   --ns-brand-crimson-subtle: rgba(77, 99, 255, 0.15);
   --ns-live-red: var(--nebula-status-live);
   --ns-recording-amber: var(--nebula-status-warning);
+  --ns-warm: var(--nebula-status-warning);
+  --ns-warm-2: #E8A33D;
   --ns-online-green: var(--nebula-status-success);
   --ns-platform-twitch: var(--nebula-accent-secondary);
   --ns-drive-blue: var(--nebula-accent-cyan);
-  --ns-font-sans: var(--nebula-font-sans);
-  --ns-font-mono: var(--nebula-font-mono);
+  --ns-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ns-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
   /* --tube-* & generic root */
   --tube-bg: var(--nebula-bg-root);
@@ -127,4 +154,73 @@
   --silo-border-base: var(--nebula-border);
   --silo-text-main: var(--nebula-text-main);
   --silo-text-muted: var(--nebula-text-secondary);
+
+  /* 3. LEGACY ALIASES (consolidated from the former :root blocks in style.css and
+     tube_design_system.css; effective cascade value kept). New code uses --nebula-*. */
+  --glass-hover: var(--tube-surface-2);
+  --radius: var(--tube-radius);
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-1: #0b0f14;
+  --bg-2: #0a0d12;
+  --ink: #e5e7eb;
+  --sr-surface: rgba(18, 22, 22, 0.94);
+  --sr-surface-2: rgba(24, 29, 29, 0.92);
+  --sr-line: rgba(226, 232, 240, 0.12);
+  --sr-line-strong: rgba(226, 232, 240, 0.2);
+  --sr-text: #f3f4f0;
+  --sr-text-2: #c8d1cc;
+  --sr-muted: #8f9c96;
+  --sr-warm: #f28c28;
+  --sr-warm-2: #ffb15f;
+  --sr-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+  --ns-bg: #0b0d10;
+  --ns-panel: rgba(9, 18, 16, 0.82);
+  --ns-line: rgba(188, 224, 210, 0.12);
+  --ns-line-strong: rgba(188, 224, 210, 0.2);
+  --ns-text: #f3fbf8;
+  --ns-text-2: #c8ddd5;
+  --ns-muted: #8ea79e;
+  --ns-purple: var(--tube-accent);
+  --ns-purple-2: var(--tube-accent-hover);
+  --ns-cyan: #26d9d0;
+  --ns-green: #65d8ac;
+  --ns-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  --ns-soft: #cbd5e1;
+  --ns-accent: #7c5cff;
+  --ns-accent-2: #22d3ee;
+  --ns-live: #ff3b5f;
+  --ns-good: #22c55e;
+  --ns-radius: 8px;
+  --ns-bg-0: #050909;
+  --ns-bg-1: #07100f;
+  --ns-gold: #e8c060;
+  --tube-radius: 10px;
+  --tube-rail: 76px;
+  --sidebar: #0c0d0f;
+  --surface: #111316;
+  --surface-raised: #17191d;
+  --surface-hover: #1c1f23;
+  --surface-active: #202329;
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #f2f3f5;
+  --text-secondary: #979ba3;
+  --brand: #d8eb72;
+  --brand-hover: #e4f58b;
+  --brand-muted: rgba(216, 235, 114, 0.12);
+  --warning: #efc66b;
+  --offline: #737780;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-card: 10px;
+  --tube-focus: 0 0 0 3px rgba(242, 229, 141, 0.28);
+  --ns-platform-youtube: var(--nebula-status-live);
+  --ns-rail-width: 68px;
+  --ns-radius-xs: 4px;
+  --ns-radius-sm: 6px;
+  --ns-radius-md: 8px;
+  --ns-radius-lg: 12px;
+  --ns-radius-full: 9999px;
+  --ns-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --ns-shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.85);
 }

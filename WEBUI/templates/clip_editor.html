@@ -3,18 +3,17 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Clip Editor - {{ filename }}</title>
+    <title>{{ _('Clip Editor') }} - {{ filename }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+    {% include 'components/styles.html' %}
   </head>
   <body class="page-clip-editor {{ theme_class }} ns-platform">
     <header>
       <div class="brand">
-        <span>&#9986; Clip Editor</span>
+        <span><span aria-hidden="true">&#9986;</span> {{ _('Clip Editor') }}</span>
         <span style="color:var(--text-muted); font-weight:400; font-size:14px; margin-left: 10px;">{{ filename }}</span>
       </div>
-      <a href="{{ back_url }}" class="close-btn">&times;</a>
+      <a href="{{ back_url }}" class="close-btn" aria-label="{{ _('Close') }}">&times;</a>
     </header>
     
     <div class="main-area">
@@ -23,10 +22,10 @@
 <div class="msg success" style="display: flex; justify-content: space-between; align-items: center;">
   <span>{{ clip_ok }}</span>
   {% if request.args.get('clip_name') %}
-  <button type="button" class="btn-main" onclick='shareClip({{ request.args.get('clip_name')|tojson }})'>{{ _('Share') }}</button>
+  <button type="button" class="btn-main" id="btnShareClip" data-clip-name="{{ request.args.get('clip_name') }}">{{ _('Share') }}</button>
   {% endif %}
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 async function shareClip(filename) {
     const url = "{{ url_for('share_create', streamer=streamer, filename='') }}" + encodeURIComponent(filename);
     try {
@@ -46,6 +45,13 @@ async function shareClip(filename) {
         alert({{ _('Error:')|tojson }} + ' ' + e);
     }
 }
+(function () {
+    const shareBtn = document.getElementById('btnShareClip');
+    if (!shareBtn) return;
+    shareBtn.addEventListener('click', function () {
+        shareClip(shareBtn.getAttribute('data-clip-name') || '');
+    });
+})();
 </script>
 {% endif %}
       
@@ -63,30 +69,30 @@ async function shareClip(filename) {
         <div class="controls-grid">
             <!-- Start Controls -->
             <div class="time-controls">
-                <span style="font-size:12px; color:var(--text-muted); margin-right:5px;">{{ _('START') }}</span>
-                <button class="btn-icon" onclick="adjustTime('start', -1)">-1s</button>
-                <button class="btn-icon" onclick="adjustTime('start', -0.1)">-</button>
+                <span style="font-size:12px; color:var(--text-muted); margin-right:5px;">{{ _('Start') }}</span>
+                <button type="button" class="btn-icon" data-clip-adjust="start" data-clip-amount="-1">-1s</button>
+                <button type="button" class="btn-icon" data-clip-adjust="start" data-clip-amount="-0.1" aria-label="-0.1s">-</button>
                 <span id="lblStart" class="time-label">00:00</span>
-                <button class="btn-icon" onclick="adjustTime('start', 0.1)">+</button>
-                <button class="btn-icon" onclick="adjustTime('start', 1)">+1s</button>
-                <button class="btn-icon" onclick="setStartToCurrent()" title="{{ _('Set start to current position') }}" style="margin-left:5px;">&#8676;</button>
+                <button type="button" class="btn-icon" data-clip-adjust="start" data-clip-amount="0.1" aria-label="+0.1s">+</button>
+                <button type="button" class="btn-icon" data-clip-adjust="start" data-clip-amount="1">+1s</button>
+                <button type="button" class="btn-icon" data-clip-cmd="set-start" title="{{ _('Set start to current position') }}" aria-label="{{ _('Set start to current position') }}" style="margin-left:5px;">&#8676;</button>
             </div>
             
             <!-- Main Controls -->
             <div class="main-controls">
-                <button class="btn-main" id="btnPlayPause" onclick="togglePlay()">&#9654; Play</button>
-                <button class="btn-main" id="btnPreview" onclick="togglePreview()">&#128065; {{ _('Preview') }}</button>
+                <button type="button" class="btn-main" id="btnPlayPause">&#9654; {{ _('Play') }}</button>
+                <button type="button" class="btn-main" id="btnPreview">&#128065; {{ _('Preview') }}</button>
             </div>
             
             <!-- End Controls -->
             <div class="time-controls">
                 <span style="font-size:12px; color:var(--text-muted); margin-right:5px;">{{ _('END') }}</span>
-                <button class="btn-icon" onclick="setEndToCurrent()" title="{{ _('Set end to current position') }}" style="margin-right:5px;">&#8677;</button>
-                <button class="btn-icon" onclick="adjustTime('end', -1)">-1s</button>
-                <button class="btn-icon" onclick="adjustTime('end', -0.1)">-</button>
+                <button type="button" class="btn-icon" data-clip-cmd="set-end" title="{{ _('Set end to current position') }}" aria-label="{{ _('Set end to current position') }}" style="margin-right:5px;">&#8677;</button>
+                <button type="button" class="btn-icon" data-clip-adjust="end" data-clip-amount="-1">-1s</button>
+                <button type="button" class="btn-icon" data-clip-adjust="end" data-clip-amount="-0.1" aria-label="-0.1s">-</button>
                 <span id="lblEnd" class="time-label">00:30</span>
-                <button class="btn-icon" onclick="adjustTime('end', 0.1)">+</button>
-                <button class="btn-icon" onclick="adjustTime('end', 1)">+1s</button>
+                <button type="button" class="btn-icon" data-clip-adjust="end" data-clip-amount="0.1" aria-label="+0.1s">+</button>
+                <button type="button" class="btn-icon" data-clip-adjust="end" data-clip-amount="1">+1s</button>
             </div>
         </div>
         
@@ -96,7 +102,7 @@ async function shareClip(filename) {
           <input type="hidden" name="duration" id="inpDuration">
           <input type="hidden" name="from_editor" value="1">
           
-          <input name="clip_name" placeholder="{{ _('Clip title (optional)') }}">
+          <input name="clip_name" placeholder="{{ _('Clip title (optional)') }}" aria-label="{{ _('Clip title (optional)') }}">
           <button type="submit" class="btn-main btn-primary">{{ _('Create clip') }}</button>
         </form>
         
@@ -109,11 +115,15 @@ async function shareClip(filename) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     {% if is_live %}<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>{% endif %}
     <script src="{{ url_for('static', filename='hls_support.js', v=ASSET_VERSION) }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       const vPlayer = document.getElementById('vodPlayer');
       const slider = document.getElementById('rangeSlider');
       const isLive = {{ 'true' if is_live else 'false' }};
       const mediaUrl = {{ media_url|tojson }};
+      const LABEL_PLAY = '\u25B6 ' + {{ _('Play')|tojson }};
+      const LABEL_PAUSE = '\u275A\u275A ' + {{ _('Pause')|tojson }};
+      const LABEL_PREVIEW = '\uD83D\uDC41 ' + {{ _('Preview')|tojson }};
+      const LABEL_STOP_PREVIEW = '\u25A0 ' + {{ _('Stop preview')|tojson }};
       
       let duration = 0;
       let clipStart = parseFloat("{{ initial_time|default(0) }}");
@@ -218,10 +228,10 @@ async function shareClip(filename) {
       function togglePlay() {
           if(vPlayer.paused) {
               vPlayer.play();
-              document.getElementById('btnPlayPause').innerHTML = '&#10074;&#10074; Pause';
+              document.getElementById('btnPlayPause').textContent = LABEL_PAUSE;
           } else {
               vPlayer.pause();
-              document.getElementById('btnPlayPause').innerHTML = '&#9654; Play';
+              document.getElementById('btnPlayPause').textContent = LABEL_PLAY;
           }
       }
       
@@ -233,7 +243,7 @@ async function shareClip(filename) {
       function startPreview() {
         isPreviewing = true;
         const btn = document.getElementById('btnPreview');
-        btn.innerHTML = '&#9632; ' + {{ _('Stop preview')|tojson }};
+        btn.textContent = LABEL_STOP_PREVIEW;
         btn.classList.add('btn-primary');
         
         vPlayer.currentTime = clipStart;
@@ -249,7 +259,7 @@ async function shareClip(filename) {
       function stopPreview() {
         isPreviewing = false;
         const btn = document.getElementById('btnPreview');
-        btn.innerHTML = '&#128065; ' + {{ _('Preview')|tojson }};
+        btn.textContent = LABEL_PREVIEW;
         btn.classList.remove('btn-primary');
         
         vPlayer.pause();
@@ -314,10 +324,25 @@ async function shareClip(filename) {
       
       // Sync play button state if video ends or is paused manually
       vPlayer.addEventListener('pause', () => {
-          document.getElementById('btnPlayPause').innerHTML = '&#9654; Play';
+          document.getElementById('btnPlayPause').textContent = LABEL_PLAY;
       });
       vPlayer.addEventListener('play', () => {
-          document.getElementById('btnPlayPause').innerHTML = '&#10074;&#10074; Pause';
+          document.getElementById('btnPlayPause').textContent = LABEL_PAUSE;
+      });
+
+      // Button wiring (replaces inline onclick handlers; CSP script-src-attr 'none').
+      document.getElementById('btnPlayPause').addEventListener('click', togglePlay);
+      document.getElementById('btnPreview').addEventListener('click', togglePreview);
+      document.addEventListener('click', (e) => {
+          const adjustBtn = e.target.closest('[data-clip-adjust]');
+          if (adjustBtn) {
+              adjustTime(adjustBtn.getAttribute('data-clip-adjust'), parseFloat(adjustBtn.getAttribute('data-clip-amount')));
+              return;
+          }
+          const cmdBtn = e.target.closest('[data-clip-cmd]');
+          if (!cmdBtn) return;
+          if (cmdBtn.getAttribute('data-clip-cmd') === 'set-start') setStartToCurrent();
+          else if (cmdBtn.getAttribute('data-clip-cmd') === 'set-end') setEndToCurrent();
       });
     </script>
   </body>

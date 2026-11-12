@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 19:28+0100\n"
+"POT-Creation-Date: 2026-11-12 15:41+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -181,9 +181,6 @@ msgstr "已有恢复任务正在运行。"
 msgid "A saved value is kept if the field is left empty."
 msgstr "字段留空时将保留已保存的值。"
 
-msgid "ACTIVE (locked)"
-msgstr "活跃（已锁定）"
-
 msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
 msgstr "AWS S3、Cloudflare R2、Backblaze B2、Wasabi、MinIO、Hetzner 或任何兼容 S3 的端点。"
 
@@ -195,6 +192,9 @@ msgstr "接受条款"
 
 msgid "Account active (access allowed)"
 msgstr "账户已启用（允许访问）"
+
+msgid "Accounts"
+msgstr "账户"
 
 msgid "Action"
 msgstr "操作"
@@ -208,6 +208,9 @@ msgstr "立即激活账户"
 msgid "Active"
 msgstr "活跃"
 
+msgid "Active (locked)"
+msgstr "活跃（已锁定）"
+
 msgid "Active shares"
 msgstr "当前共享"
 
@@ -220,6 +223,9 @@ msgstr "已启用：新直播将自动开放。可在下方停用/屏蔽单个�
 msgid "Actively monitored by the recorder core"
 msgstr "由录制核心主动监控"
 
+msgid "Add a channel to record"
+msgstr "添加要录制的频道"
+
 msgid "Add channel"
 msgstr "添加频道"
 
@@ -228,6 +234,9 @@ msgstr "添加新频道"
 
 msgid "Add provider"
 msgstr "添加提供商"
+
+msgid "Add the first channel above"
+msgstr "在上方添加第一个频道"
 
 msgid "Addressing"
 msgstr "寻址"
@@ -240,6 +249,9 @@ msgstr "管理员控制"
 
 msgid "Admins only"
 msgstr "仅限管理员"
+
+msgid "Alert sound overlay"
+msgstr "提示音叠加层"
 
 msgid "All"
 msgstr "全部"
@@ -480,26 +492,26 @@ msgstr "缓冲仍较短——剪辑时间窗口会随之增长。"
 msgid "Buffer:"
 msgstr "缓冲："
 
-msgid "Buffering..."
-msgstr "缓冲中..."
+msgid "Buffering…"
+msgstr "缓冲中…"
 
 msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
 msgstr "默认情况下不会自动上传或删除任何内容。请谨慎启用这些功能。"
 
-msgid "CHANGE"
-msgstr "更改"
-
-msgid "CHANNEL MANAGEMENT (ADMIN)"
-msgstr "频道管理（管理员）"
-
 msgid "Cancel"
 msgstr "取消"
+
+msgid "Category"
+msgstr "分类"
 
 msgid "Category search failed."
 msgstr "分类搜索失败。"
 
 msgid "Category search is currently unavailable."
 msgstr "分类搜索暂不可用。"
+
+msgid "Change"
+msgstr "更改"
 
 msgid "Change banner"
 msgstr "更换横幅"
@@ -515,6 +527,9 @@ msgstr "频道操作"
 
 msgid "Channel archive & recording metrics"
 msgstr "频道存档与录制指标"
+
+msgid "Channel management (admin)"
+msgstr "频道管理（管理员）"
 
 msgid "Channel not found."
 msgstr "未找到频道。"
@@ -572,11 +587,11 @@ msgstr "清理已加入队列（任务 #%(task)s）。"
 msgid "Clear filters"
 msgstr "清除筛选"
 
-msgid "Click to change password"
-msgstr "点击修改密码"
-
 msgid "Clip"
 msgstr "剪辑"
+
+msgid "Clip Editor"
+msgstr "剪辑编辑器"
 
 msgid "Clip URL is missing on this page."
 msgstr "此页面缺少剪辑 URL。"
@@ -662,6 +677,9 @@ msgstr "配置录制频道并管理存档分配"
 msgid "Configured streamers & sources"
 msgstr "已配置的主播与来源"
 
+msgid "Confirm"
+msgstr "确认"
+
 msgid "Connect account"
 msgstr "连接账户"
 
@@ -683,6 +701,9 @@ msgstr "连接正常"
 msgid "Connection failed"
 msgstr "连接失败"
 
+msgid "Connection failed. Check your network and try again."
+msgstr "连接失败。请检查网络后重试。"
+
 msgid "Connection lost — reconnecting…"
 msgstr "连接中断——正在重连…"
 
@@ -698,6 +719,9 @@ msgstr "控制面板"
 
 msgid "Control the global maintenance mode or lock individual platform areas."
 msgstr "控制全局维护模式，或锁定特定平台区域。"
+
+msgid "Copied"
+msgstr "已复制"
 
 msgid "Copy"
 msgstr "复制"
@@ -815,6 +839,14 @@ msgstr "默认目标"
 msgid "Delete"
 msgstr "删除"
 
+#, python-format
+msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
+msgstr "删除 %(name)s？文件将从存档中移除且无法恢复。"
+
+#, python-format
+msgid "Delete backup %(name)s? This cannot be undone."
+msgstr "删除备份 %(name)s？此操作无法撤销。"
+
 msgid "Delete folder"
 msgstr "删除文件夹"
 
@@ -832,6 +864,12 @@ msgstr "本地删除"
 
 msgid "Delete permanently"
 msgstr "永久删除"
+
+msgid "Delete this streamer folder and all recordings? This cannot be undone."
+msgstr "删除该主播的文件夹及所有录像？此操作无法撤销。"
+
+msgid "Delete this video? The file is removed from the archive and cannot be restored."
+msgstr "删除此视频？文件将从存档中移除且无法恢复。"
 
 msgid "Delete user"
 msgstr "删除用户"
@@ -913,8 +951,8 @@ msgstr "下载 TXT"
 msgid "Download all"
 msgstr "全部下载"
 
-msgid "Download all VODs?"
-msgstr "下载全部 VOD？"
+msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
+msgstr "将该主播的所有 VOD 下载为一个压缩包？大型频道可能需要一些时间。"
 
 msgid "Download archive & VODs"
 msgstr "下载存档和 VOD"
@@ -933,7 +971,7 @@ msgstr "已在后台开始下载全部 VOD。"
 
 #, python-format
 msgid "Downloading... %(percent)s"
-msgstr "下载中... %(percent)s"
+msgstr "下载中… %(percent)s"
 
 #, python-format
 msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
@@ -984,6 +1022,9 @@ msgstr "电子邮件地址"
 msgid "Email address (optional)"
 msgstr "电子邮件地址（可选）"
 
+msgid "Emotes"
+msgstr "表情"
+
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr "留空 = AWS。对于 R2、B2、Wasabi、MinIO 等，请填写 S3 端点。"
 
@@ -998,6 +1039,9 @@ msgstr "立即启用"
 
 msgid "Enable maintenance mode"
 msgstr "启用维护模式"
+
+msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
+msgstr "启用维护模式？除允许列表中的用户外，所有人都会看到维护页面，直到你关闭它。"
 
 msgid "Enable recording"
 msgstr "启用录制"
@@ -1096,6 +1140,9 @@ msgstr "错误："
 msgid "Error: %(error)s"
 msgstr "错误：%(error)s"
 
+msgid "Everywhere"
+msgstr "所有设备"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "该用户组的现有成员将自动分配到默认用户组 <strong>Viewer</strong>。"
 
@@ -1112,10 +1159,7 @@ msgid "Exported by StreamVault"
 msgstr "由 StreamVault 导出"
 
 msgid "Extracting audio..."
-msgstr "正在提取音频..."
-
-msgid "FEATURED VOD"
-msgstr "精选 VOD"
+msgstr "正在提取音频…"
 
 msgid "Failed"
 msgstr "失败"
@@ -1125,6 +1169,9 @@ msgstr "快速"
 
 msgid "Feature permissions"
 msgstr "功能权限"
+
+msgid "Featured VOD"
+msgstr "精选 VOD"
 
 msgid "Featured highlight"
 msgstr "精选亮点"
@@ -1156,8 +1203,11 @@ msgstr "文件已上传。"
 msgid "Filter"
 msgstr "筛选"
 
-msgid "Filter chat..."
-msgstr "筛选聊天..."
+msgid "Filter chat"
+msgstr "筛选聊天"
+
+msgid "Filter chat…"
+msgstr "筛选聊天…"
 
 msgid "First"
 msgstr "第一个"
@@ -1435,19 +1485,6 @@ msgstr "七月"
 msgid "June"
 msgstr "六月"
 
-msgid "LIVE"
-msgstr "直播"
-
-#, python-format
-msgid "LIVE %(name)s (without Twitch login)"
-msgstr "直播 %(name)s（无需 Twitch 登录）"
-
-msgid "LIVE & DISCORD ONLY"
-msgstr "仅直播和 DISCORD"
-
-msgid "LIVE NOW"
-msgstr "正在直播"
-
 msgid "Language"
 msgstr "语言"
 
@@ -1496,11 +1533,14 @@ msgstr "链接已复制："
 msgid "Live"
 msgstr "直播"
 
+msgid "Live & Discord only"
+msgstr "仅直播和 DISCORD"
+
 msgid "Live & Discord only:"
 msgstr "仅直播和 Discord："
 
 msgid "Live (recovering...)"
-msgstr "直播（恢复中...）"
+msgstr "直播（恢复中…）"
 
 msgid "Live channels"
 msgstr "直播频道"
@@ -1535,8 +1575,8 @@ msgstr "仅直播流和 Discord 提醒，不录制到磁盘"
 msgid "Live stream highlight"
 msgstr "直播亮点"
 
-msgid "Live stream is currently unavailable. Searching for stream..."
-msgstr "直播流当前不可用。正在搜索直播流..."
+msgid "Live stream is currently unavailable. Searching for stream…"
+msgstr "直播流当前不可用。正在搜索直播流…"
 
 msgid "Live stream not available."
 msgstr "直播流不可用。"
@@ -1553,6 +1593,10 @@ msgstr "观看直播"
 msgid "Live-only"
 msgstr "仅直播"
 
+#, python-format
+msgid "Live: %(name)s (without Twitch login)"
+msgstr "直播 %(name)s（无需 Twitch 登录）"
+
 msgid "Load"
 msgstr "负载"
 
@@ -1563,7 +1607,7 @@ msgid "Loading chat…"
 msgstr "正在加载聊天…"
 
 msgid "Loading model..."
-msgstr "正在加载模型..."
+msgstr "正在加载模型…"
 
 msgid "Loading streams…"
 msgstr "正在加载直播…"
@@ -1593,6 +1637,9 @@ msgstr "锁定<strong>移动版</strong>"
 msgid "Log out"
 msgstr "退出登录"
 
+msgid "Log out everywhere"
+msgstr "在所有设备上退出"
+
 msgid "Login"
 msgstr "登录"
 
@@ -1604,6 +1651,9 @@ msgstr "登录失败。"
 
 msgid "MP4 check not possible"
 msgstr "无法检查 MP4"
+
+msgid "Main navigation"
+msgstr "主导航"
 
 msgid "Maintenance"
 msgstr "维护中"
@@ -1670,6 +1720,9 @@ msgstr "消息"
 msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
 msgstr "移动端直播暂时停用。请使用桌面版或已安装的应用。"
 
+msgid "Mods"
+msgstr "管理员"
+
 msgid "Monitored"
 msgstr "已监控"
 
@@ -1691,9 +1744,6 @@ msgstr "网络错误"
 msgid "Network error while loading streams."
 msgstr "加载直播时发生网络错误。"
 
-msgid "Network error:"
-msgstr "网络错误："
-
 msgid "Network is back — reconnecting…"
 msgstr "网络已恢复——正在重连…"
 
@@ -1712,8 +1762,8 @@ msgstr "新密码（留空则不更改）"
 msgid "New password * (min. 8 characters)"
 msgstr "新密码 *（至少 8 个字符）"
 
-msgid "New password..."
-msgstr "新密码..."
+msgid "New password…"
+msgstr "新密码…"
 
 msgid "New user"
 msgstr "新用户"
@@ -1736,8 +1786,8 @@ msgstr "Nextcloud、ownCloud、Hetzner Storage Box 或任何使用应用密码�
 msgid "No (self-signed only)"
 msgstr "否（仅限自签名证书）"
 
-msgid "No VODs available in the archive"
-msgstr "存档中没有可用的 VOD"
+msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
+msgstr "还没有 VOD。被监控的频道开播后，录像会自动显示在这里。"
 
 msgid "No acceptances yet."
 msgstr "尚无人同意。"
@@ -1771,6 +1821,9 @@ msgstr "没有可用的备份。"
 
 msgid "No badges received from Twitch."
 msgstr "未从 Twitch 获取到徽章。"
+
+msgid "No channels are monitored yet."
+msgstr "尚未监控任何频道。"
 
 msgid "No chat"
 msgstr "无聊天"
@@ -1811,9 +1864,6 @@ msgstr "没有监控的 Twitch 频道。"
 
 msgid "No monitored Twitch channels. Add streamers under Streamers."
 msgstr "没有监控的 Twitch 频道。请在“主播”中添加主播。"
-
-msgid "No monitored channels configured."
-msgstr "未配置监控频道。"
 
 msgid "No recently watched streams yet."
 msgstr "还没有最近观看的直播。"
@@ -1869,29 +1919,14 @@ msgstr "OAuth 说明"
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "OAuth 状态令牌需要强度足够的 VOD_SECRET_KEY。"
 
+msgid "OBS overlays"
+msgstr "OBS 叠加层"
+
 msgid "OFF (normal operation)"
 msgstr "关（正常运行）"
 
-msgid "OFFLINE"
-msgstr "离线"
-
 msgid "OK"
 msgstr "确定"
-
-msgid "ONLINE"
-msgstr "在线"
-
-msgid "OPERATING MODE:"
-msgstr "运行模式："
-
-msgid "OPTION A: UPLOAD IMAGE FILE"
-msgstr "选项 A：上传图片文件"
-
-msgid "OPTION A: UPLOAD PROFILE PICTURE"
-msgstr "选项 A：上传头像"
-
-msgid "OPTION B: USE IMAGE URL"
-msgstr "选项 B：使用图片 URL"
 
 msgid "OR"
 msgstr "或"
@@ -1918,6 +1953,9 @@ msgstr "最早优先"
 msgid "OneDrive / Microsoft 365 via Microsoft Graph with OAuth 2.0."
 msgstr "OneDrive / Microsoft 365，通过 Microsoft Graph 和 OAuth 2.0。"
 
+msgid "Online"
+msgstr "在线"
+
 msgid "Only after a successful upload and optional cloud verification."
 msgstr "仅在上传成功且（可选）云端验证通过后。"
 
@@ -1938,6 +1976,22 @@ msgstr "打开剪辑"
 
 msgid "Open editor"
 msgstr "打开编辑器"
+
+#, python-format
+msgid "Open streamer %(name)s"
+msgstr "打开主播 %(name)s"
+
+msgid "Operating mode"
+msgstr "运行模式："
+
+msgid "Option A: upload image file"
+msgstr "选项 A：上传图片文件"
+
+msgid "Option A: upload profile picture"
+msgstr "选项 A：上传头像"
+
+msgid "Option B: use image URL"
+msgstr "选项 B：使用图片 URL"
 
 msgid "Option sections"
 msgstr "选项分区"
@@ -2049,6 +2103,9 @@ msgstr "无法播放"
 msgid "Player error — reconnecting…"
 msgstr "播放器错误——正在重连…"
 
+msgid "Please confirm"
+msgstr "请确认"
+
 msgid "Please enter a name for the storage provider."
 msgstr "请输入存储提供商的名称。"
 
@@ -2099,10 +2156,10 @@ msgid "Private video and stream archive console."
 msgstr "私人视频和直播存档控制台。"
 
 msgid "Processing video (this may take a while)..."
-msgstr "正在处理视频（可能需要一些时间）..."
+msgstr "正在处理视频（可能需要一些时间）…"
 
 msgid "Processing video..."
-msgstr "正在处理视频..."
+msgstr "正在处理视频…"
 
 msgid "Profile picture reset to default."
 msgstr "头像已恢复默认。"
@@ -2147,8 +2204,8 @@ msgstr "提供商"
 msgid "Public link created:"
 msgstr "已创建公开链接："
 
-msgid "Purpose of this user group..."
-msgstr "此用户组的用途..."
+msgid "Purpose of this user group…"
+msgstr "此用户组的用途…"
 
 msgid "Quality"
 msgstr "画质"
@@ -2162,21 +2219,11 @@ msgstr "无法读取队列"
 msgid "Quiet"
 msgstr "安静"
 
-msgid "RECORDING"
-msgstr "录制中"
-
-msgid "RECORDING ACTIVE"
-msgstr "录制进行中"
-
 msgid "Ready"
 msgstr "就绪"
 
 msgid "Real-time stream error — reconnecting…"
 msgstr "实时流错误——正在重连…"
-
-#, python-format
-msgid "Really delete backup %(name)s?"
-msgstr "确定删除备份 %(name)s 吗？"
 
 msgid "Really delete file?"
 msgstr "确定删除文件吗？"
@@ -2187,27 +2234,14 @@ msgstr "确定删除云端文件吗？本地副本将保留。"
 msgid "Really delete the local file? The cloud copy is kept."
 msgstr "确定删除本地文件吗？云端副本将保留。"
 
-msgid "Really delete?"
-msgstr "确定删除吗？"
-
-#, python-format
-msgid "Really remove channel %(name)s?"
-msgstr "确定移除频道 %(name)s 吗？"
-
 msgid "Really remove the provider? The cloud files are kept."
 msgstr "确定移除该提供商吗？云端文件将保留。"
-
-msgid "Really rename the file?"
-msgstr "确定重命名文件吗？"
 
 msgid "Really reset the custom banner and switch to the default?"
 msgstr "确定重置自定义横幅并切换为默认吗？"
 
 msgid "Really reset the custom profile picture and switch to the default?"
 msgstr "确定重置自定义头像并切换为默认吗？"
-
-msgid "Really revoke this share?"
-msgstr "确定撤销此共享吗？"
 
 msgid "Really stop the recording?"
 msgstr "确定停止录制吗？"
@@ -2217,6 +2251,9 @@ msgstr "最近的任务错误"
 
 msgid "Recently watched"
 msgstr "最近观看"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "推荐的浏览器源 URL。请将 TOKEN 替换为 TTS_OVERLAY_TOKEN 或 ALERT_OVERLAY_TOKEN 的值。# 之后的部分保留在 OBS 中，只以请求头形式发送到服务器，不会出现在日志中。"
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "推荐。防止因上传不完整造成数据丢失。"
@@ -2235,6 +2272,9 @@ msgstr "录制"
 
 msgid "Recording + live stream & Discord notification"
 msgstr "录制 + 直播流和 Discord 通知"
+
+msgid "Recording active"
+msgstr "录制进行中"
 
 msgid "Recording disabled (live & Discord only)"
 msgstr "录制已停用（仅直播和 Discord）"
@@ -2285,8 +2325,8 @@ msgid "Remove channel"
 msgstr "移除频道"
 
 #, python-format
-msgid "Remove channel %(name)s?"
-msgstr "移除频道 %(name)s？"
+msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
+msgstr "移除频道 %(name)s？监控将停止，现有录像会保留在存档中。"
 
 msgid "Remove only the database entry?"
 msgstr "仅移除数据库条目？"
@@ -2300,6 +2340,9 @@ msgstr "重新封装任务已启动。进度显示在管理面板中。"
 
 msgid "Rename file"
 msgstr "重命名文件"
+
+msgid "Rename the file? Existing links and shares to the old file name stop working."
+msgstr "重命名文件？指向旧文件名的现有链接和分享将失效。"
 
 msgid "Renamed."
 msgstr "已重命名。"
@@ -2326,6 +2369,9 @@ msgstr "重启失败。"
 msgid "Restart services"
 msgstr "重启服务"
 
+msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
+msgstr "立即重启录制器和聊天记录器？正在进行的录制会中断几秒钟。"
+
 msgid "Restore"
 msgstr "恢复"
 
@@ -2341,6 +2387,9 @@ msgstr "继续播放"
 
 msgid "Revoke"
 msgstr "撤销"
+
+msgid "Revoke this share? The link stops working immediately."
+msgstr "撤销此分享？链接将立即失效。"
 
 #, python-format
 msgid "Role access '%(slug)s' added."
@@ -2373,9 +2422,6 @@ msgstr "运行中…"
 
 msgid "S3-compatible"
 msgstr "兼容 S3"
-
-msgid "START"
-msgstr "开始"
 
 msgid "Safety migration:"
 msgstr "安全迁移："
@@ -2430,10 +2476,7 @@ msgid "Saving transcript failed: %(error)s"
 msgstr "保存转录文本失败：%(error)s"
 
 msgid "Saving transcript..."
-msgstr "正在保存转录文本..."
-
-msgid "Saving..."
-msgstr "正在保存..."
+msgstr "正在保存转录文本…"
 
 msgid "Saving…"
 msgstr "正在保存…"
@@ -2441,8 +2484,8 @@ msgstr "正在保存…"
 msgid "Search"
 msgstr "搜索"
 
-msgid "Search VODs, streamers or games..."
-msgstr "搜索 VOD、主播或游戏..."
+msgid "Search VODs, streamers or games…"
+msgstr "搜索 VOD、主播或游戏…"
 
 msgid "Search category"
 msgstr "搜索分类"
@@ -2453,8 +2496,11 @@ msgstr "搜索分类/游戏…"
 msgid "Search failed."
 msgstr "搜索失败。"
 
-msgid "Search recordings (title, date, game)..."
-msgstr "搜索录制（标题、日期、游戏）..."
+msgid "Search recordings"
+msgstr "搜索录像"
+
+msgid "Search recordings (title, date, game)…"
+msgstr "搜索录制（标题、日期、游戏）…"
 
 msgid "Search results"
 msgstr "搜索结果"
@@ -2465,20 +2511,20 @@ msgstr "搜索主播或频道…"
 msgid "Search streamers"
 msgstr "搜索主播"
 
-msgid "Search term (e.g. player name, chat message, date)..."
-msgstr "搜索词（如玩家名、聊天消息、日期）..."
+msgid "Search term (e.g. player name, chat message, date)…"
+msgstr "搜索词（如玩家名、聊天消息、日期）…"
 
-msgid "Search user, email or group..."
-msgstr "搜索用户、电子邮件或用户组..."
+msgid "Search user, email or group…"
+msgstr "搜索用户、电子邮件或用户组…"
 
-msgid "Search..."
-msgstr "搜索..."
-
-msgid "Searching for stream..."
-msgstr "正在搜索直播流..."
+msgid "Searching for stream…"
+msgstr "正在搜索直播流…"
 
 msgid "Searching…"
 msgstr "正在搜索…"
+
+msgid "Search…"
+msgstr "搜索…"
 
 msgid "Seconds after trigger"
 msgstr "触发后秒数"
@@ -2569,8 +2615,20 @@ msgstr "显示在导航栏、侧边栏和主播卡片上。"
 msgid "Sign in"
 msgstr "登录"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "在所有设备上退出？此账户的所有会话都会结束，包括当前会话。"
+
 msgid "Size"
 msgstr "大小"
+
+msgid "Skip to content"
+msgstr "跳到内容"
+
+msgid "Sort"
+msgstr "排序"
+
+msgid "Sort order"
+msgstr "排序顺序"
 
 msgid "Sound"
 msgstr "声音"
@@ -2613,7 +2671,7 @@ msgid "Starting"
 msgstr "启动中"
 
 msgid "Starting download..."
-msgstr "正在开始下载..."
+msgstr "正在开始下载…"
 
 msgid "Status"
 msgstr "状态"
@@ -2651,6 +2709,9 @@ msgstr "未找到存储提供商。"
 
 msgid "Storage providers"
 msgstr "存储提供商"
+
+msgid "Storage usage"
+msgstr "存储用量"
 
 #, python-format
 msgid "Storage: <strong>%(pct)s%%</strong>"
@@ -2712,6 +2773,9 @@ msgstr "主播、VOD 和聊天记录"
 
 msgid "Subfolder"
 msgstr "子文件夹"
+
+msgid "Subs"
+msgstr "订阅者"
 
 msgid "Success"
 msgstr "成功"
@@ -2799,6 +2863,9 @@ msgstr "条款版本已过期——请刷新页面并重新接受。"
 
 msgid "Test"
 msgstr "测试"
+
+msgid "Text-to-speech overlay"
+msgstr "文字转语音叠加层"
 
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "感谢理解。授权用户可通过登录页面登录。"
@@ -2912,8 +2979,10 @@ msgstr "今天 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "当前播放的 VOD 过多。直播不受影响。请几分钟后再试——有人关闭播放器后就会空出名额。"
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "尝试次数过多。IP 已被暂时封禁。请稍后重试。"
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "登录尝试次数过多。请在 %(num)d 分钟后重试。"
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "热门直播暂不可用。请使用监控频道或搜索。"
@@ -2966,6 +3035,9 @@ msgstr "转录文本已完成"
 msgid "Transcript missing despite finished status"
 msgstr "状态为已完成，但缺少转录文本"
 
+msgid "Transcript progress"
+msgstr "转写进度"
+
 msgid "Transcription cancelled"
 msgstr "转录已取消"
 
@@ -2989,7 +3061,7 @@ msgid "Transcription queued in the worker. The result appears on the next page l
 msgstr "转录已加入工作进程队列。完成后下次加载页面时将显示结果。"
 
 msgid "Transcription running..."
-msgstr "正在转录..."
+msgstr "正在转录…"
 
 msgid "Transcription timed out"
 msgstr "转录超时"
@@ -3006,8 +3078,11 @@ msgstr "Twitch / 默认"
 msgid "Twitch badge library synchronized."
 msgstr "Twitch 徽章库已同步。"
 
-msgid "Twitch channel name..."
-msgstr "Twitch 频道名称..."
+msgid "Twitch channel name"
+msgstr "Twitch 频道名"
+
+msgid "Twitch channel name…"
+msgstr "Twitch 频道名称…"
 
 msgid "Twitch live chat"
 msgstr "Twitch 直播聊天"
@@ -3015,8 +3090,8 @@ msgstr "Twitch 直播聊天"
 msgid "Twitch live stream"
 msgstr "Twitch 直播流"
 
-msgid "Twitch name (e.g. shroud) or YouTube URL / @handle..."
-msgstr "Twitch 名称（如 shroud）或 YouTube URL / @handle..."
+msgid "Twitch name (e.g. shroud) or YouTube URL / @handle…"
+msgstr "Twitch 名称（如 shroud）或 YouTube URL / @handle…"
 
 msgid "Twitch or YouTube supported"
 msgstr "支持 Twitch 或 YouTube"
@@ -3234,12 +3309,6 @@ msgstr "可见范围："
 msgid "Volume"
 msgstr "音量"
 
-msgid "WARNING: Do you want to permanently delete this streamer and all recordings?"
-msgstr "警告：确定要永久删除此主播及所有录制吗？"
-
-msgid "WATCH LIVE"
-msgstr "观看直播"
-
 msgid "Waiting for server stream…"
 msgstr "正在等待服务器流…"
 
@@ -3251,6 +3320,9 @@ msgstr "观看"
 
 msgid "Watch latest video"
 msgstr "观看最新视频"
+
+msgid "Watch live"
+msgstr "观看直播"
 
 msgid "Watch now"
 msgstr "立即观看"
@@ -3308,8 +3380,8 @@ msgstr "不能将自己移到没有用户管理权限的用户组。"
 msgid "You have accepted version %(version)s."
 msgstr "你已接受版本 %(version)s。"
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "你的 IP 已被暂时封禁。请稍后重试。"
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "你的 IP 已被封禁。请联系管理员。"
 
 msgid "Your browser does not support the video tag."
 msgstr "你的浏览器不支持 video 标签。"
@@ -3353,11 +3425,11 @@ msgstr "如：VIP 存档"
 msgid "e.g. alice, bob"
 msgstr "如：alice, bob"
 
-msgid "e.g. john_doe"
-msgstr "如：zhang_san"
-
 msgid "e.g. channel_name"
 msgstr "如：channel_name"
+
+msgid "e.g. john_doe"
+msgstr "如：zhang_san"
 
 #, python-format
 msgid "effective from %(date)s"

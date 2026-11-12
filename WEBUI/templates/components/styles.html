@@ -1,0 +1,8 @@
+{# Stylesheets as parallel <link>s (former @import chain in style.css / tube_design_system.css). tokens.css is the only token layer (no :root blocks elsewhere); a11y.css and reduced-motion.css last so their rules win. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css', v=ASSET_VERSION) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css', v=ASSET_VERSION) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=ASSET_VERSION) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tube_design_system.css', v=ASSET_VERSION) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/a11y.css', v=ASSET_VERSION) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reduced-motion.css', v=ASSET_VERSION) }}">
+<script src="{{ url_for('static', filename='sv_confirm.js', v=ASSET_VERSION) }}" defer></script>

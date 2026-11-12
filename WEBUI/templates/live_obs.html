@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ _('LIVE') }}</title>
+    <title>{{ _('Live') }}</title>
     <!-- StreamVault mobile app -->
     <style>
       html, body {
@@ -26,7 +26,7 @@
   <body>
     <video id="player" autoplay playsinline></video>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1" referrerpolicy="no-referrer"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       const video = document.getElementById("player");
       const src = {{ playlist_url|tojson }};
       let hls = null;
