@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 import os
 import shutil
+import sqlite3
 import stat
 import time
 from typing import Optional
@@ -1132,8 +1133,10 @@ def _progress_callback(object_id: int, total: int):
         state["last_pct"] = pct
         try:
             database.update_storage_object(object_id, progress=round(pct, 1))
-        except Exception:
-            pass
+        except sqlite3.Error as exc:
+            # Progress is cosmetic and rewritten every two seconds; a busy
+            # database must not abort the transfer itself.
+            logger.debug("storage object %s: progress not saved: %s", object_id, exc)
 
     return callback
 
@@ -1396,8 +1399,14 @@ def run_restore(payload: dict) -> dict:
         database.update_storage_object(object_id, last_error=message)
         try:
             database.set_storage_provider_error(obj["provider_id"], message)
-        except Exception:
-            pass
+        except sqlite3.Error as db_exc:
+            # Keep the restore error for the caller; the provider status line
+            # is only a convenience for the storage page.
+            logger.warning(
+                "provider %s: restore error not recorded: %s",
+                obj["provider_id"],
+                db_exc,
+            )
         raise
 
 
