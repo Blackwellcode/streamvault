@@ -10,6 +10,7 @@ from typing import Iterable, Optional
 from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
+    close_quietly,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -185,7 +186,7 @@ class WebDAVProvider(StorageProvider):
                 os.fsync(handle.fileno())
             os.replace(tmp_path, dest_path)
         finally:
-            http.close_quietly(response, provider=self.type_id)
+            close_quietly(response, provider=self.type_id)
             if os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)
@@ -206,7 +207,7 @@ class WebDAVProvider(StorageProvider):
         try:
             yield from iter_response_range(response, start, end)
         finally:
-            http.close_quietly(response, provider=self.type_id)
+            close_quietly(response, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         response = self._request("DELETE", self._url(remote_path), timeout=(10, 60), retries=2)

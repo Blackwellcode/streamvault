@@ -242,6 +242,8 @@ def _drain_http_error(exc: urllib.error.HTTPError, path: str) -> None:
 
     The status code has already decided the outcome; a body that cannot be
     read (connection reset, truncated chunk) changes nothing about it.
+    Debug, not warning: the caller already logs the HTTP status at
+    warning/info level, and a second line per failed request adds nothing.
     """
     try:
         exc.read()

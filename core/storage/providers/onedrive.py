@@ -10,6 +10,7 @@ from typing import Iterable, Optional
 from flask_babel import lazy_gettext
 
 from core.storage.base import (
+    close_quietly,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -153,7 +154,7 @@ class OneDriveProvider(StorageProvider):
             kwargs["headers"] = self._headers(**(kwargs.get("headers") or {}))
             response = http.request(method, url, provider=self.type_id, **kwargs)
             if response.status_code == 401 and attempt == 0:
-                http.close_quietly(response, provider=self.type_id)
+                close_quietly(response, provider=self.type_id)
                 self._token(force=True)
                 continue
             return response
@@ -349,7 +350,7 @@ class OneDriveProvider(StorageProvider):
                 os.fsync(handle.fileno())
             os.replace(tmp_path, dest_path)
         finally:
-            http.close_quietly(response, provider=self.type_id)
+            close_quietly(response, provider=self.type_id)
             if os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)
@@ -365,7 +366,7 @@ class OneDriveProvider(StorageProvider):
         try:
             yield from iter_response_range(response, start, end)
         finally:
-            http.close_quietly(response, provider=self.type_id)
+            close_quietly(response, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         response = self._api("DELETE", self._item_url(remote_path), timeout=(10, 60))

@@ -25,7 +25,7 @@ except ImportError:  # run as tests.test_error_handling
 from core import config  # noqa: E402
 from core import chat_chunker, live_watch_diag, redis_client, tube_auth  # noqa: E402
 from core import twitch_api, twitch_eventsub  # noqa: E402
-from core.storage import http as storage_http  # noqa: E402
+from core.storage import base as storage_base  # noqa: E402
 from core.storage.providers import google_drive as google_module  # noqa: E402
 from core.storage.providers.google_drive import GoogleDriveProvider  # noqa: E402
 
@@ -34,15 +34,15 @@ class StorageResponseCloseTests(unittest.TestCase):
     def test_close_failure_is_logged_with_provider(self):
         response = mock.Mock()
         response.close.side_effect = ConnectionResetError("reset by peer")
-        with self.assertLogs("storage.http", level="DEBUG") as logs:
-            storage_http.close_quietly(response, provider="dropbox")
+        with self.assertLogs("storage.base", level="DEBUG") as logs:
+            storage_base.close_quietly(response, provider="dropbox")
         self.assertTrue(any("dropbox" in line and "reset by peer" in line for line in logs.output))
 
     def test_unexpected_close_error_is_not_swallowed(self):
         response = mock.Mock()
         response.close.side_effect = RuntimeError("programming error")
         with self.assertRaises(RuntimeError):
-            storage_http.close_quietly(response, provider="dropbox")
+            storage_base.close_quietly(response, provider="dropbox")
 
     def test_google_drive_401_retry_survives_a_failing_close(self):
         class Unauthorized:
@@ -68,7 +68,7 @@ class StorageResponseCloseTests(unittest.TestCase):
             return Unauthorized()
 
         with mock.patch.object(google_module.http, "request", fake_request), \
-                self.assertLogs("storage.http", level="DEBUG"):
+                self.assertLogs("storage.base", level="DEBUG"):
             response = provider._api("GET", "/files")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(len(requests), 2)

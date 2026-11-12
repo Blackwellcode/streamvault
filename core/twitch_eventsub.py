@@ -225,7 +225,8 @@ def _helix_post(path: str, payload: dict[str, Any]) -> dict | None:
         try:
             detail = exc.read().decode("utf-8", errors="replace")[:400]
         except (OSError, http.client.HTTPException) as read_exc:
-            # The HTTP status below is the result; the body is only detail.
+            # The HTTP status below is the result and is logged as a warning
+            # on the next line; the unreadable body is only detail (debug).
             logger.debug("EventSub Helix POST %s: error body unreadable: %s", path, read_exc)
         logger.warning("EventSub Helix POST %s failed: HTTP %s %s", path, exc.code, detail)
         return None

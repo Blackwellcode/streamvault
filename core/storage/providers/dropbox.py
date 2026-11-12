@@ -12,6 +12,7 @@ from typing import Iterable, Optional
 from flask_babel import gettext, lazy_gettext
 
 from core.storage.base import (
+    close_quietly,
     ProgressCallback,
     ProviderField,
     RemoteObject,
@@ -152,7 +153,7 @@ class DropboxProvider(StorageProvider):
                 timeout=(10, 60),
             )
             if response.status_code == 401 and attempt == 0:
-                http.close_quietly(response, provider=self.type_id)
+                close_quietly(response, provider=self.type_id)
                 self._token(force=True)
                 continue
             return http.json_response(response, action, provider=self.type_id)
@@ -366,7 +367,7 @@ class DropboxProvider(StorageProvider):
                 os.fsync(handle.fileno())
             os.replace(tmp_path, dest_path)
         finally:
-            http.close_quietly(response, provider=self.type_id)
+            close_quietly(response, provider=self.type_id)
             if os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)
@@ -382,7 +383,7 @@ class DropboxProvider(StorageProvider):
         try:
             yield from iter_response_range(response, start, end)
         finally:
-            http.close_quietly(response, provider=self.type_id)
+            close_quietly(response, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         try:

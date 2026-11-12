@@ -15,9 +15,10 @@ import posixpath
 import re
 import sqlite3
 from dataclasses import dataclass
-from typing import Callable, Iterable, Iterator, Optional
+from typing import Callable, Iterable, Iterator, Optional, Protocol
 
 from flask_babel import gettext, lazy_gettext
+from urllib3.exceptions import HTTPError as Urllib3HTTPError
 
 logger = logging.getLogger("storage.base")
 
@@ -380,6 +381,33 @@ def mask_text(value) -> str:
         text,
     )
     return text[:500]
+
+
+class Closable(Protocol):
+    def close(self) -> None: ...
+
+
+def close_quietly(resource: Closable, *, provider: str = "") -> None:
+    """Release a response or stream body whose result is no longer needed.
+
+    Closing only hands the connection back to the pool; the transfer result
+    is already decided by then. A socket that is already gone (OSError,
+    including requests' ConnectionError) or a urllib3 protocol error while
+    draining must therefore not replace the caller's result or exception.
+    Anything else is a programming error and propagates.
+
+    Logged at debug, not warning: a peer that resets an idle or finished
+    connection is routine for every provider and changes no outcome, so a
+    warning would only add noise to every transfer log.
+    """
+    try:
+        resource.close()
+    except (OSError, Urllib3HTTPError) as exc:
+        logger.debug(
+            "%s: closing HTTP response failed: %s",
+            provider or "storage",
+            mask_error(exc),
+        )
 
 
 def mask_error(exc: Exception) -> str:

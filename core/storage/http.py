@@ -11,9 +11,7 @@ import time
 from typing import Any, Optional
 
 import requests
-from urllib3.exceptions import HTTPError as Urllib3HTTPError
-
-from .base import StorageError
+from .base import StorageError, close_quietly
 
 logger = logging.getLogger("storage.http")
 
@@ -49,25 +47,6 @@ def session() -> requests.Session:
         })
         _LOCAL.session = current
     return current
-
-
-def close_quietly(resource, *, provider: str = "") -> None:
-    """Release a response or stream body whose result is no longer needed.
-
-    Closing only hands the connection back to the pool; the transfer result
-    is already decided by then. A socket that is already gone (OSError,
-    including requests' ConnectionError) or a urllib3 protocol error while
-    draining must therefore not replace the caller's result or exception.
-    Anything else is a programming error and propagates.
-    """
-    try:
-        resource.close()
-    except (OSError, Urllib3HTTPError) as exc:
-        logger.debug(
-            "%s: closing HTTP response failed: %s",
-            provider or "storage",
-            sanitize_error_text(exc),
-        )
 
 
 def _retry_after_seconds(response: requests.Response, attempt: int) -> float:
