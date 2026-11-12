@@ -220,8 +220,8 @@ class WebuiLookupFailureTests(IsolatedBaseTest):
         archive.mkdir()
         (archive / "vod.mp4").write_bytes(b"\0" * 32)
         self.locked = sqlite3.OperationalError("database is locked")
-        webui._DB_WARNING_LAST.clear()
-        self.addCleanup(webui._DB_WARNING_LAST.clear)
+        webui._RATE_LIMITED_LAST.clear()
+        self.addCleanup(webui._RATE_LIMITED_LAST.clear)
 
     def _viewer_request(self):
         ctx = self.webui.app.test_request_context("/")
@@ -307,7 +307,7 @@ class DatabaseAccessErrorTests(IsolatedBaseTest):
         archive = self.base / "streamer"
         archive.mkdir()
         (archive / "vod.mp4").write_bytes(b"\0" * 32)
-        self.webui._DB_WARNING_LAST.clear()
+        self.webui._RATE_LIMITED_LAST.clear()
 
     def test_malformed_channel_row_raises_value_error(self):
         from core import database
@@ -329,7 +329,7 @@ class DatabaseAccessErrorTests(IsolatedBaseTest):
 
     def test_media_path_resolves_on_os_and_value_errors(self):
         for error in (PermissionError("data dir"), ValueError("bad record flag")):
-            self.webui._DB_WARNING_LAST.clear()
+            self.webui._RATE_LIMITED_LAST.clear()
             with self.subTest(error=type(error).__name__), \
                     mock.patch.object(self.webui, "related_archive_slugs", side_effect=error), \
                     self.assertLogs(level="WARNING"):
@@ -365,8 +365,8 @@ class DatabaseWarningRateLimitTests(IsolatedBaseTest):
         archive = self.base / "streamer"
         archive.mkdir()
         (archive / "vod.mp4").write_bytes(b"\0" * 32)
-        self.webui._DB_WARNING_LAST.clear()
-        self.addCleanup(self.webui._DB_WARNING_LAST.clear)
+        self.webui._RATE_LIMITED_LAST.clear()
+        self.addCleanup(self.webui._RATE_LIMITED_LAST.clear)
         self.locked = sqlite3.OperationalError("database is locked")
 
     def _locked_lines(self, logs):
@@ -378,8 +378,8 @@ class DatabaseWarningRateLimitTests(IsolatedBaseTest):
             for _ in range(5):
                 self.assertIsNotNone(self.webui.resolve_media_path("streamer", "vod.mp4", "vod"))
             self.assertEqual(len(self._locked_lines(logs)), 1)
-            for site in list(self.webui._DB_WARNING_LAST):
-                self.webui._DB_WARNING_LAST[site] -= 61
+            for site in list(self.webui._RATE_LIMITED_LAST):
+                self.webui._RATE_LIMITED_LAST[site] -= 61
             self.webui.resolve_media_path("streamer", "vod.mp4", "vod")
         locked = self._locked_lines(logs)
         self.assertEqual(len(locked), 2)
@@ -460,6 +460,116 @@ class StorageQuotaErrorTests(unittest.TestCase):
                 self.assertLogs(level="WARNING") as logs:
             self.assertIsNone(provider.quota())
         self.assertTrue(any("quota endpoint down" in line for line in logs.output))
+
+
+
+class ChatLogLineSkipTests(IsolatedBaseTest):
+    """Unreadable chat-log lines are skipped and reported once per read."""
+
+    def setUp(self):
+        super().setUp()
+        from WEBUI import webui
+        self.webui = webui
+        webui._RATE_LIMITED_LAST.clear()
+        self.addCleanup(webui._RATE_LIMITED_LAST.clear)
+        self.log = self.base / "chat.jsonl"
+
+    def _write(self, *lines):
+        self.log.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def test_jump_markers_skip_non_object_lines(self):
+        rows = [json.dumps({"rel": 40 + i * 0.1, "msg": "hype"}) for i in range(30)]
+        self._write("{broken", "[1, 2]", "42", *rows)
+        with self.assertLogs(level="WARNING") as logs:
+            markers = self.webui.build_chat_jump_markers(str(self.log), 600)
+        self.assertTrue(markers)
+        self.assertTrue(any("3 unreadable" in line for line in logs.output))
+
+    def test_single_partial_tail_line_is_only_debug(self):
+        self._write(json.dumps({"rel": 1.0, "msg": "a"}), '{"rel": 2.0, "ms')
+        with self.assertLogs(level="DEBUG") as logs:
+            self.webui.build_chat_jump_markers(str(self.log), 600)
+        self.assertEqual([line for line in logs.output if line.startswith("WARNING")], [])
+        self.assertTrue(any("1 unreadable" in line for line in logs.output))
+
+    def test_chunker_counts_skipped_lines(self):
+        self._write("{broken", "{also broken", json.dumps({"t": 1.0, "rel": 1.0, "msg": "hi"}))
+        with self.assertLogs("streamvault.chat_chunker", level="WARNING") as logs:
+            result = chat_chunker.ensure_chat_chunks(str(self.base), "chan", "vod.mp4", str(self.log))
+        self.assertTrue(result.get("ok"), result)
+        self.assertTrue(any("2 unreadable" in line for line in logs.output))
+
+
+
+class StateFileFallbackTests(IsolatedBaseTest):
+    def test_corrupt_remux_status_is_logged_and_none(self):
+        from WEBUI import webui
+        with open(webui.remux_status_path(), "w", encoding="utf-8") as handle:
+            handle.write("{broken")
+        with self.assertLogs(level="WARNING"):
+            self.assertIsNone(webui.load_remux_status())
+
+    def test_corrupt_current_recording_pointer_is_logged_and_none(self):
+        from recorder import Streamrecorder as recorder
+        recordings = self.base / "chan"
+        recordings.mkdir()
+        with open(recorder.current_recording_path(str(recordings)), "w", encoding="utf-8") as handle:
+            handle.write("{broken")
+        recorder.LOG_THROTTLE.clear()
+        with self.assertLogs(recorder.logger, level="WARNING"):
+            self.assertIsNone(recorder.load_current_recording(str(recordings)))
+
+    def test_legacy_recording_timestamps_still_parse(self):
+        from recorder import Streamrecorder as recorder
+        stamp = time.strftime(recorder.LEGACY_RECORDING_TIMESTAMP_FORMAT, time.localtime(1_700_000_000))
+        parsed = recorder.parse_recording_timestamp(f"chan_{stamp}.mp4")
+        self.assertEqual(parsed, time.mktime(time.strptime(stamp, recorder.LEGACY_RECORDING_TIMESTAMP_FORMAT)))
+
+    def test_clip_engine_skips_corrupt_recording_pointer(self):
+        from recorder import clip_engine
+        archive = self.base / "chan"
+        archive.mkdir()
+        (archive / ".current_recording.json").write_text("{broken", encoding="utf-8")
+        with self.assertLogs(clip_engine.logger, level="WARNING"):
+            clip_engine.find_active_recording_file(str(archive))
+
+
+
+class SidecarTitleFromChatTests(IsolatedBaseTest):
+    def setUp(self):
+        super().setUp()
+        from WEBUI import webui
+        self.webui = webui
+        archive = self.base / "streamer"
+        (archive / "chat_logs").mkdir(parents=True)
+        self.media = archive / "vod.mp4"
+        self.media.write_bytes(b"\0" * 32)
+        (archive / "vod.info.json").write_text(json.dumps({"platform": "twitch"}), encoding="utf-8")
+        self.chat = archive / "chat_logs" / "vod.jsonl"
+
+    def test_title_comes_from_the_first_status_line_after_broken_lines(self):
+        self.chat.write_text("{broken\n[1, 2]\n" + json.dumps({"msg": "Streaming Just Chatting: Hello world"}) + "\n",
+                             encoding="utf-8")
+        with self.assertLogs(level="DEBUG") as logs:
+            meta = self.webui.read_media_sidecar_metadata(str(self.media))
+        self.assertEqual(meta["title"], "Hello world")
+        self.assertEqual(meta["category"], "Just Chatting")
+        self.assertTrue(any("2 unreadable" in line for line in logs.output))
+
+    def test_unreadable_chat_log_leaves_title_empty_and_logs(self):
+        self.chat.write_text(json.dumps({"msg": "Streaming X: Y"}) + "\n", encoding="utf-8")
+        real_open = open
+
+        def guarded_open(path, *args, **kwargs):
+            if str(path).endswith(".jsonl"):
+                raise PermissionError("chat log locked")
+            return real_open(path, *args, **kwargs)
+
+        with mock.patch("builtins.open", side_effect=guarded_open), \
+                self.assertLogs(level="WARNING") as logs:
+            meta = self.webui.read_media_sidecar_metadata(str(self.media))
+        self.assertEqual(meta["title"], "")
+        self.assertTrue(any("chat log locked" in line for line in logs.output))
 
 
 if __name__ == "__main__":

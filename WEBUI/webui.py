@@ -59,6 +59,7 @@ from flask import (
 )
 from flask_limiter import Limiter
 from markupsafe import Markup, escape
+from werkzeug.routing import BuildError
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import safe_join, secure_filename
 
@@ -209,7 +210,8 @@ def _resolve_ratelimit_storage_uri(raw: str) -> str:
         scheme = uri.split("://", 1)[0].lower()
         if scheme not in SCHEMES:
             return "memory://"
-    except Exception:
+    except ImportError as exc:
+        logging.warning("Rate-limit storage schemes unavailable (%s); using memory://", exc)
         return "memory://"
     return uri
 
@@ -1288,7 +1290,12 @@ def current_user_can_manage_users() -> bool:
             return True
         perms = ctx.get("permissions") or {}
         return bool(perms.get("can_manage_users"))
-    except (RuntimeError, Exception):
+    except RuntimeError as exc:
+        # Outside a request (CLI, background thread) there is no user and no right.
+        logging.debug("User-management check outside a request: %s", exc)
+        return False
+    except database.DB_ACCESS_ERRORS as exc:
+        logging.warning("User-management right unavailable (database error): %s", exc)
         return False
 
 
@@ -1775,33 +1782,67 @@ def get_user_color(username):
         hash_val = ord(char) + ((hash_val << 5) - hash_val)
     return colors[abs(hash_val) % len(colors)]
 
-DB_WARNING_INTERVAL_SEC = 60.0
-_DB_WARNING_LAST = {}
-_DB_WARNING_SUPPRESSED = {}
-_DB_WARNING_LOCK = threading.Lock()
+RATE_LIMITED_WARNING_SEC = 60.0
+_RATE_LIMITED_LAST = {}
+_RATE_LIMITED_SUPPRESSED = {}
+_RATE_LIMITED_LOCK = threading.Lock()
 
 
-def _warn_db_fallback(site, message, *args):
-    """Log a database fallback at most once per minute and call site.
+def _warn_rate_limited(site, message, *args):
+    """Log a warning at most once per minute and call site.
 
     Access checks and media lookups run for every entry of a list and on
     every request. During a database outage one line per site and minute,
     with the number of repeats since the last one, says as much as thousands.
     """
     now = time.monotonic()
-    with _DB_WARNING_LOCK:
-        last = _DB_WARNING_LAST.get(site)
+    with _RATE_LIMITED_LOCK:
+        last = _RATE_LIMITED_LAST.get(site)
         if last is None:
-            _DB_WARNING_SUPPRESSED.pop(site, None)
-        elif now - last < DB_WARNING_INTERVAL_SEC:
-            _DB_WARNING_SUPPRESSED[site] = _DB_WARNING_SUPPRESSED.get(site, 0) + 1
+            _RATE_LIMITED_SUPPRESSED.pop(site, None)
+        elif now - last < RATE_LIMITED_WARNING_SEC:
+            _RATE_LIMITED_SUPPRESSED[site] = _RATE_LIMITED_SUPPRESSED.get(site, 0) + 1
             return
-        _DB_WARNING_LAST[site] = now
-        repeats = _DB_WARNING_SUPPRESSED.pop(site, 0)
+        _RATE_LIMITED_LAST[site] = now
+        repeats = _RATE_LIMITED_SUPPRESSED.pop(site, 0)
     if repeats:
         message += " (%d more since the last warning)"
         args = args + (repeats,)
     logging.warning(message, *args)
+
+
+class _ChatLineSkips:
+    """Count chat-log lines that are not a JSON object; report once per read.
+
+    A single bad line is normally the half-written last line of a log the
+    recorder is still appending to, so it is logged at debug. More than one
+    means a damaged file: a warning, at most once per minute and reader.
+    """
+
+    def __init__(self, reader, source):
+        self.reader = reader
+        self.source = source
+        self.count = 0
+
+    def parse(self, line):
+        try:
+            data = json.loads(line)
+        except ValueError:
+            data = None
+        if isinstance(data, dict):
+            return data
+        self.count += 1
+        return None
+
+    def report(self):
+        if self.count == 1:
+            logging.debug("%s: 1 unreadable chat line skipped in %s", self.reader, self.source)
+        elif self.count > 1:
+            _warn_rate_limited(
+                "chat-lines:" + self.reader,
+                "%s: %d unreadable chat lines skipped in %s",
+                self.reader, self.count, self.source,
+            )
 
 
 def normalize_channel_name(name):
@@ -1967,7 +2008,8 @@ def tail_matching_lines(file_path, limit, query=None):
                 if q and q not in line.lower():
                     continue
                 dq.append(line.rstrip("\n"))
-    except Exception:
+    except OSError as exc:
+        logging.warning("Log file %s unreadable: %s", file_path, exc)
         return []
     return list(dq)
 
@@ -2446,7 +2488,9 @@ def get_streamer_archive_fallback_banner(streamer):
     def _ts(it):
         try:
             return float(it.get("recorded_ts") or it.get("mtime") or 0)
-        except Exception:
+        except (TypeError, ValueError) as exc:
+            # A malformed timestamp sorts as oldest; the card still renders.
+            logging.debug("Unusable timestamp on %s: %s", it.get("name"), exc)
             return 0.0
     sorted_items = sorted(items, key=_ts, reverse=True)
     top = sorted_items[0]
@@ -2454,7 +2498,12 @@ def get_streamer_archive_fallback_banner(streamer):
         thumb_dir, thumb_path, _ = resolve_thumb_paths(streamer, top["name"])
         thumb_v = int(os.path.getmtime(thumb_path)) if thumb_path and os.path.exists(thumb_path) else int(top.get("mtime") or 0)
         return url_for("thumb_view", streamer=streamer, filename=top["name"], v=thumb_v)
-    except Exception:
+    except RuntimeError as exc:
+        # url_for outside an app context (background sync, CLI): no URL to build.
+        logging.debug("Preview thumbnail for %s outside a request: %s", streamer, exc)
+        return None
+    except (BuildError,) + database.DB_ACCESS_ERRORS as exc:
+        logging.warning("Preview thumbnail for %s unavailable: %s", streamer, exc)
         return None
 
 
@@ -2848,7 +2897,9 @@ def twitch_helix_json(url):
 def is_twitch_badge_image_url(url):
     try:
         parsed = urllib.parse.urlparse(str(url or ""))
-    except Exception:
+    except ValueError as exc:
+        # urlparse rejects e.g. a malformed IPv6 host; such a URL is not a badge.
+        logging.debug("Badge URL rejected: %s", exc)
         return False
     return (
         parsed.scheme == "https"
@@ -3510,7 +3561,8 @@ def load_remux_status():
             return None
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except (OSError, ValueError) as exc:
+        logging.warning("Remux status file unreadable: %s", exc)
         return None
 
 def storage_alert_path():
@@ -3523,7 +3575,9 @@ def load_storage_alert_status():
 def is_allowed_url(url):
     try:
         parsed = urllib.parse.urlparse(url)
-    except Exception:
+    except ValueError as exc:
+        # Unparseable means not allowed (fail closed).
+        logging.debug("URL rejected: %s", exc)
         return False
     if parsed.scheme not in ("http", "https"):
         return False
@@ -3562,7 +3616,9 @@ def is_safe_next(target):
         return False
     try:
         parsed = urllib.parse.urlsplit(target)
-    except Exception:
+    except ValueError as exc:
+        # Unparseable redirect target: refuse it (fail closed).
+        logging.debug("Redirect target rejected: %s", exc)
         return False
     if parsed.scheme or parsed.netloc:
         return False
@@ -4078,7 +4134,8 @@ def get_media_duration(file_path):
         if result.returncode != 0:
             return None
         return float(result.stdout.strip())
-    except Exception:
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        logging.warning("ffprobe duration failed: %s", exc)
         return None
 
 
@@ -4089,7 +4146,8 @@ def load_transcript_status(transcript_path):
     try:
         with open(status_path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except (OSError, ValueError) as exc:
+        logging.warning("Status file %s unreadable: %s", status_path, exc)
         return None
 
 
@@ -4292,7 +4350,8 @@ def load_transcript(file_path):
         try:
             with open(transcript_path, "r", encoding="utf-8") as f:
                 return f.read().strip()
-        except Exception:
+        except (OSError, ValueError) as exc:
+            logging.warning("Transcript %s unreadable: %s", transcript_path, exc)
             return None
     return None
 
@@ -4471,7 +4530,9 @@ def get_duration(file_path):
         # Timeout auf 1s reduziert fuer bessere Performance
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=1)
         return float(result.stdout.strip())
-    except Exception:
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        # Runs per file in listings with a 1 s budget: rate-limited.
+        _warn_rate_limited("ffprobe-quick-duration", "Quick duration probe failed: %s", exc)
         return 0.0
 
 
@@ -4802,13 +4863,13 @@ def can_view_streamer(streamer):
         if arch:
             candidates.add(arch.lower())
     except database.DB_ACCESS_ERRORS as exc:
-        _warn_db_fallback("can_view_streamer:archive",
+        _warn_rate_limited("can_view_streamer:archive",
                           "Access check for %s without archive name (database error): %s", streamer, exc)
     try:
         for s in related_archive_slugs(streamer) or []:
             candidates.add(str(s).strip().lower())
     except database.DB_ACCESS_ERRORS as exc:
-        _warn_db_fallback("can_view_streamer:aliases",
+        _warn_rate_limited("can_view_streamer:aliases",
                           "Access check for %s without archive aliases (database error): %s", streamer, exc)
 
     # 1. Check disabled_channels (Folder explicitly shut off / disabled)
@@ -4865,7 +4926,7 @@ def abort_deleted_media(streamer, filename, file_id=None):
     try:
         slugs.update(related_archive_slugs(streamer) or [])
     except database.DB_ACCESS_ERRORS as exc:
-        _warn_db_fallback("abort_deleted_media:aliases",
+        _warn_rate_limited("abort_deleted_media:aliases",
                           "Tombstone check for %s/%s without aliases (database error): %s", streamer, name, exc)
     primary = archive_name_for(streamer) or str(streamer or "").strip()
     if primary:
@@ -4877,7 +4938,7 @@ def abort_deleted_media(streamer, filename, file_id=None):
     except database.DB_ACCESS_ERRORS as exc:
         # Same outcome as before: without the tombstone table the file
         # itself decides (resolve_media_path still 404s a missing file).
-        _warn_db_fallback("abort_deleted_media:lookup",
+        _warn_rate_limited("abort_deleted_media:lookup",
                           "Tombstone check for %s/%s failed, serving: %s", streamer, name, exc)
         return
     if deleted:
@@ -5801,15 +5862,15 @@ def read_media_sidecar_metadata(media_path):
                 streamer_dir_cand = os.path.dirname(media_path)
                 chat_cand = os.path.join(streamer_dir_cand, "chat_logs", f"{os.path.basename(base_cand)}.jsonl")
                 if os.path.isfile(chat_cand):
+                    skips = _ChatLineSkips("media title", chat_cand)
                     with open(chat_cand, "r", encoding="utf-8", errors="ignore") as cf:
                         for i, line in enumerate(cf):
                             if i > 60:
                                 break
-                            msg = ""
-                            try:
-                                msg = str(json.loads(line).get("msg") or "").strip()
-                            except Exception:
+                            row = skips.parse(line)
+                            if row is None:
                                 continue
+                            msg = str(row.get("msg") or "").strip()
                             m_se = re.search(r"Streaming\s+([^:]+):\s*(.+)$", msg, re.IGNORECASE)
                             if m_se:
                                 if not category:
@@ -5819,6 +5880,7 @@ def read_media_sidecar_metadata(media_path):
                             m_w = re.search(r"(?:Neuer Status|Stream-Titel):\s*(.+)$", msg, re.IGNORECASE)
                             if m_w and not title:
                                 title = m_w.group(1).strip()
+                    skips.report()
             except OSError as exc:
                 logging.warning("Title from chat log of %s unavailable: %s", media_path, exc)
 
@@ -6268,7 +6330,7 @@ def resolve_media_path(streamer, filename, route):
     try:
         candidates.extend(related_archive_slugs(streamer))
     except database.DB_ACCESS_ERRORS as exc:
-        _warn_db_fallback("resolve_media_path:aliases",
+        _warn_rate_limited("resolve_media_path:aliases",
                           "Media lookup for %s without archive aliases (database error): %s", streamer, exc)
     seen = set()
     files_dir = getattr(config, "FILES_DIR", None) or os.path.join(BASE_DIR, "files")
@@ -6336,15 +6398,15 @@ def build_chat_jump_markers(log_path, duration_sec, bucket_sec=30, limit=24):
     bucket = max(10, int(bucket_sec or 30))
     buckets = {}
     samples = 0
+    skips = _ChatLineSkips("chat jump markers", log_path)
     try:
         with open(log_path, "r", encoding="utf-8", errors="ignore") as handle:
             for line in handle:
                 line = line.strip()
                 if not line:
                     continue
-                try:
-                    data = json.loads(line)
-                except Exception:
+                data = skips.parse(line)
+                if data is None:
                     continue
                 rel = data.get("rel")
                 if rel is None:
@@ -6383,6 +6445,7 @@ def build_chat_jump_markers(log_path, duration_sec, bucket_sec=30, limit=24):
                     break
     except OSError:
         return []
+    skips.report()
     if not buckets:
         return []
     scored = []
@@ -6492,6 +6555,7 @@ def find_related_recordings(streamer, filename, meta=None, limit=4):
 def build_chat_index(log_path):
     index = [(0.0, 0)]
     line_count = 0
+    skips = _ChatLineSkips("chat index", log_path)
     try:
         with open(log_path, "rb") as f:
             while True:
@@ -6502,17 +6566,22 @@ def build_chat_index(log_path):
                 line_count += 1
                 if line_count % CHAT_INDEX_STEP != 0:
                     continue
-                try:
-                    data = json.loads(line.decode("utf-8", errors="ignore"))
-                    rel = data.get("rel")
-                    if rel is None:
-                        continue
-                    rel_val = float(rel)
-                    index.append((rel_val, offset))
-                except Exception:
+                data = skips.parse(line.decode("utf-8", errors="ignore"))
+                if data is None:
                     continue
-    except Exception:
+                rel = data.get("rel")
+                if rel is None:
+                    continue
+                try:
+                    rel_val = float(rel)
+                except (TypeError, ValueError):
+                    skips.count += 1
+                    continue
+                index.append((rel_val, offset))
+    except OSError as exc:
+        logging.warning("Chat index for %s not built: %s", log_path, exc)
         return None
+    skips.report()
     return index
 
 def get_chat_index(log_path):
@@ -6614,7 +6683,10 @@ def chat_item_from_row(data, *, time_key):
         return None
     try:
         time_val = float(raw_time)
-    except Exception:
+    except (TypeError, ValueError):
+        # One chat row with a broken timestamp is dropped; logged per row at
+        # debug only, the reader reports damaged files as a whole.
+        logging.debug("Chat row without usable %s: %r", time_key, raw_time)
         return None
     user = str(data.get("user", "") or "").strip()
     msg = str(data.get("msg", "") or "")
@@ -6874,14 +6946,14 @@ def global_search(query):
                 if len(results["chat"]) >= GLOBAL_SEARCH_CHAT_LIMIT:
                     break
                 full_path = os.path.join(chat_dir, log_file)
+                skips = _ChatLineSkips("global search", full_path)
                 try:
                     with open(full_path, "r", encoding="utf-8", errors="ignore") as handle:
                         for line in handle:
                             if len(results["chat"]) >= GLOBAL_SEARCH_CHAT_LIMIT:
                                 break
-                            try:
-                                data = json.loads(line)
-                            except Exception:
+                            data = skips.parse(line)
+                            if data is None:
                                 continue
                             msg = str(data.get("msg", "") or "")
                             user = str(data.get("user", "") or "")
@@ -6896,6 +6968,7 @@ def global_search(query):
                                 "msg_html": highlight_chat_message(msg, needle),
                                 "link": chat_vod_url_for_log(streamer_name, log_file, rel),
                             })
+                    skips.report()
                 except OSError:
                     continue
     return results
@@ -6980,7 +7053,8 @@ def current_recording_info(streamer):
             if state_mtime >= best_mtime:
                 best_mtime = state_mtime
                 best = data
-        except Exception:
+        except (OSError, ValueError) as exc:
+            _warn_rate_limited("current_recording_info", "Recording state %s unreadable: %s", path, exc)
             continue
 
     _RECORDING_INFO_CACHE[streamer] = {"ts": now, "data": best}
@@ -9354,7 +9428,9 @@ def _compute_dashboard_media_sync(streamers=None):
     def _vod_timestamp(x):
         try:
             return float(x.get("recorded_ts") or x.get("mtime") or 0)
-        except Exception:
+        except (TypeError, ValueError) as exc:
+            # A malformed timestamp sorts as oldest; the dashboard still renders.
+            logging.debug("Unusable VOD timestamp on %s: %s", x.get("name"), exc)
             return 0.0
 
     recent_vods.sort(key=_vod_timestamp, reverse=True)
@@ -11169,6 +11245,7 @@ def chat_vod(streamer, filename):
     items = []
     seen = set()
     recent = {}
+    skips = _ChatLineSkips("chat replay", log_path)
     try:
         index = get_chat_index(log_path)
         if index:
@@ -11181,16 +11258,16 @@ def chat_vod(streamer, filename):
                     line = raw.decode("utf-8", errors="ignore").strip()
                     if not line:
                         continue
-                    try:
-                        data = json.loads(line)
-                    except Exception:
+                    data = skips.parse(line)
+                    if data is None:
                         continue
                     rel = data.get("rel")
                     if rel is None:
                         continue
                     try:
                         rel_val = float(rel)
-                    except Exception:
+                    except (TypeError, ValueError):
+                        skips.count += 1
                         continue
                     if rel_val < start:
                         continue
@@ -11219,16 +11296,16 @@ def chat_vod(streamer, filename):
                     line = line.strip()
                     if not line:
                         continue
-                    try:
-                        data = json.loads(line)
-                    except Exception:
+                    data = skips.parse(line)
+                    if data is None:
                         continue
                     rel = data.get("rel")
                     if rel is None:
                         continue
                     try:
                         rel_val = float(rel)
-                    except Exception:
+                    except (TypeError, ValueError):
+                        skips.count += 1
                         continue
                     if rel_val < start:
                         continue
@@ -11253,6 +11330,7 @@ def chat_vod(streamer, filename):
                         break
     except Exception:
         return Response("[]", 200, mimetype="application/json")
+    skips.report()
     return Response(json.dumps(items, ensure_ascii=False), 200, mimetype="application/json")
 
 
@@ -11380,14 +11458,14 @@ def chat_live(streamer):
     except Exception:
         return Response("[]", 200, mimetype="application/json")
     lines = list(tail)
+    skips = _ChatLineSkips("live chat", log_path)
 
     for line in lines:
         line = line.strip()
         if not line:
             continue
-        try:
-            data = json.loads(line)
-        except Exception:
+        data = skips.parse(line)
+        if data is None:
             continue
         parsed = chat_item_from_row(data, time_key="t")
         if not parsed:
@@ -11406,6 +11484,7 @@ def chat_live(streamer):
         items.append(item)
         if len(items) >= 200:
             break
+    skips.report()
     return Response(json.dumps(items, ensure_ascii=False), 200, mimetype="application/json")
 
 
