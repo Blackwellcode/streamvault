@@ -108,8 +108,14 @@ class RoleSmokeTests(IsolatedBaseTest):
                 self.assertIn(status, DENIED)
 
     def test_member_can_open_the_archive(self):
-        # Control: the same request is allowed for an admin, so the denials above
-        # come from the role checks and not from a broken fixture.
+        # Control: the same request works for a member (and an admin), so the
+        # live-only denials above come from the role check, not a broken fixture.
+        from core import database
+        member = self._client("member1", "member")
+        # Members see the archives released for their role.
+        self.assertEqual(member.get("/media/streamer/vod.mp4").status_code, 404)
+        database.add_role_vod_access("member", "streamer")
+        self.assertEqual(member.get("/media/streamer/vod.mp4").status_code, 200)
         admin = self._client(config.VOD_USER, "admin")
         self.assertEqual(admin.get("/media/streamer/vod.mp4").status_code, 200)
 
