@@ -181,8 +181,9 @@ SESSION_COOKIE_MAX_AGE_SEC = max(
 )
 _MEDIA_HTTP_METHODS = ("GET", "HEAD", "OPTIONS")
 LOGIN_BAN_TTL_SEC = int(os.environ.get("VOD_LOGIN_BAN_TTL_SEC", "1800"))
-# OBS browser sources historically pass overlay tokens in the query string.
-OVERLAY_ALLOW_QUERY_TOKEN = os.environ.get("OVERLAY_ALLOW_QUERY_TOKEN", "true").lower() in (
+# OBS browser sources historically pass overlay tokens in the query string, where
+# they end up in access logs and Referer headers. Off unless explicitly enabled.
+OVERLAY_ALLOW_QUERY_TOKEN = os.environ.get("OVERLAY_ALLOW_QUERY_TOKEN", "false").lower() in (
     "true",
     "1",
     "yes",
@@ -811,8 +812,20 @@ def ensure_admin_user():
             logging.error(f"Failed to bootstrap admin user: {e}")
             raise
 
+# Hash checked for unknown names so response time does not reveal which accounts exist.
+_DUMMY_PASSWORD_HASH = generate_password_hash(secrets.token_hex(16))
+
+
+def _env_password_matches(password):
+    return secrets.compare_digest(
+        str(password or "").encode("utf-8"), str(config.VOD_PASS or "").encode("utf-8")
+    )
+
+
 def authenticate_user(username, password):
     """Authenticate user - ONLY hashed passwords accepted, no plaintext fallback."""
+    username = str(username or "")
+    password = str(password or "")
     users = load_users()
     active_db_users = [
         u for u, data in users.items() if data.get("active", True)
@@ -838,9 +851,10 @@ def authenticate_user(username, password):
     # Optional env-login fallback when enabled or when no active DB users exist.
     allow_env = bool(getattr(config, "VOD_ALLOW_ENV_LOGIN", False))
     if (allow_env or not active_db_users) and config.VOD_USER and config.VOD_PASS:
-        if username.lower() == config.VOD_USER.lower() and password == config.VOD_PASS:
-            return "admin"
+        if username.lower() == config.VOD_USER.lower():
+            return "admin" if _env_password_matches(password) else None
 
+    check_password_hash(_DUMMY_PASSWORD_HASH, password)
     return None
 
 
@@ -8999,7 +9013,7 @@ def api_user_change_password():
         return jsonify({"ok": False, "error": gettext("Not authenticated.")}), 401
 
     if config.VOD_USER and username.lower() == str(config.VOD_USER).lower():
-        if config.VOD_PASS and current_pass != config.VOD_PASS:
+        if config.VOD_PASS and not _env_password_matches(current_pass):
             return jsonify({"ok": False, "error": gettext("The current password is incorrect.")}), 400
         return jsonify({"ok": False, "error": gettext("The system administrator's password can only be changed via environment variables.")}), 403
 
@@ -10431,9 +10445,9 @@ def media(streamer, filename):
     if busy:
         logging.info(
             "VODDBG media slot-busy %s/%s range=%s",
-            streamer,
-            filename,
-            request.headers.get("Range"),
+            log_safe(streamer, 64),
+            log_safe(filename, 160),
+            log_safe(request.headers.get("Range"), 64),
         )
         return busy
     if request.method != "HEAD":
@@ -10446,6 +10460,15 @@ def media(streamer, filename):
         accel_path = media_accel_path(streamer, filename, file_path=file_path) if USE_X_ACCEL else None
         return send_mp4_with_range(file_path, accel_path=accel_path)
     abort(404)
+
+
+_LOG_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
+
+
+def log_safe(value, limit=120):
+    """Client-supplied value for a log line: no control characters, bounded length."""
+    text = _LOG_CONTROL_CHARS.sub("?", str(value if value is not None else ""))
+    return text[:limit]
 
 
 @app.route("/api/vod/debug", methods=["POST"])
@@ -10472,8 +10495,8 @@ def vod_debug_ingest():
     meta = (payload or {}).get("meta") if isinstance(payload, dict) else {}
     logging.info(
         "VODDBG client-batch user=%s page=%s meta=%s count=%s",
-        user,
-        page,
+        log_safe(user, 64),
+        log_safe(page, 180),
         json.dumps(meta, ensure_ascii=True)[:240] if meta else "{}",
         len(events),
     )
@@ -10482,10 +10505,10 @@ def vod_debug_ingest():
             continue
         logging.info(
             "VODDBG client user=%s #%s %s/%s detail=%s snap=%s",
-            user,
-            row.get("id"),
-            row.get("src"),
-            row.get("kind"),
+            log_safe(user, 64),
+            log_safe(row.get("id"), 32),
+            log_safe(row.get("src"), 64),
+            log_safe(row.get("kind"), 64),
             json.dumps(row.get("detail") or {}, ensure_ascii=True)[:300],
             json.dumps(row.get("snap") or {}, ensure_ascii=True)[:300],
         )
@@ -12670,7 +12693,7 @@ def tts_api_next():
     )
 
 
-@app.route("/tts/api/ack", methods=["POST", "GET"])
+@app.route("/tts/api/ack", methods=["POST"])
 @limiter.limit("300 per minute")
 def tts_api_ack():
     from core import tts_service
@@ -12770,7 +12793,7 @@ def alerts_api_next():
     )
 
 
-@app.route("/alerts/api/ack", methods=["POST", "GET"])
+@app.route("/alerts/api/ack", methods=["POST"])
 @limiter.limit("300 per minute")
 def alerts_api_ack():
     from core import alert_sounds
@@ -12816,12 +12839,10 @@ def healthz():
     # Full disk/service detail only for admin sessions (optionally via ?full=1).
     if is_admin and (want_full or session.get("logged_in")):
         return jsonify(health), code
-    # Public summary stays lean; disk/task extras remain in admin/full payload.
+    # Everyone else (incl. anonymous monitors) gets only the verdict, no disk data.
     return jsonify({
         "status": health.get("status", "degraded"),
         "ts": health.get("ts"),
-        "disk_used_pct": health.get("disk_used_pct"),
-        "disk_free_gb": health.get("disk_free_gb"),
     }), code
 
 

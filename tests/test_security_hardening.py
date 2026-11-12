@@ -257,5 +257,72 @@ class ResourceUploadTests(WebTestBase):
         self.assertFalse(os.path.exists(legacy))
 
 
+
+class SmallHardeningTests(WebTestBase):
+    def test_env_password_compared_in_constant_time(self):
+        with mock.patch.object(self.webui.secrets, "compare_digest",
+                               wraps=self.webui.secrets.compare_digest) as cmp:
+            with mock.patch.object(self.webui, "load_users", return_value={}):
+                self.assertEqual(self.webui.authenticate_user(config.VOD_USER, config.VOD_PASS), "admin")
+                self.assertIsNone(self.webui.authenticate_user(config.VOD_USER, "wrong"))
+        self.assertGreaterEqual(cmp.call_count, 2)
+
+    def test_unknown_user_still_runs_a_hash_check(self):
+        with mock.patch.object(self.webui, "check_password_hash", return_value=False) as check:
+            self.assertIsNone(self.webui.authenticate_user("nobody-here", "pw"))
+        check.assert_called_once()
+
+    def test_ack_endpoints_reject_get(self):
+        client = self.webui.app.test_client()
+        for path in ("/tts/api/ack?id=1", "/alerts/api/ack?id=1"):
+            with self.subTest(path=path):
+                self.assertEqual(client.get(path).status_code, 405)
+
+    def test_query_token_is_off_by_default(self):
+        if os.environ.get("OVERLAY_ALLOW_QUERY_TOKEN"):
+            self.skipTest("OVERLAY_ALLOW_QUERY_TOKEN set in the environment")
+        self.assertFalse(self.webui.OVERLAY_ALLOW_QUERY_TOKEN)
+        with self.webui.app.test_request_context("/alerts/api/next?token=secret"):
+            self.assertEqual(self.webui._alert_token_from_request(), "")
+        with self.webui.app.test_request_context("/alerts/api/next", headers={"X-Alert-Token": "secret"}):
+            self.assertEqual(self.webui._alert_token_from_request(), "secret")
+
+    def test_anonymous_healthz_has_no_disk_data(self):
+        response = self.webui.app.test_client().get("/healthz")
+        self.assertIn(response.status_code, (200, 503))
+        body = response.get_json()
+        self.assertIn("status", body)
+        self.assertFalse({"disk_used_pct", "disk_free_gb", "disk"} & set(body))
+
+    def test_admin_healthz_keeps_disk_data(self):
+        client = self.webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        body = client.get("/healthz").get_json()
+        self.assertIn("disk_used_pct", body)
+
+    def test_vod_debug_log_lines_cannot_be_forged(self):
+        client = self.webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        forged = "x\n2026-01-01 00:00:00 - INFO - Successful login: admin\r"
+        with self.assertLogs(level="INFO") as logs:
+            response = client.post("/api/vod/debug", json={
+                "csrf_token": "t", "page": forged,
+                "events": [{"id": forged, "src": forged, "kind": "\u2028" + forged}],
+            })
+        self.assertEqual(response.status_code, 200)
+        vod_lines = [line for line in logs.output if "VODDBG" in line]
+        self.assertTrue(vod_lines)
+        for line in vod_lines:
+            self.assertNotIn("\n", line)
+            self.assertNotIn("\r", line)
+            self.assertNotIn("\u2028", line)
+
+
 if __name__ == "__main__":
     unittest.main()
