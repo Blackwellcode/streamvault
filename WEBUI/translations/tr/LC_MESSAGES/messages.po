@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:13+0100\n"
+"POT-Creation-Date: 2026-11-12 15:20+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
@@ -249,6 +249,9 @@ msgstr "Yönetici kontrolleri"
 
 msgid "Admins only"
 msgstr "Yalnızca yöneticiler"
+
+msgid "Alert sound overlay"
+msgstr "Uyarı sesi katmanı"
 
 msgid "All"
 msgstr "Tümü"
@@ -1137,6 +1140,9 @@ msgstr "Hata:"
 msgid "Error: %(error)s"
 msgstr "Hata: %(error)s"
 
+msgid "Everywhere"
+msgstr "Her yerde"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "Bu grubun mevcut üyeleri otomatik olarak varsayılan <strong>İzleyici</strong> grubuna atanır."
 
@@ -1631,6 +1637,9 @@ msgstr "<strong>Mobil sürümü</strong> kilitle"
 msgid "Log out"
 msgstr "Çıkış yap"
 
+msgid "Log out everywhere"
+msgstr "Her yerden çıkış yap"
+
 msgid "Login"
 msgstr "Giriş"
 
@@ -1909,6 +1918,9 @@ msgstr "OAuth notu"
 
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "OAuth durum belirteçleri güçlü bir VOD_SECRET_KEY gerektirir."
+
+msgid "OBS overlays"
+msgstr "OBS katmanları"
 
 msgid "OFF (normal operation)"
 msgstr "KAPALI (normal çalışma)"
@@ -2239,6 +2251,9 @@ msgstr "Son görev hataları"
 
 msgid "Recently watched"
 msgstr "Son izlenenler"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "Tarayıcı kaynağı için önerilen URL'ler. TOKEN yerine TTS_OVERLAY_TOKEN veya ALERT_OVERLAY_TOKEN değerini yazın. # işaretinden sonraki kısım OBS'te kalır ve sunucuya yalnızca istek başlığı olarak ulaşır, asla günlüğe yazılmaz."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "Önerilir. Eksik yüklemelerden kaynaklanan veri kaybını önler."
@@ -2600,6 +2615,9 @@ msgstr "Gezinme çubuğunda, kenar çubuğunda ve yayıncı kartlarında göster
 msgid "Sign in"
 msgstr "Oturum aç"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "Tüm cihazlarda oturum kapatılsın mı? Bu hesabın bu oturum dahil tüm oturumları sona erer."
+
 msgid "Size"
 msgstr "Boyut"
 
@@ -2846,6 +2864,9 @@ msgstr "Koşullar sürümü eski — sayfayı yenileyin ve yeniden kabul edin."
 msgid "Test"
 msgstr "Test et"
 
+msgid "Text-to-speech overlay"
+msgstr "Metin okuma katmanı"
+
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "Anlayışınız için teşekkürler. Yetkili kullanıcılar giriş sayfasından oturum açabilir."
 
@@ -2958,8 +2979,10 @@ msgstr "Bugün, %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "Şu anda çok fazla VOD oynatılıyor. Canlı yayın etkilenmez. Birkaç dakika sonra tekrar deneyin — biri oynatıcıyı kapattığında bir yuva boşalır."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "Çok fazla deneme. IP geçici olarak engellendi. Lütfen daha sonra tekrar deneyin."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] ""
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "Popüler yayınlar şu anda kullanılamıyor. İzlenen kanalları veya aramayı kullanın."
@@ -3357,8 +3380,8 @@ msgstr "Kendinizi kullanıcı yönetimi izni olmayan bir gruba taşıyamazsını
 msgid "You have accepted version %(version)s."
 msgstr "%(version)s sürümünü kabul ettiniz."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "IP adresiniz geçici olarak engellendi. Lütfen daha sonra tekrar deneyin."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "IP adresiniz engellendi. Lütfen yöneticiyle iletişime geçin."
 
 msgid "Your browser does not support the video tag."
 msgstr "Tarayıcınız video etiketini desteklemiyor."

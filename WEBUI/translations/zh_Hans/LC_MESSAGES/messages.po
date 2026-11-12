@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:13+0100\n"
+"POT-Creation-Date: 2026-11-12 15:20+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -249,6 +249,9 @@ msgstr "管理员控制"
 
 msgid "Admins only"
 msgstr "仅限管理员"
+
+msgid "Alert sound overlay"
+msgstr "提示音叠加层"
 
 msgid "All"
 msgstr "全部"
@@ -1137,6 +1140,9 @@ msgstr "错误："
 msgid "Error: %(error)s"
 msgstr "错误：%(error)s"
 
+msgid "Everywhere"
+msgstr "所有设备"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "该用户组的现有成员将自动分配到默认用户组 <strong>Viewer</strong>。"
 
@@ -1631,6 +1637,9 @@ msgstr "锁定<strong>移动版</strong>"
 msgid "Log out"
 msgstr "退出登录"
 
+msgid "Log out everywhere"
+msgstr "在所有设备上退出"
+
 msgid "Login"
 msgstr "登录"
 
@@ -1909,6 +1918,9 @@ msgstr "OAuth 说明"
 
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "OAuth 状态令牌需要强度足够的 VOD_SECRET_KEY。"
+
+msgid "OBS overlays"
+msgstr "OBS 叠加层"
 
 msgid "OFF (normal operation)"
 msgstr "关（正常运行）"
@@ -2239,6 +2251,9 @@ msgstr "最近的任务错误"
 
 msgid "Recently watched"
 msgstr "最近观看"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "推荐的浏览器源 URL。请将 TOKEN 替换为 TTS_OVERLAY_TOKEN 或 ALERT_OVERLAY_TOKEN 的值。# 之后的部分保留在 OBS 中，只以请求头形式发送到服务器，不会出现在日志中。"
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "推荐。防止因上传不完整造成数据丢失。"
@@ -2600,6 +2615,9 @@ msgstr "显示在导航栏、侧边栏和主播卡片上。"
 msgid "Sign in"
 msgstr "登录"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "在所有设备上退出？此账户的所有会话都会结束，包括当前会话。"
+
 msgid "Size"
 msgstr "大小"
 
@@ -2846,6 +2864,9 @@ msgstr "条款版本已过期——请刷新页面并重新接受。"
 msgid "Test"
 msgstr "测试"
 
+msgid "Text-to-speech overlay"
+msgstr "文字转语音叠加层"
+
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "感谢理解。授权用户可通过登录页面登录。"
 
@@ -2958,8 +2979,10 @@ msgstr "今天 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "当前播放的 VOD 过多。直播不受影响。请几分钟后再试——有人关闭播放器后就会空出名额。"
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "尝试次数过多。IP 已被暂时封禁。请稍后重试。"
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] ""
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "热门直播暂不可用。请使用监控频道或搜索。"
@@ -3357,8 +3380,8 @@ msgstr "不能将自己移到没有用户管理权限的用户组。"
 msgid "You have accepted version %(version)s."
 msgstr "你已接受版本 %(version)s。"
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "你的 IP 已被暂时封禁。请稍后重试。"
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "你的 IP 已被封禁。请联系管理员。"
 
 msgid "Your browser does not support the video tag."
 msgstr "你的浏览器不支持 video 标签。"

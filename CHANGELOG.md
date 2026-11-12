@@ -7,6 +7,97 @@ All notable changes to this project are documented here. The format follows
 
 ### Breaking changes
 
+- **Sessions expire after 30 days** (`VOD_SESSION_MAX_AGE_SEC`, `0` restores
+  the old unlimited behaviour). Logout ends the session in this browser;
+  the new "log out everywhere" action (`POST /logout/all`) and every password
+  change sign the account out on all devices.
+- **Overlay tokens in the query string are off by default.** The bundled
+  TTS/alert overlay pages pass `?token=`; set `OVERLAY_ALLOW_QUERY_TOKEN=true`
+  while you use them. The `/tts/api/ack` and `/alerts/api/ack` routes accept
+  POST only.
+- **Resource uploads use an allowlist** (documents, images, audio/video,
+  archives; `VOD_FILES_ALLOWED_EXTENSIONS` overrides it). Existing files with
+  other extensions are no longer served but can still be deleted.
+- **Docker programs run as an unprivileged user** (`APP_UID`, default 1000).
+  `./data` must be writable by that UID: `sudo chown -R 1000:1000 data`.
+- **`/metrics` needs an admin session or `METRICS_TOKEN`**; other signed-in
+  users get HTTP 403. `/healthz` shows disk data to admins only.
+- **`streamvault stop|restart|update` exit with status 1** while recordings
+  are running or when the archive cannot be scanned; `--force` overrides.
+  `install.sh` exits with status 1 when it cannot scan the archive
+  (`STREAMVAULT_FORCE_RESTART=1` overrides).
+- **OBS overlay URLs:** `/tts/overlay` and `/alerts/overlay` load without a
+  token. Pass the token in the URL fragment, for example
+  `https://example.com/alerts/overlay#token=SECRET`; browsers never send the
+  fragment to the server. The overlay APIs still require the token, as a
+  header unless `OVERLAY_ALLOW_QUERY_TOKEN=true`.
+
+### Security
+
+- Cancelling a transcription only signals a verified `run_transcribe.py`
+  process group, never PID 1 or the web worker's own group.
+- The Twitch OAuth token never falls back to the command line when its
+  private config file cannot be written.
+- Login throttling counts only form submissions and groups IPv6 clients by
+  /64. Failed logins are counted per account and network
+  (`VOD_LOGIN_USER_MAX_FAILS`, default 10 per hour); an account-wide safety
+  net (`VOD_LOGIN_USER_GLOBAL_MAX_FAILS`, default 100) only slows networks
+  that themselves failed at least `VOD_LOGIN_USER_NET_MIN_FAILS` times
+  (default 3), so the owner, even after a typo, is never locked out by
+  failures produced elsewhere. Throttled requests get HTTP 429 with
+  `Retry-After`. Known limit: an attacker with many fresh networks (e.g. the
+  /64s of one /48) still gets that many guesses per network and hour; see
+  SECURITY.md.
+- The overlay pages are sent with `Referrer-Policy: no-referrer` and
+  `Cache-Control: no-store`.
+- Session revocation uses a random per-account token instead of a counter.
+- Shared and downloaded resource files are always sent as
+  `attachment`/`application/octet-stream` with `nosniff`; symlinked media
+  and resource files are refused.
+- Constant-time comparison for the environment admin password; unknown,
+  inactive and environment accounts all pay the same password-hash cost.
+  Client values in VOD debug logs are stripped of control characters.
+- Live-only accounts can no longer open the live clip editor.
+
+### Changed
+
+- **S2, app factory and blueprints:** `create_app()` builds the web app;
+  routes are grouped into 12 blueprints whose endpoint names are unchanged
+  (`url_for` keeps working; the URL map is identical). Caches shared between
+  workers go through `core.cache` (Redis in production).
+- **S4, recording loop:** the recorder's decisions live in
+  `recorder/recording_policy.py` (`RecordingPolicy`); processes start through
+  a `ProcessRunner` (`recorder/recording_runtime.py`). Every child now starts
+  in its own session (`start_new_session=True`), replacing the former
+  `preexec_fn=os.setsid`.
+- The "are recordings running?" check is shared in
+  `scripts/recording-guard.sh`; the VPS deploy snapshot uses the same exclude
+  list as the code copy (`scripts/deploy-excludes.txt`).
+- `install.sh` aborts on a failing `nginx -t`, copies without databases,
+  `data/`, `demo-data/` or `.env` (shared list in
+  `scripts/deploy-excludes.txt`), runs git as the service user, keeps the
+  initial password out of the terminal and does not restart services while
+  recordings are running. `streamvault restart` accepts a single service.
+- `scripts/streamvault_vps.sh deploy` takes a `sqlite3 .backup` of the
+  database and checks it with `PRAGMA integrity_check` before touching the
+  code.
+- The nginx example sets `Connection` via `map`, keeps security headers in
+  every location with its own `add_header`, marks protected thumbnails
+  `private` and compresses proxied CSS/JS (`gzip_proxied any`).
+- `core.channels` holds the channel helpers shared by the web UI and the
+  recorder; `core.database` no longer depends on Flask.
+
+### Fixed
+
+- Broad `except Exception: pass` handlers are gone from the database layer,
+  recorder, worker and clip engine; 46 such handlers remain elsewhere (18 in
+  the web UI, the rest in storage providers and API clients).
+- A fresh database no longer logs a bogus `users.role` migration warning.
+
+## [0.1.0] - 2026-11-09
+
+### Breaking changes
+
 - **Docker data directory.** `docker-compose.yml` now uses
   `VOD_BASE_DIR=/app/data`. Before upgrading, move archives,
   `streamrecorder.db` and the dot-directories (`.meta`, `.thumbs`, `.hls`,

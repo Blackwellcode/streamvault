@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:13+0100\n"
+"POT-Creation-Date: 2026-11-12 15:20+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ja\n"
@@ -249,6 +249,9 @@ msgstr "管理者コントロール"
 
 msgid "Admins only"
 msgstr "管理者のみ"
+
+msgid "Alert sound overlay"
+msgstr "アラート音オーバーレイ"
 
 msgid "All"
 msgstr "すべて"
@@ -1137,6 +1140,9 @@ msgstr "エラー:"
 msgid "Error: %(error)s"
 msgstr "エラー: %(error)s"
 
+msgid "Everywhere"
+msgstr "すべて"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "このグループの既存メンバーは、自動的にデフォルトグループ <strong>視聴者</strong> に割り当てられます。"
 
@@ -1631,6 +1637,9 @@ msgstr "<strong>モバイル版</strong>をロック"
 msgid "Log out"
 msgstr "ログアウト"
 
+msgid "Log out everywhere"
+msgstr "すべての端末からログアウト"
+
 msgid "Login"
 msgstr "ログイン"
 
@@ -1909,6 +1918,9 @@ msgstr "OAuth に関する注意"
 
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "OAuth の state トークンには強力な VOD_SECRET_KEY が必要です。"
+
+msgid "OBS overlays"
+msgstr "OBS オーバーレイ"
 
 msgid "OFF (normal operation)"
 msgstr "オフ（通常運用）"
@@ -2239,6 +2251,9 @@ msgstr "最近のタスクエラー"
 
 msgid "Recently watched"
 msgstr "最近視聴した配信"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "ブラウザソース用の推奨 URL です。TOKEN を TTS_OVERLAY_TOKEN または ALERT_OVERLAY_TOKEN の値に置き換えてください。# 以降の部分は OBS 内に留まり、サーバーにはリクエストヘッダーとしてのみ届き、ログには残りません。"
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "推奨。不完全なアップロードによるデータ損失を防ぎます。"
@@ -2600,6 +2615,9 @@ msgstr "ナビゲーション、サイドバー、配信者カードに表示さ
 msgid "Sign in"
 msgstr "サインイン"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "すべての端末からログアウトしますか？このセッションを含め、このアカウントのすべてのセッションが終了します。"
+
 msgid "Size"
 msgstr "サイズ"
 
@@ -2846,6 +2864,9 @@ msgstr "利用規約のバージョンが古くなっています — ページ�
 msgid "Test"
 msgstr "テスト"
 
+msgid "Text-to-speech overlay"
+msgstr "読み上げオーバーレイ"
+
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "ご理解いただきありがとうございます。権限のあるユーザーはログインページからサインインできます。"
 
@@ -2958,8 +2979,10 @@ msgstr "今日 %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "現在、再生中の VOD が多すぎます。ライブには影響しません。数分後に再度お試しください。誰かがプレーヤーを閉じるとスロットが空きます。"
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "試行回数が多すぎます。IP が一時的にブロックされました。しばらくしてから再度お試しください。"
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] ""
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "トップ配信は現在利用できません。監視中のチャンネルまたは検索をご利用ください。"
@@ -3357,8 +3380,8 @@ msgstr "ユーザー管理権限のないグループに自分を移動するこ
 msgid "You have accepted version %(version)s."
 msgstr "バージョン %(version)s に同意済みです。"
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "お使いの IP は一時的にブロックされています。しばらくしてから再度お試しください。"
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "お使いの IP はブロックされています。管理者にお問い合わせください。"
 
 msgid "Your browser does not support the video tag."
 msgstr "お使いのブラウザーは video タグに対応していません。"

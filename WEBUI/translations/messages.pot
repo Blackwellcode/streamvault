@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:13+0100\n"
+"POT-Creation-Date: 2026-11-12 15:20+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -252,6 +252,9 @@ msgid "Admin controls"
 msgstr ""
 
 msgid "Admins only"
+msgstr ""
+
+msgid "Alert sound overlay"
 msgstr ""
 
 msgid "All"
@@ -1141,6 +1144,9 @@ msgstr ""
 msgid "Error: %(error)s"
 msgstr ""
 
+msgid "Everywhere"
+msgstr ""
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr ""
 
@@ -1635,6 +1641,9 @@ msgstr ""
 msgid "Log out"
 msgstr ""
 
+msgid "Log out everywhere"
+msgstr ""
+
 msgid "Login"
 msgstr ""
 
@@ -1912,6 +1921,9 @@ msgid "OAuth note"
 msgstr ""
 
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
+msgstr ""
+
+msgid "OBS overlays"
 msgstr ""
 
 msgid "OFF (normal operation)"
@@ -2242,6 +2254,9 @@ msgid "Recent task errors"
 msgstr ""
 
 msgid "Recently watched"
+msgstr ""
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
 msgstr ""
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
@@ -2604,6 +2619,9 @@ msgstr ""
 msgid "Sign in"
 msgstr ""
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr ""
+
 msgid "Size"
 msgstr ""
 
@@ -2850,6 +2868,9 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
+msgid "Text-to-speech overlay"
+msgstr ""
+
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr ""
 
@@ -2962,8 +2983,11 @@ msgstr ""
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr ""
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr ""
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr ""
@@ -3361,7 +3385,7 @@ msgstr ""
 msgid "You have accepted version %(version)s."
 msgstr ""
 
-msgid "Your IP has been temporarily blocked. Please try again later."
+msgid "Your IP has been blocked. Please contact the administrator."
 msgstr ""
 
 msgid "Your browser does not support the video tag."

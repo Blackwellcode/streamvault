@@ -772,6 +772,56 @@ gate_release() {
     [[ $N_FAIL -eq 0 ]]
 }
 
+# Code copies and snapshots never carry runtime data, databases or secrets.
+# One list for install.sh, deploy, snapshot and rollback.
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXCLUDES_FILE="${SCRIPTS_DIR}/deploy-excludes.txt"
+CODE_EXCLUDES=(--exclude-from="$EXCLUDES_FILE")
+# shellcheck source=recording-guard.sh
+source "${SCRIPTS_DIR}/recording-guard.sh"
+
+# Usage: snapshot_code SRC_DIR ARCHIVE.tgz
+# Copies SRC_DIR through the shared exclude list into a staging directory and
+# packs that, so the snapshot contains exactly what a deploy would copy.
+snapshot_code() {
+    local src="$1" archive="$2" stage rc=0
+    stage="$(mktemp -d)"
+    rsync -a "${CODE_EXCLUDES[@]}" "${src%/}"/ "$stage"/ || rc=$?
+    if [[ $rc -eq 0 ]]; then
+        tar -czf "$archive" -C "$stage" . || rc=$?
+    fi
+    rm -rf -- "$stage"
+    return $rc
+}
+
+# Consistent online copy of the SQLite database (WAL-safe) before any deploy.
+backup_database() {
+    local ts="$1" db tmp out
+    db="$(readlink -f "${BASE_DIR}")/streamrecorder.db"
+    if [[ ! -f "$db" ]]; then
+        printf 'DB-Backup: keine Datenbank unter %s\n' "$db"
+        return 0
+    fi
+    have sqlite3 || die "sqlite3 fehlt (apt-get install sqlite3) - ohne DB-Backup kein Deploy."
+    # Run as the service user so no root-owned -wal/-shm files appear next to the DB.
+    tmp="$(mktemp -d)"
+    chown "$SERVICE_USER" "$tmp"
+    if ! as_service sqlite3 "$db" ".backup '${tmp}/db.sqlite'"; then
+        rm -rf -- "$tmp"
+        die "DB-Backup von $db fehlgeschlagen - Deploy abgebrochen."
+    fi
+    if [[ "$(sqlite3 "${tmp}/db.sqlite" 'PRAGMA integrity_check;' 2>&1)" != "ok" ]]; then
+        rm -rf -- "$tmp"
+        die "DB-Backup von $db besteht integrity_check nicht - Deploy abgebrochen."
+    fi
+    out="${BACKUP_DIR}/streamrecorder-${ts}.db"
+    mv -- "${tmp}/db.sqlite" "$out"
+    chmod 600 "$out"
+    rm -rf -- "$tmp"
+    find "$BACKUP_DIR" -maxdepth 1 -name 'streamrecorder-*.db' -printf '%T@ %p\n' | sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r rm -f --
+    printf 'DB-Backup: %s\n' "$out"
+}
+
 restore_snapshot() {
     local state="${BACKUP_DIR}/last_deploy.env" mode prev archive tmp
     [[ -r "$state" ]] || die "Kein Deploy-Zustand in $state."
@@ -785,7 +835,7 @@ restore_snapshot() {
         [[ -r "$archive" ]] || die "Snapshot fehlt: $archive"
         tmp="$(mktemp -d)"
         tar -xzf "$archive" -C "$tmp"
-        rsync -a --delete --exclude '.git/' "$tmp"/ "$APP_DIR"/
+        rsync -a --delete "${CODE_EXCLUDES[@]}" "$tmp"/ "$APP_DIR"/
         chown -R "$SERVICE_USER:$SERVICE_USER" "$APP_DIR"
         rm -rf -- "$tmp"
         printf 'Rollback: %s wiederhergestellt\n' "$archive"
@@ -798,22 +848,20 @@ do_deploy() {
     [[ -n "$SOURCE_DIR" && -n "$GIT_REF" ]] && die "--source und --ref schliessen sich aus."
     [[ -d "$APP_DIR" && -x "$PY" ]] || die "Keine Installation unter $APP_DIR / $VENV_DIR - zuerst install.sh ausfuehren."
     have rsync || die "rsync fehlt (apt-get install rsync)."
+    [[ -r "$EXCLUDES_FILE" ]] || die "$EXCLUDES_FILE fehlt."
     load_paths
 
     # 1. Never cut running recordings without explicit consent.
-    local active
-    active="$(find "$(readlink -f "$BASE_DIR")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2 2>/dev/null || true)"
-    if [[ -n "$active" && $FORCE -eq 0 ]]; then
-        printf 'Aktive Aufnahmen (frische .part-Dateien):\n%s\n' "$active" | sed 's/^/  /'
-        die "Recorder-Neustart wuerde diese Aufnahmen splitten. Spaeter erneut versuchen oder --force."
-    fi
+    # Fail closed (scripts/recording-guard.sh): unreadable archive = maybe recording.
+    sv_recording_guard "$BASE_DIR" "$FORCE" \
+        || die "Recorder-Neustart abgebrochen (laufende Aufnahmen oder Archiv nicht pruefbar). Spaeter erneut versuchen oder --force."
 
     # 2. Snapshot current code.
     install -d -m 0750 "$BACKUP_DIR"
     local ts mode prev snapshot
     ts="$(date +%Y%m%d-%H%M%S)"
     snapshot="${BACKUP_DIR}/app-${ts}.tgz"
-    tar -czf "$snapshot" -C "$APP_DIR" --exclude='./.git' --exclude='__pycache__' .
+    snapshot_code "$APP_DIR" "$snapshot" || die "Code-Snapshot nach $snapshot fehlgeschlagen."
     if [[ -d "${APP_DIR}/.git" ]]; then
         mode=git; prev="$(as_service git -C "$APP_DIR" rev-parse HEAD)"
     else
@@ -823,6 +871,7 @@ do_deploy() {
     printf 'MODE=%s\nPREV_REV=%s\nSNAPSHOT=%s\nTS=%s\n' "$mode" "$prev" "$snapshot" "$ts" > "${BACKUP_DIR}/last_deploy.env"
     find "$BACKUP_DIR" -maxdepth 1 -name 'app-*.tgz' -printf '%T@ %p\n' | sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r rm -f --
     printf 'Snapshot: %s\n' "$snapshot"
+    backup_database "$ts"
 
     # 3. Update code.
     if [[ -n "$GIT_REF" ]]; then
@@ -835,7 +884,7 @@ do_deploy() {
         printf 'Code: git %s -> %s\n' "${prev:0:12}" "$(as_service git -C "$APP_DIR" rev-parse --short=12 HEAD)"
     else
         [[ -f "${SOURCE_DIR}/WEBUI/webui.py" ]] || die "$SOURCE_DIR ist kein StreamVault-Quellbaum."
-        local -a rs=(-a --exclude '.git/' --exclude '.venv/' --exclude '__pycache__/' --exclude '*.pyc' --exclude '.env')
+        local -a rs=(-a "${CODE_EXCLUDES[@]}")
         if [[ $PRUNE -eq 1 ]]; then
             case "$(readlink -f "$BASE_DIR")/" in
                 "$(readlink -f "$APP_DIR")"/*) die "--prune verweigert: VOD_BASE_DIR liegt innerhalb von APP_DIR." ;;
@@ -880,6 +929,9 @@ do_rollback() {
 }
 
 usage() { sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+
+# Sourcing the script (tests) only defines the functions above.
+[[ "${BASH_SOURCE[0]}" == "$0" ]] || return 0
 
 CMD="${1:-}"; [[ -n "$CMD" ]] || usage; shift
 while [[ $# -gt 0 ]]; do

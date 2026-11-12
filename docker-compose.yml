@@ -3,8 +3,12 @@ services:
     container_name: streamvault_app
     build:
       context: .
+      args:
+        # Must own ./data on the host (check with: id -u). Programs never run as root.
+        APP_UID: ${APP_UID:-1000}
       dockerfile_inline: |
         FROM python:3.11-slim
+        ARG APP_UID=1000
         ENV PYTHONUNBUFFERED=1 \
             PIP_NO_CACHE_DIR=1 \
             PYTHONDONTWRITEBYTECODE=1
@@ -13,8 +17,11 @@ services:
             && rm -rf /var/lib/apt/lists/*
         COPY requirements.txt /tmp/requirements.txt
         RUN pip install --no-cache-dir -r /tmp/requirements.txt
+        RUN useradd --uid "$${APP_UID}" --create-home --shell /usr/sbin/nologin streamvault
         WORKDIR /app
-        CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+        # The hls_live volume starts root-owned; hand it to the app user, then let
+        # supervisord (root) start every program as streamvault.
+        CMD ["/bin/sh", "-c", "mkdir -p /app/data && install -d -o streamvault -g streamvault /app/.hls_live && exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
     restart: unless-stopped
     # Must exceed the recorder's supervisord stopwaitsecs (60 s), otherwise
     # Docker SIGKILLs the container before FFmpeg finishes the MP4.

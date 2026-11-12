@@ -1,4 +1,7 @@
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -62,24 +65,26 @@ def streamlink_twitch_config_args(token, config_dir=None):
     root = config_dir or os.environ.get("VOD_META_DIR") or os.path.join(
         os.environ.get("VOD_BASE_DIR", APP_DIR), ".meta"
     )
-    try:
-        os.makedirs(root, mode=0o700, exist_ok=True)
-    except OSError:
-        root = APP_DIR
     path = os.path.join(root, "streamlink-twitch-api-header.cfg")
     content = f"twitch-api-header=Authorization=OAuth {token}\n"
     try:
+        os.makedirs(root, mode=0o700, exist_ok=True)
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
-        try:
-            os.chmod(path, 0o600)
-        except OSError:
-            pass
-    except OSError:
-        return ["--no-config", "--twitch-api-header", f"Authorization=OAuth {token}"]
+        # The O_CREAT mode does not apply to an existing file; tighten it explicitly.
+        os.chmod(path, 0o600)
+    except OSError as exc:
+        # Never fall back to passing the token in argv (visible in ps): run
+        # anonymously instead and make the failure visible.
+        logger.error(
+            "Streamlink Twitch config %s not writable (%s); continuing without OAuth.",
+            path,
+            exc.__class__.__name__,
+        )
+        return ["--no-config"]
     return ["--config", path]
 
 
@@ -203,4 +208,4 @@ if SENTRY_DSN:
             send_default_pii=SENTRY_SEND_DEFAULT_PII,
         )
     except ImportError:
-        pass
+        logger.warning("SENTRY_DSN is set but sentry_sdk is not installed; error reporting disabled.")

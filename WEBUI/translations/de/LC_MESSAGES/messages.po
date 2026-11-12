@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:13+0100\n"
+"POT-Creation-Date: 2026-11-12 15:20+0100\n"
 "PO-Revision-Date: 2026-11-03 19:25+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -255,6 +255,9 @@ msgstr "Admin Steuerung"
 
 msgid "Admins only"
 msgstr "Nur Admins"
+
+msgid "Alert sound overlay"
+msgstr "Overlay für Alert-Sounds"
 
 msgid "All"
 msgstr "Alle"
@@ -1143,6 +1146,9 @@ msgstr "Fehler:"
 msgid "Error: %(error)s"
 msgstr "Fehler: %(error)s"
 
+msgid "Everywhere"
+msgstr "Überall"
+
 msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
 msgstr "Bestehende Mitglieder dieser Gruppe werden automatisch der Standardgruppe <strong>Viewer</strong> zugewiesen."
 
@@ -1637,6 +1643,9 @@ msgstr "<strong>Mobile Version</strong> sperren"
 msgid "Log out"
 msgstr "Abmelden"
 
+msgid "Log out everywhere"
+msgstr "Überall abmelden"
+
 msgid "Login"
 msgstr "Login"
 
@@ -1915,6 +1924,9 @@ msgstr "OAuth-Hinweis"
 
 msgid "OAuth state tokens require a strong VOD_SECRET_KEY."
 msgstr "Für OAuth-Status-Token muss ein starker VOD_SECRET_KEY gesetzt sein."
+
+msgid "OBS overlays"
+msgstr "OBS-Overlays"
 
 msgid "OFF (normal operation)"
 msgstr "AUS (Normalbetrieb)"
@@ -2245,6 +2257,9 @@ msgstr "Letzte Task-Fehler"
 
 msgid "Recently watched"
 msgstr "Zuletzt angesehen"
+
+msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "Empfohlene URLs für die Browserquelle. Ersetzen Sie TOKEN durch den Wert von TTS_OVERLAY_TOKEN bzw. ALERT_OVERLAY_TOKEN. Der Teil nach # bleibt in OBS und erreicht den Server nur als Request-Header, nie in einer Logzeile."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "Empfohlen. Verhindert Datenverlust bei unvollständigen Uploads."
@@ -2606,6 +2621,9 @@ msgstr "Wird in der Navigation, Seitenleiste und auf Streamer-Karten angezeigt."
 msgid "Sign in"
 msgstr "Anmelden"
 
+msgid "Sign out on every device? Every session of this account ends, including this one."
+msgstr "Auf allen Geräten abmelden? Jede Sitzung dieses Kontos endet, auch diese."
+
 msgid "Size"
 msgstr "Größe"
 
@@ -2852,6 +2870,9 @@ msgstr "AGB-Version veraltet — Seite neu laden und erneut akzeptieren."
 msgid "Test"
 msgstr "Testen"
 
+msgid "Text-to-speech overlay"
+msgstr "Text-to-Speech-Overlay"
+
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "Danke fürs Verständnis. Berechtigte Benutzer können sich über den Login anmelden."
 
@@ -2964,8 +2985,11 @@ msgstr "Heute, %(time)s"
 msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
 msgstr "Gerade laufen zu viele VODs. Live ist davon nicht betroffen. Versuch es in ein paar Minuten nochmal — der Platz wird frei, sobald jemand den Player schließt."
 
-msgid "Too many attempts. IP temporarily blocked. Please try again later."
-msgstr "Zu viele Versuche. IP vorübergehend gesperrt. Bitte später erneut versuchen."
+#, python-format
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "Zu viele Anmeldeversuche. Bitte in %(num)d Minute erneut versuchen."
+msgstr[1] "Zu viele Anmeldeversuche. Bitte in %(num)d Minuten erneut versuchen."
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "Top-Streams derzeit nicht verfügbar. Nutze überwachte Kanäle oder die Suche."
@@ -3363,8 +3387,8 @@ msgstr "Sie können sich nicht in eine Gruppe ohne Benutzerverwaltungs-Rechte ve
 msgid "You have accepted version %(version)s."
 msgstr "Sie haben Version %(version)s akzeptiert."
 
-msgid "Your IP has been temporarily blocked. Please try again later."
-msgstr "Ihre IP wurde vorübergehend gesperrt. Bitte später erneut versuchen."
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "Ihre IP wurde gesperrt. Bitte wenden Sie sich an den Administrator."
 
 msgid "Your browser does not support the video tag."
 msgstr "Ihr Browser unterstützt das Video-Tag nicht."
