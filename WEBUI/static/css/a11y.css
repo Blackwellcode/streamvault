@@ -1,4 +1,5 @@
-/* Accessibility helpers — Phase 6 */
+/* Accessibility layer. Linked LAST (components/styles.html) so focus, target size and
+   dialog rules win over legacy !important declarations in style.css / tube_design_system.css. */
 .sr-only {
   position: absolute !important;
   width: 1px !important;
@@ -11,7 +12,254 @@
   border: 0 !important;
 }
 
-:focus-visible {
-  outline: 2px solid var(--tube-accent, #f2e58d);
-  outline-offset: 2px;
+/* One focus language: outline in --nebula-focus-ring (>= 3:1 on every surface). */
+:focus-visible,
+:where(a, button, input, select, textarea, summary, [tabindex], [role="button"], [role="tab"], [contenteditable="true"]):focus-visible {
+  outline: 2px solid var(--nebula-focus-ring, #8494FF) !important;
+  outline-offset: 2px !important;
+}
+:where(input, select, textarea):focus-visible {
+  outline-offset: 1px !important;
+}
+.vod-cb-btn:focus-visible,
+.vod-control-bar button:focus-visible,
+.mobile-player button:focus-visible,
+#vodPlayer:focus-visible {
+  outline: 2px solid var(--nebula-focus-ring, #8494FF) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(7, 11, 20, 0.85) !important;
+}
+
+/* Skip link */
+.sv-skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2147483000;
+  padding: 10px 16px;
+  border-radius: var(--nebula-radius-sm, 8px);
+  background: var(--nebula-bg-card, #151F33);
+  color: var(--nebula-text-main, #F3F5FC);
+  font: 600 14px/1.2 var(--nebula-font-sans, system-ui, sans-serif);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.sv-skip-link:focus,
+.sv-skip-link:focus-visible {
+  transform: none;
+}
+main[tabindex="-1"]:focus {
+  outline: none !important;
+}
+
+/* Form fields: visible edges (>= 3:1, WCAG 1.4.11) */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="color"]), select, textarea) {
+  border-color: var(--nebula-field-edge, #66789C) !important;
+}
+
+/* Target size (WCAG 2.5.8): 20px box + 2px margin keeps a 24px spacing circle free. */
+input[type="checkbox"],
+input[type="radio"] {
+  inline-size: 20px !important;
+  block-size: 20px !important;
+  min-inline-size: 20px !important;
+  margin: 2px !important;
+  accent-color: var(--nebula-accent-primary, #4D63FF);
+  cursor: pointer;
+}
+.vod-channel-link,
+.nebula-streamer-link,
+.ns-module-link,
+.sidebar-link {
+  min-block-size: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+button, [role="button"], input[type="submit"], input[type="button"] {
+  touch-action: manipulation;
+}
+
+/* Dialogs (native <dialog>) */
+.sv-dialog {
+  inline-size: min(440px, calc(100vw - 32px));
+  max-block-size: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--nebula-border-bright, #3B4E73);
+  border-radius: var(--nebula-radius-lg, 16px);
+  background: var(--nebula-bg-surface, #111A2B);
+  color: var(--nebula-text-main, #F3F5FC);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  overflow: auto;
+}
+.sv-dialog::backdrop {
+  background: rgba(4, 8, 16, 0.82);
+}
+.sv-dialog--wide {
+  inline-size: min(640px, calc(100vw - 32px));
+}
+.sv-dialog__head,
+.sv-dialog__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--nebula-bg-card, #151F33);
+}
+.sv-dialog__head {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--nebula-border, #26344F);
+}
+.sv-dialog__foot {
+  justify-content: flex-end;
+  border-top: 1px solid var(--nebula-border, #26344F);
+}
+.sv-dialog__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nebula-accent-text, #8494FF);
+}
+.sv-dialog__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--nebula-text-main, #F3F5FC);
+}
+.sv-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+.sv-dialog__form {
+  margin: 0;
+}
+.sv-dialog__close {
+  min-inline-size: 32px;
+  min-block-size: 32px;
+  border: none;
+  border-radius: var(--nebula-radius-sm, 8px);
+  background: transparent;
+  color: var(--nebula-text-secondary, #A2AEC8);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.sv-dialog__close:hover {
+  background: var(--nebula-bg-hover, #1A2740);
+  color: var(--nebula-text-main, #F3F5FC);
+}
+.sv-confirm__msg {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nebula-text-secondary, #A2AEC8);
+}
+.sv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sv-field > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nebula-text-secondary, #A2AEC8);
+}
+.sv-field > :is(input, select, textarea) {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--nebula-field-edge, #66789C);
+  border-radius: var(--nebula-radius-sm, 8px);
+  background: var(--nebula-bg-deep, #0B1220);
+  color: var(--nebula-text-main, #F3F5FC);
+  font-size: 14px;
+}
+
+/* Buttons used by dialogs and confirmations */
+.sv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-block-size: 36px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--nebula-radius-sm, 8px);
+  font: 600 13px/1.2 var(--nebula-font-sans, system-ui, sans-serif);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.sv-btn--primary {
+  background: var(--nebula-accent-primary, #4D63FF);
+  color: #FFFFFF;
+}
+.sv-btn--primary:hover {
+  background: #3F55F0;
+}
+.sv-btn--secondary {
+  background: transparent;
+  border-color: var(--nebula-field-edge, #66789C);
+  color: var(--nebula-text-main, #F3F5FC);
+}
+.sv-btn--secondary:hover {
+  background: var(--nebula-bg-hover, #1A2740);
+}
+.sv-btn--danger {
+  background: var(--nebula-danger-bg, #D42A40);
+  color: #FFFFFF;
+}
+.sv-btn--danger:hover {
+  background: #BC2236;
+}
+.sv-btn--danger-outline {
+  background: transparent;
+  border-color: var(--nebula-status-live-text, #F2667A);
+  color: var(--nebula-status-live-text, #F2667A);
+}
+.sv-btn--danger-outline:hover {
+  background: rgba(240, 68, 88, 0.12);
+}
+.sv-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alerts */
+.sv-alert {
+  padding: 10px 14px;
+  border-radius: var(--nebula-radius-sm, 8px);
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+}
+.sv-alert--error {
+  background: rgba(240, 68, 88, 0.15);
+  border-color: rgba(240, 68, 88, 0.45);
+  color: var(--nebula-status-live-text, #F2667A);
+}
+.sv-alert--success {
+  background: rgba(72, 214, 162, 0.12);
+  border-color: rgba(72, 214, 162, 0.45);
+  color: var(--nebula-status-success, #48D6A2);
+}
+
+/* Bottom navigation <= 768px for desktop-UA pages (rail is hidden there) */
+.sv-bottom-nav__logout {
+  display: flex;
+  flex: 1 1 0;
+  margin: 0;
+}
+.sv-bottom-nav__logout > button {
+  inline-size: 100%;
+}
+.mobile-global-nav a.active,
+.mobile-global-nav a[aria-current="page"] {
+  color: var(--nebula-accent-text, #8494FF) !important;
+}
+.mobile-global-nav a.active svg {
+  stroke: var(--nebula-accent-text, #8494FF) !important;
+}
+.mobile-global-nav span {
+  font-size: 12px;
 }
