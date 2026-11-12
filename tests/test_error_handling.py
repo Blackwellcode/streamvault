@@ -12,6 +12,7 @@ import io
 import json
 import os
 import sqlite3
+import time
 import unittest
 import urllib.error
 from unittest import mock
@@ -21,6 +22,7 @@ try:
 except ImportError:  # run as tests.test_error_handling
     from tests.test_recorder_reliability import IsolatedBaseTest  # noqa: F401
 
+from core import config  # noqa: E402
 from core import chat_chunker, live_watch_diag, redis_client, tube_auth  # noqa: E402
 from core import twitch_api, twitch_eventsub  # noqa: E402
 from core.storage import http as storage_http  # noqa: E402
@@ -144,6 +146,50 @@ class RedisDashboardCacheTests(unittest.TestCase):
     def test_shm_cache_removal_failure_is_logged(self):
         with mock.patch.object(redis_client, "delete_state", return_value=False),                 mock.patch.object(redis_client, "publish_event", return_value=False),                 mock.patch.object(redis_client.os.path, "exists", return_value=True),                 mock.patch.object(redis_client.os, "remove", side_effect=PermissionError("busy")),                 self.assertLogs("streamvault.redis", level="WARNING"):
             self.assertTrue(redis_client.invalidate_dashboard_cache())
+
+
+
+def _admin_client(webui):
+    webui.app.config.update(TESTING=True)
+    client = webui.app.test_client()
+    with client.session_transaction() as sess:
+        now = time.time()
+        sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                    login_time=now, last_active=now, _csrf_token="t")
+    return client
+
+
+class DeletedMediaTombstoneTests(IsolatedBaseTest):
+    """A tombstoned VOD stays hidden even while its file is still on disk."""
+
+    def setUp(self):
+        super().setUp()
+        from core import database
+        from WEBUI import webui
+        self.webui = webui
+        self.database = database
+        patcher = mock.patch.object(webui, "BASE_DIR", str(self.base))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        webui.ensure_admin_user()
+        archive = self.base / "streamer"
+        archive.mkdir()
+        (archive / "vod.mp4").write_bytes(b"\0" * 32)
+
+    def test_tombstoned_vod_page_is_404(self):
+        client = _admin_client(self.webui)
+        self.assertEqual(client.get("/vod/streamer/vod.mp4").status_code, 200)
+        self.database.upsert_deleted_media("streamer", "vod.mp4", deleted_by="admin")
+        self.assertEqual(client.get("/vod/streamer/vod.mp4").status_code, 404)
+
+    def test_tombstone_lookup_failure_is_logged_and_page_still_served(self):
+        client = _admin_client(self.webui)
+        locked = sqlite3.OperationalError("database is locked")
+        with mock.patch.object(self.webui.database, "is_deleted_media", side_effect=locked),                 self.assertLogs(level="WARNING") as logs:
+            response = client.get("/vod/streamer/vod.mp4")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any("database is locked" in line for line in logs.output))
+
 
 
 if __name__ == "__main__":
