@@ -772,10 +772,27 @@ gate_release() {
     [[ $N_FAIL -eq 0 ]]
 }
 
-# Code copies never carry runtime data, databases or secrets. Same list as
-# install.sh; the tar snapshot below uses the equivalent ./-anchored patterns.
-EXCLUDES_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/deploy-excludes.txt"
+# Code copies and snapshots never carry runtime data, databases or secrets.
+# One list for install.sh, deploy, snapshot and rollback.
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXCLUDES_FILE="${SCRIPTS_DIR}/deploy-excludes.txt"
 CODE_EXCLUDES=(--exclude-from="$EXCLUDES_FILE")
+# shellcheck source=recording-guard.sh
+source "${SCRIPTS_DIR}/recording-guard.sh"
+
+# Usage: snapshot_code SRC_DIR ARCHIVE.tgz
+# Copies SRC_DIR through the shared exclude list into a staging directory and
+# packs that, so the snapshot contains exactly what a deploy would copy.
+snapshot_code() {
+    local src="$1" archive="$2" stage rc=0
+    stage="$(mktemp -d)"
+    rsync -a "${CODE_EXCLUDES[@]}" "${src%/}"/ "$stage"/ || rc=$?
+    if [[ $rc -eq 0 ]]; then
+        tar -czf "$archive" -C "$stage" . || rc=$?
+    fi
+    rm -rf -- "$stage"
+    return $rc
+}
 
 # Consistent online copy of the SQLite database (WAL-safe) before any deploy.
 backup_database() {
@@ -835,24 +852,16 @@ do_deploy() {
     load_paths
 
     # 1. Never cut running recordings without explicit consent.
-    local active
-    # Fail closed: an unreadable archive could hide running recordings.
-    if ! active="$(find "$(readlink -f "$BASE_DIR")" -mindepth 2 -maxdepth 2 -name '*.part' -mmin -2)"; then
-        [[ $FORCE -eq 1 ]] || die "Aktive Aufnahmen nicht pruefbar (find-Fehler oben) - Rechte pruefen oder --force."
-    fi
-    if [[ -n "$active" && $FORCE -eq 0 ]]; then
-        printf 'Aktive Aufnahmen (frische .part-Dateien):\n%s\n' "$active" | sed 's/^/  /'
-        die "Recorder-Neustart wuerde diese Aufnahmen splitten. Spaeter erneut versuchen oder --force."
-    fi
+    # Fail closed (scripts/recording-guard.sh): unreadable archive = maybe recording.
+    sv_recording_guard "$BASE_DIR" "$FORCE" \
+        || die "Recorder-Neustart abgebrochen (laufende Aufnahmen oder Archiv nicht pruefbar). Spaeter erneut versuchen oder --force."
 
     # 2. Snapshot current code.
     install -d -m 0750 "$BACKUP_DIR"
     local ts mode prev snapshot
     ts="$(date +%Y%m%d-%H%M%S)"
     snapshot="${BACKUP_DIR}/app-${ts}.tgz"
-    tar -czf "$snapshot" -C "$APP_DIR" --exclude='./.git' --exclude='__pycache__' \
-        --exclude='./data' --exclude='./demo-data' --exclude='./files' --exclude='*.db' \
-        --exclude='*.db-wal' --exclude='*.db-shm' --exclude='*.part' --exclude='./.env' .
+    snapshot_code "$APP_DIR" "$snapshot" || die "Code-Snapshot nach $snapshot fehlgeschlagen."
     if [[ -d "${APP_DIR}/.git" ]]; then
         mode=git; prev="$(as_service git -C "$APP_DIR" rev-parse HEAD)"
     else
@@ -920,6 +929,9 @@ do_rollback() {
 }
 
 usage() { sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+
+# Sourcing the script (tests) only defines the functions above.
+[[ "${BASH_SOURCE[0]}" == "$0" ]] || return 0
 
 CMD="${1:-}"; [[ -n "$CMD" ]] || usage; shift
 while [[ $# -gt 0 ]]; do
