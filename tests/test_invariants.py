@@ -124,6 +124,53 @@ class WorkerTranscribeSessionTests(IsolatedBaseTest):
         self.assertIn("timeout", run.call_args.kwargs)
 
 
+class TwitchTokenNeverInArgvTests(IsolatedBaseTest):
+    """Invariant 1: the OAuth token reaches Streamlink only via a private config file."""
+
+    TOKEN = "abcdef0123456789secrettoken"
+
+    def _assert_token_absent(self, cmd):
+        self.assertFalse(any(self.TOKEN in str(arg) for arg in cmd), cmd)
+
+    def test_record_and_probe_commands_keep_token_out_of_argv(self):
+        # The streamlink binary is an installation detail, not under test.
+        with mock.patch.object(config, "RECORDER_TWITCH_OAUTH_TOKEN", self.TOKEN), \
+                mock.patch.object(recorder, "find_streamlink", return_value="streamlink"):
+            for build in (recorder.build_streamlink_command, recorder.build_streamlink_probe_command):
+                with self.subTest(build=build.__name__):
+                    cmd = build("somechannel", {})
+                    self._assert_token_absent(cmd)
+                    cfg = cmd[cmd.index("--config") + 1]
+                    self.assertIn(self.TOKEN, Path(cfg).read_text(encoding="utf-8"))
+
+    @unittest.skipUnless(os.name == "posix", "POSIX file modes")
+    def test_config_file_is_private(self):
+        args = config.streamlink_twitch_config_args(self.TOKEN, config_dir=str(self.base / "cfg"))
+        path = Path(args[1])
+        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+
+    @unittest.skipUnless(os.name == "posix", "POSIX file modes")
+    def test_existing_world_readable_file_is_tightened(self):
+        cfg_dir = self.base / "cfg"
+        cfg_dir.mkdir()
+        existing = cfg_dir / "streamlink-twitch-api-header.cfg"
+        existing.write_text("old", encoding="utf-8")
+        os.chmod(existing, 0o644)
+        config.streamlink_twitch_config_args(self.TOKEN, config_dir=str(cfg_dir))
+        self.assertEqual(existing.stat().st_mode & 0o777, 0o600)
+
+    def test_unwritable_config_falls_back_to_anonymous_and_logs(self):
+        with mock.patch.object(config.os, "open", side_effect=PermissionError("denied")), \
+                self.assertLogs(config.logger, level="ERROR") as logs:
+            args = config.streamlink_twitch_config_args(self.TOKEN, config_dir=str(self.base / "cfg"))
+        self.assertEqual(args, ["--no-config"])
+        self._assert_token_absent(args)
+        self.assertFalse(any(self.TOKEN in line for line in logs.output))
+
+    def test_no_token_means_no_config(self):
+        self.assertEqual(config.streamlink_twitch_config_args(""), ["--no-config"])
+
+
 @unittest.skipUnless(POSIX, "needs POSIX process groups")
 class StopProcessRealChildTests(unittest.TestCase):
     """stop_process with a real child in its own session: reaped, caller alive."""
