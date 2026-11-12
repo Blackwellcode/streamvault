@@ -215,16 +215,36 @@ class LoginThrottleTests(WebTestBase):
         for i in range(self.webui.LOGIN_USER_MAX_FAILS + 5):
             _, response = self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
             self.assertNotEqual(response.status_code, 429, f"attempt {i + 1}")
-        _, response = self.login(user, ip="198.51.100.200")
+        owner, response = self.login(user, ip="198.51.100.200")
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(self.logged_in(_))
+        self.assertTrue(self.logged_in(owner))
+
+    def test_owner_with_a_typo_is_not_locked_out_by_foreign_failures(self):
+        # The owner mistypes once; an attacker then fills the account-wide net
+        # (100 failures from 25 networks). The owner's network has fewer than
+        # LOGIN_USER_NET_MIN_FAILS failures, so the correct password still works.
+        user = self.make_user()
+        _, response = self.login(user, password="typo", ip="198.51.100.200")
+        self.assertEqual(response.status_code, 200)
+        for net in range(25):
+            for _attempt in range(4):
+                self.webui.add_login_attempt(f"2001:db8:{net + 1:x}::1", user)
+        self.assertGreaterEqual(self.webui.LOGIN_USER_GLOBAL_MAX_FAILS, 100)
+        owner, response = self.login(user, ip="198.51.100.200")
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(self.logged_in(owner))
+        # An attacking network with enough failures of its own is still slowed down.
+        self.assertGreater(self.webui.username_lockout_wait(user, "2001:db8:1::1"), 0)
 
     def test_account_wide_safety_net_only_slows_networks_that_failed(self):
         user = self.make_user()
         with mock.patch.object(self.webui, "LOGIN_USER_GLOBAL_MAX_FAILS", 6):
-            for i in range(6):
-                self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
-            # A network that already failed is throttled once the account-wide net is full ...
+            min_fails = self.webui.LOGIN_USER_NET_MIN_FAILS
+            for _attempt in range(min_fails):
+                self.login(user, password="wrong", ip="203.0.113.1")
+            for i in range(6 - min_fails):
+                self.login(user, password="wrong", ip=f"203.0.113.{i + 2}")
+            # A network that failed often enough is throttled once the account-wide net is full ...
             _, response = self.login(user, password="wrong", ip="203.0.113.1")
             self.assertEqual(response.status_code, 429)
             # ... a clean network still gets through with the right password.
@@ -238,7 +258,7 @@ class LoginThrottleTests(WebTestBase):
             self.login(user, password="wrong", ip=f"203.0.113.{i + 1}")
         _, response = self.login(user, ip="198.51.100.9")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(self.webui.username_lockout_wait(user), 0)
+        self.assertEqual(self.webui.username_lockout_wait(user, "198.51.100.9"), 0)
 
     def test_throttle_message_is_translated(self):
         user = self.make_user()

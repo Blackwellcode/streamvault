@@ -410,7 +410,8 @@ class FlatBlueprint(Blueprint):
         self.route_endpoints = set()
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
-        # Remember which endpoints belong to this feature (role checks, tests).
+        # Remember which endpoints belong to this feature; read by the role
+        # smoke tests (tests/test_role_smoke.py), not by the application.
         self.route_endpoints.add(endpoint or getattr(view_func, "__name__", rule))
         super().add_url_rule(rule, endpoint, view_func, **options)
 
@@ -568,10 +569,14 @@ LOGIN_IP_WINDOW_SEC = max(60, _env_int("VOD_LOGIN_IP_WINDOW_SEC", 300))
 # Failed logins for one account from one network (/64 or IPv4 address).
 LOGIN_USER_MAX_FAILS = max(1, _env_int("VOD_LOGIN_USER_MAX_FAILS", 10))
 LOGIN_USER_WINDOW_SEC = max(60, _env_int("VOD_LOGIN_USER_WINDOW_SEC", 3600))
-# Safety net across all networks. It only slows down networks that already
-# failed for this account: a correct password from a clean network always works,
-# so nobody can lock an account by failing on purpose.
+# Safety net across all networks. It only slows down networks that themselves
+# failed at least LOGIN_USER_NET_MIN_FAILS times for this account, so the owner
+# (correct password, at most a typo or two) can never be locked out by failures
+# an attacker produces elsewhere. Known limit: an attacker with many fresh
+# networks (e.g. the /64s of one /48) still gets NET_MIN_FAILS guesses per
+# network and hour; see SECURITY.md.
 LOGIN_USER_GLOBAL_MAX_FAILS = max(1, _env_int("VOD_LOGIN_USER_GLOBAL_MAX_FAILS", 100))
+LOGIN_USER_NET_MIN_FAILS = max(1, _env_int("VOD_LOGIN_USER_NET_MIN_FAILS", 3))
 
 
 def login_rate_key(ip):
@@ -595,28 +600,18 @@ def _login_username_key(username):
     return str(username or "").strip().lower()[:128]
 
 
-def _login_username_key(username):
-    return str(username or "").strip().lower()[:128]
-
-
 @database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def check_rate_limit(ip):
     """Return True if the address key is under the failed-login threshold (shared via SQLite)."""
-    now = time.time()
-    cutoff = now - LOGIN_IP_WINDOW_SEC
-    conn = database.get_db()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
+    cutoff = time.time() - LOGIN_IP_WINDOW_SEC
+    with database.db_transaction() as conn:
         conn.execute("DELETE FROM login_attempts WHERE ts <= ?", (cutoff,))
         row = conn.execute(
             "SELECT COUNT(*) AS c FROM login_attempts WHERE ip=? AND ts > ?",
             (login_rate_key(ip), cutoff),
         ).fetchone()
-        conn.commit()
-        count = int(row["c"] if row is not None else 0)
-        return count < LOGIN_IP_MAX_FAILS
-    finally:
-        conn.close()
+    count = int(row["c"] if row is not None else 0)
+    return count < LOGIN_IP_MAX_FAILS
 
 
 def _wait_until_window_frees(rows, limit, now):
@@ -628,42 +623,35 @@ def _wait_until_window_frees(rows, limit, now):
 
 
 @database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
-def username_lockout_wait(username, ip=None):
+def username_lockout_wait(username, ip):
     """Seconds until ``username`` may try again from ``ip`` (0 = now).
 
     * Per (account, network): LOGIN_USER_MAX_FAILS per window.
     * Account-wide: LOGIN_USER_GLOBAL_MAX_FAILS per window, applied only to
-      networks with failures of their own for this account. ``ip=None`` asks
-      for the account-wide figure alone.
+      networks with at least LOGIN_USER_NET_MIN_FAILS failures of their own.
     """
     key = _login_username_key(username)
     if not key:
         return 0
-    net = login_rate_key(ip) if ip is not None else None
+    net = login_rate_key(ip)
     now = time.time()
     cutoff = now - LOGIN_USER_WINDOW_SEC
-    conn = database.get_db()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
+    with database.db_transaction() as conn:
         conn.execute("DELETE FROM login_user_attempts WHERE ts <= ?", (cutoff,))
-        account_rows = conn.execute(
-            "SELECT ts FROM login_user_attempts WHERE username=? AND ts > ? ORDER BY ts DESC LIMIT ?",
-            (key, cutoff, LOGIN_USER_GLOBAL_MAX_FAILS),
+        pair_rows = conn.execute(
+            "SELECT ts FROM login_user_attempts WHERE username=? AND net=? AND ts > ? "
+            "ORDER BY ts DESC LIMIT ?",
+            (key, net, cutoff, max(LOGIN_USER_MAX_FAILS, LOGIN_USER_NET_MIN_FAILS)),
         ).fetchall()
-        pair_rows = []
-        if net is not None:
-            pair_rows = conn.execute(
-                "SELECT ts FROM login_user_attempts WHERE username=? AND net=? AND ts > ? "
+        account_rows = []
+        if len(pair_rows) >= LOGIN_USER_NET_MIN_FAILS:
+            account_rows = conn.execute(
+                "SELECT ts FROM login_user_attempts WHERE username=? AND ts > ? "
                 "ORDER BY ts DESC LIMIT ?",
-                (key, net, cutoff, LOGIN_USER_MAX_FAILS),
+                (key, cutoff, LOGIN_USER_GLOBAL_MAX_FAILS),
             ).fetchall()
-        conn.commit()
-    finally:
-        conn.close()
     pair_wait = _wait_until_window_frees(pair_rows, LOGIN_USER_MAX_FAILS, now)
     account_wait = _wait_until_window_frees(account_rows, LOGIN_USER_GLOBAL_MAX_FAILS, now)
-    if net is not None and not pair_rows:
-        account_wait = 0  # clean network: the account-wide net never blocks it
     return max(pair_wait, account_wait)
 
 
@@ -671,35 +659,25 @@ def username_lockout_wait(username, ip=None):
 def add_login_attempt(ip, username=None):
     now = time.time()
     net = login_rate_key(ip)
-    conn = database.get_db()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
+    key = _login_username_key(username)
+    with database.db_transaction() as conn:
         conn.execute("INSERT INTO login_attempts (ip, ts) VALUES (?, ?)", (net, now))
-        key = _login_username_key(username)
         if key:
             conn.execute(
                 "INSERT INTO login_user_attempts (username, net, ts) VALUES (?, ?, ?)",
                 (key, net, now),
             )
-        conn.commit()
-    finally:
-        conn.close()
 
 
 @database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def clear_login_attempts(ip, username=None):
     """After a successful login: forget this network's failures (address and account)."""
     net = login_rate_key(ip)
-    conn = database.get_db()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
+    key = _login_username_key(username)
+    with database.db_transaction() as conn:
         conn.execute("DELETE FROM login_attempts WHERE ip=?", (net,))
-        key = _login_username_key(username)
         if key:
             conn.execute("DELETE FROM login_user_attempts WHERE username=? AND net=?", (key, net))
-        conn.commit()
-    finally:
-        conn.close()
 
 
 def ban_remaining_seconds(ip):

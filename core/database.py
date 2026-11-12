@@ -1691,18 +1691,14 @@ def set_user_password(username: str, password_hash: str) -> str:
     Returns the new session token ("" when the user does not exist).
     """
     token = secrets.token_hex(16)
-    conn = get_db()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
+    with db_transaction() as conn:
         cur = conn.execute(
             "UPDATE users SET password_hash = ?, session_version = ?, updated_at = ? "
             "WHERE username = ? COLLATE NOCASE",
             (password_hash, token, time.time(), username),
         )
-        conn.commit()
-    finally:
-        conn.close()
-    return token if cur.rowcount else ""
+        changed = cur.rowcount
+    return token if changed else ""
 
 
 @db_retry(max_retries=5, delay=0.1, backoff=2.0)
@@ -1716,17 +1712,13 @@ def bump_session_version(username: str) -> str:
     if not name:
         return ""
     token = secrets.token_hex(16)
-    conn = get_db()
-    try:
-        conn.execute("BEGIN IMMEDIATE")
+    with db_transaction() as conn:
         cur = conn.execute(
             "UPDATE users SET session_version = ? WHERE username = ? COLLATE NOCASE",
             (token, name),
         )
-        conn.commit()
-    finally:
-        conn.close()
-    return token if cur.rowcount else ""
+        changed = cur.rowcount
+    return token if changed else ""
 
 
 def set_user_email(username: str, email: str) -> None:
