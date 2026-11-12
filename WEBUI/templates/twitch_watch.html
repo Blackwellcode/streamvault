@@ -40,7 +40,7 @@
             {% else %}
             <iframe
               src="{{ player_url }}"
-              title="{{ _('LIVE %(name)s (without Twitch login)', name=display_name) }}"
+              title="{{ _('Live: %(name)s (without Twitch login)', name=display_name) }}"
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowfullscreen
               credentialless
@@ -52,7 +52,7 @@
           <section class="vod-details" aria-labelledby="watchTitle">
             <div class="vod-details-main">
               <div class="vod-kicker">
-                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('LIVE') }}</span>
+                <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('Live') }}</span>
                 {% if monitored and not is_mobile %}<span class="twitch-monitored-pill">{{ _('Monitored') }}</span>{% endif %}
                 <span class="platform-badge platform-twitch">TW</span>
               </div>

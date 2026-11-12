@@ -36,7 +36,7 @@
           {% if session.user_role == 'admin' %}
           <div class="nebula-avatar-edit-overlay">
             <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.5px; margin-top: 3px;">{{ _('CHANGE') }}</span>
+            <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.5px; margin-top: 3px;">{{ _('Change') }}</span>
           </div>
           {% endif %}
         </div>
@@ -47,7 +47,7 @@
               <span class="ns-pulse-dot"></span>
               {% if online %}ON AIR{% else %}OFFLINE{% endif %}
             </span>
-            {% if streamer in live_channels %}<span class="ns-pill ns-pill-live">{{ _('RECORDING ACTIVE') }}</span>{% endif %}
+            {% if streamer in live_channels %}<span class="ns-pill ns-pill-live">{{ _('Recording active') }}</span>{% endif %}
             <span>•</span>
             <span>{{ _('%(count)s recordings', count=cnt_vod) }}</span>
             <span>•</span>
@@ -59,7 +59,7 @@
       <div style="display:flex; align-items:center; gap:12px;">
         {% if twitch_login and (twitch_live or online) %}
         <a href="{{ url_for('twitch_watch', channel=twitch_login) }}" class="ns-btn ns-btn-primary" style="padding: 10px 22px;">
-          <span class="nebula-live-dot" style="margin-right:6px;"></span> {{ _('WATCH LIVE') }}
+          <span class="nebula-live-dot" style="margin-right:6px;"></span> {{ _('Watch live') }}
         </a>
         {% elif files and files|length > 0 %}
         <a href="{{ url_for('vod_view', streamer=streamer, filename=files[0].name) }}" class="ns-btn ns-btn-secondary" style="padding: 10px 18px;">
@@ -75,7 +75,7 @@
   <section class="nebula-admin-box" aria-label="{{ _('Admin controls') }}">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
       <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size: 13px; font-weight: 700; color: var(--nebula-accent-highlight);"><span aria-hidden="true">⚙️</span> {{ _('CHANNEL MANAGEMENT (ADMIN)') }}</span>
+        <span style="font-size: 13px; font-weight: 700; color: var(--nebula-accent-highlight);"><span aria-hidden="true">⚙️</span> {{ _('Channel management (admin)') }}</span>
         <form method="post" action="{{ url_for('streamer_visibility_update', streamer=streamer) }}" style="display: flex; align-items: center; gap: 8px; margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Visible to:') }}</span>
@@ -149,7 +149,7 @@
     <div class="nebula-hero-glow"></div>
     <div class="nebula-hero-content">
       <div class="nebula-live-badge" style="margin-bottom: 14px;">
-        <span class="nebula-live-dot"></span> {{ _('LIVE NOW') }}
+        <span class="nebula-live-dot"></span> {{ _('Live now') }}
       </div>
       
       <h2 class="nebula-hero-title">{{ hero_stream.title }}</h2>
@@ -173,7 +173,7 @@
       
       <div style="display:flex; align-items:center; gap:12px;">
         <a href="{{ hero_stream.watch_url }}" class="ns-btn ns-btn-primary" style="padding: 10px 24px; font-size: 15px;">
-          {{ _('WATCH LIVE') }}
+          {{ _('Watch live') }}
         </a>
       </div>
     </div>
@@ -182,7 +182,7 @@
     <div class="nebula-hero-preview-col">
       <a href="{{ hero_stream.watch_url }}" class="nebula-hero-preview-frame" aria-label="{{ _('Watch stream directly') }}" style="display:block;">
         <img src="{{ hero_stream.thumbnail_url }}" alt="{{ hero_stream.title }}" class="nebula-hero-preview-img">
-        <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> {{ _('LIVE') }}</span>
+        <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> {{ _('Live') }}</span>
         {% if not is_mobile %}
         <div class="nebula-hero-play-icon">
           <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
@@ -208,7 +208,7 @@
     <!-- Filter Form -->
     <form method="get" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0;">
       <input type="hidden" name="type" value="{{ current_type }}">
-      <input type="text" name="q" value="{{ q or '' }}" placeholder="{{ _('Search...') }}" aria-label="{{ _('Search') }}" class="ns-input-field" style="padding: 6px 12px; font-size: 12px; width: 220px;">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="{{ _('Search…') }}" aria-label="{{ _('Search') }}" class="ns-input-field" style="padding: 6px 12px; font-size: 12px; width: 220px;">
       
       {% if categories %}
       <select name="cat" aria-label="{{ _('Game') }}" class="ns-input-field" style="padding: 6px 10px; font-size: 12px; cursor: pointer;">
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" enctype="multipart/form-data" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save">
-        <label for="bannerFileInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION A: UPLOAD IMAGE FILE') }}</label>
+        <label for="bannerFileInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('Option A: upload image file') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="file" name="banner_file" id="bannerFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Upload') }}</button>
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <!-- URL Form -->
       <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="customBannerUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION B: USE IMAGE URL') }}</label>
+        <label for="customBannerUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('Option B: use image URL') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="url" name="custom_banner_url" id="customBannerUrlInput" placeholder="https://example.com/banner.jpg" value="{{ custom_banner_url or '' }}" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" name="action" value="save" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Save') }}</button>
@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" enctype="multipart/form-data" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save">
-        <label for="avatarFileInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION A: UPLOAD PROFILE PICTURE') }}</label>
+        <label for="avatarFileInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('Option A: upload profile picture') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="file" name="avatar_file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Upload') }}</button>
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <!-- URL Form -->
       <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="customAvatarUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION B: USE IMAGE URL') }}</label>
+        <label for="customAvatarUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('Option B: use image URL') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="url" name="custom_avatar_url" id="customAvatarUrlInput" placeholder="https://example.com/avatar.jpg" value="{{ custom_avatar_url or '' }}" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" name="action" value="save" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Save') }}</button>

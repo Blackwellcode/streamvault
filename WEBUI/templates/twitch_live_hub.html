@@ -35,7 +35,7 @@
             <div class="twitch-thumb-wrap">
               {% if s.is_live %}
               <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
-              <span class="twitch-live-pill">{{ _('LIVE') }}</span>
+              <span class="twitch-live-pill">{{ _('Live') }}</span>
               <span class="twitch-viewers">{{ s.viewer_count }}</span>
               {% else %}
               <div class="twitch-thumb-offline">{{ _('Offline') }}</div>
@@ -73,7 +73,7 @@
           <a class="twitch-stream-card is-live" href="{{ url_for('twitch_watch', channel=s.login) }}" data-login="{{ s.login }}">
             <div class="twitch-thumb-wrap">
               <img src="{{ s.thumbnail_url }}" alt="" loading="lazy" decoding="async" width="640" height="360">
-              <span class="twitch-live-pill">{{ _('LIVE') }}</span>
+              <span class="twitch-live-pill">{{ _('Live') }}</span>
               <span class="twitch-viewers">{{ s.viewer_count }}</span>
             </div>
             <div class="twitch-card-body">

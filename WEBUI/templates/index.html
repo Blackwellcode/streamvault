@@ -28,7 +28,7 @@
             <span class="nebula-live-dot" aria-hidden="true"></span> {{ _('Live now') }}
           </div>
           {% else %}
-          <div class="nebula-hero-badge">{{ _('FEATURED VOD') }}</div>
+          <div class="nebula-hero-badge">{{ _('Featured VOD') }}</div>
           {% endif %}
           
           <h2 class="nebula-hero-title">{{ hero_item.title }}</h2>
@@ -64,7 +64,7 @@
           <a href="{{ hero_item.watch_url }}" class="nebula-hero-preview-frame" aria-label="{{ _('Watch stream directly') }}" style="display:block;">
             <img src="{{ hero_item.thumbnail_url }}" alt="{{ hero_item.title }}" class="nebula-hero-preview-img" decoding="async">
             {% if hero_item.is_live %}
-            <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> {{ _('LIVE') }}</span>
+            <span class="nebula-live-badge" style="position: absolute; top: 10px; left: 10px;"><span class="nebula-live-dot"></span> {{ _('Live') }}</span>
             {% endif %}
             {% if not is_mobile %}
             <div class="nebula-hero-play-icon">

@@ -17,11 +17,11 @@
     <h1 style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">{{ display_name or streamer }}</h1>
   </div>
   {% if twitch_live %}
-  <span class="nebula-live-badge"><span class="nebula-live-dot"></span> {{ _('LIVE') }}</span>
+  <span class="nebula-live-badge"><span class="nebula-live-dot"></span> {{ _('Live') }}</span>
   {% elif online %}
-  <span style="font-size:12px; font-weight:700; padding:3px 8px; border-radius:4px; background:rgba(72,214,162,0.15); color:var(--nebula-status-success);">{{ _('ONLINE') }}</span>
+  <span style="font-size:12px; font-weight:700; padding:3px 8px; border-radius:4px; background:rgba(72,214,162,0.15); color:var(--nebula-status-success);">{{ _('Online') }}</span>
   {% else %}
-  <span style="font-size:12px; font-weight:600; padding:3px 8px; border-radius:4px; background:var(--nebula-bg-card); color:var(--nebula-text-muted);">{{ _('OFFLINE') }}</span>
+  <span style="font-size:12px; font-weight:600; padding:3px 8px; border-radius:4px; background:var(--nebula-bg-card); color:var(--nebula-text-muted);">{{ _('Offline') }}</span>
   {% endif %}
 </div>
 
@@ -30,7 +30,7 @@
   <div class="btn-row" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
     {% if mobile_live_enabled and twitch_login and (twitch_live or online) %}
     <a href="{{ url_for('twitch_watch', channel=twitch_login) }}" class="ns-btn ns-btn-primary" style="padding: 8px 14px; font-size: 13px; font-weight: 700;">
-      {{ _('WATCH LIVE') }}
+      {{ _('Watch live') }}
     </a>
     {% endif %}
     {% if twitch_login %}

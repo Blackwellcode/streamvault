@@ -11,7 +11,7 @@
     <div class="overlay-header">
       <a href="{{ url_for('index') }}" class="back-btn" aria-label="{{ _('Back') }}"><svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></a>
       <div class="overlay-header-meta">
-        <span class="twitch-live-pill" id="livePillOverlay" {% if not is_live %}hidden{% endif %}>{{ _('LIVE') }}</span>
+        <span class="twitch-live-pill" id="livePillOverlay" {% if not is_live %}hidden{% endif %}>{{ _('Live') }}</span>
         <span class="overlay-stream-name" id="watchDisplayNameOverlay">{{ display_name }}</span>
       </div>
       <div class="overlay-header-actions">
@@ -69,7 +69,7 @@
       {% else %}
       <iframe
         src="{{ player_url }}"
-        title="{{ _('LIVE %(name)s (without Twitch login)', name=display_name) }}"
+        title="{{ _('Live: %(name)s (without Twitch login)', name=display_name) }}"
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowfullscreen
         credentialless
@@ -88,7 +88,7 @@
           </svg>
         </a>
         <div class="vod-kicker">
-          <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('LIVE') }}</span>
+          <span class="twitch-live-pill" id="livePill" {% if not is_live %}hidden{% endif %}>{{ _('Live') }}</span>
         </div>
         <h1 class="vod-display-title" id="watchDisplayName">{{ display_name }}</h1>
       </div>
