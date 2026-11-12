@@ -3265,6 +3265,27 @@ def is_allowed_url(url):
         return False
     return True
 
+
+_CSS_URL_FORBIDDEN = frozenset("'\"()\\<> \t\r\n\f")
+
+
+def css_url(value):
+    """Return value if it is safe inside CSS url('...'), else "" (audit S8, banner/hero images).
+
+    Accepted: a same-origin path ("/static/..."), or an https URL that is_allowed_url()
+    accepts. Rejected: quotes, parentheses, backslashes, angle brackets and whitespace,
+    which could close the url() token and inject CSS.
+    """
+    text = str(value or "").strip()
+    if not text or any(ch in _CSS_URL_FORBIDDEN for ch in text):
+        return ""
+    if text.startswith("/") and not text.startswith("//"):
+        return text
+    if text.lower().startswith("https://") and is_allowed_url(text):
+        return text
+    return ""
+
+
 def is_safe_next(target):
     if not target:
         return False
@@ -10628,6 +10649,7 @@ def csp_nonce():
 
 
 app.jinja_env.globals["csp_nonce"] = csp_nonce
+app.jinja_env.filters["css_url"] = css_url
 
 _CSP_INJECTED_SCRIPT_HASHES = []
 
@@ -10651,10 +10673,10 @@ def csp_injected_script_hashes():
 # clip editor slider: cdnjs). Keep in sync with static/chat_emotes.js.
 CSP_SCRIPT_HOSTS = "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
 CSP_STYLE_HOSTS = "https://fonts.googleapis.com https://cdnjs.cloudflare.com"
-CSP_IMG_HOSTS = (
-    "https://static-cdn.jtvnw.net https://badges.twitch.tv https://cdn.discordapp.com "
-    "https://cdn.betterttv.net https://cdn.frankerfacez.com https://cdn.7tv.app"
-)
+# Images: any https source. Admins may set custom banner/avatar URLs on arbitrary
+# hosts (streamer page); images cannot execute script, the CSS url() value is
+# filtered by css_url(). Twitch/emote CDNs are covered by https:.
+CSP_IMG_HOSTS = "https:"
 CSP_CONNECT_HOSTS = (
     "https://*.googleapis.com https://clients3.google.com "
     "https://api.betterttv.net https://api.frankerfacez.com https://7tv.io https://api.ivr.fi"
