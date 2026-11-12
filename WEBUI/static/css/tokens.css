@@ -34,6 +34,9 @@
   --nebula-status-warning: #F2BC61;   /* Warnung (Amber/Gold) */
   --nebula-status-live-text: #F2667A; /* Live/Fehler als Text: >= 4.5:1 auf allen Flaechen */
   --nebula-danger-bg: #D42A40;        /* Danger-Buttons: Weiss darauf 4.99:1 */
+  --nebula-danger-bg-hover: #BC2236;
+  --nebula-accent-primary-hover: #3F55F0;
+  --nebula-text-on-accent: #FFFFFF;   /* Text auf Primaer-/Danger-Flaechen (4.62:1 / 4.99:1) */
 
   /* Typography Colors */
   --nebula-text-main: #F3F5FC;        /* Haupttext (Strahlendes Eisweiß) */
@@ -75,6 +78,7 @@
   --sv-text-5xl: 40px;
   --sv-text-6xl: 48px;
   --nebula-rail-width: 72px;
+  --sv-bottom-nav-h: 64px;            /* Hoehe der unteren Navigationsleiste ohne safe-area */
   --sv-min-text: 12px;                /* Mindestschriftgroesse fuer Labels/Metadaten */
 
   /* 2. NAMESPACE MAPPINGS FOR SYSTEM INTEGRATION */

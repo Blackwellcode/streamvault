@@ -213,7 +213,7 @@ body.page-vod .chat-filter-bar label {
   font-size: var(--sv-min-text);
   white-space: nowrap;
 }
-body.page-vod .chat-filter-bar button {
+body.page-vod .chat-filter-bar button:where(:not(.sv-btn)) {
   width: 32px;
   height: 32px;
   padding: 0;
@@ -551,7 +551,7 @@ body.page-login input::placeholder {
 body.page-login input:focus {
   transform: translateY(-1px);
 }
-body.page-login button {
+body.page-login button:where(:not(.sv-btn)) {
   width: 100%;
   margin-top: 10px;
   font-size: var(--sv-text-md);
@@ -560,7 +560,7 @@ body.page-login button {
   cursor: pointer;
   transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
-body.page-login button:hover {
+body.page-login button:where(:not(.sv-btn)):hover {
   transform: translateY(-2px);
   box-shadow: 0 24px 46px rgba(255, 83, 23, 0.34);
   filter: brightness(1.04);
@@ -852,7 +852,7 @@ body.page-admin .success {
 body.page-admin .fail {
   color: var(--danger);
 }
-body.page-admin button {
+body.page-admin button:where(:not(.sv-btn)) {
   background: none;
   border: none;
   cursor: pointer;
@@ -987,7 +987,7 @@ body.page-mail label span {
 }
 body.page-admin .btn-primary:disabled,
 body.page-admin input:disabled,
-body.page-admin button:disabled {
+body.page-admin button:where(:not(.sv-btn)):disabled {
   opacity: .48;
   cursor: not-allowed;
   transform: none;
@@ -1248,7 +1248,7 @@ body.page-discord-tool select {
   margin-bottom: 16px;
   appearance: none;
 }
-body.page-discord-tool button {
+body.page-discord-tool button:where(:not(.sv-btn)) {
   width: 100%;
   padding: 12px;
   border: 0;
@@ -1259,7 +1259,7 @@ body.page-discord-tool button {
   cursor: pointer;
   transition: background 0.2s;
 }
-body.page-discord-tool button:hover {
+body.page-discord-tool button:where(:not(.sv-btn)):hover {
   background: var(--primary-hover);
 }
 body.page-discord-tool .btn-danger {
@@ -1625,7 +1625,7 @@ body.page-streamer .video-card {
 body.page-streamer .video-card:hover {
   box-shadow: 0 20px 40px -10px rgba(245, 158, 11, 0.15);
 }
-body.page-streamer button {
+body.page-streamer button:where(:not(.sv-btn)) {
   background: none;
   border: none;
   cursor: pointer;
@@ -1912,7 +1912,7 @@ body.page-vod input {
   background: rgba(0,0,0,0.3);
   color: white;
 }
-body.page-vod button {
+body.page-vod button:where(:not(.sv-btn)) {
   padding: 10px 20px;
   border: 0;
   border-radius: var(--nebula-radius-md);
@@ -1924,7 +1924,7 @@ body.page-vod button {
   position: relative;
   overflow: hidden;
 }
-body.page-vod button::after {
+body.page-vod button:where(:not(.sv-btn))::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1934,11 +1934,11 @@ body.page-vod button::after {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
   transition: 0.5s;
 }
-body.page-vod button:hover {
+body.page-vod button:where(:not(.sv-btn)):hover {
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
 }
-body.page-vod button:hover::after {
+body.page-vod button:where(:not(.sv-btn)):hover::after {
   left: 100%;
 }
 body.page-vod .note {
@@ -2075,7 +2075,7 @@ body.page-hls .note {
   padding: 0 28px 16px;
   color: var(--muted);
 }
-body.page-hls button {
+body.page-hls button:where(:not(.sv-btn)) {
   padding: 10px 14px;
   border: 0;
   border-radius: var(--nebula-radius-sm);
@@ -2177,7 +2177,7 @@ body.page-live input {
   background: #0f1218;
   color: var(--ink);
 }
-body.page-live button {
+body.page-live button:where(:not(.sv-btn)) {
   padding: 8px 12px;
   border: 0;
   border-radius: var(--nebula-radius-sm);
@@ -3131,7 +3131,7 @@ body.page-search input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
-body.page-search button {
+body.page-search button:where(:not(.sv-btn)) {
   background: linear-gradient(135deg, var(--primary), var(--accent));
   color: white;
   padding: 12px 24px;
@@ -3143,7 +3143,7 @@ body.page-search button {
   transition: 0.3s;
   margin-top: 16px;
 }
-body.page-search button:hover {
+body.page-search button:where(:not(.sv-btn)):hover {
   transform: scale(1.02);
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
 }
@@ -3237,13 +3237,13 @@ body.page-index .avatar,
 body.page-index .avatar img {
   border-radius: var(--nebula-radius-sm) !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button,
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button:where(:not(.sv-btn)),
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .btn,
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .btn-primary {
   transform: none !important;
   transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button:hover,
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button:where(:not(.sv-btn)):hover,
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .btn:hover {
   transform: translateY(-1px) !important;
 }
@@ -3442,7 +3442,7 @@ body.page-index .avatar.online {
   border-color: var(--ns-purple) !important;
   box-shadow: 0 0 0 4px rgba(145, 71, 255, 0.14), 0 0 28px rgba(145, 71, 255, 0.24) !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button,
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button:where(:not(.sv-btn)),
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .btn,
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .btn-primary {
   min-height: 36px !important;
@@ -3456,7 +3456,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
   text-decoration: none !important;
   box-shadow: none !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button:hover,
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) button:where(:not(.sv-btn)):hover,
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool) .btn:hover {
   border-color: rgba(145,71,255,0.55) !important;
   background: rgba(145,71,255,0.18) !important;
@@ -3851,7 +3851,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
 }
 .studio-btn,
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live) .btn-icon,
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live) button {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live) button:where(:not(.sv-btn)) {
   min-height: 38px;
   padding: 9px 13px !important;
   display: inline-flex !important;
@@ -3869,7 +3869,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
 }
 .studio-btn:hover,
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live) .btn-icon:hover,
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live) button:hover {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live) button:where(:not(.sv-btn)):hover {
   background: rgba(255,255,255,.09) !important;
   border-color: var(--ns-line-strong) !important;
 }
@@ -4263,7 +4263,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
   color: #fff !important;
   letter-spacing: 0 !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is( button, .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .studio-btn, .mplus-primary, .mplus-link.buttonlike ) {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is( button:where(:not(.sv-btn)), .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .studio-btn, .mplus-primary, .mplus-link.buttonlike ) {
   border-radius: var(--nebula-radius-xs) !important;
   border: 1px solid var(--ns-line-strong) !important;
   color: var(--ns-text) !important;
@@ -4273,12 +4273,12 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
   font-weight: 850 !important;
   letter-spacing: 0 !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is( .btn-primary, .studio-btn.primary, .action-btn.primary, .mplus-primary, .mplus-link.buttonlike, .live-input-group button, .channel-input-group button ) {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is( .btn-primary, .studio-btn.primary, .action-btn.primary, .mplus-primary, .mplus-link.buttonlike, .live-input-group button:where(:not(.sv-btn)), .channel-input-group button:where(:not(.sv-btn)) ) {
   color: #06110f !important;
   background: linear-gradient(135deg, var(--ns-green), var(--ns-gold)) !important;
   border-color: rgba(255,255,255,0.2) !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is(button,.btn,.btn-action,.btn-restart,.action-btn,.btn-primary,.studio-btn,.mplus-primary):hover {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is(button:where(:not(.sv-btn)),.btn,.btn-action,.btn-restart,.action-btn,.btn-primary,.studio-btn,.mplus-primary):hover {
   border-color: rgba(101,216,172,0.42) !important;
   filter: brightness(1.04);
 }
@@ -4580,7 +4580,7 @@ body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .pa
   border-color: rgba(242, 229, 141, 0.7) !important;
   box-shadow: 0 0 0 3px rgba(242, 229, 141, 0.08) !important;
 }
-body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( button, .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .btn-secondary, .studio-btn, .vod-link-btn, .vod-icon-btn, .mplus-primary ) {
+body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( button:where(:not(.sv-btn)), .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .btn-secondary, .studio-btn, .vod-link-btn, .vod-icon-btn, .mplus-primary ) {
   min-height: 38px !important;
   padding: 8px 13px !important;
   border: 1px solid var(--tube-line) !important;
@@ -4594,19 +4594,19 @@ body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .pa
   font-weight: 750 !important;
   text-decoration: none !important;
 }
-body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( button, .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .btn-secondary, .studio-btn, .vod-link-btn, .vod-icon-btn, .mplus-primary ):hover {
+body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( button:where(:not(.sv-btn)), .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .btn-secondary, .studio-btn, .vod-link-btn, .vod-icon-btn, .mplus-primary ):hover {
   color: var(--tube-text) !important;
   background: var(--tube-surface-3) !important;
   border-color: #3a3a3a !important;
   filter: none !important;
   transform: none !important;
 }
-body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( .btn-primary, .studio-btn.primary, .action-btn.primary, .vod-primary-action, .mplus-primary, .live-input-group button, .channel-input-group button ) {
+body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( .btn-primary, .studio-btn.primary, .action-btn.primary, .vod-primary-action, .mplus-primary, .live-input-group button:where(:not(.sv-btn)), .channel-input-group button:where(:not(.sv-btn)) ) {
   color: #11100a !important;
   background: var(--tube-accent) !important;
   border-color: var(--tube-accent) !important;
 }
-body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( .btn-primary, .studio-btn.primary, .action-btn.primary, .vod-primary-action, .mplus-primary, .live-input-group button, .channel-input-group button ):hover {
+body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-twitch-live ) :is( .btn-primary, .studio-btn.primary, .action-btn.primary, .vod-primary-action, .mplus-primary, .live-input-group button:where(:not(.sv-btn)), .channel-input-group button:where(:not(.sv-btn)) ):hover {
   color: #11100a !important;
   background: var(--tube-accent-hover) !important;
   border-color: var(--tube-accent-hover) !important;
@@ -4879,7 +4879,7 @@ body.page-login .login-form label {
 body.page-login input {
   min-height: 44px !important;
 }
-body.page-login button {
+body.page-login button:where(:not(.sv-btn)) {
   min-height: 44px !important;
   border: 1px solid var(--tube-accent) !important;
   border-radius: var(--nebula-radius-sm) !important;
@@ -5675,7 +5675,7 @@ body:is(.page-vod, .page-live) .vod-clip-nudge-group span {
   font-size: var(--sv-min-text) !important;
   font-weight: 850 !important;
 }
-body:is(.page-vod, .page-live) .vod-clip-nudge-group button,
+body:is(.page-vod, .page-live) .vod-clip-nudge-group button:where(:not(.sv-btn)),
 body:is(.page-vod, .page-live) .vod-clip-secondary,
 body:is(.page-vod, .page-live) .vod-clip-primary {
   min-height: 34px !important;
@@ -5687,7 +5687,7 @@ body:is(.page-vod, .page-live) .vod-clip-primary {
   font-weight: 800 !important;
   cursor: pointer !important;
 }
-body:is(.page-vod, .page-live) .vod-clip-nudge-group button:hover,
+body:is(.page-vod, .page-live) .vod-clip-nudge-group button:where(:not(.sv-btn)):hover,
 body:is(.page-vod, .page-live) .vod-clip-secondary:hover {
   border-color: rgba(242, 229, 141, 0.28) !important;
   background: rgba(255, 255, 255, 0.08) !important;
@@ -6284,7 +6284,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-mail,.page-f
   border-radius: var(--nebula-radius-sm) !important;
   font-size: var(--sv-text-xs) !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-mail,.page-files,.page-search,.page-discord-tool) :is( button, .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .btn-secondary ) {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-mail,.page-files,.page-search,.page-discord-tool) :is( button:where(:not(.sv-btn)), .btn, .btn-action, .btn-restart, .action-btn, .btn-primary, .btn-secondary ) {
   min-height: 34px !important;
   padding: 6px 10px !important;
   border-radius: var(--nebula-radius-sm) !important;
@@ -6620,8 +6620,8 @@ body.page-index .btn-secondary.danger {
   border-color: rgba(239, 116, 116, 0.28) !important;
   background: rgba(239, 116, 116, 0.08) !important;
 }
-body.page-index :is(.btn-primary,.btn-secondary,.btn-ghost,button,select):disabled,
-body.page-index :is(.btn-primary,.btn-secondary,.btn-ghost,button,select)[aria-disabled="true"] {
+body.page-index :is(.btn-primary,.btn-secondary,.btn-ghost,button:where(:not(.sv-btn)),select):disabled,
+body.page-index :is(.btn-primary,.btn-secondary,.btn-ghost,button:where(:not(.sv-btn)),select)[aria-disabled="true"] {
   opacity: 0.48 !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
@@ -6802,7 +6802,7 @@ body.page-index .streamer-menu-popover {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
 }
 body.page-index .streamer-menu-popover a,
-body.page-index .streamer-menu-popover button {
+body.page-index .streamer-menu-popover button:where(:not(.sv-btn)) {
   width: 100% !important;
   min-height: 34px !important;
   padding: 0 9px !important;
@@ -6819,9 +6819,9 @@ body.page-index .streamer-menu-popover button {
   cursor: pointer;
 }
 body.page-index .streamer-menu-popover a:hover,
-body.page-index .streamer-menu-popover button:hover,
+body.page-index .streamer-menu-popover button:where(:not(.sv-btn)):hover,
 body.page-index .streamer-menu-popover a:focus-visible,
-body.page-index .streamer-menu-popover button:focus-visible {
+body.page-index .streamer-menu-popover button:where(:not(.sv-btn)):focus-visible {
   color: var(--text-primary) !important;
   background: var(--surface-hover) !important;
 }

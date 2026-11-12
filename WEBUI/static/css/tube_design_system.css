@@ -730,9 +730,9 @@ body.ns-platform.page-admin input:focus,
 body.ns-platform.page-stalk-admin input:focus {
   border-color: var(--ns-brand-crimson) !important;
 }
-body.ns-platform.page-admin button[type="submit"],
+body.ns-platform.page-admin button:where(:not(.sv-btn))[type="submit"]:where(:not(.sv-btn)),
 body.ns-platform.page-admin .btn-primary,
-body.ns-platform.page-stalk-admin button[type="submit"],
+body.ns-platform.page-stalk-admin button:where(:not(.sv-btn))[type="submit"]:where(:not(.sv-btn)),
 body.ns-platform.page-stalk-admin .btn-primary {
   background: var(--ns-brand-crimson) !important;
   color: #fff !important;
@@ -744,8 +744,8 @@ body.ns-platform.page-stalk-admin .btn-primary {
   cursor: pointer !important;
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease !important;
 }
-body.ns-platform.page-admin button[type="submit"]:hover,
-body.ns-platform.page-stalk-admin button[type="submit"]:hover {
+body.ns-platform.page-admin button:where(:not(.sv-btn))[type="submit"]:hover,
+body.ns-platform.page-stalk-admin button:where(:not(.sv-btn))[type="submit"]:hover {
   background: var(--ns-brand-crimson-hover) !important;
 }
 /* 5. User Management & Data Tables */
@@ -851,8 +851,8 @@ body .ns-command-rail {
   width: 100% !important;
 }
 .ns-command-rail .ns-logout-btn button.ns-rail-item,
-body .ns-command-rail .ns-logout-btn button.ns-rail-item,
-body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-command-rail .ns-logout-btn button {
+body .ns-command-rail .ns-logout-btn button:where(:not(.sv-btn)).ns-rail-item,
+body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-command-rail .ns-logout-btn button:where(:not(.sv-btn)) {
   width: 44px !important;
   height: 44px !important;
   border-radius: var(--ns-radius-md, 10px) !important;
@@ -868,7 +868,7 @@ body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .
   margin: 0 !important;
 }
 .ns-command-rail .ns-logout-btn button.ns-rail-item:hover,
-body .ns-command-rail .ns-logout-btn button.ns-rail-item:hover {
+body .ns-command-rail .ns-logout-btn button:where(:not(.sv-btn)).ns-rail-item:hover {
   color: #ef4444 !important;
   background-color: rgba(239, 68, 68, 0.12) !important;
   border-color: rgba(239, 68, 68, 0.3) !important;
@@ -2602,8 +2602,8 @@ body.page-login input:focus {
   border-color: var(--nebula-accent-primary) !important;
   box-shadow: 0 0 12px rgba(77, 99, 255, 0.4) !important;
 }
-body.page-login button#login-submit,
-body.page-login button[type="submit"] {
+body.page-login button:where(:not(.sv-btn))#login-submit,
+body.page-login button:where(:not(.sv-btn))[type="submit"] {
   background: var(--nebula-gradient-primary) !important;
   color: #FFFFFF !important;
   font-weight: 700 !important;
@@ -2614,8 +2614,8 @@ body.page-login button[type="submit"] {
   transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease !important;
   cursor: pointer;
 }
-body.page-login button#login-submit:hover,
-body.page-login button[type="submit"]:hover {
+body.page-login button:where(:not(.sv-btn))#login-submit:hover,
+body.page-login button:where(:not(.sv-btn))[type="submit"]:hover {
   background: linear-gradient(135deg, #5B70FF 0%, #A276FF 100%) !important;
   box-shadow: 0 6px 28px rgba(77, 99, 255, 0.7), 0 0 16px rgba(187, 120, 255, 0.4) !important;
   transform: translateY(-1px);
