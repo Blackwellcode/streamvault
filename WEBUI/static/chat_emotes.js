@@ -595,8 +595,9 @@
     if (body) {
       const color = userColor(item.color);
       const style = color ? ` style="color:${color}"` : '';
+      const badges = renderBadgesHtml(item);
       html += '<span class="chat-notice-body">' +
-        `<span class="chat-badges">${renderBadgesHtml(item)}</span>` +
+        (badges ? `<span class="chat-badges">${badges}</span>` : '') +
         `<span class="chat-notice-user"${style}>${escapeHtml(String(item.user || ''))}</span>` +
         `<span class="chat-notice-sep">: </span><span class="chat-notice-msg">${body}</span></span>`;
     }
