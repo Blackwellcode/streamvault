@@ -7,7 +7,7 @@ Jinja2>=3.1.2
 requests>=2.31.0
 streamlink>=8.0.0
 yt-dlp>=2024.1.0
-redis>=5.0.0
+redis>=8.1.0
 limits>=3.10.0
 markupsafe>=2.1.0
 gunicorn>=21.2.0; sys_platform != "win32"
