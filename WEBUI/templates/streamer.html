@@ -36,7 +36,7 @@
           {% if session.user_role == 'admin' %}
           <div class="nebula-avatar-edit-overlay">
             <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.5px; margin-top: 3px;">{{ _('CHANGE') }}</span>
+            <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.5px; margin-top: 3px;">{{ _('CHANGE') }}</span>
           </div>
           {% endif %}
         </div>
@@ -75,7 +75,7 @@
   <section class="nebula-admin-box" aria-label="{{ _('Admin controls') }}">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
       <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size: 13px; font-weight: 700; color: #BB78FF;"><span aria-hidden="true">⚙️</span> {{ _('CHANNEL MANAGEMENT (ADMIN)') }}</span>
+        <span style="font-size: 13px; font-weight: 700; color: var(--nebula-accent-highlight);"><span aria-hidden="true">⚙️</span> {{ _('CHANNEL MANAGEMENT (ADMIN)') }}</span>
         <form method="post" action="{{ url_for('streamer_visibility_update', streamer=streamer) }}" style="display: flex; align-items: center; gap: 8px; margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Visible to:') }}</span>
@@ -115,27 +115,27 @@
   <!-- 3. Analytics Telemetry Cards -->
   <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
     <div class="ns-card-panel">
-      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Total recordings') }}</span>
+      <span style="font-size: 12px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Total recordings') }}</span>
       <div style="font-size: 24px; font-weight: 800; font-family: var(--ns-font-mono); color: #fff; margin-top: 4px;">{{ cnt_vod }}</div>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('%(count)s clips archived', count=cnt_clip) }}</span>
+      <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('%(count)s clips archived', count=cnt_clip) }}</span>
     </div>
 
     <div class="ns-card-panel">
-      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Total runtime') }}</span>
+      <span style="font-size: 12px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Total runtime') }}</span>
       <div style="font-size: 24px; font-weight: 800; font-family: var(--ns-font-mono); color: #fff; margin-top: 4px;">{{ total_runtime or (analytics and analytics.total_duration_str) or '—' }}</div>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Archived airtime') }}</span>
+      <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Archived airtime') }}</span>
     </div>
 
     <div class="ns-card-panel">
-      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Storage') }}</span>
+      <span style="font-size: 12px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Storage') }}</span>
       <div style="font-size: 24px; font-weight: 800; font-family: var(--ns-font-mono); color: #fff; margin-top: 4px;">{{ total_size or (analytics and analytics.total_size_str) or '—' }}</div>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Used vault volume') }}</span>
+      <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Used vault volume') }}</span>
     </div>
 
     <div class="ns-card-panel">
-      <span style="font-size: 11px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Last broadcast') }}</span>
+      <span style="font-size: 12px; font-weight: 700; color: var(--ns-text-muted); text-transform: uppercase;">{{ _('Last broadcast') }}</span>
       <div style="font-size: 18px; font-weight: 700; color: var(--ns-text-primary); margin-top: 8px;">{{ last_date or (files and files[0].date_str) or '—' }}</div>
-      <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Synced') }}</span>
+      <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Synced') }}</span>
     </div>
   </section>
 
@@ -167,7 +167,7 @@
         </div>
         <span class="nebula-hero-cat">{{ hero_stream.category }}</span>
         {% if hero_stream.viewers %}
-        <span style="color:#F04458; font-weight:600;">{{ _('%(count)s viewers', count=hero_stream.viewers) }}</span>
+        <span style="color:var(--nebula-status-live); font-weight:600;">{{ _('%(count)s viewers', count=hero_stream.viewers) }}</span>
         {% endif %}
       </div>
       
@@ -297,7 +297,7 @@
             {% endif %}
             {% if f.category %}
             <span>•</span>
-            <span style="color: #BB78FF;">{{ _('Game: %(category)s', category=f.category) }}</span>
+            <span style="color: var(--nebula-accent-highlight);">{{ _('Game: %(category)s', category=f.category) }}</span>
             {% endif %}
             {% if f.viewer_count_str %}
             <span>•</span>
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
             <span aria-hidden="true">🖼️</span> {{ _('Customize channel banner') }}
           </h3>
           <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--ns-text-muted);">
-            {{ display_name or streamer }} · {{ _('Status:') }} <span style="color: #48D6A2; font-weight: 700;">{{ banner_source or _('Automatic') }}</span>
+            {{ display_name or streamer }} · {{ _('Status:') }} <span style="color: var(--nebula-status-success); font-weight: 700;">{{ banner_source or _('Automatic') }}</span>
           </p>
         </div>
         <button type="button" data-streamer-close="banner" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 14px; line-height: 1; border-radius: 50%;" aria-label="{{ _('Close') }}">✕</button>
@@ -385,22 +385,22 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
 
       <!-- Banner Preview Box -->
       <div style="width: 100%; height: 90px; border-radius: 10px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--nebula-border); background: {% if banner_css_url %}url('{{ banner_css_url }}') center/cover no-repeat{% else %}linear-gradient(135deg, rgba(77, 99, 255, 0.35) 0%, rgba(147, 101, 255, 0.3) 50%, rgba(11, 18, 32, 0.95) 100%){% endif %}; position: relative;">
-        <span style="position: absolute; bottom: 6px; right: 8px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px; color: #FFF;">{{ _('Current preview') }}</span>
+        <span style="position: absolute; bottom: 6px; right: 8px; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px; color: #FFF;">{{ _('Current preview') }}</span>
       </div>
 
       <!-- Upload Form -->
       <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" enctype="multipart/form-data" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save">
-        <label for="bannerFileInput" style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">{{ _('OPTION A: UPLOAD IMAGE FILE') }}</label>
+        <label for="bannerFileInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION A: UPLOAD IMAGE FILE') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="file" name="banner_file" id="bannerFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Upload') }}</button>
         </div>
-        <span style="font-size: 10px; color: var(--ns-text-muted); display: block; margin-top: 4px;">{{ _('Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)') }}</span>
+        <span style="font-size: 12px; color: var(--ns-text-muted); display: block; margin-top: 4px;">{{ _('Supported: JPG, PNG, WEBP, GIF (recommended: 1920x360 or 1200x300)') }}</span>
       </form>
 
-      <div style="display: flex; align-items: center; text-align: center; margin: 16px 0; color: var(--ns-text-muted); font-size: 11px;">
+      <div style="display: flex; align-items: center; text-align: center; margin: 16px 0; color: var(--ns-text-muted); font-size: 12px;">
         <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
         <span style="padding: 0 10px;">{{ _('OR') }}</span>
         <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <!-- URL Form -->
       <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="customBannerUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">{{ _('OPTION B: USE IMAGE URL') }}</label>
+        <label for="customBannerUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION B: USE IMAGE URL') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="url" name="custom_banner_url" id="customBannerUrlInput" placeholder="https://example.com/banner.jpg" value="{{ custom_banner_url or '' }}" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" name="action" value="save" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Save') }}</button>
@@ -418,10 +418,10 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
 
       {% if has_custom_banner %}
       <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Custom banner active') }}</span>
+        <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Custom banner active') }}</span>
         <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 11px; color: #F04458;" data-streamer-confirm="{{ _('Really reset the custom banner and switch to the default?') }}">{{ _('Restore default') }}</button>
+          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 12px; color: var(--nebula-status-live);" data-streamer-confirm="{{ _('Really reset the custom banner and switch to the default?') }}">{{ _('Restore default') }}</button>
         </form>
       </div>
       {% endif %}
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
             <span aria-hidden="true">👤</span> {{ _('Customize profile picture') }}
           </h3>
           <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--ns-text-muted);">
-            {{ display_name or streamer }} · {{ _('Status:') }} <span style="color: #48D6A2; font-weight: 700;">{{ avatar_source or _('Twitch / default') }}</span>
+            {{ display_name or streamer }} · {{ _('Status:') }} <span style="color: var(--nebula-status-success); font-weight: 700;">{{ avatar_source or _('Twitch / default') }}</span>
           </p>
         </div>
         <button type="button" data-streamer-close="avatar" class="ns-btn ns-btn-secondary" style="padding: 4px 10px; font-size: 14px; line-height: 1; border-radius: 50%;" aria-label="{{ _('Close') }}">✕</button>
@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
 
       <!-- Avatar Preview Box -->
       <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px solid var(--nebula-border);">
-        <div style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #9365FF; overflow: hidden; background: #151F33; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #FFF; flex-shrink: 0;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--nebula-accent-secondary); overflow: hidden; background: var(--nebula-bg-card); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #FFF; flex-shrink: 0;">
           {% if avatar_url %}
           <img src="{{ avatar_url }}" alt="{{ streamer }}" style="width: 100%; height: 100%; object-fit: cover;">
           {% else %}
@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
         </div>
         <div>
           <div style="font-size: 13px; font-weight: 700; color: #FFF;">{{ _('Current profile picture') }}</div>
-          <div style="font-size: 11px; color: var(--ns-text-muted); margin-top: 2px;">{{ _('Shown in the navigation, sidebar and on streamer cards.') }}</div>
+          <div style="font-size: 12px; color: var(--ns-text-muted); margin-top: 2px;">{{ _('Shown in the navigation, sidebar and on streamer cards.') }}</div>
         </div>
       </div>
 
@@ -462,15 +462,15 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" enctype="multipart/form-data" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="save">
-        <label for="avatarFileInput" style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">{{ _('OPTION A: UPLOAD PROFILE PICTURE') }}</label>
+        <label for="avatarFileInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION A: UPLOAD PROFILE PICTURE') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="file" name="avatar_file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Upload') }}</button>
         </div>
-        <span style="font-size: 10px; color: var(--ns-text-muted); display: block; margin-top: 4px;">{{ _('Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)') }}</span>
+        <span style="font-size: 12px; color: var(--ns-text-muted); display: block; margin-top: 4px;">{{ _('Supported: JPG, PNG, WEBP, GIF (square recommended, e.g. 300x300)') }}</span>
       </form>
 
-      <div style="display: flex; align-items: center; text-align: center; margin: 16px 0; color: var(--ns-text-muted); font-size: 11px;">
+      <div style="display: flex; align-items: center; text-align: center; margin: 16px 0; color: var(--ns-text-muted); font-size: 12px;">
         <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
         <span style="padding: 0 10px;">{{ _('OR') }}</span>
         <div style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08);"></div>
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
       <!-- URL Form -->
       <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" style="margin-bottom: 16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="customAvatarUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: #BB78FF; margin-bottom: 6px;">{{ _('OPTION B: USE IMAGE URL') }}</label>
+        <label for="customAvatarUrlInput" style="display: block; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); margin-bottom: 6px;">{{ _('OPTION B: USE IMAGE URL') }}</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="url" name="custom_avatar_url" id="customAvatarUrlInput" placeholder="https://example.com/avatar.jpg" value="{{ custom_avatar_url or '' }}" class="ns-input-field" style="flex: 1; padding: 6px 10px; font-size: 12px;">
           <button type="submit" name="action" value="save" class="ns-btn ns-btn-primary" style="padding: 6px 14px; font-size: 12px; white-space: nowrap;">{{ _('Save') }}</button>
@@ -488,10 +488,10 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
 
       {% if has_custom_avatar %}
       <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 11px; color: var(--ns-text-muted);">{{ _('Custom profile picture active') }}</span>
+        <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Custom profile picture active') }}</span>
         <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 11px; color: #F04458;" data-streamer-confirm="{{ _('Really reset the custom profile picture and switch to the default?') }}">{{ _('Restore default') }}</button>
+          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 12px; color: var(--nebula-status-live);" data-streamer-confirm="{{ _('Really reset the custom profile picture and switch to the default?') }}">{{ _('Restore default') }}</button>
         </form>
       </div>
       {% endif %}

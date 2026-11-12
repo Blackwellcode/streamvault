@@ -50,7 +50,7 @@
         <div id="vodPlayerError" class="vod-player-error-overlay" role="alert" hidden>
           <div aria-hidden="true" style="font-size: 36px; margin-bottom: 8px;">⚠️</div>
           <strong style="font-size: 16px; color: #FFF;">{{ _('Playback unavailable') }}</strong>
-          <p style="color: #A2AEC8; max-width: 440px; margin: 0; font-size: 13px;">{{ _('The video file could not be loaded or is still being transcoded.') }}</p>
+          <p style="color: var(--nebula-text-secondary); max-width: 440px; margin: 0; font-size: 13px;">{{ _('The video file could not be loaded or is still being transcoded.') }}</p>
           <a href="{{ back_url }}" class="ns-btn ns-btn-secondary" style="margin-top: 10px;">{{ _('Back to overview') }}</a>
         </div>
         <div class="vod-timeline-heatmap-bar" id="vodHeatmapBar" title="{{ _('Chat density & event timeline (click to jump)') }}">
@@ -267,7 +267,7 @@
           <div id="chatList" class="chat-list">
             <div id="chatEmptyState" class="vod-chat-empty-state">
               <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.7;">💬</div>
-              <span style="font-weight: 600; color: #F3F5FC; margin-bottom: 4px;">{{ _('Chat replay ready') }}</span>
+              <span style="font-weight: 600; color: var(--nebula-text-main); margin-bottom: 4px;">{{ _('Chat replay ready') }}</span>
               <span>{{ _('Start playback or move along the timeline to sync chat messages.') }}</span>
             </div>
           </div>

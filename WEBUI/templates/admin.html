@@ -9,7 +9,7 @@
     <style>
       body.page-admin.ns-platform {
         overflow-x: hidden !important;
-        background: var(--nebula-bg-base, #070B14) !important;
+        background: var(--nebula-bg-base) !important;
         animation: none !important;
       }
       body.page-admin.ns-platform .main {
@@ -50,8 +50,8 @@
         flex-wrap: wrap;
         gap: 12px;
         padding: 14px 18px;
-        background: #0E1626;
-        border: 1px solid #26344F;
+        background: var(--nebula-bg-surface);
+        border: 1px solid var(--nebula-border);
         border-radius: 12px;
       }
       .ns-options-title-group {
@@ -75,14 +75,14 @@
         gap: 6px;
       }
       .ns-options-pill {
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 600;
         font-family: var(--ns-font-mono, monospace);
         padding: 3px 8px;
         border-radius: 6px;
         background: rgba(17, 26, 43, 0.9);
-        border: 1px solid #26344F;
-        color: #A2AEC8;
+        border: 1px solid var(--nebula-border);
+        color: var(--nebula-text-secondary);
         white-space: nowrap;
       }
       .ns-options-pill strong {
@@ -112,7 +112,7 @@
       .ns-module-link:hover,
       .ns-module-link:focus-visible {
         background: rgba(77, 99, 255, 0.26);
-        border-color: #4D63FF;
+        border-color: var(--nebula-accent-primary);
         color: #FFFFFF;
         outline: none;
       }
@@ -124,8 +124,8 @@
         max-width: 100% !important;
         margin: 0 !important;
         padding: 5px !important;
-        background: #0B1220 !important;
-        border: 1px solid #26344F !important;
+        background: var(--nebula-bg-deep) !important;
+        border: 1px solid var(--nebula-border) !important;
         border-radius: 10px !important;
         box-sizing: border-box !important;
         overflow: visible !important;
@@ -138,7 +138,7 @@
         padding: 9px 12px !important;
         font-size: 13px !important;
         font-weight: 600 !important;
-        color: #A2AEC8 !important;
+        color: var(--nebula-text-secondary) !important;
         background: transparent !important;
         border: 1px solid transparent !important;
         border-radius: 7px !important;
@@ -154,7 +154,7 @@
         color: #F3F6FF !important;
       }
       body.ns-platform.page-admin .admin-tab-btn.active {
-        background: #4D63FF !important;
+        background: var(--nebula-accent-primary) !important;
         color: #FFFFFF !important;
         border-color: rgba(255, 255, 255, 0.18) !important;
         box-shadow: 0 2px 10px rgba(77, 99, 255, 0.35) !important;
@@ -184,8 +184,8 @@
         box-sizing: border-box !important;
       }
       body.page-admin .panel {
-        background: #111A2B !important;
-        border: 1px solid #26344F !important;
+        background: var(--nebula-bg-surface) !important;
+        border: 1px solid var(--nebula-border) !important;
         border-radius: 12px !important;
         padding: 16px 18px !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
@@ -386,7 +386,7 @@
                   {% endif %}
                 </div>
                 {% if maintenance.updated_label %}
-                <div class="stat-row" style="margin-bottom: 10px; font-size: 11px; color: var(--text-muted);">
+                <div class="stat-row" style="margin-bottom: 10px; font-size: 12px; color: var(--text-muted);">
                   <span>{{ _('Last changed:') }}</span>
                   <span>{{ maintenance.updated_label }}{% if maintenance.updated_by %} ({{ maintenance.updated_by }}){% endif %}</span>
                 </div>
@@ -440,7 +440,7 @@
                 </div>
                 <label for="bypassUsers" style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Allowlist (comma-separated):') }}</label>
                 <input type="text" id="bypassUsers" name="bypass_users" value="{{ maintenance.bypass_users_str }}" placeholder="{{ _('e.g. alice, bob') }}" style="width:100%; margin-bottom: 10px; box-sizing:border-box;">
-                <button type="submit" class="btn-primary" style="width:100%; background: #4D63FF; color: white;">
+                <button type="submit" class="btn-primary" style="width:100%; background: var(--nebula-accent-primary); color: white;">
                   {{ _('Save area maintenance') }}
                 </button>
               </form>
@@ -572,7 +572,7 @@
                           <button type="submit" title="{{ _('Ban IP') }}">{{ _('Ban') }}</button>
                         </form>
                         {% else %}
-                        <span style="color:var(--danger); font-size:11px;">{{ _('Banned') }}</span>
+                        <span style="color:var(--danger); font-size:12px;">{{ _('Banned') }}</span>
                         {% endif %}
                       </td>
                     </tr>
@@ -594,7 +594,7 @@
                 </div>
                 <form method="post" action="{{ url_for('admin_backup_create') }}" style="margin: 0;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn-primary" style="background: #4D63FF; color: #FFF; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+                  <button type="submit" class="btn-primary" style="background: var(--nebula-accent-primary); color: #FFF; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
                     {{ _('Create backup now') }}
                   </button>
                 </form>
@@ -614,11 +614,11 @@
                   <tbody>
                     {% for b in backups %}
                     <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
-                      <td style="padding: 10px; font-family: monospace; font-weight: 600; color: #F3F5FC;">{{ b.filename }}</td>
+                      <td style="padding: 10px; font-family: monospace; font-weight: 600; color: var(--nebula-text-main);">{{ b.filename }}</td>
                       <td style="padding: 10px; color: var(--text-muted);">{{ b.date_str }}</td>
                       <td style="padding: 10px;">{{ b.size_str }}</td>
                       <td style="padding: 10px;">
-                        {% if b.on_disk %}<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: rgba(72,214,162,0.15); color: #48D6A2; margin-right: 4px;">{{ _('Local') }}</span>{% endif %}
+                        {% if b.on_disk %}<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; background: rgba(72,214,162,0.15); color: var(--nebula-status-success); margin-right: 4px;">{{ _('Local') }}</span>{% endif %}
                       </td>
                       <td style="padding: 10px; text-align: right;">
                         <div style="display: inline-flex; gap: 6px;">

@@ -60,7 +60,7 @@
       : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #A2AEC8; font-weight: 700;">VOD</div>';
 
     var durHtml = vod.duration_str
-      ? '<span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); color: #FFF; font-size: 10px; padding: 1px 4px; border-radius: 3px; font-family: var(--ns-font-mono);">' + escapeHtml(vod.duration_str) + '</span>'
+      ? '<span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); color: #FFF; font-size: 12px; padding: 1px 4px; border-radius: 3px; font-family: var(--ns-font-mono);">' + escapeHtml(vod.duration_str) + '</span>'
       : '';
 
     var freshBorder = isFresh ? 'border-color: #4D63FF; animation: vodCardPulse 1.2s ease-out;' : '';
@@ -72,8 +72,8 @@
       '</div>' +
       '<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;">' +
         '<h4 style="font-size: 13px; font-weight: 600; color: #FFF; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(vod.title || vod.name) + '</h4>' +
-        '<div style="font-size: 11px; color: #BB78FF; margin-bottom: 2px;">' + escapeHtml(vod.streamer_name) + '</div>' +
-        '<div style="font-size: 10px; color: #75839D;">' + escapeHtml(vod.date_str || '') + '</div>' +
+        '<div style="font-size: 12px; color: #BB78FF; margin-bottom: 2px;">' + escapeHtml(vod.streamer_name) + '</div>' +
+        '<div style="font-size: 12px; color: #75839D;">' + escapeHtml(vod.date_str || '') + '</div>' +
       '</div>' +
     '</a>';
   }

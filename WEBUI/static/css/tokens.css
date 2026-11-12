@@ -59,13 +59,26 @@
   --nebula-radius-md: 12px;
   --nebula-radius-lg: 16px;
   --nebula-radius-full: 9999px;
+  --nebula-radius-xl: 24px;
+  /* Type scale (restyle 2026-11-12): every px font-size in the stylesheets maps here */
+  --sv-text-xs: 12px;
+  --sv-text-sm: 13px;
+  --sv-text-md: 14px;
+  --sv-text-base: 16px;
+  --sv-text-lg: 18px;
+  --sv-text-xl: 20px;
+  --sv-text-2xl: 24px;
+  --sv-text-3xl: 28px;
+  --sv-text-4xl: 32px;
+  --sv-text-5xl: 40px;
+  --sv-text-6xl: 48px;
   --nebula-rail-width: 72px;
   --sv-min-text: 12px;                /* Mindestschriftgroesse fuer Labels/Metadaten */
 
   /* 2. NAMESPACE MAPPINGS FOR SYSTEM INTEGRATION */
   /* --ns-* mappings */
   --ns-bg-canvas: var(--nebula-bg-root);
-  --ns-bg-sidebar: var(--nebula-bg-root);
+  --ns-bg-sidebar: var(--nebula-bg-deep, #0B1220);
   --ns-bg-surface: var(--nebula-bg-surface);
   --ns-bg-surface-raised: var(--nebula-bg-card);
   --ns-bg-surface-hover: var(--nebula-bg-hover);
@@ -88,8 +101,8 @@
   --ns-online-green: var(--nebula-status-success);
   --ns-platform-twitch: var(--nebula-accent-secondary);
   --ns-drive-blue: var(--nebula-accent-cyan);
-  --ns-font-sans: var(--nebula-font-sans);
-  --ns-font-mono: var(--nebula-font-mono);
+  --ns-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ns-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
   /* --tube-* & generic root */
   --tube-bg: var(--nebula-bg-root);
@@ -135,4 +148,73 @@
   --silo-border-base: var(--nebula-border);
   --silo-text-main: var(--nebula-text-main);
   --silo-text-muted: var(--nebula-text-secondary);
+
+  /* 3. LEGACY ALIASES (consolidated from the former :root blocks in style.css and
+     tube_design_system.css; effective cascade value kept). New code uses --nebula-*. */
+  --glass-hover: var(--tube-surface-2);
+  --radius: var(--tube-radius);
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-1: #0b0f14;
+  --bg-2: #0a0d12;
+  --ink: #e5e7eb;
+  --sr-surface: rgba(18, 22, 22, 0.94);
+  --sr-surface-2: rgba(24, 29, 29, 0.92);
+  --sr-line: rgba(226, 232, 240, 0.12);
+  --sr-line-strong: rgba(226, 232, 240, 0.2);
+  --sr-text: #f3f4f0;
+  --sr-text-2: #c8d1cc;
+  --sr-muted: #8f9c96;
+  --sr-warm: #f28c28;
+  --sr-warm-2: #ffb15f;
+  --sr-shadow: 0 22px 60px rgba(0, 0, 0, 0.42);
+  --ns-bg: #0b0d10;
+  --ns-panel: rgba(9, 18, 16, 0.82);
+  --ns-line: rgba(188, 224, 210, 0.12);
+  --ns-line-strong: rgba(188, 224, 210, 0.2);
+  --ns-text: #f3fbf8;
+  --ns-text-2: #c8ddd5;
+  --ns-muted: #8ea79e;
+  --ns-purple: var(--tube-accent);
+  --ns-purple-2: var(--tube-accent-hover);
+  --ns-cyan: #26d9d0;
+  --ns-green: #65d8ac;
+  --ns-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  --ns-soft: #cbd5e1;
+  --ns-accent: #7c5cff;
+  --ns-accent-2: #22d3ee;
+  --ns-live: #ff3b5f;
+  --ns-good: #22c55e;
+  --ns-radius: 8px;
+  --ns-bg-0: #050909;
+  --ns-bg-1: #07100f;
+  --ns-gold: #e8c060;
+  --tube-radius: 10px;
+  --tube-rail: 76px;
+  --sidebar: #0c0d0f;
+  --surface: #111316;
+  --surface-raised: #17191d;
+  --surface-hover: #1c1f23;
+  --surface-active: #202329;
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #f2f3f5;
+  --text-secondary: #979ba3;
+  --brand: #d8eb72;
+  --brand-hover: #e4f58b;
+  --brand-muted: rgba(216, 235, 114, 0.12);
+  --warning: #efc66b;
+  --offline: #737780;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-card: 10px;
+  --tube-focus: 0 0 0 3px rgba(242, 229, 141, 0.28);
+  --ns-platform-youtube: var(--nebula-status-live);
+  --ns-rail-width: 68px;
+  --ns-radius-xs: 4px;
+  --ns-radius-sm: 6px;
+  --ns-radius-md: 8px;
+  --ns-radius-lg: 12px;
+  --ns-radius-full: 9999px;
+  --ns-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --ns-shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.85);
 }

@@ -6,7 +6,7 @@
 
 {% block content %}
   {% if channels_msg %}
-  <div role="status" style="padding: 12px 16px; margin-bottom: 20px; border-radius: var(--ns-radius-md); background: rgba(77,99,255,0.15); border: 1px solid rgba(77,99,255,0.35); color: #69C9FF;">
+  <div role="status" style="padding: 12px 16px; margin-bottom: 20px; border-radius: var(--ns-radius-md); background: rgba(77,99,255,0.15); border: 1px solid rgba(77,99,255,0.35); color: var(--nebula-accent-cyan);">
     {{ channels_msg }}
   </div>
   {% endif %}
@@ -46,7 +46,7 @@
             </div>
             <span class="nebula-hero-cat">{{ hero_item.category }}</span>
             {% if hero_item.is_live and hero_item.viewers %}
-            <span style="color:#F04458; font-weight:600;">{{ _('%(count)s viewers', count=hero_item.viewers) }}</span>
+            <span style="color:var(--nebula-status-live); font-weight:600;">{{ _('%(count)s viewers', count=hero_item.viewers) }}</span>
             {% elif hero_item.duration %}
             <span style="font-family:var(--ns-font-mono);">{{ hero_item.duration }}</span>
             {% endif %}
@@ -89,7 +89,7 @@
         <div class="nebula-section-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
           <h2 class="nebula-section-title" style="margin:0;">{{ _('Latest VODs') }}</h2>
           {% if vod_total_pages is defined and vod_total_pages > 1 %}
-          <div class="ns-pagination-inline" style="display:flex; align-items:center; gap:8px; font-size:12px; color:#A2AEC8;">
+          <div class="ns-pagination-inline" style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--nebula-text-secondary);">
             <span>{{ _('Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)', page=vod_page, pages=vod_total_pages, count=vod_total_count) }}</span>
             {% if vod_page > 1 %}
             <a href="{{ url_for('index', page=vod_page-1) }}" class="ns-page-btn" style="padding:4px 10px; min-height:28px; height:28px;">&lsaquo; {{ _('Back') }}</a>
@@ -107,7 +107,7 @@
               {% if vod.thumb_url %}
               <img src="{{ vod.thumb_url }}" alt="" class="nebula-vod-thumb-img" {% if loop.index <= 2 %}{% if loop.first %}fetchpriority="high" {% endif %}loading="eager"{% else %}loading="lazy" decoding="async"{% endif %}>
               {% else %}
-              <div style="width:100%; height:100%; background: linear-gradient(135deg, #111A2B 0%, #151F33 100%); display:flex; align-items:center; justify-content:center; color:#A2AEC8; font-weight:700; font-size:16px;">{{ vod.streamer_name }}</div>
+              <div style="width:100%; height:100%; background: linear-gradient(135deg, var(--nebula-bg-surface) 0%, var(--nebula-bg-card) 100%); display:flex; align-items:center; justify-content:center; color:var(--nebula-text-secondary); font-weight:700; font-size:16px;">{{ vod.streamer_name }}</div>
               {% endif %}
               <span class="nebula-vod-streamer-badge">{{ vod.streamer_name }}</span>
               {% if vod.duration_str %}
@@ -166,7 +166,7 @@
       <div class="nebula-side-widget">
         <div class="nebula-widget-head" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
           <h3>{{ _('Channels') }}</h3>
-          <a href="{{ url_for('channels_view') }}" style="font-size:12px; color:#69C9FF; text-decoration:none; font-weight:600;">{{ _('Manage streamers') }}</a>
+          <a href="{{ url_for('channels_view') }}" style="font-size:12px; color:var(--nebula-accent-cyan); text-decoration:none; font-weight:600;">{{ _('Manage streamers') }}</a>
         </div>
         <div class="nebula-category-list ns-compact-streamer-list">
           {% for s in streamers[:6] %}
@@ -215,7 +215,7 @@
           {% for clip in recent_clips %}
           <a href="{{ url_for('clip_view', streamer=clip.streamer_name, filename=clip.name) }}" class="nebula-category-item" style="display:flex; flex-direction:column; align-items:flex-start; gap:4px;">
             <div style="font-weight:600; color:#FFF; font-size:12px;">{{ clip.title or clip.name }}</div>
-            <div style="display:flex; justify-content:space-between; width:100%; font-size:11px; color:#A2AEC8;">
+            <div style="display:flex; justify-content:space-between; width:100%; font-size:12px; color:var(--nebula-text-secondary);">
               <span>{{ clip.streamer_name }}</span>
               <span style="font-family:var(--ns-font-mono);">{{ clip.duration_str }}</span>
             </div>

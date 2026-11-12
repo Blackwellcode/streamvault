@@ -41,13 +41,13 @@
 
       <!-- Betriebsmodus Auswahl -->
       <fieldset style="margin: 0; min-width: 0; background: rgba(11, 18, 32, 0.65); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-        <legend style="float: left; padding: 0; font-size: 12px; font-weight: 700; color: #BB78FF;">{{ _('Operating mode') }}</legend>
+        <legend style="float: left; padding: 0; font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight);">{{ _('Operating mode') }}</legend>
         <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #FFF; cursor: pointer; margin: 0;">
-          <input type="radio" name="mode" value="record" checked style="accent-color: #BB78FF; cursor: pointer;">
+          <input type="radio" name="mode" value="record" checked style="accent-color: var(--nebula-accent-highlight); cursor: pointer;">
           <span><span aria-hidden="true">🔴</span> <strong>{{ _('Full mode:') }}</strong> {{ _('Recording + live stream & Discord notification') }}</span>
         </label>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A2AEC8; cursor: pointer; margin: 0;">
-          <input type="radio" name="mode" value="live_only" style="accent-color: #48D6A2; cursor: pointer;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nebula-text-secondary); cursor: pointer; margin: 0;">
+          <input type="radio" name="mode" value="live_only" style="accent-color: var(--nebula-status-success); cursor: pointer;">
           <span><span aria-hidden="true">📡</span> <strong>{{ _('Live & Discord only:') }}</strong> {{ _('Notification + live stream (no recording)') }}</span>
         </label>
       </fieldset>
@@ -76,13 +76,13 @@
       <div class="ns-card-panel" style="padding: 16px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--ns-border-subtle); padding-bottom: 8px;">
           <strong style="font-size: 15px; color: var(--ns-text-primary); font-family: var(--ns-font-mono);">{{ _('Archive: %(name)s', name=archive) }}</strong>
-          <span style="font-size: 11px; color: var(--ns-text-muted);">{{ ngettext('%(num)d source', '%(num)d sources', configs|length) }}</span>
+          <span style="font-size: 12px; color: var(--ns-text-muted);">{{ ngettext('%(num)d source', '%(num)d sources', configs|length) }}</span>
         </div>
 
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
           {% for c in configs %}
           <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: var(--ns-radius-md); background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-subtle);">
-            <span class="ns-overlay-chip" style="font-size: 9px; padding: 1px 4px; background-color: {% if c.platform == 'youtube' %}var(--ns-platform-youtube){% else %}var(--ns-platform-twitch){% endif %};">
+            <span class="ns-overlay-chip" style="font-size: 12px; padding: 1px 4px; background-color: {% if c.platform == 'youtube' %}var(--ns-platform-youtube){% else %}var(--ns-platform-twitch){% endif %};">
               {% if c.platform == 'youtube' %}YT{% else %}TW{% endif %}
             </span>
             <strong style="font-size: 13px; color: var(--ns-text-primary);">{{ c.name }}</strong>
@@ -103,7 +103,7 @@
               </button>
             </form>
             {% else %}
-            <span style="font-size: 12px; font-weight: 700; color: #48D6A2; background: rgba(72,214,162,0.15); border: 1px solid rgba(72,214,162,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('Live stream and Discord alerts only, no disk recording') }}">
+            <span style="font-size: 12px; font-weight: 700; color: var(--nebula-status-success); background: rgba(72,214,162,0.15); border: 1px solid rgba(72,214,162,0.3); padding: 2px 6px; border-radius: 4px;" title="{{ _('Live stream and Discord alerts only, no disk recording') }}">
               <span aria-hidden="true">📡</span> {{ _('Live & Discord only') }}
             </span>
             <form method="post" action="{{ url_for('source_record_toggle', channel=c.name) }}" style="margin: 0;">

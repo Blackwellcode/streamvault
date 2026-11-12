@@ -32,34 +32,34 @@
     flex-shrink: 0; white-space: nowrap;
   }
   .rbac-tab-btn:hover { color: var(--ns-text-primary); background: rgba(255, 255, 255, 0.03); }
-  .rbac-tab-btn.is-active { color: #4D63FF; border-bottom-color: #4D63FF; background: rgba(77, 99, 255, 0.08); }
-  .rbac-tab-badge { background: rgba(255, 255, 255, 0.1); color: var(--ns-text-secondary); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+  .rbac-tab-btn.is-active { color: var(--nebula-accent-primary); border-bottom-color: var(--nebula-accent-primary); background: rgba(77, 99, 255, 0.08); }
+  .rbac-tab-badge { background: rgba(255, 255, 255, 0.1); color: var(--ns-text-secondary); font-size: 12px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
   .rbac-tab-btn.is-active .rbac-tab-badge { background: rgba(77, 99, 255, 0.25); color: #FFF; }
   .rbac-table-wrap { background: var(--ns-bg-surface); border: 1px solid var(--ns-border-subtle); border-radius: var(--ns-radius-lg); overflow-x: auto; box-shadow: var(--ns-shadow-sm); }
   .rbac-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-  .rbac-table th { background: var(--ns-bg-surface-raised); color: var(--ns-text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 18px; border-bottom: 1px solid var(--ns-border-subtle); }
+  .rbac-table th { background: var(--ns-bg-surface-raised); color: var(--ns-text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 18px; border-bottom: 1px solid var(--ns-border-subtle); }
   .rbac-table td { padding: 14px 18px; border-bottom: 1px solid rgba(38, 52, 79, 0.4); color: var(--ns-text-primary); vertical-align: middle; }
   .rbac-table tr:last-child td { border-bottom: none; }
   .rbac-table tr:hover td { background: var(--ns-bg-surface-hover); }
-  .rbac-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: var(--ns-radius-sm); font-size: 11px; font-weight: 600; line-height: 1.2; }
-  .rbac-badge-admin { background: rgba(147, 101, 255, 0.2); color: #BB78FF; border: 1px solid rgba(147, 101, 255, 0.4); }
-  .rbac-badge-mod { background: rgba(77, 99, 255, 0.2); color: #69C9FF; border: 1px solid rgba(77, 99, 255, 0.4); }
-  .rbac-badge-viewer { background: rgba(162, 174, 200, 0.15); color: #A2AEC8; border: 1px solid rgba(162, 174, 200, 0.25); }
-  .rbac-badge-custom { background: rgba(72, 214, 162, 0.15); color: #48D6A2; border: 1px solid rgba(72, 214, 162, 0.3); }
+  .rbac-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: var(--ns-radius-sm); font-size: 12px; font-weight: 600; line-height: 1.2; }
+  .rbac-badge-admin { background: rgba(147, 101, 255, 0.2); color: var(--nebula-accent-highlight); border: 1px solid rgba(147, 101, 255, 0.4); }
+  .rbac-badge-mod { background: rgba(77, 99, 255, 0.2); color: var(--nebula-accent-cyan); border: 1px solid rgba(77, 99, 255, 0.4); }
+  .rbac-badge-viewer { background: rgba(162, 174, 200, 0.15); color: var(--nebula-text-secondary); border: 1px solid rgba(162, 174, 200, 0.25); }
+  .rbac-badge-custom { background: rgba(72, 214, 162, 0.15); color: var(--nebula-status-success); border: 1px solid rgba(72, 214, 162, 0.3); }
   .rbac-badge-system { background: rgba(187, 120, 255, 0.15); color: #D4A5FF; border: 1px solid rgba(187, 120, 255, 0.35); font-weight: 700; }
-  .rbac-badge-custom-grp { background: rgba(105, 201, 255, 0.15); color: #69C9FF; border: 1px solid rgba(105, 201, 255, 0.35); }
-  .rbac-badge-active { background: rgba(72, 214, 162, 0.15); color: #48D6A2; border: 1px solid rgba(72, 214, 162, 0.4); }
-  .rbac-badge-inactive { background: rgba(240, 68, 88, 0.15); color: #F04458; border: 1px solid rgba(240, 68, 88, 0.4); }
+  .rbac-badge-custom-grp { background: rgba(105, 201, 255, 0.15); color: var(--nebula-accent-cyan); border: 1px solid rgba(105, 201, 255, 0.35); }
+  .rbac-badge-active { background: rgba(72, 214, 162, 0.15); color: var(--nebula-status-success); border: 1px solid rgba(72, 214, 162, 0.4); }
+  .rbac-badge-inactive { background: rgba(240, 68, 88, 0.15); color: var(--nebula-status-live); border: 1px solid rgba(240, 68, 88, 0.4); }
   .rbac-perm-chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 520px; }
-  .rbac-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-  .rbac-chip-on { background: rgba(72, 214, 162, 0.12); color: #48D6A2; border: 1px solid rgba(72, 214, 162, 0.25); }
-  .rbac-chip-off { background: rgba(117, 131, 157, 0.08); color: #75839D; border: 1px solid rgba(117, 131, 157, 0.18); text-decoration: line-through; opacity: 0.6; }
-  .rbac-chip-channel-all { background: rgba(187, 120, 255, 0.15); color: #BB78FF; border: 1px solid rgba(187, 120, 255, 0.35); font-weight: 600; }
-  .rbac-chip-channel-custom { background: rgba(105, 201, 255, 0.15); color: #69C9FF; border: 1px solid rgba(105, 201, 255, 0.35); font-weight: 600; }
+  .rbac-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .rbac-chip-on { background: rgba(72, 214, 162, 0.12); color: var(--nebula-status-success); border: 1px solid rgba(72, 214, 162, 0.25); }
+  .rbac-chip-off { background: rgba(117, 131, 157, 0.08); color: var(--nebula-text-muted); border: 1px solid rgba(117, 131, 157, 0.18); text-decoration: line-through; opacity: 0.6; }
+  .rbac-chip-channel-all { background: rgba(187, 120, 255, 0.15); color: var(--nebula-accent-highlight); border: 1px solid rgba(187, 120, 255, 0.35); font-weight: 600; }
+  .rbac-chip-channel-custom { background: rgba(105, 201, 255, 0.15); color: var(--nebula-accent-cyan); border: 1px solid rgba(105, 201, 255, 0.35); font-weight: 600; }
   .rbac-actions { display: flex; gap: 8px; align-items: center; }
   .rbac-btn-icon { background: transparent; border: 1px solid var(--ns-border-subtle); color: var(--ns-text-secondary); width: 32px; height: 32px; border-radius: var(--ns-radius-sm); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease; }
   .rbac-btn-icon:hover { color: var(--ns-text-primary); background: var(--ns-bg-surface-active); border-color: var(--ns-border-medium); }
-  .rbac-btn-icon.danger:hover { color: #F04458; background: rgba(240, 68, 88, 0.12); border-color: rgba(240, 68, 88, 0.35); }
+  .rbac-btn-icon.danger:hover { color: var(--nebula-status-live); background: rgba(240, 68, 88, 0.12); border-color: rgba(240, 68, 88, 0.35); }
   .rbac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(7, 11, 20, 0.85); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
   .rbac-modal-backdrop.is-open { display: flex; }
   dialog.rbac-modal-backdrop { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; color: inherit; }
@@ -75,14 +75,14 @@
   .rbac-form-group { display: flex; flex-direction: column; gap: 6px; }
   .rbac-form-group label, .rbac-group-label { font-size: 12px; font-weight: 600; color: var(--ns-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
   .rbac-input, .rbac-select { background: var(--ns-bg-canvas); border: 1px solid var(--ns-border-medium); border-radius: var(--ns-radius-md); color: var(--ns-text-primary); padding: 10px 14px; font-size: 14px; outline: none; transition: border-color 0.15s ease; }
-  .rbac-input:focus, .rbac-select:focus { border-color: #4D63FF; box-shadow: 0 0 0 2px rgba(77, 99, 255, 0.2); }
+  .rbac-input:focus, .rbac-select:focus { border-color: var(--nebula-accent-primary); box-shadow: 0 0 0 2px rgba(77, 99, 255, 0.2); }
   .rbac-checkbox-list { display: flex; flex-direction: column; gap: 8px; background: var(--ns-bg-canvas); padding: 12px 16px; border-radius: var(--ns-radius-md); border: 1px solid var(--ns-border-subtle); }
   .rbac-checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ns-text-primary); cursor: pointer; }
-  .rbac-checkbox-label input[type="checkbox"] { accent-color: #4D63FF; width: 16px; height: 16px; }
+  .rbac-checkbox-label input[type="checkbox"] { accent-color: var(--nebula-accent-primary); width: 16px; height: 16px; }
   #rbac-toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
-  .rbac-toast { background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-medium); border-left: 4px solid #4D63FF; color: var(--ns-text-primary); padding: 12px 18px; border-radius: var(--ns-radius-md); box-shadow: var(--ns-shadow-lg); font-size: 13px; display: flex; align-items: center; gap: 10px; min-width: 280px; max-width: 440px; animation: rbacToastIn 0.2s ease-out; }
-  .rbac-toast.success { border-left-color: #48D6A2; }
-  .rbac-toast.error { border-left-color: #F04458; }
+  .rbac-toast { background: var(--ns-bg-surface-raised); border: 1px solid var(--ns-border-medium); border-left: 4px solid var(--nebula-accent-primary); color: var(--ns-text-primary); padding: 12px 18px; border-radius: var(--ns-radius-md); box-shadow: var(--ns-shadow-lg); font-size: 13px; display: flex; align-items: center; gap: 10px; min-width: 280px; max-width: 440px; animation: rbacToastIn 0.2s ease-out; }
+  .rbac-toast.success { border-left-color: var(--nebula-status-success); }
+  .rbac-toast.error { border-left-color: var(--nebula-status-live); }
   @keyframes rbacToastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 {% endblock %}{% block content %}
@@ -128,14 +128,14 @@
           <tr id="user-row-{{ u.username }}" data-username="{{ u.username }}" data-email="{{ u.email }}" data-group="{{ u.group_name }}">
             <td>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #4D63FF, #9365FF); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFF;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--nebula-accent-primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFF;">
                   {{ u.username[:1].upper() }}
                 </div>
                 <div>
                   <div style="font-weight: 600; color: #FFF; display: flex; align-items: center; gap: 6px;">
                     <span>{{ u.username }}</span>
                     {% if u.is_system_admin %}
-                    <span class="rbac-badge rbac-badge-admin" style="font-size: 9px; padding: 1px 5px;">ENV ADMIN</span>
+                    <span class="rbac-badge rbac-badge-admin" style="font-size: 12px; padding: 1px 5px;">ENV ADMIN</span>
                     {% endif %}
                   </div>
                 </div>
@@ -235,7 +235,7 @@
             </td>
             <td>
               <span style="font-weight: 600; color: #FFF;">{{ g.member_count or 0 }}</span>
-              <span style="color: var(--ns-text-muted); font-size: 11px;"> {{ _('users') }}</span>
+              <span style="color: var(--ns-text-muted); font-size: 12px;"> {{ _('users') }}</span>
             </td>
             <td>
               {% if g.permissions.access_all_channels %}
@@ -245,7 +245,7 @@
                     <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                     {{ _('All streams (+ auto-new)') }}
                   </span>
-                  <span style="font-size:11px; color:#F04458; font-weight:500;">
+                  <span style="font-size:12px; color:var(--nebula-status-live); font-weight:500;">
                     {{ _('Blocked (%(count)s): %(list)s', count=g.permissions.disabled_channels|length, list=g.permissions.disabled_channels|join(', ')) }}
                   </span>
                 </div>
@@ -261,7 +261,7 @@
                     {{ ngettext('%(num)d folder allowed', '%(num)d folders allowed', (g.permissions.allowed_channels or [])|length) }}
                   </span>
                   {% if g.permissions.allowed_channels %}
-                  <span style="font-size:11px; color:var(--ns-text-muted);">
+                  <span style="font-size:12px; color:var(--ns-text-muted);">
                     {{ g.permissions.allowed_channels|join(', ') }}
                   </span>
                   {% endif %}
@@ -395,7 +395,7 @@
       <input type="hidden" id="delete-user-name">
       <div class="rbac-modal-body">
         <p style="margin: 0; color: var(--ns-text-primary);">
-          {% set delete_user_target %}<strong id="delete-user-display" style="color: #F04458;"></strong>{% endset %}{{ _('Do you really want to permanently delete the user %(name)s?', name=delete_user_target) }}
+          {% set delete_user_target %}<strong id="delete-user-display" style="color: var(--nebula-status-live);"></strong>{% endset %}{{ _('Do you really want to permanently delete the user %(name)s?', name=delete_user_target) }}
         </p>
         <p style="margin: 0; font-size: 12px; color: var(--ns-text-muted);">
           {{ _('All saved settings of this account will be deleted completely.') }}
@@ -435,13 +435,13 @@
               <input type="checkbox" id="add-group-access-all" checked data-channel-mode="add">
               <span>{{ _('Automatically unlock future streams & folders') }}</span>
             </label>
-            <div id="add-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
+            <div id="add-channel-hint" style="font-size: 12px; color: var(--ns-text-muted); margin-left: 26px;">
               {{ _('Active: new streams are unlocked automatically. Below you can disable / block individual folders.') }}
             </div>
 
             <div id="add-group-channels-box" style="border-top: 1px solid var(--ns-border-subtle); padding-top: 10px; margin-top: 4px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div id="add-channel-title" style="font-size: 11px; font-weight: 700; color: #BB78FF; text-transform: uppercase;">
+                <div id="add-channel-title" style="font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); text-transform: uppercase;">
                   {{ _('Disable / enable individual folders:') }}
                 </div>
                 <div style="display: flex; gap: 6px;">
@@ -524,13 +524,13 @@
               <input type="checkbox" id="edit-group-access-all" data-channel-mode="edit">
               <span>{{ _('Automatically unlock future streams & folders') }}</span>
             </label>
-            <div id="edit-channel-hint" style="font-size: 11px; color: var(--ns-text-muted); margin-left: 26px;">
+            <div id="edit-channel-hint" style="font-size: 12px; color: var(--ns-text-muted); margin-left: 26px;">
               {{ _('Active: new streams are unlocked automatically. Below you can disable / block individual folders.') }}
             </div>
 
             <div id="edit-group-channels-box" style="border-top: 1px solid var(--ns-border-subtle); padding-top: 10px; margin-top: 4px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div id="edit-channel-title" style="font-size: 11px; font-weight: 700; color: #BB78FF; text-transform: uppercase;">
+                <div id="edit-channel-title" style="font-size: 12px; font-weight: 700; color: var(--nebula-accent-highlight); text-transform: uppercase;">
                   {{ _('Disable / enable individual folders:') }}
                 </div>
                 <div style="display: flex; gap: 6px;">
@@ -596,9 +596,9 @@
       <input type="hidden" id="delete-group-id">
       <div class="rbac-modal-body">
         <p style="margin: 0; color: var(--ns-text-primary);">
-          {% set delete_group_target %}<strong id="delete-group-display" style="color: #F04458;"></strong>{% endset %}{{ _('Do you really want to delete the group %(name)s?', name=delete_group_target) }}
+          {% set delete_group_target %}<strong id="delete-group-display" style="color: var(--nebula-status-live);"></strong>{% endset %}{{ _('Do you really want to delete the group %(name)s?', name=delete_group_target) }}
         </p>
-        <div style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.3); border-radius: var(--ns-radius-md); padding: 12px; font-size: 12px; color: #A2AEC8;">
+        <div style="background: rgba(77, 99, 255, 0.12); border: 1px solid rgba(77, 99, 255, 0.3); border-radius: var(--ns-radius-md); padding: 12px; font-size: 12px; color: var(--nebula-text-secondary);">
           <strong style="color: #FFF;">{{ _('Safety migration:') }}</strong> {{ _('Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>.') }}
         </div>
       </div>
