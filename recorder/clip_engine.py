@@ -459,12 +459,18 @@ def _kill_process_tree(proc: subprocess.Popen) -> None:
     if proc.poll() is not None:
         return
     try:
-        os.killpg(proc.pid, signal.SIGKILL)
+        if not hasattr(os, "killpg"):
+            raise PermissionError("no POSIX process groups on this platform")
+        # Invariant 2: never signal our own group (or PID 1's).
+        pgid = os.getpgid(proc.pid)
+        if pgid <= 1 or pgid == os.getpgrp():
+            raise PermissionError(f"refusing to signal process group {pgid}")
+        os.killpg(pgid, signal.SIGKILL)
     except (ProcessLookupError, PermissionError, OSError):
         try:
             proc.kill()
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Process %s not killed: %s", getattr(proc, "pid", "?"), exc)
 
 
 def _run_ffmpeg(cmd: list[str], timeout: int = FFMPEG_TIMEOUT_SEC) -> subprocess.CompletedProcess:

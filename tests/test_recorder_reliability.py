@@ -108,18 +108,27 @@ class LiveOnlyMonitorTests(IsolatedBaseTest):
             calls["count"] += 1
             return conf if calls["count"] == 1 else None
 
-        with mock.patch.object(recorder, "get_source_config", side_effect=fake_config), \
-             mock.patch.object(recorder, "cheap_live_presence", return_value={"live": False}), \
-             mock.patch.object(recorder, "CHECK_INTERVAL", 0), \
-             mock.patch.object(recorder, "shutdown_requested", False):
-            recorder.monitor_stream_live_only("audit_channel", "audit_channel", conf)
+        ports = recorder.LiveMonitorPorts(
+            get_config=fake_config,
+            live_presence=lambda _channel, _conf: {"live": False},
+            should_stop=lambda: False,
+            sleep=lambda *_args, **_kwargs: False,
+            interval=lambda: 0,
+        )
+        recorder.monitor_stream_live_only("audit_channel", "audit_channel", conf, ports=ports)
 
         self.assertGreaterEqual(calls["count"], 2)
 
     def test_monitor_exits_immediately_during_shutdown(self):
-        with mock.patch.object(recorder, "shutdown_requested", True), \
-             mock.patch.object(recorder, "get_source_config") as get_conf:
-            recorder.monitor_stream_live_only("audit_channel", "audit_channel", {"record": False})
+        get_conf = mock.Mock()
+        ports = recorder.LiveMonitorPorts(
+            get_config=get_conf,
+            live_presence=mock.Mock(),
+            should_stop=lambda: True,
+            sleep=mock.Mock(),
+            interval=lambda: 0,
+        )
+        recorder.monitor_stream_live_only("audit_channel", "audit_channel", {"record": False}, ports=ports)
         get_conf.assert_not_called()
 
 
@@ -376,6 +385,12 @@ class TaskRequeueTests(IsolatedBaseTest):
 
 
 class RunTranscribeTests(unittest.TestCase):
+    def setUp(self):
+        # run_transcribe.main sets STREAMVAULT_IMPORT_ONLY process-wide; restore it.
+        env = mock.patch.dict(os.environ)
+        env.start()
+        self.addCleanup(env.stop)
+
     def test_usage_error(self):
         self.assertEqual(run_transcribe.main([]), 2)
 
@@ -817,6 +832,10 @@ class DemoSeedTests(IsolatedBaseTest):
         (own / self.demo_seed.MARKER_FILE).write_text("x", encoding="utf-8")
         (own / "pixelharbor").mkdir()
         self.demo_seed.check_target(str(own))
+        # check_target creates a missing target and leaves its own data alone.
+        self.assertTrue((self.base / "fresh").is_dir())
+        self.assertEqual(sorted(p.name for p in own.iterdir()),
+                         sorted([self.demo_seed.MARKER_FILE, "pixelharbor"]))
 
 
 class LoadJsonTests(IsolatedBaseTest):
@@ -1046,17 +1065,16 @@ class DiskSpaceGuardTests(IsolatedBaseTest):
             self.assertFalse(recorder.disk_blocks_recording(str(nonexistent)))
 
     def test_disk_pause_flag_blocks_immediately(self):
-        with mock.patch.object(recorder, "_storage_pause_flag_active", return_value=True):
-            self.assertTrue(recorder.disk_blocks_recording(str(self.base)))
+        self.assertTrue(recorder.disk_blocks_recording(str(self.base), pause_flag=True))
 
 
 class NetworkProbeTimeoutTests(unittest.TestCase):
     def test_streamlink_probe_timeout_returns_error_dict(self):
-        with mock.patch.object(recorder, "find_streamlink", return_value="streamlink"), \
-             mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="streamlink", timeout=10)):
-            res = recorder.probe_streamlink_playable("testchannel", {"platform": "twitch"})
-            self.assertFalse(res["ok"])
-            self.assertIn("Timeout", res["error"])
+        from recorder.recording_runtime import FakeProcessRunner
+        runner = FakeProcessRunner(error=subprocess.TimeoutExpired(cmd="streamlink", timeout=10))
+        res = recorder.probe_streamlink_playable("testchannel", {"platform": "twitch"}, runner=runner)
+        self.assertFalse(res["ok"])
+        self.assertIn("Timeout", res["error"])
 
     def test_ytdlp_probe_timeout_returns_error_dict(self):
         with mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="yt-dlp", timeout=10)):
@@ -1075,8 +1093,7 @@ class NetworkProbeTimeoutTests(unittest.TestCase):
 class ShutdownControlTests(unittest.TestCase):
     def test_interruptible_sleep_exits_early_on_shutdown(self):
         start = time.time()
-        with mock.patch.object(recorder, "shutdown_requested", True):
-            recorder.interruptible_sleep(10)
+        recorder.interruptible_sleep(10, should_stop=lambda: True)
         elapsed = time.time() - start
         self.assertLess(elapsed, 1.0)
 

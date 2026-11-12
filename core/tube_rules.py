@@ -157,16 +157,6 @@ def user_has_accepted_current_rules(row: dict | None) -> bool:
     return bool(version == RULES_VERSION and accepted_ts > 0)
 
 
-def record_rules_acceptance(username: str, *, version: str | None = None) -> dict | None:
-    """Record Hausordnung acceptance; AGB consent is kept in lockstep (Anlage A)."""
-    from core import tube_terms
-
-    username = str(username or "").strip()
-    if not username:
-        return None
-    return tube_terms.record_terms_acceptance(username, source="rules")
-
-
 def status_for_user_row(row: dict | None) -> dict[str, Any]:
     row = row or {}
     return {

@@ -97,6 +97,17 @@ python -m WEBUI.webui --host 127.0.0.1 --port 8080
 Requires FFmpeg on the `PATH`. Open `http://127.0.0.1:8080` and sign in with
 the `VOD_USER` and `VOD_PASS` values from the command.
 
+## Optional components
+
+| Feature | Package | Enable with |
+| --- | --- | --- |
+| Transcription (default backend) | `openai-whisper` (pulls `torch`) | `pip install openai-whisper` |
+| Faster CPU transcription | `faster-whisper` | `pip install faster-whisper`, `TRANSCRIBE_BACKEND=faster_whisper` |
+| Error reporting | `sentry-sdk` | `pip install "sentry-sdk[flask]"`, `SENTRY_DSN=...` |
+
+Without them StreamVault runs normally; transcription and error reporting
+are simply unavailable and the log says so.
+
 ## Installation
 
 ### Ubuntu 22.04+ / Debian 12+
@@ -182,6 +193,19 @@ StreamVault is a tool for archiving streams you are allowed to archive, such
 as your own channel or content whose rights holder agreed. Recording,
 storing or redistributing other people's streams can violate copyright and the
 platforms' terms of service. You are responsible for how you use it.
+
+## Running the tests
+
+The suite uses the standard library runner; ruff is the only extra tool
+(development only, the version CI uses):
+
+```bash
+python -m unittest discover -s tests -p "test_*.py"
+pip install ruff==0.17.3 && ruff check .
+```
+
+Tests that need POSIX process groups, `flock` or symlinks skip themselves on
+Windows and run in CI on Linux.
 
 ## Contributing
 

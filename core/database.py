@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import secrets
 import sqlite3
 import time
 
@@ -8,10 +9,22 @@ logger = logging.getLogger("database")
 from functools import wraps
 from contextlib import contextmanager
 
-from flask_babel import gettext
-
 from core import config
 from core.config import DB_FILE, LEGACY_CHANNELS_FILE, LEGACY_LIVE_CHANNEL_FILE
+
+
+def N_(message: str) -> str:
+    """Mark a message for extraction; the web layer translates it (no Flask here)."""
+    return message
+
+
+class GroupError(ValueError):
+    """Group validation error. ``msgid`` is English source text for gettext."""
+
+    def __init__(self, msgid: str, **params):
+        self.msgid = msgid
+        self.params = params
+        super().__init__(msgid % params if params else msgid)
 
 
 def db_retry(max_retries: int = 5, delay: float = 0.1, backoff: float = 2.0):
@@ -69,6 +82,27 @@ def db_transaction():
     finally:
         conn.close()
 
+def ensure_login_user_attempts_table(cursor) -> None:
+    """Failed logins per (account, network); ``net`` is the /64 or IPv4 address."""
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS login_user_attempts "
+        "(username TEXT NOT NULL, net TEXT NOT NULL DEFAULT '', ts REAL NOT NULL)"
+    )
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(login_user_attempts)").fetchall()}
+    if "net" not in columns:
+        try:
+            cursor.execute("ALTER TABLE login_user_attempts ADD COLUMN net TEXT NOT NULL DEFAULT ''")
+        except sqlite3.OperationalError as exc:
+            logger.warning("Migration login_user_attempts.net skipped: %s", exc)
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_login_user_attempts ON login_user_attempts(username, ts)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_login_user_attempts_net "
+        "ON login_user_attempts(username, net, ts)"
+    )
+
+
 def init_db():
     conn = get_db()
     try:
@@ -88,19 +122,25 @@ def init_db():
             if column not in channel_columns:
                 try:
                     c.execute(f"ALTER TABLE channels ADD COLUMN {column} {definition}")
-                except Exception:
-                    pass
+                except sqlite3.OperationalError as exc:
+                    # Another process may have added it between PRAGMA and ALTER.
+                    logger.warning("Migration channels.%s skipped: %s", column, exc)
         c.execute("UPDATE channels SET platform='twitch' WHERE platform IS NULL OR platform=''")
         c.execute("UPDATE channels SET archive_name=name WHERE archive_name IS NULL OR archive_name=''")
 
-        # Migration: role Spalte zu users hinzufuegen falls fehlt
+        # Migration: role Spalte zu users hinzufuegen falls fehlt (nur bestehende Tabelle;
+        # eine neue Tabelle wird weiter unten bereits mit role angelegt)
+        has_users = c.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
+        ).fetchone()
         try:
-            c.execute("SELECT role FROM users LIMIT 1")
+            if has_users:
+                c.execute("SELECT role FROM users LIMIT 1")
         except sqlite3.OperationalError:
             try:
                 c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'admin'")
-            except Exception:
-                pass
+            except sqlite3.OperationalError as exc:
+                logger.warning("Migration users.role skipped: %s", exc)
         c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password_hash TEXT, role TEXT, active INTEGER DEFAULT 1)")
         c.execute(
             """
@@ -191,12 +231,15 @@ def init_db():
             "group_id": "INTEGER",
             "email": "TEXT DEFAULT ''",
             "updated_at": "REAL",
+            # Random token, replaced on "log out everywhere" and password changes;
+            # cookies carry the value they were issued with.
+            "session_version": "TEXT NOT NULL DEFAULT ''",
         }.items():
             if column not in user_columns:
                 try:
                     c.execute(f"ALTER TABLE users ADD COLUMN {column} {definition}")
-                except Exception:
-                    pass
+                except sqlite3.OperationalError as exc:
+                    logger.warning("Migration users.%s skipped: %s", column, exc)
 
         c.execute(
             """
@@ -246,11 +289,12 @@ def init_db():
         if "expires_at" not in ban_columns:
             try:
                 c.execute("ALTER TABLE bans ADD COLUMN expires_at REAL")
-            except Exception:
-                pass
+            except sqlite3.OperationalError as exc:
+                logger.warning("Migration bans.expires_at skipped: %s", exc)
         c.execute("CREATE TABLE IF NOT EXISTS login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, username TEXT, success INTEGER, ts REAL)")
         c.execute("CREATE TABLE IF NOT EXISTS login_attempts (ip TEXT NOT NULL, ts REAL NOT NULL)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_ts ON login_attempts(ip, ts)")
+        ensure_login_user_attempts_table(c)
         c.execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, payload TEXT, status TEXT DEFAULT 'pending', created_at REAL, updated_at REAL)")
         task_columns = {row["name"] for row in c.execute("PRAGMA table_info(tasks)").fetchall()}
         for column, definition in {
@@ -520,8 +564,8 @@ def migrate_legacy_data(c):
                 c.execute("INSERT OR IGNORE INTO channels (name, record) VALUES (?, 1)", (ch.lower(),))
                 c.execute("UPDATE channels SET record=1 WHERE name=?", (ch.lower(),))
             os.rename(LEGACY_CHANNELS_FILE, LEGACY_CHANNELS_FILE + ".migrated")
-        except Exception:
-            pass
+        except (OSError, ValueError, TypeError, sqlite3.Error) as exc:
+            logger.error("Legacy channel migration from %s failed: %s", LEGACY_CHANNELS_FILE, exc)
     if os.path.exists(LEGACY_LIVE_CHANNEL_FILE):
         try:
             with open(LEGACY_LIVE_CHANNEL_FILE, 'r') as f:
@@ -531,8 +575,8 @@ def migrate_legacy_data(c):
                 c.execute("INSERT OR IGNORE INTO channels (name, live) VALUES (?, 1)", (str(ch).lower(),))
                 c.execute("UPDATE channels SET live=1 WHERE name=?", (str(ch).lower(),))
             os.rename(LEGACY_LIVE_CHANNEL_FILE, LEGACY_LIVE_CHANNEL_FILE + ".migrated")
-        except Exception:
-            pass
+        except (OSError, ValueError, TypeError, sqlite3.Error) as exc:
+            logger.error("Legacy live-channel migration from %s failed: %s", LEGACY_LIVE_CHANNEL_FILE, exc)
 
 def get_channels(mode='record'):
     conn = get_db()
@@ -569,8 +613,8 @@ def add_task(task_type, payload):
     try:
         from core import redis_client
         redis_client.enqueue_task(task_type, payload, task_id)
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Redis client unavailable, task %s stays SQLite-only: %s", task_id, exc)
 
     return task_id
 
@@ -582,8 +626,8 @@ def get_system_state(key: str, default=None):
         cached = redis_client.get_state(f"sysstate:{key}")
         if cached is not None:
             return cached
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Redis client unavailable for state %s: %s", key, exc)
 
     conn = get_db()
     try:
@@ -596,8 +640,8 @@ def get_system_state(key: str, default=None):
             try:
                 from core import redis_client
                 redis_client.set_state(f"sysstate:{key}", val, ex=3600)
-            except Exception:
-                pass
+            except ImportError as exc:
+                logger.warning("Redis client unavailable for state %s: %s", key, exc)
             return val
         except json.JSONDecodeError:
             return default
@@ -611,8 +655,8 @@ def set_system_state(key: str, value):
     try:
         from core import redis_client
         redis_client.set_state(f"sysstate:{key}", value)
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Redis client unavailable for state %s: %s", key, exc)
 
     conn = get_db()
     try:
@@ -1293,6 +1337,7 @@ def _row_to_user(row) -> dict | None:
         "terms_version": (row["terms_version"] if "terms_version" in keys else None) or "",
         "last_seen_at": float(row["last_seen_at"] or 0) if "last_seen_at" in keys else 0.0,
         "last_login_at": float(row["last_login_at"] or 0) if "last_login_at" in keys else 0.0,
+        "session_version": str(row["session_version"] or "") if "session_version" in keys else "",
     }
 
 
@@ -1639,16 +1684,41 @@ def set_user_role(username: str, role: str) -> None:
         conn.close()
 
 
-def set_user_password(username: str, password_hash: str) -> None:
-    conn = get_db()
-    try:
-        conn.execute(
-            "UPDATE users SET password_hash = ? WHERE username = ? COLLATE NOCASE",
-            (password_hash, username),
+@db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def set_user_password(username: str, password_hash: str) -> str:
+    """Store a new hash and revoke every existing session of the user.
+
+    Returns the new session token ("" when the user does not exist).
+    """
+    token = secrets.token_hex(16)
+    with db_transaction() as conn:
+        cur = conn.execute(
+            "UPDATE users SET password_hash = ?, session_version = ?, updated_at = ? "
+            "WHERE username = ? COLLATE NOCASE",
+            (password_hash, token, time.time(), username),
         )
-        conn.commit()
-    finally:
-        conn.close()
+        changed = cur.rowcount
+    return token if changed else ""
+
+
+@db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def bump_session_version(username: str) -> str:
+    """Invalidate all login cookies of a user. Returns the new token ("" if unknown).
+
+    The token is random rather than a counter, so a value seen once (in an old
+    cookie) can never become valid again.
+    """
+    name = str(username or "").strip()
+    if not name:
+        return ""
+    token = secrets.token_hex(16)
+    with db_transaction() as conn:
+        cur = conn.execute(
+            "UPDATE users SET session_version = ? WHERE username = ? COLLATE NOCASE",
+            (token, name),
+        )
+        changed = cur.rowcount
+    return token if changed else ""
 
 
 def set_user_email(username: str, email: str) -> None:
@@ -1872,8 +1942,8 @@ def list_user_groups() -> list[dict]:
             perms = {}
             try:
                 perms = json.loads(r["permissions"]) if r["permissions"] else {}
-            except Exception:
-                pass
+            except (TypeError, ValueError) as exc:
+                logger.warning("Group %s has unreadable permissions, using none: %s", r["id"], exc)
             result.append({
                 "id": r["id"],
                 "name": r["name"],
@@ -1911,8 +1981,8 @@ def get_user_group(group_id: int | str) -> dict | None:
         perms = {}
         try:
             perms = json.loads(row["permissions"]) if row["permissions"] else {}
-        except Exception:
-            pass
+        except (TypeError, ValueError) as exc:
+            logger.warning("Group %s has unreadable permissions, using none: %s", row["id"], exc)
         return {
             "id": row["id"],
             "name": row["name"],
@@ -1948,8 +2018,8 @@ def get_user_group_by_name(name: str) -> dict | None:
         perms = {}
         try:
             perms = json.loads(row["permissions"]) if row["permissions"] else {}
-        except Exception:
-            pass
+        except (TypeError, ValueError) as exc:
+            logger.warning("Group %s has unreadable permissions, using none: %s", row["id"], exc)
         return {
             "id": row["id"],
             "name": row["name"],
@@ -1972,10 +2042,10 @@ def create_user_group(
 ) -> int:
     name = str(name or "").strip()
     if not (2 <= len(name) <= 50):
-        raise ValueError(gettext("Group name must be between 2 and 50 characters long."))
+        raise GroupError(N_("Group name must be between 2 and 50 characters long."))
     existing = get_user_group_by_name(name)
     if existing:
-        raise ValueError(gettext("A group named '%(name)s' already exists.", name=name))
+        raise GroupError(N_("A group named '%(name)s' already exists."), name=name)
 
     default_perms = {
         "can_view_streams": True,
@@ -2019,24 +2089,24 @@ def update_user_group(
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError(gettext("Invalid group ID.")) from None
+        raise GroupError(N_("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError(gettext("Group not found."))
+        raise GroupError(N_("Group not found."))
 
     name_clean = str(name or "").strip()
     if not (2 <= len(name_clean) <= 50):
-        raise ValueError(gettext("Group name must be between 2 and 50 characters long."))
+        raise GroupError(N_("Group name must be between 2 and 50 characters long."))
 
     # System group name protection
     if group["is_system"] and group["name"].lower() != name_clean.lower():
-        raise ValueError(gettext("The name of system groups cannot be changed."))
+        raise GroupError(N_("The name of system groups cannot be changed."))
 
     # Check duplicate name if name changed
     if group["name"].lower() != name_clean.lower():
         duplicate = get_user_group_by_name(name_clean)
         if duplicate and duplicate["id"] != gid:
-            raise ValueError(gettext("A group named '%(name)s' already exists.", name=name_clean))
+            raise GroupError(N_("A group named '%(name)s' already exists."), name=name_clean)
 
     merged_perms = _normalize_group_permissions(group["permissions"])
     if permissions is not None:
@@ -2049,7 +2119,7 @@ def update_user_group(
     # Lockout protection: Administrator group cannot lose can_manage_users
     if group["name"] == "Administrator" and group["is_system"]:
         if not merged_perms.get("can_manage_users"):
-            raise ValueError(gettext("The 'can_manage_users' permission cannot be removed from the Administrator group."))
+            raise GroupError(N_("The 'can_manage_users' permission cannot be removed from the Administrator group."))
 
     now = time.time()
     conn = get_db()
@@ -2072,16 +2142,16 @@ def delete_user_group(group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError(gettext("Invalid group ID.")) from None
+        raise GroupError(N_("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError(gettext("Group not found."))
+        raise GroupError(N_("Group not found."))
     if group["is_system"]:
-        raise ValueError(gettext("System groups (%(name)s) cannot be deleted.", name=group["name"]))
+        raise GroupError(N_("System groups (%(name)s) cannot be deleted."), name=group["name"])
 
     viewer_group = get_user_group_by_name("Viewer")
     if not viewer_group:
-        raise ValueError(gettext("System group 'Viewer' was not found. Deletion cancelled."))
+        raise GroupError(N_("System group 'Viewer' was not found. Deletion cancelled."))
 
     now = time.time()
     conn = get_db()
@@ -2106,10 +2176,10 @@ def set_user_group(username: str, group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError(gettext("Invalid group ID.")) from None
+        raise GroupError(N_("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError(gettext("Group not found."))
+        raise GroupError(N_("Group not found."))
 
     now = time.time()
     conn = get_db()

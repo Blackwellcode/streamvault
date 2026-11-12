@@ -3416,3 +3416,13 @@ msgstr "✓ CLIP GESPEICHERT"
 msgid "✕ CLIP FAILED"
 msgstr "✕ CLIP FEHLGESCHLAGEN"
 
+
+#: WEBUI/webui.py
+msgid "Your IP has been blocked. Please contact the administrator."
+msgstr "Ihre IP wurde gesperrt. Bitte wenden Sie sich an den Administrator."
+
+#: WEBUI/webui.py
+msgid "Too many login attempts. Please try again in %(num)d minute."
+msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
+msgstr[0] "Zu viele Anmeldeversuche. Bitte in %(num)d Minute erneut versuchen."
+msgstr[1] "Zu viele Anmeldeversuche. Bitte in %(num)d Minuten erneut versuchen."
