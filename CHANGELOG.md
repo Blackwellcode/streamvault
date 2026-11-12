@@ -12,9 +12,10 @@ All notable changes to this project are documented here. The format follows
   the new "log out everywhere" action (`POST /logout/all`) and every password
   change sign the account out on all devices.
 - **Overlay tokens in the query string are off by default.** The bundled
-  TTS/alert overlay pages pass `?token=`; set `OVERLAY_ALLOW_QUERY_TOKEN=true`
-  while you use them. The `/tts/api/ack` and `/alerts/api/ack` routes accept
-  POST only.
+  TTS/alert overlays read the token from `#token=` (or an old `?token=` URL)
+  and send it only as a header, so existing OBS sources keep working; move
+  the token behind `#` to keep it out of server logs. The `/tts/api/ack` and
+  `/alerts/api/ack` routes accept POST only.
 - **Resource uploads use an allowlist** (documents, images, audio/video,
   archives; `VOD_FILES_ALLOWED_EXTENSIONS` overrides it). Existing files with
   other extensions are no longer served but can still be deleted.
@@ -120,9 +121,10 @@ All notable changes to this project are documented here. The format follows
   (`onclick=` ...) are blocked. Custom templates or overlays with inline
   scripts must use `nonce="{{ csp_nonce() }}"`. `VOD_CSP_ENFORCE=false` falls
   back to `Content-Security-Policy-Report-Only`.
-- **Overlay tokens as headers.** The TTS and alert overlays read `?token=`
-  from their own URL but send it to the API only as `X-TTS-Token` /
-  `X-Alert-Token`; audio is fetched with the header and played from a blob URL.
+- **Overlay tokens as headers.** The TTS and alert overlays read the token
+  from `#token=` (or `?token=`) of their own URL and send it to the API only as
+  `X-TTS-Token` / `X-Alert-Token`; audio is fetched with the header and played
+  from a blob URL. Options > Settings shows the recommended OBS URLs.
 
 ### Security
 
@@ -159,6 +161,7 @@ All notable changes to this project are documented here. The format follows
 - WebUI accessibility and design (audit 2026-11-12): native `<dialog>` modals
   with focus handling, one confirmation dialog (`data-confirm`) for restart,
   maintenance and deletions, bottom navigation with logout below 768px,
+  "Log out everywhere" in the rail, bottom navigation and mobile pages,
   skip link, labelled fields, AA contrast tokens, unlocked zoom on mobile.
   `static/css/tokens.css` is the single token layer; stylesheets load as
   parallel `<link>`s.
