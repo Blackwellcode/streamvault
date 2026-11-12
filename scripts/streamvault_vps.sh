@@ -797,6 +797,10 @@ backup_database() {
         rm -rf -- "$tmp"
         die "DB-Backup von $db fehlgeschlagen - Deploy abgebrochen."
     fi
+    if [[ "$(sqlite3 "${tmp}/db.sqlite" 'PRAGMA integrity_check;' 2>&1)" != "ok" ]]; then
+        rm -rf -- "$tmp"
+        die "DB-Backup von $db besteht integrity_check nicht - Deploy abgebrochen."
+    fi
     out="${BACKUP_DIR}/streamrecorder-${ts}.db"
     mv -- "${tmp}/db.sqlite" "$out"
     chmod 600 "$out"
