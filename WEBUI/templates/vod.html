@@ -1089,9 +1089,7 @@
       }
 
       async function deleteItem(btn, url) {
-        const confirmed = window.svConfirm
-          ? await window.svConfirm({{ _('Delete this video? The file is removed from the archive and cannot be restored.')|tojson }}, {{ _('Delete')|tojson }}, true)
-          : window.confirm({{ _('Delete this video? The file is removed from the archive and cannot be restored.')|tojson }});
+        const confirmed = await window.svConfirm({{ _('Delete this video? The file is removed from the archive and cannot be restored.')|tojson }}, {{ _('Delete')|tojson }}, true);
         if (!confirmed) return;
         const card = btn.closest('.video-card');
         btn.disabled = true;
