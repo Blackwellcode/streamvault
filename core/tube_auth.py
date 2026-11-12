@@ -12,7 +12,6 @@ import logging
 import os
 import re
 import secrets
-import sqlite3
 import string
 import time
 from typing import Any
@@ -97,7 +96,7 @@ def _expand_access_slugs(raw_slugs) -> set[str]:
 def list_default_vod_access_slugs() -> list[str]:
     try:
         rows = database.list_role_vod_access(MEMBER_ROLE)
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logger.warning("VOD access defaults unreadable, using seed list: %s", exc)
         rows = []
     if rows:
@@ -115,7 +114,7 @@ def effective_vod_access_bases(role: str | None = None) -> list[str]:
         rows = database.list_role_vod_access(role_key)
         if rows:
             return rows
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logger.warning("VOD access for role %s unreadable, using defaults: %s", role_key, exc)
     return list_default_vod_access_slugs()
 

@@ -2094,6 +2094,21 @@ class StorageBookkeepingFailureTests(StorageTestBase):
             callback(50, 100)
         self.assertTrue(any("database is locked" in line for line in logs.output))
 
+    def test_progress_save_failures_warn_once_per_transfer_and_never_abort(self):
+        callback = service._progress_callback(1, 100)
+        clock = [1000.0]
+        with mock.patch.object(service.time, "time", side_effect=lambda: clock[0]), \
+                mock.patch.object(service.database, "update_storage_object",
+                                  side_effect=PermissionError("data dir read-only")), \
+                self.assertLogs("storage.service", level="DEBUG") as logs:
+            for done in (10, 30, 50, 70):
+                callback(done, 100)
+                clock[0] += 5
+        warnings = [line for line in logs.output if line.startswith("WARNING")]
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("data dir read-only", warnings[0])
+        self.assertEqual(len(logs.output), 4)
+
     def test_restore_error_survives_failing_provider_error_bookkeeping(self):
         path, obj = RestoreSafetyTests._restore_object(self, b"new", remote_size=3, local=b"older")
         fake = RestoreSafetyTests._FakeDownloadProvider(error=StorageError("remote gone"))

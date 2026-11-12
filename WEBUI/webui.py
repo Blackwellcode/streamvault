@@ -1716,14 +1716,12 @@ def maintenance_mode_enabled(scope: str = "global"):
 def current_user_bypasses_maintenance() -> bool:
     if current_user_is_admin():
         return True
-    try:
-        from core import site_maintenance
+    from core import site_maintenance
 
-        username = session.get("username")
-        if username and site_maintenance.is_user_exempt(username, current_user_role()):
-            return True
-    except (OSError, ValueError) as exc:
-        logging.warning("Maintenance bypass check failed, treating user as not exempt: %s", exc)
+    # load_state() logs and replaces an unreadable state file itself.
+    username = session.get("username")
+    if username and site_maintenance.is_user_exempt(username, current_user_role()):
+        return True
     return False
 
 
@@ -1776,6 +1774,35 @@ def get_user_color(username):
     for char in username:
         hash_val = ord(char) + ((hash_val << 5) - hash_val)
     return colors[abs(hash_val) % len(colors)]
+
+DB_WARNING_INTERVAL_SEC = 60.0
+_DB_WARNING_LAST = {}
+_DB_WARNING_SUPPRESSED = {}
+_DB_WARNING_LOCK = threading.Lock()
+
+
+def _warn_db_fallback(site, message, *args):
+    """Log a database fallback at most once per minute and call site.
+
+    Access checks and media lookups run for every entry of a list and on
+    every request. During a database outage one line per site and minute,
+    with the number of repeats since the last one, says as much as thousands.
+    """
+    now = time.monotonic()
+    with _DB_WARNING_LOCK:
+        last = _DB_WARNING_LAST.get(site)
+        if last is None:
+            _DB_WARNING_SUPPRESSED.pop(site, None)
+        elif now - last < DB_WARNING_INTERVAL_SEC:
+            _DB_WARNING_SUPPRESSED[site] = _DB_WARNING_SUPPRESSED.get(site, 0) + 1
+            return
+        _DB_WARNING_LAST[site] = now
+        repeats = _DB_WARNING_SUPPRESSED.pop(site, 0)
+    if repeats:
+        message += " (%d more since the last warning)"
+        args = args + (repeats,)
+    logging.warning(message, *args)
+
 
 def normalize_channel_name(name):
     if not name:
@@ -2581,7 +2608,7 @@ def list_all_streamer_folders():
                 folders.add(name)
             if arch and not is_system_backup_slug(arch):
                 folders.add(arch)
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("Folder list without channel configs (database error): %s", exc)
 
     rows = []
@@ -2589,7 +2616,7 @@ def list_all_streamer_folders():
     configs = {}
     try:
         configs = {c.get("name"): c for c in database.list_channel_configs()}
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("Folder list cannot mark stream channels (database error): %s", exc)
 
     for f in sorted(folders, key=lambda s: s.lower()):
@@ -4774,13 +4801,15 @@ def can_view_streamer(streamer):
         arch = archive_name_for(streamer)
         if arch:
             candidates.add(arch.lower())
-    except sqlite3.Error as exc:
-        logging.warning("Access check for %s without archive name (database error): %s", streamer, exc)
+    except database.DB_ACCESS_ERRORS as exc:
+        _warn_db_fallback("can_view_streamer:archive",
+                          "Access check for %s without archive name (database error): %s", streamer, exc)
     try:
         for s in related_archive_slugs(streamer) or []:
             candidates.add(str(s).strip().lower())
-    except sqlite3.Error as exc:
-        logging.warning("Access check for %s without archive aliases (database error): %s", streamer, exc)
+    except database.DB_ACCESS_ERRORS as exc:
+        _warn_db_fallback("can_view_streamer:aliases",
+                          "Access check for %s without archive aliases (database error): %s", streamer, exc)
 
     # 1. Check disabled_channels (Folder explicitly shut off / disabled)
     disabled_set = ctx.get("disabled_channels") or set()
@@ -4835,8 +4864,9 @@ def abort_deleted_media(streamer, filename, file_id=None):
     slugs = set()
     try:
         slugs.update(related_archive_slugs(streamer) or [])
-    except sqlite3.Error as exc:
-        logging.warning("Tombstone check for %s/%s without aliases (database error): %s", streamer, name, exc)
+    except database.DB_ACCESS_ERRORS as exc:
+        _warn_db_fallback("abort_deleted_media:aliases",
+                          "Tombstone check for %s/%s without aliases (database error): %s", streamer, name, exc)
     primary = archive_name_for(streamer) or str(streamer or "").strip()
     if primary:
         slugs.add(primary)
@@ -4844,10 +4874,11 @@ def abort_deleted_media(streamer, filename, file_id=None):
         slugs.add(str(streamer).strip())
     try:
         deleted = database.is_deleted_media(filename=name, file_id=file_id, streamers=slugs)
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         # Same outcome as before: without the tombstone table the file
         # itself decides (resolve_media_path still 404s a missing file).
-        logging.warning("Tombstone check for %s/%s failed, serving: %s", streamer, name, exc)
+        _warn_db_fallback("abort_deleted_media:lookup",
+                          "Tombstone check for %s/%s failed, serving: %s", streamer, name, exc)
         return
     if deleted:
         abort(404)
@@ -6236,8 +6267,9 @@ def resolve_media_path(streamer, filename, route):
         candidates.append(streamer)
     try:
         candidates.extend(related_archive_slugs(streamer))
-    except sqlite3.Error as exc:
-        logging.warning("Media lookup for %s without archive aliases (database error): %s", streamer, exc)
+    except database.DB_ACCESS_ERRORS as exc:
+        _warn_db_fallback("resolve_media_path:aliases",
+                          "Media lookup for %s without archive aliases (database error): %s", streamer, exc)
     seen = set()
     files_dir = getattr(config, "FILES_DIR", None) or os.path.join(BASE_DIR, "files")
     for cand in candidates:
@@ -7082,7 +7114,7 @@ def delete_video_file(streamer, filename, is_clip):
     tombstone_slugs = set()
     try:
         tombstone_slugs.update(related_archive_slugs(streamer) or [])
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("Tombstone for %s/%s without archive aliases (database error): %s", streamer, filename, exc)
     primary = archive_name_for(streamer) or str(streamer or "").strip()
     if primary:
@@ -7114,7 +7146,7 @@ def delete_video_file(streamer, filename, is_clip):
                 _td, alt_path, alt_lock = thumb_paths(slug, filename)
                 paths_to_clear.add(alt_path)
                 paths_to_clear.add(alt_lock)
-        except sqlite3.Error as exc:
+        except database.DB_ACCESS_ERRORS as exc:
             logging.warning("Thumbnails of %s/%s under alias folders kept (database error): %s", streamer, filename, exc)
         for path in paths_to_clear:
             if not path:
@@ -8959,12 +8991,12 @@ def _vod_access_candidate_slugs():
             name = str((item or {}).get("name") or "").strip()
             if name:
                 found.add(database._normalize_vod_access_slug(name) or name.rstrip("_").lower())
-    except (OSError, sqlite3.Error) as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("VOD access candidates without archive folders: %s", exc)
     try:
         for slug in database.list_vod_access_defaults():
             found.add(slug)
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("VOD access candidates without stored defaults: %s", exc)
     return sorted(s for s in found if s)
 
@@ -11870,7 +11902,7 @@ def _recording_logins_set():
             login = twitch_api.normalize_login(conf.get("name"))
             if login and current_recording_info(login) is not None:
                 logins.add(login)
-    except (sqlite3.Error, OSError) as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("Recording channel list unavailable: %s", exc)
     return logins
 
@@ -12005,7 +12037,7 @@ def twitch_watch(channel):
         conf = database.get_channel_config(login)
         if conf:
             archive_name = normalize_channel_name(conf.get("archive_name")) or login
-    except sqlite3.Error as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logging.warning("Live watch %s: channel config unavailable: %s", login, exc)
         archive_name = ""
     if not archive_name:
@@ -12014,7 +12046,7 @@ def twitch_watch(channel):
                 if twitch_api.normalize_login(conf.get("name")) == login:
                     archive_name = normalize_channel_name(conf.get("archive_name")) or login
                     break
-        except sqlite3.Error as exc:
+        except database.DB_ACCESS_ERRORS as exc:
             logging.warning("Live watch %s: channel list unavailable: %s", login, exc)
 
     # Default: Twitch embed without account cookies (iframe credentialless ≈ Incognito).

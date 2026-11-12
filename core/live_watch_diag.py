@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 import os
 import re
-import sqlite3
 import subprocess
 import time
 from pathlib import Path
@@ -88,7 +87,7 @@ def list_candidate_channels(extra: list[str] | None = None) -> list[str]:
                 found.add(name)
             if int(conf.get("live") or 0) == 1 and name:
                 found.add(name)
-    except (sqlite3.Error, ValueError) as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logger.warning("live diag: channel configs unavailable: %s", exc)
     for name in extra or []:
         if name:
@@ -177,7 +176,7 @@ def diagnose_channel(channel: str, *, logs: int = 30, helix: dict | None = None)
         if conf:
             db_live = int(conf.get("live") or 0)
             db_record = int(conf.get("record") or 0)
-    except (sqlite3.Error, ValueError) as exc:
+    except database.DB_ACCESS_ERRORS as exc:
         logger.warning("live diag %s: channel config unavailable: %s", channel, exc)
 
     helix_info = (helix or {}).get(channel) if helix is not None else None

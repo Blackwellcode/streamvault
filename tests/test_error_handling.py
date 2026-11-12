@@ -220,6 +220,8 @@ class WebuiLookupFailureTests(IsolatedBaseTest):
         archive.mkdir()
         (archive / "vod.mp4").write_bytes(b"\0" * 32)
         self.locked = sqlite3.OperationalError("database is locked")
+        webui._DB_WARNING_LAST.clear()
+        self.addCleanup(webui._DB_WARNING_LAST.clear)
 
     def _viewer_request(self):
         ctx = self.webui.app.test_request_context("/")
@@ -228,14 +230,6 @@ class WebuiLookupFailureTests(IsolatedBaseTest):
         now = time.time()
         self.webui.session.update(logged_in=True, user_role="viewer", username="plainviewer",
                                   login_time=now, last_active=now)
-
-    def test_maintenance_bypass_check_failure_is_logged_and_denied(self):
-        from core import site_maintenance
-        self._viewer_request()
-        with mock.patch.object(site_maintenance, "is_user_exempt", side_effect=OSError("state unreadable")), \
-                self.assertLogs(level="WARNING") as logs:
-            self.assertFalse(self.webui.current_user_bypasses_maintenance())
-        self.assertTrue(any("state unreadable" in line for line in logs.output))
 
     def test_viewer_access_check_survives_channel_lookup_failure(self):
         self._viewer_request()
@@ -298,6 +292,152 @@ class WebuiLookupFailureTests(IsolatedBaseTest):
         self.assertEqual(sum("database is locked" in line for line in logs.output), 3)
         self.assertFalse((self.base / "streamer" / "vod.mp4").exists())
         self.assertTrue(self.webui.database.is_deleted_media(streamer="streamer", filename="vod.mp4"))
+
+
+class DatabaseAccessErrorTests(IsolatedBaseTest):
+    """Fallbacks around database reads cover every error get_db() callers can see."""
+
+    def setUp(self):
+        super().setUp()
+        from WEBUI import webui
+        self.webui = webui
+        patcher = mock.patch.object(webui, "BASE_DIR", str(self.base))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        archive = self.base / "streamer"
+        archive.mkdir()
+        (archive / "vod.mp4").write_bytes(b"\0" * 32)
+        self.webui._DB_WARNING_LAST.clear()
+
+    def test_malformed_channel_row_raises_value_error(self):
+        from core import database
+        conn = database.get_db()
+        try:
+            conn.execute("INSERT INTO channels (name, record) VALUES ('streamer', 'abc')")
+            conn.commit()
+        finally:
+            conn.close()
+        with self.assertRaises(database.DB_ACCESS_ERRORS):
+            database.get_channel_config("streamer")
+
+    def test_vod_access_bases_fall_back_when_data_dir_is_unreadable(self):
+        with mock.patch.object(tube_auth.database, "list_role_vod_access",
+                               side_effect=PermissionError("data dir")), \
+                self.assertLogs("core.tube_auth", level="WARNING"):
+            bases = tube_auth.effective_vod_access_bases()
+        self.assertEqual(bases, sorted(tube_auth._VOD_ACCESS_SEED_BASES))
+
+    def test_media_path_resolves_on_os_and_value_errors(self):
+        for error in (PermissionError("data dir"), ValueError("bad record flag")):
+            self.webui._DB_WARNING_LAST.clear()
+            with self.subTest(error=type(error).__name__), \
+                    mock.patch.object(self.webui, "related_archive_slugs", side_effect=error), \
+                    self.assertLogs(level="WARNING"):
+                resolved = self.webui.resolve_media_path("streamer", "vod.mp4", "vod")
+            self.assertIsNotNone(resolved)
+
+    def test_unexpected_error_in_alias_lookup_is_not_swallowed(self):
+        with mock.patch.object(self.webui, "related_archive_slugs", side_effect=RuntimeError("bug")):
+            with self.assertRaises(RuntimeError):
+                self.webui.resolve_media_path("streamer", "vod.mp4", "vod")
+
+    def test_vod_access_candidates_survive_malformed_defaults(self):
+        with mock.patch.object(self.webui, "list_streamers", return_value=[{"name": "streamer"}]), \
+                mock.patch.object(self.webui.database, "list_vod_access_defaults",
+                                  side_effect=ValueError("bad row")), \
+                self.assertLogs(level="WARNING"):
+            self.assertEqual(self.webui._vod_access_candidate_slugs(), ["streamer"])
+
+
+class DatabaseWarningRateLimitTests(IsolatedBaseTest):
+    """A database outage leaves one warning per call site and minute, not one per lookup."""
+
+    def setUp(self):
+        super().setUp()
+        from werkzeug.security import generate_password_hash
+
+        from WEBUI import webui
+        self.webui = webui
+        patcher = mock.patch.object(webui, "BASE_DIR", str(self.base))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        webui.save_user("plainviewer", generate_password_hash("Role-Test-Pass-1"), role="viewer")
+        archive = self.base / "streamer"
+        archive.mkdir()
+        (archive / "vod.mp4").write_bytes(b"\0" * 32)
+        self.webui._DB_WARNING_LAST.clear()
+        self.addCleanup(self.webui._DB_WARNING_LAST.clear)
+        self.locked = sqlite3.OperationalError("database is locked")
+
+    def _locked_lines(self, logs):
+        return [line for line in logs.output if "database is locked" in line]
+
+    def test_media_lookup_warns_once_per_minute(self):
+        with mock.patch.object(self.webui, "related_archive_slugs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING") as logs:
+            for _ in range(5):
+                self.assertIsNotNone(self.webui.resolve_media_path("streamer", "vod.mp4", "vod"))
+            self.assertEqual(len(self._locked_lines(logs)), 1)
+            for site in list(self.webui._DB_WARNING_LAST):
+                self.webui._DB_WARNING_LAST[site] -= 61
+            self.webui.resolve_media_path("streamer", "vod.mp4", "vod")
+        locked = self._locked_lines(logs)
+        self.assertEqual(len(locked), 2)
+        self.assertIn("4 more", locked[1])
+
+    def test_access_check_in_a_list_warns_once(self):
+        ctx = self.webui.app.test_request_context("/")
+        ctx.push()
+        self.addCleanup(ctx.pop)
+        now = time.time()
+        self.webui.session.update(logged_in=True, user_role="viewer", username="plainviewer",
+                                  login_time=now, last_active=now)
+        with mock.patch.object(self.webui, "related_archive_slugs", side_effect=self.locked), \
+                self.assertLogs(level="WARNING") as logs:
+            for _ in range(10):
+                self.webui.can_view_streamer("streamer")
+        self.assertEqual(len(self._locked_lines(logs)), 1)
+
+
+class MaintenanceBypassTests(IsolatedBaseTest):
+    def test_corrupt_maintenance_state_keeps_viewer_not_exempt(self):
+        from werkzeug.security import generate_password_hash
+
+        from core import site_maintenance
+        from WEBUI import webui
+        webui.save_user("plainviewer", generate_password_hash("Role-Test-Pass-1"), role="viewer")
+        with open(site_maintenance.state_path(), "w", encoding="utf-8") as handle:
+            handle.write("{broken")
+        ctx = webui.app.test_request_context("/")
+        ctx.push()
+        self.addCleanup(ctx.pop)
+        now = time.time()
+        webui.session.update(logged_in=True, user_role="viewer", username="plainviewer",
+                             login_time=now, last_active=now)
+        with self.assertLogs(level="WARNING") as logs:
+            self.assertFalse(webui.current_user_bypasses_maintenance())
+        self.assertTrue(any("maintenance state unreadable" in line for line in logs.output))
+
+
+class TwitchWatchFallbackTests(IsolatedBaseTest):
+    def setUp(self):
+        super().setUp()
+        from WEBUI import webui
+        self.webui = webui
+        webui.ensure_admin_user()
+
+    def test_watch_page_renders_when_channel_lookups_fail(self):
+        locked = sqlite3.OperationalError("database is locked")
+        client = _admin_client(self.webui)
+        with mock.patch.object(self.webui.database, "get_channel_config", side_effect=locked), \
+                mock.patch.object(self.webui.database, "list_channel_configs", side_effect=locked), \
+                mock.patch.object(self.webui, "add_live_channel"), \
+                self.assertLogs(level="WARNING") as logs:
+            response = client.get("/live/watch/somechannel?proxy=0")
+        self.assertEqual(response.status_code, 200)
+        warned = [line for line in logs.output if "Live watch somechannel" in line]
+        self.assertEqual(len(warned), 2)
+
 
 
 if __name__ == "__main__":

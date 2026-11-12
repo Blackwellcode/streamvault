@@ -11,7 +11,6 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-import sqlite3
 import stat
 import time
 from typing import Optional
@@ -1118,7 +1117,7 @@ def cleanup_local_copies(provider_id=None, *, limit: int = 100) -> dict:
 # ---------------------------------------------------------------------------
 
 def _progress_callback(object_id: int, total: int):
-    state = {"last": 0.0, "last_pct": -1.0}
+    state = {"last": 0.0, "last_pct": -1.0, "warned": False}
 
     def callback(done: int, size: int):
         now = time.time()
@@ -1133,10 +1132,14 @@ def _progress_callback(object_id: int, total: int):
         state["last_pct"] = pct
         try:
             database.update_storage_object(object_id, progress=round(pct, 1))
-        except sqlite3.Error as exc:
-            # Progress is cosmetic and rewritten every two seconds; a busy
-            # database must not abort the transfer itself.
-            logger.debug("storage object %s: progress not saved: %s", object_id, exc)
+        except database.DB_ACCESS_ERRORS as exc:
+            # Progress is cosmetic and rewritten every two seconds; a busy or
+            # read-only database must not abort the transfer itself. Warn
+            # once per transfer, then stay at debug so a long upload during a
+            # lock does not write a line every two seconds.
+            level = logging.DEBUG if state["warned"] else logging.WARNING
+            state["warned"] = True
+            logger.log(level, "storage object %s: progress not saved: %s", object_id, exc)
 
     return callback
 
@@ -1399,7 +1402,7 @@ def run_restore(payload: dict) -> dict:
         database.update_storage_object(object_id, last_error=message)
         try:
             database.set_storage_provider_error(obj["provider_id"], message)
-        except sqlite3.Error as db_exc:
+        except database.DB_ACCESS_ERRORS as db_exc:
             # Keep the restore error for the caller; the provider status line
             # is only a convenience for the storage page.
             logger.warning(
