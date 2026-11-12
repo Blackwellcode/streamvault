@@ -185,6 +185,7 @@
     </button>
   </form>
 </div>
+{% include 'components/js_i18n.html' %}
 <script nonce="{{ csp_nonce() }}">
   (function () {
     document.querySelectorAll('select[data-autosubmit]').forEach(function (sel) {

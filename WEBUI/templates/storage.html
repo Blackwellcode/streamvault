@@ -178,7 +178,7 @@
           <a class="storage-btn" href="{{ url_for('admin_storage_oauth_start', provider_id=p.id) }}">{{ p.oauth_label }}</a>
           {% endif %}
           <button type="button" class="storage-btn" data-storage-edit="{{ p.id }}" data-update-url="{{ url_for('admin_storage_provider_update', provider_id=p.id) }}">{{ _('Edit') }}</button>
-          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" data-storage-confirm="{{ _('Really remove the provider? The cloud files are kept.') }}">
+          <form method="post" action="{{ url_for('admin_storage_provider_delete', provider_id=p.id) }}" data-confirm="{{ _('Really remove the provider? The cloud files are kept.') }}" data-confirm-danger>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="storage-btn danger">{{ _('Remove') }}</button>
           </form>
@@ -224,8 +224,8 @@
           <input id="storage-cleanup-interval" type="number" min="0" max="10080" name="cleanup_interval_minutes" value="{{ settings.cleanup_interval_minutes }}">
         </div>
         <div class="storage-field">
-          <label>{{ _('Max. files per sync') }}</label>
-          <input type="number" min="1" max="5000" name="max_sync_files" value="{{ settings.max_sync_files }}">
+          <label for="storage-max-files">{{ _('Max. files per sync') }}</label>
+          <input id="storage-max-files" type="number" min="1" max="5000" name="max_sync_files" value="{{ settings.max_sync_files }}">
         </div>
       </div>
 
@@ -273,8 +273,8 @@
         </select>
       </div>
       <div class="storage-field" style="min-width:220px;">
-        <label>{{ _('Streamer (optional)') }}</label>
-        <input type="text" name="streamer" placeholder="{{ _('e.g. channel_name') }}">
+        <label for="storage-sync-streamer">{{ _('Streamer (optional)') }}</label>
+        <input id="storage-sync-streamer" type="text" name="streamer" placeholder="{{ _('e.g. channel_name') }}">
       </div>
       <button type="submit" class="storage-btn primary">{{ _('Start sync') }}</button>
       <button type="submit" class="storage-btn" formaction="{{ url_for('admin_storage_cleanup') }}">{{ _('Start local cleanup') }}</button>
@@ -326,7 +326,7 @@
                 </form>
                 {% endif %}
                 {% if o.status in ('uploaded','restored') and o.local_exists and not o.local_deleted_at %}
-                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" data-storage-confirm="{{ _('Really delete the local file? The cloud copy is kept.') }}">
+                <form method="post" action="{{ url_for('admin_storage_object_delete_local', object_id=o.id) }}" data-confirm="{{ _('Really delete the local file? The cloud copy is kept.') }}" data-confirm-danger>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="storage-btn danger">{{ _('Delete locally') }}</button>
                 </form>
@@ -338,12 +338,12 @@
                 </form>
                 {% endif %}
                 {% if not o.remote_deleted_at and not o.local_deleted_at and o.local_exists and o.status in ('uploaded','restored') %}
-                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" data-storage-confirm="{{ _('Really delete the cloud file? A local copy is kept.') }}">
+                <form method="post" action="{{ url_for('admin_storage_object_delete_remote', object_id=o.id) }}" data-confirm="{{ _('Really delete the cloud file? A local copy is kept.') }}" data-confirm-danger>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="storage-btn danger">{{ _('Delete from cloud') }}</button>
                 </form>
                 {% endif %}
-                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" data-storage-confirm="{{ _('Remove only the database entry?') }}">
+                <form method="post" action="{{ url_for('admin_storage_object_forget', object_id=o.id) }}" data-confirm="{{ _('Remove only the database entry?') }}" data-confirm-danger>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="storage-btn">{{ _('Forget') }}</button>
                 </form>
@@ -379,7 +379,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-modal-body">
         <div class="storage-field">
-          <label>{{ _('Provider type') }}</label>
+          <label for="add-provider-type">{{ _('Provider type') }}</label>
           <select id="add-provider-type" name="provider_type">
             {% for entry in catalog %}
             <option value="{{ entry.type_id }}">{{ entry.label }}</option>
@@ -388,8 +388,8 @@
           <span class="help" id="add-provider-description"></span>
         </div>
         <div class="storage-field">
-          <label>{{ _('Display name') }}</label>
-          <input type="text" name="name" required maxlength="80" placeholder="{{ _('e.g. Google Drive archive') }}">
+          <label for="add-provider-name">{{ _('Display name') }}</label>
+          <input id="add-provider-name" type="text" name="name" required maxlength="80" placeholder="{{ _('e.g. Google Drive archive') }}">
         </div>
         <div id="add-provider-fields" class="storage-form-grid"></div>
         <label class="storage-check">
@@ -415,7 +415,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-modal-body">
         <div class="storage-field">
-          <label>{{ _('Display name') }}</label>
+          <label for="edit-provider-name">{{ _('Display name') }}</label>
           <input type="text" name="name" id="edit-provider-name" required maxlength="80">
         </div>
         <div id="edit-provider-fields" class="storage-form-grid"></div>
@@ -483,7 +483,7 @@
     }
     let help = field.help || '';
     if (field.secret && setFlag) help = (help ? help + ' ' : '') + {{ _('A saved value is kept if the field is left empty.')|tojson }};
-    return '<div class="storage-field"><label>' + escapeHtml(field.label) + (field.required ? ' *' : '') + '</label>' + input + (help ? '<span class="help">' + escapeHtml(help) + '</span>' : '') + '</div>';
+    return '<div class="storage-field"><label for="' + id + '">' + escapeHtml(field.label) + (field.required ? ' *' : '') + '</label>' + input + (help ? '<span class="help">' + escapeHtml(help) + '</span>' : '') + '</div>';
   }
 
   function renderFields(containerId, typeId, values) {
@@ -529,12 +529,6 @@
     if (editBtn) {
       openEditProvider(Number(editBtn.getAttribute('data-storage-edit')), editBtn.dataset.updateUrl);
     }
-  });
-
-  document.addEventListener('submit', function (event) {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-storage-confirm')) return;
-    if (!confirm(form.getAttribute('data-storage-confirm'))) event.preventDefault();
   });
 
   document.addEventListener('DOMContentLoaded', function () {

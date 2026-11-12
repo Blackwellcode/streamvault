@@ -12,9 +12,9 @@
   var okBtn = null;
   var cancelBtn = null;
 
-  function label(name, fallback) {
-    var meta = document.querySelector('meta[name="sv-i18n-' + name + '"]');
-    return (meta && meta.getAttribute('content')) || fallback;
+  // Strings are registered in JS_MESSAGES (WEBUI/i18n.py); svT() comes from components/js_i18n.html.
+  function t(text) {
+    return typeof window.svT === 'function' ? window.svT(text) : text;
   }
 
   function ensureDialog() {
@@ -29,7 +29,7 @@
     var title = document.createElement('h2');
     title.id = 'sv-confirm-title';
     title.className = 'sv-dialog__title';
-    title.textContent = label('confirm-title', 'Please confirm');
+    title.textContent = t('Please confirm');
     msgEl = document.createElement('p');
     msgEl.id = 'sv-confirm-msg';
     msgEl.className = 'sv-confirm__msg';
@@ -66,9 +66,9 @@
         return;
       }
       msgEl.textContent = source.getAttribute('data-confirm');
-      okBtn.textContent = source.getAttribute('data-confirm-ok') || label('confirm-ok', 'OK');
+      okBtn.textContent = source.getAttribute('data-confirm-ok') || t('Confirm');
       okBtn.className = 'sv-btn ' + (source.hasAttribute('data-confirm-danger') ? 'sv-btn--danger' : 'sv-btn--primary');
-      cancelBtn.textContent = source.getAttribute('data-confirm-cancel') || label('cancel', 'Cancel');
+      cancelBtn.textContent = source.getAttribute('data-confirm-cancel') || t('Cancel');
       dlg.returnValue = '';
       dlg.addEventListener('close', function onClose() {
         dlg.removeEventListener('close', onClose);

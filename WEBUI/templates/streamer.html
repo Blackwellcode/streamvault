@@ -5,13 +5,10 @@
 {% block page_subtitle %}{{ _('Channel archive & recording metrics') }}{% endblock %}
 
 {% block content %}
-  {#- CSS url() values are only emitted for same-origin paths or https URLs without quote,
-      paren, backslash, angle-bracket or whitespace characters (prevents CSS injection). -#}
-  {% set sv_css_bad_chars = ["'", '"', '(', ')', '\\', '<', '>'] %}
-  {% set sv_banner_raw = (banner_url or '')|string %}
-  {% set banner_css_url = sv_banner_raw if (sv_banner_raw and ((sv_banner_raw[:1] == '/' and sv_banner_raw[:2] != '//') or sv_banner_raw[:8] == 'https://') and (sv_banner_raw.split()|join('')) == sv_banner_raw and not (sv_css_bad_chars|select('in', sv_banner_raw)|list)) else '' %}
-  {% set sv_hero_raw = ((hero_stream.thumbnail_url if hero_stream else '') or '')|string %}
-  {% set hero_css_url = sv_hero_raw if (sv_hero_raw and ((sv_hero_raw[:1] == '/' and sv_hero_raw[:2] != '//') or sv_hero_raw[:8] == 'https://') and (sv_hero_raw.split()|join('')) == sv_hero_raw and not (sv_css_bad_chars|select('in', sv_hero_raw)|list)) else '' %}
+  {#- CSS url() values go through the css_url filter (webui.css_url: same-origin path or
+      https URL accepted by is_allowed_url, no quote/paren/backslash/angle/whitespace). -#}
+  {% set banner_css_url = banner_url|css_url %}
+  {% set hero_css_url = (hero_stream.thumbnail_url if hero_stream else '')|css_url %}
   <!-- 1. NEBULA Streamer Profile Card (Panel 04) -->
   <section class="nebula-profile-card" aria-label="{{ _('Streamer profile') }}">
     <div class="nebula-profile-banner {% if session.user_role == 'admin' %}is-editable{% endif %}" 
@@ -90,19 +87,19 @@
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
         <form method="post" action="{{ url_for('stop_recording_route', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" data-streamer-confirm="{{ _('Really stop the recording?') }}">
+          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" data-confirm="{{ _('Really stop the recording?') }}" data-confirm-ok="{{ _('Stop recording') }}" data-confirm-danger>
             {{ _('Stop recording') }}
           </button>
         </form>
         <form method="post" action="{{ url_for('empty_folder_route', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" data-streamer-confirm="{{ _('Do you want to empty the entire recording folder?') }}">
+          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" data-confirm="{{ _('Do you want to empty the entire recording folder?') }}" data-confirm-ok="{{ _('Empty folder') }}" data-confirm-danger>
             {{ _('Empty folder') }}
           </button>
         </form>
         <form method="post" action="{{ url_for('delete_folder_route', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" data-streamer-confirm="{{ _('WARNING: Do you want to permanently delete this streamer and all recordings?') }}">
+          <button type="submit" class="ns-btn nebula-btn-danger" style="font-size: 12px; padding: 6px 12px;" data-confirm="{{ _('Delete this streamer folder and all recordings? This cannot be undone.') }}" data-confirm-ok="{{ _('Delete folder') }}" data-confirm-danger>
             {{ _('Delete folder') }}
           </button>
         </form>
@@ -421,7 +418,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
         <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Custom banner active') }}</span>
         <form method="post" action="{{ url_for('streamer_banner_update', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 12px; color: var(--nebula-status-live);" data-streamer-confirm="{{ _('Really reset the custom banner and switch to the default?') }}">{{ _('Restore default') }}</button>
+          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 12px; color: var(--nebula-status-live);" data-confirm="{{ _('Really reset the custom banner and switch to the default?') }}" data-confirm-ok="{{ _('Restore default') }}">{{ _('Restore default') }}</button>
         </form>
       </div>
       {% endif %}
@@ -491,7 +488,7 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
         <span style="font-size: 12px; color: var(--ns-text-muted);">{{ _('Custom profile picture active') }}</span>
         <form method="post" action="{{ url_for('streamer_avatar_update', streamer=streamer) }}" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 12px; color: var(--nebula-status-live);" data-streamer-confirm="{{ _('Really reset the custom profile picture and switch to the default?') }}">{{ _('Restore default') }}</button>
+          <button type="submit" name="action" value="reset" class="ns-btn ns-btn-secondary" style="padding: 5px 12px; font-size: 12px; color: var(--nebula-status-live);" data-confirm="{{ _('Really reset the custom profile picture and switch to the default?') }}" data-confirm-ok="{{ _('Restore default') }}">{{ _('Restore default') }}</button>
         </form>
       </div>
       {% endif %}
@@ -538,10 +535,6 @@ document.addEventListener('DOMContentLoaded', updateWatchStates);
     if (backdrop && e.target === backdrop && streamerModalClosers[backdrop.getAttribute('data-streamer-backdrop')]) {
       streamerModalClosers[backdrop.getAttribute('data-streamer-backdrop')]();
       return;
-    }
-    var confirmBtn = e.target.closest('[data-streamer-confirm]');
-    if (confirmBtn && !confirm(confirmBtn.getAttribute('data-streamer-confirm'))) {
-      e.preventDefault();
     }
   });
   document.addEventListener('keydown', function(e) {
