@@ -96,9 +96,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
-- Broad `except Exception: pass` handlers are gone from the database layer,
-  recorder, worker and clip engine; 46 such handlers remain elsewhere (18 in
-  the web UI, the rest in storage providers and API clients).
+- Broad `except Exception: pass` handlers are gone from the whole code base
+  (database layer, recorder, worker, clip engine, web UI, storage providers
+  and API clients). The failures they hid are now caught by class and logged;
+  fallback values are unchanged.
+- A deleted VOD or clip whose file was still on disk opened in the player:
+  the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.
 
 ## [0.1.0] - 2026-11-09
