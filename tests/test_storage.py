@@ -2089,7 +2089,8 @@ class StorageBookkeepingFailureTests(StorageTestBase):
     def test_progress_update_on_locked_database_is_logged(self):
         callback = service._progress_callback(1, 100)
         locked = sqlite3.OperationalError("database is locked")
-        with mock.patch.object(service.database, "update_storage_object", side_effect=locked),                 self.assertLogs("storage.service", level="DEBUG") as logs:
+        with mock.patch.object(service.database, "update_storage_object", side_effect=locked), \
+                self.assertLogs("storage.service", level="DEBUG") as logs:
             callback(50, 100)
         self.assertTrue(any("database is locked" in line for line in logs.output))
 
@@ -2097,7 +2098,9 @@ class StorageBookkeepingFailureTests(StorageTestBase):
         path, obj = RestoreSafetyTests._restore_object(self, b"new", remote_size=3, local=b"older")
         fake = RestoreSafetyTests._FakeDownloadProvider(error=StorageError("remote gone"))
         locked = sqlite3.OperationalError("database is locked")
-        with mock.patch.object(service, "build_provider", return_value=fake),                 mock.patch.object(service.database, "set_storage_provider_error", side_effect=locked),                 self.assertLogs("storage.service", level="WARNING") as logs:
+        with mock.patch.object(service, "build_provider", return_value=fake), \
+                mock.patch.object(service.database, "set_storage_provider_error", side_effect=locked), \
+                self.assertLogs("storage.service", level="WARNING") as logs:
             with self.assertRaises(StorageError) as ctx:
                 service.run_restore({"object_id": obj["id"]})
         self.assertIn("remote gone", str(ctx.exception))

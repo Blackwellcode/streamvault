@@ -105,21 +105,26 @@ class TwitchHttpErrorBodyTests(unittest.TestCase):
 class CoreDatabaseFallbackTests(IsolatedBaseTest):
     def test_vod_access_bases_fall_back_to_defaults_and_log(self):
         locked = sqlite3.OperationalError("database is locked")
-        with mock.patch.object(tube_auth.database, "list_role_vod_access", side_effect=locked),                 self.assertLogs("core.tube_auth", level="WARNING"):
+        with mock.patch.object(tube_auth.database, "list_role_vod_access", side_effect=locked), \
+                self.assertLogs("core.tube_auth", level="WARNING"):
             bases = tube_auth.effective_vod_access_bases()
         self.assertEqual(bases, sorted(tube_auth._VOD_ACCESS_SEED_BASES))
 
     def test_live_diag_candidates_survive_database_error(self):
         from core import database
         locked = sqlite3.OperationalError("database is locked")
-        with mock.patch.object(database, "list_channel_configs", side_effect=locked),                 self.assertLogs("core.live_watch_diag", level="WARNING"):
+        with mock.patch.object(database, "list_channel_configs", side_effect=locked), \
+                self.assertLogs("core.live_watch_diag", level="WARNING"):
             names = live_watch_diag.list_candidate_channels(extra=["Extra"])
         self.assertIn("extra", names)
 
     def test_live_diag_channel_report_survives_database_error(self):
         from core import database
         locked = sqlite3.OperationalError("database is locked")
-        with mock.patch.object(database, "get_channel_config", side_effect=locked),                 mock.patch.object(live_watch_diag, "streamlink_counts", return_value={}),                 mock.patch.object(live_watch_diag, "ffmpeg_hls_pids", return_value={}),                 self.assertLogs("core.live_watch_diag", level="WARNING"):
+        with mock.patch.object(database, "get_channel_config", side_effect=locked), \
+                mock.patch.object(live_watch_diag, "streamlink_counts", return_value={}), \
+                mock.patch.object(live_watch_diag, "ffmpeg_hls_pids", return_value={}), \
+                self.assertLogs("core.live_watch_diag", level="WARNING"):
             report = live_watch_diag.diagnose_channel("chan", helix={"chan": {}})
         self.assertEqual(report["db"], {"live": None, "record": None})
 
@@ -144,7 +149,11 @@ class ChatChunkCacheTests(IsolatedBaseTest):
 
 class RedisDashboardCacheTests(unittest.TestCase):
     def test_shm_cache_removal_failure_is_logged(self):
-        with mock.patch.object(redis_client, "delete_state", return_value=False),                 mock.patch.object(redis_client, "publish_event", return_value=False),                 mock.patch.object(redis_client.os.path, "exists", return_value=True),                 mock.patch.object(redis_client.os, "remove", side_effect=PermissionError("busy")),                 self.assertLogs("streamvault.redis", level="WARNING"):
+        with mock.patch.object(redis_client, "delete_state", return_value=False), \
+                mock.patch.object(redis_client, "publish_event", return_value=False), \
+                mock.patch.object(redis_client.os.path, "exists", return_value=True), \
+                mock.patch.object(redis_client.os, "remove", side_effect=PermissionError("busy")), \
+                self.assertLogs("streamvault.redis", level="WARNING"):
             self.assertTrue(redis_client.invalidate_dashboard_cache())
 
 
@@ -185,7 +194,8 @@ class DeletedMediaTombstoneTests(IsolatedBaseTest):
     def test_tombstone_lookup_failure_is_logged_and_page_still_served(self):
         client = _admin_client(self.webui)
         locked = sqlite3.OperationalError("database is locked")
-        with mock.patch.object(self.webui.database, "is_deleted_media", side_effect=locked),                 self.assertLogs(level="WARNING") as logs:
+        with mock.patch.object(self.webui.database, "is_deleted_media", side_effect=locked), \
+                self.assertLogs(level="WARNING") as logs:
             response = client.get("/vod/streamer/vod.mp4")
         self.assertEqual(response.status_code, 200)
         self.assertTrue(any("database is locked" in line for line in logs.output))
