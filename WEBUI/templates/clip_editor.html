@@ -23,7 +23,7 @@
 <div class="msg success" style="display: flex; justify-content: space-between; align-items: center;">
   <span>{{ clip_ok }}</span>
   {% if request.args.get('clip_name') %}
-  <button type="button" class="btn-main" onclick="shareClip('{{ request.args.get('clip_name') }}')">{{ _('Share') }}</button>
+  <button type="button" class="btn-main" onclick='shareClip({{ request.args.get('clip_name')|tojson }})'>{{ _('Share') }}</button>
   {% endif %}
 </div>
 <script>

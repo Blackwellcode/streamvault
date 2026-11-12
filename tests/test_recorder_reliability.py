@@ -905,6 +905,62 @@ class LegalPagesTests(IsolatedBaseTest):
                 self.assertEqual(client.get(path).status_code, 200)
 
 
+class ClipEditorShareXssTests(IsolatedBaseTest):
+    """?clip_name= lands in the Share button's onclick; it must stay a JS string."""
+
+    def _share_onclick(self, clip_name):
+        from html.parser import HTMLParser
+        from urllib.parse import quote
+
+        from WEBUI import webui
+        webui.ensure_admin_user()
+        webui.app.config.update(TESTING=True)
+        client = webui.app.test_client()
+        with client.session_transaction() as sess:
+            now = time.time()
+            sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
+                        login_time=now, last_active=now, _csrf_token="t")
+        response = client.get(
+            "/editor/streamer/vod.mp4?clip_ok=1&clip_name=" + quote(clip_name, safe="")
+        )
+        self.assertEqual(response.status_code, 200)
+
+        handlers = []
+
+        class OnclickCollector(HTMLParser):
+            # HTMLParser decodes entities in attribute values exactly like a
+            # browser does before the onclick body reaches the JS engine.
+            def handle_starttag(self, tag, attrs):
+                value = dict(attrs).get("onclick") or ""
+                if value.startswith("shareClip("):
+                    handlers.append(value)
+
+        OnclickCollector().feed(response.get_data(as_text=True))
+        self.assertEqual(len(handlers), 1)
+        return handlers[0]
+
+    def test_clip_name_cannot_break_out_of_the_share_handler(self):
+        import json
+        import re
+
+        payloads = (
+            "a');console.log('SVPOC');//",
+            'a");console.log("SVPOC");//',
+            "a\\');console.log(1);//",
+            "</button><img src=x onerror=console.log(1)>",
+            "plain_clip_2026-11-12.mp4",
+        )
+        for payload in payloads:
+            with self.subTest(payload=payload):
+                handler = self._share_onclick(payload)
+                match = re.fullmatch(r"shareClip\((.*)\)", handler, flags=re.DOTALL)
+                if match is None:
+                    self.fail(f"unexpected Share handler: {handler!r}")
+                # The single argument must be one string literal that evaluates
+                # to exactly the payload; anything else means code ran outside it.
+                self.assertEqual(json.loads(match.group(1)), payload)
+
+
 class ClientIpTests(unittest.TestCase):
     """Rate limits and bans key on get_client_ip(); it must not be spoofable."""
 
