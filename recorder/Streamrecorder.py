@@ -27,6 +27,7 @@ from recorder import chat_clip
 from recorder import chat_events
 from core import config
 from core import database
+from core.channels import is_youtube_host, load_all_channels
 from core import twitch_api
 from core import twitch_eventsub
 from core.mp4_utils import (
@@ -275,10 +276,6 @@ def get_source_config(source_channel):
     conf["archive_name"] = archive_name
     return conf
 
-def is_youtube_host(hostname):
-    host = str(hostname or "").lower()
-    return host in ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be")
-
 def youtube_live_url(source_channel, conf=None):
     conf = conf or get_source_config(source_channel)
     raw_url = str(conf.get("source_url") or source_channel or "").strip()
@@ -372,15 +369,6 @@ def throttled_log(level, key, message, interval=300):
             LOG_THROTTLE.clear()
             LOG_THROTTLE.update(keep)
     getattr(logger, level)(message)
-
-def load_channels():
-    return database.get_channels(mode='record')
-
-def load_all_channels():
-    return database.get_channels(mode='all')
-
-def load_live_channels():
-    return database.get_channels(mode='live')
 
 def build_filter_str(font_path, chat_text_file, viewer_text_file, use_vaapi):
     # VOD overlay komplett entfernt: nur skalieren (default max 720, no upscale pad)

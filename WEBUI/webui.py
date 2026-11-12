@@ -66,6 +66,7 @@ from recorder import clip_engine
 from WEBUI import i18n as ui_i18n
 from core import config
 from core import database
+from core.channels import is_youtube_host, load_channels, load_live_channels
 from core import twitch_api
 from core.health import (
     SYSTEMD_SHOW_PROPERTIES,
@@ -897,6 +898,13 @@ def _session_version_of(sess):
         return int(sess.get(SESSION_VERSION_KEY) or 0)
     except (TypeError, ValueError):
         return -1
+
+
+def translated_error(exc):
+    """User-facing text for a ValueError; core.database group errors carry a msgid."""
+    if isinstance(exc, database.GroupError):
+        return gettext(exc.msgid, **exc.params)
+    return str(exc)
 
 
 def _get_current_user_context() -> dict | None:
@@ -1776,10 +1784,6 @@ def suggest_archive_name(source_name, explicit=None):
     return source_name
 
 
-def is_youtube_host(hostname):
-    host = str(hostname or "").lower()
-    return host in ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be")
-
 def parse_channel_source_input(raw_value, archive_name=None):
     raw = str(raw_value or "").strip()
     if not raw:
@@ -1837,9 +1841,6 @@ def tail_matching_lines(file_path, limit, query=None):
     return list(dq)
 
 
-def load_channels():
-    return database.get_channels(mode='record')
-
 def add_channel_db(channel, platform="twitch", source_url="", archive_name=None, record=1, live=0, notify=1):
     platform = "youtube" if str(platform or "").lower() in ("youtube", "yt") else "twitch"
     archive_name = normalize_channel_name(archive_name) or channel
@@ -1894,9 +1895,6 @@ def active_recording_archives():
         if archive:
             names.add(archive)
     return names
-
-def load_live_channels():
-    return database.get_channels(mode='live')
 
 
 def add_live_channel(channel):
@@ -8306,314 +8304,6 @@ def admin_share_revoke(token):
 @admin_required
 def chat_tracker():
     return redirect(url_for("index"))
-    results = []
-    # Support both GET (search) and POST (export)
-    query_user = request.args.get("user", "").strip() or request.form.get("user", "").strip()
-    global_query = request.args.get("global", "").strip()
-    global_results = global_search(global_query) if global_query else {"streamers": [], "videos": [], "chat": []}
-    
-    # Check if export requested
-    do_export_html = request.form.get("export") == "html"
-    selected_ids = request.form.getlist("selected_items") if do_export_html else None
-    
-    # --- Log Export (Full Log) ---
-    if request.method == "POST" and request.form.get("export_log") == "1":
-        s_streamer = request.form.get("streamer")
-        s_date = request.form.get("date")
-        s_word = request.form.get("word", "").strip()
-        if s_streamer and s_date:
-            safe_dir = streamer_dir(s_streamer)
-            log_basename = os.path.basename(str(s_date))
-            full_path = None
-            if safe_dir and log_basename and log_basename == str(s_date):
-                candidate = os.path.join(safe_dir, CHAT_LOG_SUBDIR, log_basename)
-                try:
-                    real = os.path.realpath(candidate)
-                    base_real = os.path.realpath(BASE_DIR)
-                    if real.startswith(base_real + os.sep) and os.path.isfile(real):
-                        full_path = real
-                except OSError:
-                    full_path = None
-            if full_path:
-                msgs = []
-                try:
-                    with open(full_path, 'r', encoding='utf-8') as f:
-                        for line in f:
-                            try:
-                                d = json.loads(line)
-                                if s_word and not chat_message_matches_word(d.get("msg", ""), s_word):
-                                    continue
-                                d['color'] = get_user_color(d.get('user',''))
-                                d['timestamp'] = time.strftime("%H:%M:%S", time.localtime(d.get('t',0)))
-                                msgs.append(d)
-                            except Exception:
-                                pass
-                except Exception:
-                    pass
-                
-                grouped_list = [{
-                    "streamer": s_streamer,
-                    "date": s_date,
-                    "messages": msgs
-                }]
-                html_content = render_template_string(CHAT_EXPORT_TEMPLATE, user=f"Log {s_date}", grouped_results=grouped_list)
-                response = make_response(html_content)
-                response.headers["Content-Disposition"] = f"attachment; filename=chat_log_{s_streamer}_{s_date}.html"
-                return response
-
-    # --- Log Browser & Analysis Shared Logic ---
-    # Only active recording archives — no orphan/chat-only streamer noise.
-    active_archives = active_recording_archives()
-    streamers_with_logs = []
-    if os.path.isdir(BASE_DIR):
-        for d in os.listdir(BASE_DIR):
-            if active_archives and d not in active_archives:
-                continue
-            path = os.path.join(BASE_DIR, d, CHAT_LOG_SUBDIR)
-            if os.path.isdir(path) and any(f.endswith('.jsonl') for f in os.listdir(path)):
-                streamers_with_logs.append(d)
-    streamers_with_logs.sort()
-    
-    # --- Log Browser Logic ---
-    selected_streamer = request.args.get("streamer")
-    selected_date = request.args.get("date")
-    log_word_query = request.args.get("word", "").strip()
-    
-    available_logs = []
-    log_content = []
-    selected_log_display = ""
-    log_browser_active = False
-    selected_files_by_streamer = {}
-    
-    if selected_streamer and selected_streamer in streamers_with_logs:
-        log_dir = os.path.join(BASE_DIR, selected_streamer, CHAT_LOG_SUBDIR)
-        if os.path.isdir(log_dir):
-            files = [f for f in os.listdir(log_dir) if f.endswith('.jsonl')]
-            files.sort(reverse=True)
-            
-            for f in files:
-                base_name = os.path.splitext(f)[0]
-                display_name = base_name
-                match = re.search(r"(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})", base_name)
-                if not match:
-                    match = re.search(r"(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})", base_name)
-                if match:
-                    y, mo, d, h, mi, s = match.groups()
-                    display_name = f"{d}.{mo}.{y} {h}:{mi}:{s}"
-                available_logs.append({"filename": f, "display": display_name})
-                if selected_date == f:
-                    selected_log_display = display_name
-            
-            if selected_date and selected_date in files:
-                selected_files_by_streamer[selected_streamer] = [(selected_date, selected_log_display or selected_date)]
-            elif log_word_query:
-                selected_files_by_streamer[selected_streamer] = [(item["filename"], item["display"]) for item in available_logs]
-    elif log_word_query:
-        for streamer_name in streamers_with_logs:
-            log_dir = os.path.join(BASE_DIR, streamer_name, CHAT_LOG_SUBDIR)
-            if not os.path.isdir(log_dir):
-                continue
-            files = [f for f in os.listdir(log_dir) if f.endswith('.jsonl')]
-            files.sort(reverse=True)
-            selected_files_by_streamer[streamer_name] = [(f, os.path.splitext(f)[0]) for f in files]
-
-    if selected_files_by_streamer:
-        log_browser_active = True
-        hit_count = 0
-        for streamer_name, selected_files in selected_files_by_streamer.items():
-            log_dir = os.path.join(BASE_DIR, streamer_name, CHAT_LOG_SUBDIR)
-            for log_filename, log_display in selected_files:
-                full_path = os.path.join(log_dir, log_filename)
-                try:
-                    with open(full_path, 'r', encoding='utf-8') as f:
-                        for line in f:
-                            try:
-                                data = json.loads(line)
-                                msg = str(data.get("msg", "") or "")
-                                if log_word_query and not chat_message_matches_word(msg, log_word_query):
-                                    continue
-                                rel = data.get("rel", 0)
-                                item = {
-                                    "time_str": time.strftime("%H:%M:%S", time.localtime(data.get("t", 0))),
-                                    "user": str(data.get("user", "") or ""),
-                                    "msg": msg,
-                                    "msg_html": highlight_chat_message(msg, log_word_query),
-                                    "streamer": streamer_name,
-                                    "log_display": log_display,
-                                    "context_label": "",
-                                    "link": chat_vod_url_for_log(streamer_name, log_filename, rel),
-                                }
-                                if log_word_query:
-                                    item["context_label"] = f"{streamer_name} / {log_display}"
-                                log_content.append(item)
-                                hit_count += 1
-                                if log_word_query and hit_count >= LOG_BROWSER_WORD_RESULT_LIMIT:
-                                    break
-                            except Exception:
-                                pass
-                except Exception:
-                    pass
-                if log_word_query and hit_count >= LOG_BROWSER_WORD_RESULT_LIMIT:
-                    break
-            if log_word_query and hit_count >= LOG_BROWSER_WORD_RESULT_LIMIT:
-                break
-    # -------------------------
-    
-    # --- Cross-Streamer Analysis ---
-    analysis_results = []
-    selected_analysis_streamers = request.args.getlist("analysis_streamers")
-    
-    if selected_analysis_streamers:
-        user_map = {} # user -> set of streamers
-        for s in selected_analysis_streamers:
-            if active_archives and s not in active_archives:
-                continue
-            log_dir = os.path.join(BASE_DIR, s, CHAT_LOG_SUBDIR)
-            if os.path.isdir(log_dir):
-                for log_file in os.listdir(log_dir):
-                    if not log_file.endswith(".jsonl"):
-                        continue
-                    full_path = os.path.join(log_dir, log_file)
-                    try:
-                        with open(full_path, "r", encoding="utf-8") as f:
-                            for line in f:
-                                try:
-                                    data = json.loads(line)
-                                    u = data.get("user")
-                                    if u:
-                                        if u not in user_map:
-                                            user_map[u] = set()
-                                        user_map[u].add(s)
-                                except Exception:
-                                    pass
-                    except Exception:
-                        pass
-        
-        for user, streamers in user_map.items():
-            analysis_results.append({
-                "user": user,
-                "count": len(streamers),
-                "streamers": sorted(list(streamers))
-            })
-        analysis_results.sort(key=lambda x: x['count'], reverse=True)
-        analysis_results = analysis_results[:200]
-
-    if query_user:
-        q_lower = query_user.lower()
-        found = 0
-        if os.path.isdir(BASE_DIR):
-            for streamer in os.listdir(BASE_DIR):
-                if active_archives and streamer not in active_archives:
-                    continue
-                streamer_path = os.path.join(BASE_DIR, streamer)
-                if not os.path.isdir(streamer_path):
-                    continue
-
-                chat_dir = os.path.join(streamer_path, CHAT_LOG_SUBDIR)
-                if not os.path.isdir(chat_dir):
-                    continue
-
-                for log_file in os.listdir(chat_dir):
-                    if not log_file.endswith(".jsonl"):
-                        continue
-                    
-                    base_name = os.path.splitext(log_file)[0]
-                    vod_filename = f"{base_name}.mp4"
-                    
-                    # Datum aus Dateinamen parsen
-                    vod_date_display = base_name
-                    match = re.search(r"(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})", base_name)
-                    if not match:
-                        match = re.search(r"(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})", base_name)
-                    if match:
-                        y, mo, d, h, mi, s = match.groups()
-                        vod_date_display = f"{d}.{mo}.{y}"
-                    
-                    full_log_path = os.path.join(chat_dir, log_file)
-                    
-                    try:
-                        with open(full_log_path, "r", encoding="utf-8") as f:
-                            for line in f:
-                                try:
-                                    data = json.loads(line)
-                                    if data.get("user", "").lower() == q_lower:
-                                        rel = data.get("rel", 0)
-                                        # ID for selection
-                                        item_id = f"{streamer}|{base_name}|{rel}"
-                                        results.append({
-                                            "id": item_id,
-                                            "streamer": streamer,
-                                            "vod_name": vod_filename,
-                                            "vod_base": base_name,
-                                            "vod_date": vod_date_display,
-                                            "timestamp": format_seconds(rel),
-                                            "rel": rel,
-                                            "msg": data.get("msg", ""),
-                                            "user": data.get("user", ""),
-                                            "link": chat_vod_url_for_log(streamer, log_file, rel)
-                                        })
-                                        found += 1
-                                        if found >= MAX_CHAT_SEARCH_RESULTS:
-                                            break
-                                except Exception:
-                                    pass
-                            if found >= MAX_CHAT_SEARCH_RESULTS:
-                                break
-                    except Exception:
-                        pass
-                if found >= MAX_CHAT_SEARCH_RESULTS:
-                    break
-        results.sort(key=lambda x: x['vod_name'], reverse=True)
-
-    if do_export_html and results:
-        # Filter results
-        if selected_ids:
-            # Create a set for faster lookup
-            sel_set = set(selected_ids)
-            filtered = [r for r in results if r['id'] in sel_set]
-        else:
-            filtered = []
-        
-        if filtered:
-            # Group by VOD
-            grouped = {} # key: streamer|vod_base
-            for r in filtered:
-                k = f"{r['streamer']}|{r['vod_base']}"
-                if k not in grouped:
-                    grouped[k] = {
-                        "streamer": r['streamer'],
-                        "date": r['vod_date'],
-                        "filename": r['vod_name'],
-                        "messages": []
-                    }
-                r['color'] = get_user_color(r['user'])
-                r['rel_str'] = r['timestamp']
-                grouped[k]["messages"].append(r)
-            
-            grouped_list = list(grouped.values())
-            html_content = render_template_string(CHAT_EXPORT_TEMPLATE, user=query_user, grouped_results=grouped_list)
-            response = make_response(html_content)
-            response.headers["Content-Disposition"] = f"attachment; filename=chat_export_{secure_filename(query_user)}.html"
-            return response
-    
-    return render_template_string(
-        load_html_template("search.html"), 
-        results=results, 
-        vod_results=(global_results.get("videos") if isinstance(global_results, dict) else []),
-        query=query_user,
-        global_query=global_query,
-        global_results=global_results,
-        streamers_list=streamers_with_logs,
-        selected_streamer=selected_streamer,
-        available_logs=available_logs,
-        selected_date=selected_date,
-        selected_log_display=selected_log_display,
-        log_word_query=log_word_query,
-        log_browser_active=log_browser_active,
-        log_content=log_content,
-        analysis_results=analysis_results,
-        selected_analysis_streamers=selected_analysis_streamers
-    )
 
 @app.route("/admin/ban/manual", methods=["POST"])
 @admin_required
@@ -9073,7 +8763,7 @@ def api_admin_group_create():
         logging.info(f"API: User group created: '{name}' (ID: {new_id}) by {session.get('username')}")
         return jsonify({"ok": True, "msg": gettext("Group '%(name)s' created successfully.", name=name), "group": group}), 201
     except ValueError as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return jsonify({"ok": False, "error": translated_error(e)}), 400
     except Exception:
         logging.exception("Failed to create group")
         return jsonify({"ok": False, "error": gettext("Internal server error while creating the group.")}), 500
@@ -9095,7 +8785,7 @@ def api_admin_group_update(group_id):
         logging.info(f"API: User group updated: ID {group_id} by {session.get('username')}")
         return jsonify({"ok": True, "msg": gettext("Group '%(name)s' updated successfully.", name=name), "group": group})
     except ValueError as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return jsonify({"ok": False, "error": translated_error(e)}), 400
     except Exception:
         logging.exception("Failed to update group")
         return jsonify({"ok": False, "error": gettext("Internal server error while updating the group.")}), 500
@@ -9114,7 +8804,7 @@ def api_admin_group_delete(group_id):
             "msg": gettext("Group deleted successfully. Existing members were moved to the 'Viewer' group.")
         })
     except ValueError as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
+        return jsonify({"ok": False, "error": translated_error(e)}), 400
     except Exception:
         logging.exception("Failed to delete group")
         return jsonify({"ok": False, "error": gettext("Internal server error while deleting the group.")}), 500
@@ -12437,45 +12127,6 @@ def live_segment(streamer, segment):
 @admin_required
 def files_view():
     return redirect(url_for("index"))
-    resources = load_resources()
-    file_meta = resources.get("files", {})
-    links = resources.get("links", [])
-    share_link = request.args.get("share_link")
-    shared_file = request.args.get("shared_file")
-    file_error = request.args.get("error")
-    file_msg = request.args.get("msg")
-    
-    file_list = []
-    if os.path.isdir(config.FILES_DIR):
-        with os.scandir(config.FILES_DIR) as it:
-            entries = sorted([e for e in it if not e.name.startswith(".")], key=lambda e: e.name)
-            for entry in entries:
-                if not entry.is_file():
-                    continue
-                if not is_allowed_resource_upload(entry.name):
-                    continue
-                size_mb = entry.stat().st_size / (1024 * 1024)
-                meta = file_meta.get(entry.name, {})
-                # Migration/Fallback if meta is string (old format)
-                if isinstance(meta, str):
-                    meta = {"desc": meta}
-                
-                file_list.append({
-                    "name": entry.name,
-                    "size_str": f"{size_mb:.2f} MB",
-                    "title": meta.get("title", entry.name),
-                    "description": meta.get("desc", "")
-                })
-    
-    return render_template_string(
-        FILES_TEMPLATE,
-        files=file_list,
-        links=links,
-        share_link=share_link,
-        shared_file=shared_file,
-        file_error=file_error,
-        file_msg=file_msg,
-    )
 
 @app.route("/files/upload", methods=["POST"])
 @admin_required

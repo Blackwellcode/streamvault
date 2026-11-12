@@ -8,10 +8,22 @@ logger = logging.getLogger("database")
 from functools import wraps
 from contextlib import contextmanager
 
-from flask_babel import gettext
-
 from core import config
 from core.config import DB_FILE, LEGACY_CHANNELS_FILE, LEGACY_LIVE_CHANNEL_FILE
+
+
+def N_(message: str) -> str:
+    """Mark a message for extraction; the web layer translates it (no Flask here)."""
+    return message
+
+
+class GroupError(ValueError):
+    """Group validation error. ``msgid`` is English source text for gettext."""
+
+    def __init__(self, msgid: str, **params):
+        self.msgid = msgid
+        self.params = params
+        super().__init__(msgid % params if params else msgid)
 
 
 def db_retry(max_retries: int = 5, delay: float = 0.1, backoff: float = 2.0):
@@ -2011,10 +2023,10 @@ def create_user_group(
 ) -> int:
     name = str(name or "").strip()
     if not (2 <= len(name) <= 50):
-        raise ValueError(gettext("Group name must be between 2 and 50 characters long."))
+        raise GroupError(N_("Group name must be between 2 and 50 characters long."))
     existing = get_user_group_by_name(name)
     if existing:
-        raise ValueError(gettext("A group named '%(name)s' already exists.", name=name))
+        raise GroupError(N_("A group named '%(name)s' already exists."), name=name)
 
     default_perms = {
         "can_view_streams": True,
@@ -2058,24 +2070,24 @@ def update_user_group(
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError(gettext("Invalid group ID.")) from None
+        raise GroupError(N_("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError(gettext("Group not found."))
+        raise GroupError(N_("Group not found."))
 
     name_clean = str(name or "").strip()
     if not (2 <= len(name_clean) <= 50):
-        raise ValueError(gettext("Group name must be between 2 and 50 characters long."))
+        raise GroupError(N_("Group name must be between 2 and 50 characters long."))
 
     # System group name protection
     if group["is_system"] and group["name"].lower() != name_clean.lower():
-        raise ValueError(gettext("The name of system groups cannot be changed."))
+        raise GroupError(N_("The name of system groups cannot be changed."))
 
     # Check duplicate name if name changed
     if group["name"].lower() != name_clean.lower():
         duplicate = get_user_group_by_name(name_clean)
         if duplicate and duplicate["id"] != gid:
-            raise ValueError(gettext("A group named '%(name)s' already exists.", name=name_clean))
+            raise GroupError(N_("A group named '%(name)s' already exists."), name=name_clean)
 
     merged_perms = _normalize_group_permissions(group["permissions"])
     if permissions is not None:
@@ -2088,7 +2100,7 @@ def update_user_group(
     # Lockout protection: Administrator group cannot lose can_manage_users
     if group["name"] == "Administrator" and group["is_system"]:
         if not merged_perms.get("can_manage_users"):
-            raise ValueError(gettext("The 'can_manage_users' permission cannot be removed from the Administrator group."))
+            raise GroupError(N_("The 'can_manage_users' permission cannot be removed from the Administrator group."))
 
     now = time.time()
     conn = get_db()
@@ -2111,16 +2123,16 @@ def delete_user_group(group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError(gettext("Invalid group ID.")) from None
+        raise GroupError(N_("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError(gettext("Group not found."))
+        raise GroupError(N_("Group not found."))
     if group["is_system"]:
-        raise ValueError(gettext("System groups (%(name)s) cannot be deleted.", name=group["name"]))
+        raise GroupError(N_("System groups (%(name)s) cannot be deleted."), name=group["name"])
 
     viewer_group = get_user_group_by_name("Viewer")
     if not viewer_group:
-        raise ValueError(gettext("System group 'Viewer' was not found. Deletion cancelled."))
+        raise GroupError(N_("System group 'Viewer' was not found. Deletion cancelled."))
 
     now = time.time()
     conn = get_db()
@@ -2145,10 +2157,10 @@ def set_user_group(username: str, group_id: int) -> bool:
     try:
         gid = int(group_id)
     except (TypeError, ValueError):
-        raise ValueError(gettext("Invalid group ID.")) from None
+        raise GroupError(N_("Invalid group ID.")) from None
     group = get_user_group(gid)
     if not group:
-        raise ValueError(gettext("Group not found."))
+        raise GroupError(N_("Group not found."))
 
     now = time.time()
     conn = get_db()
