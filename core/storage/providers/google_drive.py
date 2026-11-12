@@ -186,10 +186,7 @@ class GoogleDriveProvider(StorageProvider):
             kwargs["headers"] = self._headers(**(kwargs.get("headers") or {}))
             response = http.request(method, url, provider=self.type_id, **kwargs)
             if response.status_code == 401 and attempt == 0:
-                try:
-                    response.close()
-                except Exception:
-                    pass
+                http.close_quietly(response, provider=self.type_id)
                 self._token(force=True)
                 continue
             return response
@@ -345,10 +342,7 @@ class GoogleDriveProvider(StorageProvider):
             )
             if response.status_code != 401 or attempt == 1:
                 break
-            try:
-                response.close()
-            except Exception:
-                pass
+            http.close_quietly(response, provider=self.type_id)
         data = http.json_response(response, "Google-Upload (leer)", provider=self.type_id)
         return {
             "remote_id": str(data.get("id") or existing_id or ""),
@@ -410,10 +404,7 @@ class GoogleDriveProvider(StorageProvider):
             )
             if response.status_code != 401 or attempt == 1:
                 break
-            try:
-                response.close()
-            except Exception:
-                pass
+            http.close_quietly(response, provider=self.type_id)
         http.raise_for_status(response, "Google-Upload starten", provider=self.type_id)
         location = str(response.headers.get("Location") or "").strip()
         if not location:
@@ -540,10 +531,7 @@ class GoogleDriveProvider(StorageProvider):
                 os.fsync(handle.fileno())
             os.replace(tmp_path, dest_path)
         finally:
-            try:
-                response.close()
-            except Exception:
-                pass
+            http.close_quietly(response, provider=self.type_id)
             if os.path.exists(tmp_path):
                 try:
                     os.remove(tmp_path)
@@ -559,10 +547,7 @@ class GoogleDriveProvider(StorageProvider):
         try:
             yield from iter_response_range(response, start, end)
         finally:
-            try:
-                response.close()
-            except Exception:
-                pass
+            http.close_quietly(response, provider=self.type_id)
 
     def delete(self, remote_path: str) -> None:
         remote_path = normalize_remote_path(remote_path)
