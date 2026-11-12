@@ -40,8 +40,8 @@ def ensure_chat_chunks(
             if os.path.getmtime(meta_path) >= os.path.getmtime(log_path):
                 with open(meta_path, "r", encoding="utf-8") as f:
                     return json.load(f)
-        except Exception:
-            pass
+        except (OSError, ValueError) as exc:
+            logger.warning("chat chunk cache %s unreadable, rebuilding: %s", meta_path, exc)
 
     if not os.path.isfile(log_path) or os.path.getsize(log_path) == 0:
         return {"ok": False, "error": "Log file not found or empty", "total_chunks": 0}

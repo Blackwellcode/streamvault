@@ -8,6 +8,7 @@ the public Twitch GQL endpoint.
 
 from __future__ import annotations
 
+import http.client
 import json
 import logging
 import os
@@ -236,6 +237,18 @@ def _wait_if_circuit_open():
     time.sleep(delay)
 
 
+def _drain_http_error(exc: urllib.error.HTTPError, path: str) -> None:
+    """Read and discard an error response body so the socket can close.
+
+    The status code has already decided the outcome; a body that cannot be
+    read (connection reset, truncated chunk) changes nothing about it.
+    """
+    try:
+        exc.read()
+    except (OSError, http.client.HTTPException) as read_exc:
+        logger.debug("Twitch Helix %s: error body unreadable: %s", path, read_exc)
+
+
 def helix_get(path: str, params: list[tuple[str, str]] | dict[str, Any] | None = None) -> dict | None:
     token = get_app_access_token()
     if not token or not TWITCH_CLIENT_ID:
@@ -280,10 +293,7 @@ def helix_get(path: str, params: list[tuple[str, str]] | dict[str, Any] | None =
                     attempt + 1,
                     max_attempts,
                 )
-                try:
-                    exc.read()
-                except Exception:
-                    pass
+                _drain_http_error(exc, path)
                 if attempt + 1 < max_attempts:
                     time.sleep(sleep_for + random.uniform(0.0, 0.5))
                     continue
@@ -298,19 +308,13 @@ def helix_get(path: str, params: list[tuple[str, str]] | dict[str, Any] | None =
                     attempt + 1,
                     max_attempts,
                 )
-                try:
-                    exc.read()
-                except Exception:
-                    pass
+                _drain_http_error(exc, path)
                 if attempt + 1 < max_attempts:
                     time.sleep(sleep_for)
                     continue
                 return None
             logger.info("Twitch Helix request failed (%s): HTTP %s", path, code)
-            try:
-                exc.read()
-            except Exception:
-                pass
+            _drain_http_error(exc, path)
             return None
         except Exception as exc:
             logger.info("Twitch Helix request failed (%s): %s", path, exc)

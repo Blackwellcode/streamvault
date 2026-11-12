@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import http.client
 import json
 import logging
 import os
@@ -52,11 +53,10 @@ def reload_env() -> None:
     with _STATE_LOCK:
         _STATE_CACHE.clear()
         _STATE_CACHE.update({"by_login": {}, "by_user_id": {}, "updated_at": 0.0})
-    try:
-        from core import redis_client
-        redis_client.delete_state("sysstate:eventsub_state")
-    except Exception:
-        pass
+    from core import redis_client
+
+    # delete_state() absorbs Redis errors itself and returns False.
+    redis_client.delete_state("sysstate:eventsub_state")
 
 
 def enabled() -> bool:
@@ -224,8 +224,9 @@ def _helix_post(path: str, payload: dict[str, Any]) -> dict | None:
         detail = ""
         try:
             detail = exc.read().decode("utf-8", errors="replace")[:400]
-        except Exception:
-            pass
+        except (OSError, http.client.HTTPException) as read_exc:
+            # The HTTP status below is the result; the body is only detail.
+            logger.debug("EventSub Helix POST %s: error body unreadable: %s", path, read_exc)
         logger.warning("EventSub Helix POST %s failed: HTTP %s %s", path, exc.code, detail)
         return None
     except Exception as exc:
