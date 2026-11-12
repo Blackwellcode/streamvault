@@ -196,13 +196,7 @@
       <span>{{ _('Log out') }}</span>
     </button>
   </form>
-  <form method="post" action="{{ url_for('logout_everywhere') }}" class="sv-bottom-nav__logout" data-confirm="{{ _('Sign out on every device? Every session of this account ends, including this one.') }}" data-confirm-ok="{{ _('Log out everywhere') }}" data-confirm-danger>
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" aria-label="{{ _('Log out everywhere') }}">
-      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
-      <span>{{ _('Everywhere') }}</span>
-    </button>
-  </form>
+  {% with logout_all_variant = 'nav' %}{% include 'components/logout_everywhere.html' %}{% endwith %}
 </div>
 
 {% include 'components/js_i18n.html' %}
