@@ -174,7 +174,7 @@
 </main>
 
 <!-- NEBULA Mobile Bottom Navigation -->
-<nav class="mobile-global-nav" aria-label="{{ _('Main navigation') }}" style="border-top: 1px solid var(--nebula-border); background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
+<div class="mobile-global-nav" role="navigation" aria-label="{{ _('Main navigation') }}" style="border-top: 1px solid var(--nebula-border); background: rgba(7, 11, 20, 0.97); transform: translateZ(0);">
   <a href="{{ url_for('index') }}" class="active" aria-current="page">
     <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>{{ _('Home') }}</span>
@@ -196,7 +196,7 @@
       <span>{{ _('Log out') }}</span>
     </button>
   </form>
-</nav>
+</div>
 
 {% include 'components/js_i18n.html' %}
 <script src="{{ url_for('static', filename='dashboard_live.js', v=ASSET_VERSION) }}"></script>

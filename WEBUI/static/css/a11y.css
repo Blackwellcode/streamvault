@@ -263,3 +263,22 @@ button, [role="button"], input[type="submit"], input[type="button"] {
 .mobile-global-nav span {
   font-size: 12px;
 }
+
+/* Legacy page CSS styles every submit button as primary with !important; the
+   dialog/confirm button variants and the bottom-nav logout must keep their own look. */
+body .sv-btn.sv-btn--primary { background: var(--nebula-accent-primary) !important; color: #FFFFFF !important; border-color: transparent !important; }
+body .sv-btn.sv-btn--secondary { background: transparent !important; color: var(--nebula-text-main) !important; border: 1px solid var(--nebula-field-edge) !important; box-shadow: none !important; }
+body .sv-btn.sv-btn--secondary:hover { background: var(--nebula-bg-hover) !important; }
+body .sv-btn.sv-btn--danger { background: var(--nebula-danger-bg) !important; color: #FFFFFF !important; border-color: transparent !important; }
+body .sv-btn.sv-btn--danger-outline { background: transparent !important; color: var(--nebula-status-live-text) !important; border: 1px solid var(--nebula-status-live-text) !important; box-shadow: none !important; }
+body .mobile-global-nav .sv-bottom-nav__logout > button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--nebula-text-muted) !important;
+  font-size: 12px !important;
+  min-height: 48px !important;
+  padding: 4px 6px !important;
+  margin: 0 !important;
+}
+body .mobile-global-nav .sv-bottom-nav__logout > button:hover { color: var(--nebula-text-main) !important; }

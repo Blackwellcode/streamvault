@@ -85,6 +85,7 @@
 {% endblock %}
 
 {% block content %}
+<h2 class="sr-only">{{ _('Cloud storage') }}</h2>
 <div class="storage-shell">
   {% if msg %}<div class="storage-alert ok">{{ msg }}</div>{% endif %}
   {% if error %}<div class="storage-alert err">{{ error }}</div>{% endif %}
@@ -200,8 +201,8 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-form-grid">
         <div class="storage-field">
-          <label>{{ _('Default provider') }}</label>
-          <select name="default_provider_id">
+          <label for="storage-default-provider">{{ _('Default provider') }}</label>
+          <select id="storage-default-provider" name="default_provider_id">
             <option value="">{{ _('Automatic (first active)') }}</option>
             {% for p in providers if p.enabled %}
             <option value="{{ p.id }}" {% if settings.default_provider_id == p.id %}selected{% endif %}>{{ p.name }}</option>
@@ -209,18 +210,18 @@
           </select>
         </div>
         <div class="storage-field">
-          <label>{{ _('Local retention (days)') }}</label>
-          <input type="number" min="0" max="3650" name="local_retention_days" value="{{ settings.local_retention_days }}">
+          <label for="storage-retention">{{ _('Local retention (days)') }}</label>
+          <input id="storage-retention" type="number" min="0" max="3650" name="local_retention_days" value="{{ settings.local_retention_days }}">
           <span class="help">{{ _('0 = delete immediately once the cloud copy is verified.') }}</span>
         </div>
         <div class="storage-field">
-          <label>{{ _('Auto-sync interval (minutes)') }}</label>
-          <input type="number" min="0" max="10080" name="auto_sync_interval_minutes" value="{{ settings.auto_sync_interval_minutes }}">
+          <label for="storage-sync-interval">{{ _('Auto-sync interval (minutes)') }}</label>
+          <input id="storage-sync-interval" type="number" min="0" max="10080" name="auto_sync_interval_minutes" value="{{ settings.auto_sync_interval_minutes }}">
           <span class="help">{{ _('0 = no automatic sync. Only used when auto-upload is enabled.') }}</span>
         </div>
         <div class="storage-field">
-          <label>{{ _('Cleanup interval (minutes)') }}</label>
-          <input type="number" min="0" max="10080" name="cleanup_interval_minutes" value="{{ settings.cleanup_interval_minutes }}">
+          <label for="storage-cleanup-interval">{{ _('Cleanup interval (minutes)') }}</label>
+          <input id="storage-cleanup-interval" type="number" min="0" max="10080" name="cleanup_interval_minutes" value="{{ settings.cleanup_interval_minutes }}">
         </div>
         <div class="storage-field">
           <label>{{ _('Max. files per sync') }}</label>
@@ -263,8 +264,8 @@
     <form method="post" action="{{ url_for('admin_storage_sync') }}" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="storage-field" style="min-width:220px;">
-        <label>{{ _('Provider') }}</label>
-        <select name="provider_id">
+        <label for="storage-sync-provider">{{ _('Provider') }}</label>
+        <select id="storage-sync-provider" name="provider_id">
           <option value="">{{ _('Default') }}</option>
           {% for p in providers if p.enabled %}
           <option value="{{ p.id }}">{{ p.name }}</option>

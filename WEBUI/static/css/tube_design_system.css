@@ -2796,7 +2796,7 @@ aside.ns-command-rail *::after,
 }
 .nebula-btn-danger {
   background: rgba(240, 68, 88, 0.15) !important;
-  color: var(--nebula-status-live) !important;
+  color: var(--nebula-status-live-text) !important;
   border: 1px solid rgba(240, 68, 88, 0.4) !important;
 }
 .nebula-btn-danger:hover {

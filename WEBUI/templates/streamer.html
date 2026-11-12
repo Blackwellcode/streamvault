@@ -268,7 +268,7 @@
       {% for f in files %}
       <article class="ns-video-card" data-watch-card data-watch-key="{{ f.watch_key }}" data-done-key="{{ f.done_key }}" data-duration-sec="{{ f.duration_sec }}">
         <div class="ns-thumb-frame">
-          <a href="{{ url_for('vod_view' if f.route == 'vod' else 'clip_view', streamer=streamer, filename=f.name) }}" style="display: block; width: 100%; height: 100%;">
+          <a href="{{ url_for('vod_view' if f.route == 'vod' else 'clip_view', streamer=streamer, filename=f.name) }}" aria-label="{{ f.title or f.name }}" style="display: block; width: 100%; height: 100%;">
             <img src="{{ f.thumb_url }}" alt="" loading="lazy" decoding="async" data-fallback-src="{{ url_for('static', filename='img/thumb_fallback.jpg') }}">
           </a>
 

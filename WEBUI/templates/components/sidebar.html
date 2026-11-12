@@ -1,8 +1,8 @@
 {% if not is_mobile %}
 <aside class="ns-command-rail" aria-label="{{ _('Main navigation') }}">
   <div class="ns-rail-brand" style="margin-bottom: 14px;">
-    <a href="{{ url_for('index') }}" class="ns-brand-glyph" title="StreamVault" aria-label="StreamVault" style="width: 40px; height: 40px; border-radius: 12px; font-size: 18px; background: var(--nebula-accent-primary); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(77, 99, 255, 0.3);">
-      <span aria-hidden="true">SV</span>
+    <a href="{{ url_for('index') }}" class="ns-brand-glyph" title="StreamVault" style="width: 40px; height: 40px; border-radius: 12px; font-size: 18px; background: var(--nebula-accent-primary); border: none; margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(77, 99, 255, 0.3);">
+      <span aria-hidden="true">SV</span><span class="sr-only">StreamVault</span>
     </a>
   </div>
   <nav class="ns-rail-nav">
@@ -68,7 +68,7 @@
   </div>
   {% endif %}
 </aside>
-<nav class="mobile-global-nav sv-bottom-nav" aria-label="{{ _('Main navigation') }}">
+<div class="mobile-global-nav sv-bottom-nav" role="navigation" aria-label="{{ _('Main navigation') }}">
   <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active" aria-current="page"{% endif %}>
     <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>{{ _('Home') }}</span>
@@ -90,5 +90,5 @@
       <span>{{ _('Log out') }}</span>
     </button>
   </form>
-</nav>
+</div>
 {% endif %}

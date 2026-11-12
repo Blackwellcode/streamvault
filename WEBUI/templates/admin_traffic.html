@@ -41,6 +41,7 @@
         <p class="muted" style="margin:0;">{{ _('No accounts match this filter.') }}</p>
       </div>
       {% else %}
+      <h2 class="sr-only">{{ _('Accounts') }}</h2>
       <div class="traffic-grid">
         {% for card in cards %}
         <article class="panel traffic-card{% if card.inactive %} is-inactive{% endif %}{% if not card.active %} is-disabled{% endif %}">

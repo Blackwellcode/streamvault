@@ -6380,32 +6380,32 @@ body:is( .page-index, .page-channels, .page-streamer, .page-admin, .page-mail, .
 }
 body.theme-silo,
 body.theme-vault {
-  --bg: #0b0b0b;
-  --sidebar: #0f0f0f;
-  --surface: #141414;
-  --surface-raised: #1a1a1a;
-  --surface-hover: #222222;
-  --surface-active: #2a2a2a;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text-primary: #f5f5f5;
-  --text-secondary: #b0b0b0;
-  --text-muted: #7a7a7a;
-  --brand: #c8f53a;
-  --brand-hover: #d8ff5c;
-  --brand-muted: rgba(200, 245, 58, 0.12);
-  --success: #c8f53a;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --offline: #6b6b6b;
-  --theme-accent-rgb: 200, 245, 58;
-  --theme-success-rgb: 200, 245, 58;
-  --theme-button-text: #0b0b0b;
-  --radius: 14px;
-  --radius-card: 16px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --bg: var(--nebula-bg-root);
+  --sidebar: var(--nebula-bg-deep);
+  --surface: var(--nebula-bg-surface);
+  --surface-raised: var(--nebula-bg-card);
+  --surface-hover: var(--nebula-bg-hover);
+  --surface-active: var(--nebula-bg-active);
+  --border: var(--nebula-border);
+  --border-strong: var(--nebula-border-bright);
+  --text-primary: var(--nebula-text-main);
+  --text-secondary: var(--nebula-text-secondary);
+  --text-muted: var(--nebula-text-muted);
+  --brand: var(--nebula-accent-text);
+  --brand-hover: var(--nebula-accent-highlight);
+  --brand-muted: rgba(77, 99, 255, 0.15);
+  --success: var(--nebula-status-success);
+  --warning: var(--nebula-status-warning);
+  --danger: var(--nebula-status-live-text);
+  --offline: var(--nebula-text-muted);
+  --theme-accent-rgb: 77, 99, 255;
+  --theme-success-rgb: 72, 214, 162;
+  --theme-button-text: var(--nebula-bg-root);
+  --radius: var(--nebula-radius-md);
+  --radius-card: var(--nebula-radius-lg);
+  --radius-sm: var(--nebula-radius-sm);
+  --radius-md: var(--nebula-radius-md);
+  --radius-lg: var(--nebula-radius-xl);
 }
 body.theme-aurora {
   --bg: #07100f;
@@ -7283,7 +7283,7 @@ body.page-twitch-watch .twitch-proxy-wait.is-visible {
 body.page-twitch-watch .twitch-proxy-status {
   margin: 0;
   font-size: var(--sv-text-xs);
-  color: #7a7a7a;
+  color: var(--nebula-text-muted);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
 body.page-twitch-watch .twitch-proxy-wait-card {
