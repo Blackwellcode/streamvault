@@ -6,25 +6,7 @@
     const player = document.getElementById("player");
     const AUTH_HEADERS = { "X-Alert-Token": token };
 
-    let currentObjectUrl = null;
-
-    function releaseAudio() {
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
-        currentObjectUrl = null;
-      }
-    }
-
-    // <audio src> cannot send headers: fetch the file with the token header, play it as a blob URL.
-    async function loadAudio(audioUrl) {
-      const u = new URL(audioUrl, location.origin);
-      u.searchParams.delete("token");
-      const res = await fetch(u.pathname + u.search, { headers: AUTH_HEADERS });
-      if (!res.ok) throw new Error("audio http " + res.status);
-      releaseAudio();
-      currentObjectUrl = URL.createObjectURL(await res.blob());
-      player.src = currentObjectUrl;
-    }
+    const audio = window.SVOverlayAudio.create(player, AUTH_HEADERS);
     let busy = false;
     let currentId = null;
 
@@ -37,7 +19,9 @@
       if (!id) return;
       try {
         await fetch(url("/alerts/api/ack?id=" + encodeURIComponent(id)), { method: "POST", headers: AUTH_HEADERS });
-      } catch (e) {}
+      } catch (e) {
+        console.error("[alerts-overlay] ack failed for item", id, e);
+      }
     }
 
     async function tick() {
@@ -52,9 +36,10 @@
         currentId = item.id;
         hud.textContent = "🔔 " + (item.label || item.event);
         hud.classList.add("show");
-        await loadAudio(item.audio_url);
+        await audio.load(item.audio_url);
         await player.play();
       } catch (e) {
+        console.error("[alerts-overlay] loading or playing the next alert failed", e);
         hud.textContent = "click once to unlock audio";
         hud.classList.add("show");
         busy = false;
@@ -67,7 +52,7 @@
       currentId = null;
       busy = false;
       hud.classList.remove("show");
-      releaseAudio();
+      audio.release();
       await ack(id);
       tick();
     });
@@ -77,12 +62,12 @@
       currentId = null;
       busy = false;
       hud.classList.remove("show");
-      releaseAudio();
+      audio.release();
       await ack(id);
     });
 
     window.addEventListener("pointerdown", () => {
-      player.play().catch(() => {});
+      player.play().catch((e) => console.error("[alerts-overlay] unlock play failed", e));
     }, { once: true });
 
     setInterval(tick, 900);

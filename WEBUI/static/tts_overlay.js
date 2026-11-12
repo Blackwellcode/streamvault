@@ -12,25 +12,7 @@
     const player = document.getElementById("player");
     const AUTH_HEADERS = { "X-TTS-Token": token };
 
-    let currentObjectUrl = null;
-
-    function releaseAudio() {
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
-        currentObjectUrl = null;
-      }
-    }
-
-    // <audio src> cannot send headers: fetch the file with the token header, play it as a blob URL.
-    async function loadAudio(audioUrl) {
-      const u = new URL(audioUrl, location.origin);
-      u.searchParams.delete("token");
-      const res = await fetch(u.pathname + u.search, { headers: AUTH_HEADERS });
-      if (!res.ok) throw new Error("audio http " + res.status);
-      releaseAudio();
-      currentObjectUrl = URL.createObjectURL(await res.blob());
-      player.src = currentObjectUrl;
-    }
+    const audio = window.SVOverlayAudio.create(player, AUTH_HEADERS);
 
     let busy = false;
     let currentId = null;
@@ -72,7 +54,9 @@
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({id: id}),
         });
-      } catch (e) {}
+      } catch (e) {
+        console.error("[tts-overlay] ack failed for item", id, e);
+      }
     }
 
     async function pollSkip() {
@@ -88,7 +72,9 @@
           await ack(id);
           setStatus("skipped");
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("[tts-overlay] skip check failed for item", currentId, e);
+      }
     }
 
     async function tick() {
@@ -108,10 +94,11 @@
         currentId = item.id;
         setStatus("playing · " + (item.user || ""));
         showItem(item.user, item.text);
-        await loadAudio(item.audio_url);
+        await audio.load(item.audio_url);
         try {
           await player.play();
         } catch (err) {
+          console.error("[tts-overlay] autoplay blocked", err);
           setStatus("autoplay blocked — Interact + click once");
           const retry = async () => {
             try {
@@ -119,6 +106,7 @@
               await player.play();
               setStatus("playing · " + (item.user || ""));
             } catch (e2) {
+              console.error("[tts-overlay] autoplay retry failed", e2);
               setStatus("autoplay still blocked");
             }
           };
@@ -126,6 +114,7 @@
           return;
         }
       } catch (e) {
+        console.error("[tts-overlay] loading or playing the next item failed", e);
         setStatus("error");
       }
     }
@@ -135,7 +124,7 @@
       hideToast();
       currentId = null;
       busy = false;
-      releaseAudio();
+      audio.release();
       if (id) await ack(id);
       setStatus("TTS idle");
       tick();
@@ -146,7 +135,7 @@
       hideToast();
       currentId = null;
       busy = false;
-      releaseAudio();
+      audio.release();
       if (id) await ack(id);
       setStatus("audio error");
     });
@@ -154,7 +143,7 @@
     // Unlock autoplay on first user gesture (OBS interaction / click)
     window.addEventListener("pointerdown", () => {
       player.muted = false;
-      player.play().catch(() => {});
+      player.play().catch((e) => console.error("[tts-overlay] unlock play failed", e));
     }, {once: true});
 
     setInterval(tick, 1200);
