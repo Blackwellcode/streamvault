@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:20+0100\n"
+"POT-Creation-Date: 2026-11-12 15:41+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ja\n"
@@ -2982,7 +2982,7 @@ msgstr "現在、再生中の VOD が多すぎます。ライブには影響し�
 #, python-format
 msgid "Too many login attempts. Please try again in %(num)d minute."
 msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
-msgstr[0] ""
+msgstr[0] "ログイン試行が多すぎます。%(num)d 分後にもう一度お試しください。"
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "トップ配信は現在利用できません。監視中のチャンネルまたは検索をご利用ください。"

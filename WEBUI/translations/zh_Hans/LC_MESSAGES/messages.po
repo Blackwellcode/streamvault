@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:20+0100\n"
+"POT-Creation-Date: 2026-11-12 15:41+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -2982,7 +2982,7 @@ msgstr "当前播放的 VOD 过多。直播不受影响。请几分钟后再试�
 #, python-format
 msgid "Too many login attempts. Please try again in %(num)d minute."
 msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
-msgstr[0] ""
+msgstr[0] "登录尝试次数过多。请在 %(num)d 分钟后重试。"
 
 msgid "Top streams are currently unavailable. Use monitored channels or the search."
 msgstr "热门直播暂不可用。请使用监控频道或搜索。"
