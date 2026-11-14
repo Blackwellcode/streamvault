@@ -508,8 +508,9 @@
                 }
                 data.forEach(msg => {
                     const rewardId = msg.reward && msg.reward.id ? msg.reward.id : '';
-                    const eventType = msg.event && msg.event.type ? msg.event.type : '';
-                    const eventPart = eventType ? `event|${eventType}|` : '';
+                    const eventPart = window.StreamVaultChat
+                      ? window.StreamVaultChat.chatEventKey(msg)
+                      : (msg.event && msg.event.type ? `event|${msg.event.type}|` : '');
                     const rewardPart = rewardId ? `reward|${rewardId}|` : '';
                     const key = isLive
                       ? `${msg.t}|${msg.user}|${eventPart}${rewardPart}${msg.msg || ''}`
@@ -570,6 +571,7 @@
           div.innerHTML = `${timestamp}<span class="chat-badges">${badges}</span><span class="u">${user}${userSuffix}</span><span class="m">${message}</span>`;
           div.querySelector('.u').style.color = userColor;
         }
+        if (window.StreamVaultChat) window.StreamVaultChat.decorateLine(div, msg);
         chatList.appendChild(div);
         
         while (chatList.children.length > 100) {

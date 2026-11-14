@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:41+0100\n"
+"POT-Creation-Date: 2026-11-12 15:50+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ja\n"
@@ -144,6 +144,64 @@ msgstr "%(num)s 日"
 #, python-format
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s は OAuth に対応していません。"
+
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "%(user)s さんがPrimeサブからティア%(tier)sサブに切り替えました！"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "%(user)s さんが%(charity)sに%(amount)sを寄付しました！"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "%(user)s さんが%(recipient)s さんにティア%(tier)sサブ%(months)sか月分をギフトしました！"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "%(user)s さんが%(recipient)s さんにティア%(tier)sサブをギフトしました！"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "%(user)s さんは%(other)s さんからもらったギフトサブを継続しています！"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "%(user)s さんがコミュニティにティア%(tier)sサブを%(num)d個ギフトしています！"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s さんは初めての参加です。あいさつしましょう！"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "%(user)s さんは%(other)s さんからのギフトを%(recipient)s さんに恩送りしています！"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "%(user)s さんは%(other)s さんからのギフトをコミュニティに恩送りしています！"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "%(user)s さんが%(num)d人の視聴者とレイド中です！"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "%(user)s さんが新しい%(bits)sビッツバッジを獲得しました！"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s さんがティア%(tier)sでサブスクライブしました。"
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s さんがPrimeでサブスクライブしました。"
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "%(user)s さんが%(num)s回連続で配信を視聴し、視聴ストリークを達成しました！"
 
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = クラウドのコピーを確認後すぐに削除します。"
@@ -298,8 +356,14 @@ msgstr "%(path)s も転送します。"
 msgid "Also transfers preview images from %(path)s."
 msgstr "%(path)s のプレビュー画像も転送します。"
 
+msgid "An anonymous user"
+msgstr "匿名ユーザー"
+
 msgid "An upload for this file is already running."
 msgstr "このファイルのアップロードはすでに実行中です。"
+
+msgid "Announcement"
+msgstr "お知らせ"
 
 msgid "Anonymous"
 msgstr "匿名"
@@ -560,6 +624,9 @@ msgstr "チャット履歴: %(user)s"
 
 msgid "Chat messages"
 msgstr "チャットメッセージ"
+
+msgid "Chat notice"
+msgstr "チャット通知"
 
 msgid "Chat replay"
 msgstr "チャットリプレイ"
@@ -1211,6 +1278,9 @@ msgstr "チャットを絞り込み…"
 
 msgid "First"
 msgstr "最初"
+
+msgid "First message"
+msgstr "初めてのメッセージ"
 
 msgid "First page"
 msgstr "最初のページ"
@@ -2051,6 +2121,10 @@ msgstr "ページ送り"
 msgid "Pagination (top)"
 msgstr "ページ送り（上部）"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "%(months)sか月分を前払いしました。"
+
 msgid "Password"
 msgstr "パスワード"
 
@@ -2360,6 +2434,10 @@ msgid "Repeat password"
 msgstr "パスワード（確認）"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "@%(user)s さんへの返信: %(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "「%(username)s」のリクエストを拒否して削除しました。"
 
@@ -2623,6 +2701,9 @@ msgstr "サイズ"
 
 msgid "Skip to content"
 msgstr "本文へスキップ"
+
+msgid "Someone"
+msgstr "誰か"
 
 msgid "Sort"
 msgstr "並べ替え"
@@ -2938,6 +3019,19 @@ msgstr "システム管理者のパスワードは環境変数でのみ変更で
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "動画ファイルを読み込めないか、まだトランスコード中です。"
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "このチャンネルで合計%(num)d個のサブをギフトしました！"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "%(months)sか月間サブスクライブしています！"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "%(months)sか月間サブスクライブ中、現在%(streak)sか月連続です！"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "この管理者ユーザーは保護されているため削除できません。"
@@ -3398,6 +3492,9 @@ msgstr "オブジェクトデータベースによる"
 msgid "active"
 msgstr "有効"
 
+msgid "an anonymous user"
+msgstr "匿名ユーザー"
+
 msgid "available"
 msgstr "あり"
 
@@ -3453,6 +3550,9 @@ msgstr "なし"
 
 msgid "not created"
 msgstr "未作成"
+
+msgid "someone"
+msgstr "誰か"
 
 #, python-format
 msgid "today %(time)s"

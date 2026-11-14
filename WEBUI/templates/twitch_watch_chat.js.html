@@ -104,8 +104,9 @@
   function renderMessage(item) {
     if (!chatList) return;
     const rewardId = item.reward && item.reward.id ? item.reward.id : '';
-    const eventType = item.event && item.event.type ? item.event.type : '';
-    const eventPart = eventType ? ('event|' + eventType + '|') : '';
+    const eventPart = (window.StreamVaultChat && window.StreamVaultChat.chatEventKey)
+      ? window.StreamVaultChat.chatEventKey(item)
+      : (item.event && item.event.type ? ('event|' + item.event.type + '|') : '');
     const key = item.t + '|' + item.user + '|' + eventPart + (rewardId ? ('reward|' + rewardId + '|') : '') + (item.msg || '');
     if (renderedChatKeys.has(key)) return;
     renderedChatKeys.add(key);
@@ -123,6 +124,7 @@
       line.querySelector('.chat-user').textContent = (item.user || '') + (item.reward ? ' ' : ': ');
     }
     line.querySelector('.chat-msg').innerHTML = processMsg(item);
+    if (window.StreamVaultChat && window.StreamVaultChat.decorateLine) window.StreamVaultChat.decorateLine(line, item);
     chatList.appendChild(line);
     while (chatList.children.length > 200) {
       chatList.removeChild(chatList.firstElementChild);

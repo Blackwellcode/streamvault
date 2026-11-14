@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:41+0100\n"
+"POT-Creation-Date: 2026-11-12 15:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -74,7 +74,9 @@ msgid "%(count)s viewers"
 msgstr ""
 
 #, python-format
-msgid "%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, chat %(chats)s)"
+msgid ""
+"%(day)s: %(total)s (login %(logins)s, pages %(pages)s, video %(media)s, "
+"chat %(chats)s)"
 msgstr ""
 
 #, python-format
@@ -149,6 +151,70 @@ msgstr ""
 msgid "%(provider)s does not support OAuth."
 msgstr ""
 
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(user)s is paying forward the gift they got from %(other)s to "
+"%(recipient)s!"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(user)s is paying forward the gift they got from %(other)s to the "
+"community!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr ""
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr ""
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr ""
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr ""
+
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr ""
 
@@ -185,7 +251,9 @@ msgstr ""
 msgid "A saved value is kept if the field is left empty."
 msgstr ""
 
-msgid "AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any S3-compatible endpoint."
+msgid ""
+"AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO, Hetzner or any "
+"S3-compatible endpoint."
 msgstr ""
 
 msgid "Accept rules"
@@ -218,10 +286,14 @@ msgstr ""
 msgid "Active shares"
 msgstr ""
 
-msgid "Active: new streams & folders are unlocked automatically. Below you can disable individual folders (uncheck them)."
+msgid ""
+"Active: new streams & folders are unlocked automatically. Below you can "
+"disable individual folders (uncheck them)."
 msgstr ""
 
-msgid "Active: new streams are unlocked automatically. Below you can disable / block individual folders."
+msgid ""
+"Active: new streams are unlocked automatically. Below you can disable / "
+"block individual folders."
 msgstr ""
 
 msgid "Actively monitored by the recorder core"
@@ -282,7 +354,9 @@ msgstr ""
 msgid "All saved settings of this account will be deleted completely."
 msgstr ""
 
-msgid "All streamers are currently offline. Past broadcasts can be watched in the archive."
+msgid ""
+"All streamers are currently offline. Past broadcasts can be watched in "
+"the archive."
 msgstr ""
 
 msgid "All streams (+ auto-new)"
@@ -302,7 +376,13 @@ msgstr ""
 msgid "Also transfers preview images from %(path)s."
 msgstr ""
 
+msgid "An anonymous user"
+msgstr ""
+
 msgid "An upload for this file is already running."
+msgstr ""
+
+msgid "Announcement"
 msgstr ""
 
 msgid "Anonymous"
@@ -347,7 +427,9 @@ msgid "Archive: %(name)s"
 msgstr ""
 
 #, python-format
-msgid "Archive: <strong>%(channels)s</strong> channels • <strong>%(vods)s</strong> VODs"
+msgid ""
+"Archive: <strong>%(channels)s</strong> channels • "
+"<strong>%(vods)s</strong> VODs"
 msgstr ""
 
 msgid "Archived airtime"
@@ -393,7 +475,9 @@ msgstr ""
 msgid "Automatic (first active)"
 msgstr ""
 
-msgid "Automatic and manual backups (SQLite database, configuration and metadata)."
+msgid ""
+"Automatic and manual backups (SQLite database, configuration and "
+"metadata)."
 msgstr ""
 
 msgid "Automatically unlock future streams & folders"
@@ -499,7 +583,9 @@ msgstr ""
 msgid "Buffering…"
 msgstr ""
 
-msgid "By default nothing is uploaded or deleted automatically. Enable these features deliberately."
+msgid ""
+"By default nothing is uploaded or deleted automatically. Enable these "
+"features deliberately."
 msgstr ""
 
 msgid "Cancel"
@@ -563,6 +649,9 @@ msgid "Chat history: %(user)s"
 msgstr ""
 
 msgid "Chat messages"
+msgstr ""
+
+msgid "Chat notice"
 msgstr ""
 
 msgid "Chat replay"
@@ -672,7 +761,9 @@ msgstr ""
 msgid "Collapse chat"
 msgstr ""
 
-msgid "Configure dynamic permissions for streams, the video archive and channel access."
+msgid ""
+"Configure dynamic permissions for streams, the video archive and channel "
+"access."
 msgstr ""
 
 msgid "Configure recording channels and manage archive assignments"
@@ -844,7 +935,9 @@ msgid "Delete"
 msgstr ""
 
 #, python-format
-msgid "Delete %(name)s? The file is removed from the archive and cannot be restored."
+msgid ""
+"Delete %(name)s? The file is removed from the archive and cannot be "
+"restored."
 msgstr ""
 
 #, python-format
@@ -872,7 +965,9 @@ msgstr ""
 msgid "Delete this streamer folder and all recordings? This cannot be undone."
 msgstr ""
 
-msgid "Delete this video? The file is removed from the archive and cannot be restored."
+msgid ""
+"Delete this video? The file is removed from the archive and cannot be "
+"restored."
 msgstr ""
 
 msgid "Delete user"
@@ -955,7 +1050,9 @@ msgstr ""
 msgid "Download all"
 msgstr ""
 
-msgid "Download all VODs of this streamer as one archive? This can take a while for large channels."
+msgid ""
+"Download all VODs of this streamer as one archive? This can take a while "
+"for large channels."
 msgstr ""
 
 msgid "Download archive & VODs"
@@ -978,7 +1075,9 @@ msgid "Downloading... %(percent)s"
 msgstr ""
 
 #, python-format
-msgid "Drive quota active — do not press Play again (it extends the block). Seek back into the already loaded part, or wait about %(minutes)s min."
+msgid ""
+"Drive quota active — do not press Play again (it extends the block). Seek"
+" back into the already loaded part, or wait about %(minutes)s min."
 msgstr ""
 
 msgid "Drop a file here or click to select"
@@ -996,7 +1095,9 @@ msgstr ""
 msgid "Duration:"
 msgstr ""
 
-msgid "Dynamic user account and group management with granular stream and permission control"
+msgid ""
+"Dynamic user account and group management with granular stream and "
+"permission control"
 msgstr ""
 
 msgid "END"
@@ -1032,7 +1133,9 @@ msgstr ""
 msgid "Empty = AWS. For R2, B2, Wasabi, MinIO etc. enter the S3 endpoint."
 msgstr ""
 
-msgid "Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers use their own region."
+msgid ""
+"Empty = us-east-1 for AWS. Cloudflare R2 uses 'auto'; other S3 providers "
+"use their own region."
 msgstr ""
 
 msgid "Empty folder"
@@ -1044,7 +1147,9 @@ msgstr ""
 msgid "Enable maintenance mode"
 msgstr ""
 
-msgid "Enable maintenance mode? Everyone except allowlisted users sees the maintenance page until you end it."
+msgid ""
+"Enable maintenance mode? Everyone except allowlisted users sees the "
+"maintenance page until you end it."
 msgstr ""
 
 msgid "Enable recording"
@@ -1147,7 +1252,9 @@ msgstr ""
 msgid "Everywhere"
 msgstr ""
 
-msgid "Existing members of this group are automatically assigned to the default group <strong>Viewer</strong>."
+msgid ""
+"Existing members of this group are automatically assigned to the default "
+"group <strong>Viewer</strong>."
 msgstr ""
 
 msgid "Exit fullscreen"
@@ -1216,6 +1323,9 @@ msgstr ""
 msgid "First"
 msgstr ""
 
+msgid "First message"
+msgstr ""
+
 msgid "First page"
 msgstr ""
 
@@ -1228,10 +1338,15 @@ msgstr ""
 msgid "Folder not found or invalid."
 msgstr ""
 
-msgid "For Google Drive, Dropbox and OneDrive this callback URL must be registered with the provider:"
+msgid ""
+"For Google Drive, Dropbox and OneDrive this callback URL must be "
+"registered with the provider:"
 msgstr ""
 
-msgid "For encrypted credential storage, VOD_SECRET_KEY (or STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least 16 characters)."
+msgid ""
+"For encrypted credential storage, VOD_SECRET_KEY (or "
+"STORAGE_ENCRYPTION_KEY) must be set to a strong, unique value (at least "
+"16 characters)."
 msgstr ""
 
 msgid "Forget"
@@ -1293,13 +1408,17 @@ msgstr ""
 msgid "Go to terms"
 msgstr ""
 
-msgid "Google Cloud Console → APIs & Services → Credentials → OAuth client (web application)."
+msgid ""
+"Google Cloud Console → APIs & Services → Credentials → OAuth client (web "
+"application)."
 msgstr ""
 
 msgid "Google Drive / Workspace Drive with OAuth 2.0 and resumable uploads."
 msgstr ""
 
-msgid "Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. Credentials are stored with AES-GCM encryption."
+msgid ""
+"Google Drive, S3-compatible services, Dropbox, OneDrive and WebDAV. "
+"Credentials are stored with AES-GCM encryption."
 msgstr ""
 
 msgid "Group"
@@ -1319,7 +1438,9 @@ msgstr ""
 msgid "Group deleted"
 msgstr ""
 
-msgid "Group deleted successfully. Existing members were moved to the 'Viewer' group."
+msgid ""
+"Group deleted successfully. Existing members were moved to the 'Viewer' "
+"group."
 msgstr ""
 
 msgid "Group name"
@@ -1358,21 +1479,29 @@ msgstr ""
 msgid "Hotkey"
 msgstr ""
 
-msgid "House rules for the invite-only circle. No “official” framing — just binding terms of use."
+msgid ""
+"House rules for the invite-only circle. No “official” framing — just "
+"binding terms of use."
 msgstr ""
 
-msgid "I have read and accept the StreamVault rules. I understand that violations lead to immediate revocation of access."
+msgid ""
+"I have read and accept the StreamVault rules. I understand that "
+"violations lead to immediate revocation of access."
 msgstr ""
 
 #, python-format
-msgid "I have read and accept the terms (version %(version)s). Violations can lead to immediate revocation of access."
+msgid ""
+"I have read and accept the terms (version %(version)s). Violations can "
+"lead to immediate revocation of access."
 msgstr ""
 
 msgid "IP"
 msgstr ""
 
 #, python-format
-msgid "If needed, set %(var)s to your public HTTPS address so the URL matches exactly."
+msgid ""
+"If needed, set %(var)s to your public HTTPS address so the URL matches "
+"exactly."
 msgstr ""
 
 msgid "Image controls"
@@ -1382,7 +1511,9 @@ msgstr ""
 msgid "Inactive (%(count)s)"
 msgstr ""
 
-msgid "Inactive: new streams stay blocked. Only folders checked below are unlocked."
+msgid ""
+"Inactive: new streams stay blocked. Only folders checked below are "
+"unlocked."
 msgstr ""
 
 msgid "Include audio"
@@ -1391,7 +1522,9 @@ msgstr ""
 msgid "Info about the VOD…"
 msgstr ""
 
-msgid "Information on data processing within the invite-only circle. No legal notice."
+msgid ""
+"Information on data processing within the invite-only circle. No legal "
+"notice."
 msgstr ""
 
 msgid "Initial password"
@@ -1721,7 +1854,9 @@ msgstr ""
 msgid "Message"
 msgstr ""
 
-msgid "Mobile live is temporarily disabled. Please use the desktop version or the installed app."
+msgid ""
+"Mobile live is temporarily disabled. Please use the desktop version or "
+"the installed app."
 msgstr ""
 
 msgid "Mods"
@@ -1784,19 +1919,25 @@ msgstr ""
 msgid "Next page"
 msgstr ""
 
-msgid "Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app password."
+msgid ""
+"Nextcloud, ownCloud, Hetzner Storage Box or any WebDAV server with an app"
+" password."
 msgstr ""
 
 msgid "No (self-signed only)"
 msgstr ""
 
-msgid "No VODs yet. Recordings appear here automatically as soon as a monitored channel goes live."
+msgid ""
+"No VODs yet. Recordings appear here automatically as soon as a monitored "
+"channel goes live."
 msgstr ""
 
 msgid "No acceptances yet."
 msgstr ""
 
-msgid "No account yet? Accounts are issued by the administrators of this instance."
+msgid ""
+"No account yet? Accounts are issued by the administrators of this "
+"instance."
 msgstr ""
 
 msgid "No accounts match this filter."
@@ -1835,7 +1976,9 @@ msgstr ""
 msgid "No cloud storage configured yet. Add a provider or use the console:"
 msgstr ""
 
-msgid "No connection. As soon as the device is back online, the app continues loading the page normally."
+msgid ""
+"No connection. As soon as the device is back online, the app continues "
+"loading the page normally."
 msgstr ""
 
 msgid "No discovery streams right now."
@@ -1856,7 +1999,9 @@ msgstr ""
 msgid "No live streams among the monitored channels. Use the search."
 msgstr ""
 
-msgid "No local entries found for this search term. Press [Enter] to search the server."
+msgid ""
+"No local entries found for this search term. Press [Enter] to search the "
+"server."
 msgstr ""
 
 #, python-format
@@ -1893,7 +2038,9 @@ msgstr ""
 msgid "No transcript output received"
 msgstr ""
 
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
+msgid ""
+"No transcript yet. It is generated locally on the server and can take a "
+"while for long VODs."
 msgstr ""
 
 msgid "No transcription active"
@@ -2030,11 +2177,15 @@ msgid "Page %(page)s of %(total)s (%(count)s VODs)"
 msgstr ""
 
 #, python-format
-msgid "Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s VODs)"
+msgid ""
+"Page <strong>%(page)s</strong> / <strong>%(pages)s</strong> (%(count)s "
+"VODs)"
 msgstr ""
 
 #, python-format
-msgid "Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; %(count)s VODs in quick access"
+msgid ""
+"Page <strong>%(page)s</strong> of <strong>%(pages)s</strong> &bull; "
+"%(count)s VODs in quick access"
 msgstr ""
 
 msgid "Page navigation"
@@ -2053,6 +2204,10 @@ msgid "Pagination"
 msgstr ""
 
 msgid "Pagination (top)"
+msgstr ""
+
+#, python-format
+msgid "Paid for %(months)s months in advance."
 msgstr ""
 
 msgid "Password"
@@ -2256,7 +2411,10 @@ msgstr ""
 msgid "Recently watched"
 msgstr ""
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgid ""
+"Recommended browser-source URLs. Replace TOKEN with the value of "
+"TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS "
+"and reaches the server only as a request header, never in a log line."
 msgstr ""
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
@@ -2304,7 +2462,9 @@ msgid "Recording not available."
 msgstr ""
 
 #, python-format
-msgid "Recording stopped: %(count)s source(s) for %(archive)s disabled. The process will be terminated at the next check."
+msgid ""
+"Recording stopped: %(count)s source(s) for %(archive)s disabled. The "
+"process will be terminated at the next check."
 msgstr ""
 
 #, python-format
@@ -2329,7 +2489,9 @@ msgid "Remove channel"
 msgstr ""
 
 #, python-format
-msgid "Remove channel %(name)s? Monitoring stops; existing recordings stay in the archive."
+msgid ""
+"Remove channel %(name)s? Monitoring stops; existing recordings stay in "
+"the archive."
 msgstr ""
 
 msgid "Remove only the database entry?"
@@ -2345,7 +2507,9 @@ msgstr ""
 msgid "Rename file"
 msgstr ""
 
-msgid "Rename the file? Existing links and shares to the old file name stop working."
+msgid ""
+"Rename the file? Existing links and shares to the old file name stop "
+"working."
 msgstr ""
 
 msgid "Renamed."
@@ -2364,6 +2528,10 @@ msgid "Repeat password"
 msgstr ""
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr ""
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr ""
 
@@ -2373,7 +2541,9 @@ msgstr ""
 msgid "Restart services"
 msgstr ""
 
-msgid "Restart the recorder and chat logger now? Running recordings are interrupted for a few seconds."
+msgid ""
+"Restart the recorder and chat logger now? Running recordings are "
+"interrupted for a few seconds."
 msgstr ""
 
 msgid "Restore"
@@ -2406,7 +2576,10 @@ msgstr ""
 msgid "Role access grant not found."
 msgstr ""
 
-msgid "Role model: full access (<code>admin</code>), archive viewer (<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord member."
+msgid ""
+"Role model: full access (<code>admin</code>), archive viewer "
+"(<code>viewer</code>), live only (<code>live_only</code>) &amp; Discord "
+"member."
 msgstr ""
 
 msgid "Rules"
@@ -2577,7 +2750,9 @@ msgid "Set"
 msgstr ""
 
 #, python-format
-msgid "Set %(key)s (at least 16 characters) or %(alt_key)s before credentials are saved."
+msgid ""
+"Set %(key)s (at least 16 characters) or %(alt_key)s before credentials "
+"are saved."
 msgstr ""
 
 msgid "Set end to current position"
@@ -2610,7 +2785,9 @@ msgstr ""
 msgid "Sharing failed:"
 msgstr ""
 
-msgid "Short rules / Discord house rules. Part of the terms; accepted together with the consent below."
+msgid ""
+"Short rules / Discord house rules. Part of the terms; accepted together "
+"with the consent below."
 msgstr ""
 
 msgid "Shown in the navigation, sidebar and on streamer cards."
@@ -2619,13 +2796,18 @@ msgstr ""
 msgid "Sign in"
 msgstr ""
 
-msgid "Sign out on every device? Every session of this account ends, including this one."
+msgid ""
+"Sign out on every device? Every session of this account ends, including "
+"this one."
 msgstr ""
 
 msgid "Size"
 msgstr ""
 
 msgid "Skip to content"
+msgstr ""
+
+msgid "Someone"
 msgstr ""
 
 msgid "Sort"
@@ -2647,7 +2829,9 @@ msgstr ""
 msgid "Source %(name)s not found."
 msgstr ""
 
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
+msgid ""
+"Stale lock removed, transcription queued in the worker. The result "
+"appears on the next page load after completion."
 msgstr ""
 
 msgid "Start"
@@ -2680,7 +2864,9 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-msgid "Status, progress and actions of the most recently synced files. “Forget” only removes the database entry."
+msgid ""
+"Status, progress and actions of the most recently synced files. “Forget” "
+"only removes the database entry."
 msgstr ""
 
 msgid "Status:"
@@ -2745,10 +2931,14 @@ msgstr ""
 msgid "Stream stopped — reconnecting…"
 msgstr ""
 
-msgid "StreamVault is temporarily unavailable due to maintenance. Please be patient — the site will be back soon."
+msgid ""
+"StreamVault is temporarily unavailable due to maintenance. Please be "
+"patient — the site will be back soon."
 msgstr ""
 
-msgid "StreamVault is temporarily unavailable due to ongoing work. Please be patient — the site will be available again later."
+msgid ""
+"StreamVault is temporarily unavailable due to ongoing work. Please be "
+"patient — the site will be available again later."
 msgstr ""
 
 msgid "Streamer"
@@ -2850,13 +3040,18 @@ msgid "Terms & rules"
 msgstr ""
 
 #, python-format
-msgid "Terms (version %(terms)s) including house rules (%(rules)s) not yet accepted — approval only after consent on the website or on re-registration."
+msgid ""
+"Terms (version %(terms)s) including house rules (%(rules)s) not yet "
+"accepted — approval only after consent on the website or on re-"
+"registration."
 msgstr ""
 
 msgid "Terms accepted. Continuing to the dashboard…"
 msgstr ""
 
-msgid "Terms of use and house rules for the invite-only circle. No usage rights towards rights holders or platforms."
+msgid ""
+"Terms of use and house rules for the invite-only circle. No usage rights "
+"towards rights holders or platforms."
 msgstr ""
 
 msgid "Terms version outdated or not accepted. Acceptance required at /agb."
@@ -2871,10 +3066,14 @@ msgstr ""
 msgid "Text-to-speech overlay"
 msgstr ""
 
-msgid "Thanks for your understanding. Authorized users can sign in via the login page."
+msgid ""
+"Thanks for your understanding. Authorized users can sign in via the login"
+" page."
 msgstr ""
 
-msgid "The 'can_manage_users' permission cannot be removed from the Administrator group."
+msgid ""
+"The 'can_manage_users' permission cannot be removed from the "
+"Administrator group."
 msgstr ""
 
 msgid "The OAuth link has expired. Please start again."
@@ -2898,7 +3097,9 @@ msgstr ""
 msgid "The local file has already been removed. Please restore it first."
 msgstr ""
 
-msgid "The mobile version of StreamVault is currently under maintenance. Please use the desktop version."
+msgid ""
+"The mobile version of StreamVault is currently under maintenance. Please "
+"use the desktop version."
 msgstr ""
 
 msgid "The name of system groups cannot be changed."
@@ -2919,10 +3120,14 @@ msgstr ""
 msgid "The provider name must be at most 80 characters long."
 msgstr ""
 
-msgid "The provider type cannot be changed while archive objects are assigned. Create a new provider instead."
+msgid ""
+"The provider type cannot be changed while archive objects are assigned. "
+"Create a new provider instead."
 msgstr ""
 
-msgid "The recorder worker performs the sync. Unchanged files that were already uploaded are skipped."
+msgid ""
+"The recorder worker performs the sync. Unchanged files that were already "
+"uploaded are skipped."
 msgstr ""
 
 msgid "The remote path must not be empty."
@@ -2931,16 +3136,36 @@ msgstr ""
 msgid "The selected default provider does not exist."
 msgstr ""
 
-msgid "The selected default provider is disabled. Enable it first or choose another provider."
+msgid ""
+"The selected default provider is disabled. Enable it first or choose "
+"another provider."
 msgstr ""
 
 msgid "The selected group does not exist."
 msgstr ""
 
-msgid "The system administrator's password can only be changed via environment variables."
+msgid ""
+"The system administrator's password can only be changed via environment "
+"variables."
 msgstr ""
 
 msgid "The video file could not be loaded or is still being transcoded."
+msgstr ""
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr ""
+
+#, python-format
+msgid ""
+"They've subscribed for %(months)s months, currently on a %(streak)s month"
+" streak!"
 msgstr ""
 
 msgid "This admin user is protected and cannot be deleted."
@@ -2961,7 +3186,9 @@ msgstr ""
 msgid "Time (UTC)"
 msgstr ""
 
-msgid "Tip: a shared archive folder combines Twitch and YouTube streams of the same streamer."
+msgid ""
+"Tip: a shared archive folder combines Twitch and YouTube streams of the "
+"same streamer."
 msgstr ""
 
 msgid "Title & description"
@@ -2980,7 +3207,9 @@ msgstr ""
 msgid "Today, %(time)s"
 msgstr ""
 
-msgid "Too many VODs are playing right now. Live is not affected. Try again in a few minutes — a slot frees up as soon as someone closes the player."
+msgid ""
+"Too many VODs are playing right now. Live is not affected. Try again in a"
+" few minutes — a slot frees up as soon as someone closes the player."
 msgstr ""
 
 #, python-format
@@ -2989,7 +3218,9 @@ msgid_plural "Too many login attempts. Please try again in %(num)d minutes."
 msgstr[0] ""
 msgstr[1] ""
 
-msgid "Top streams are currently unavailable. Use monitored channels or the search."
+msgid ""
+"Top streams are currently unavailable. Use monitored channels or the "
+"search."
 msgstr ""
 
 msgid "Total in period"
@@ -3062,7 +3293,9 @@ msgstr ""
 msgid "Transcription is already running. Please reload later."
 msgstr ""
 
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
+msgid ""
+"Transcription queued in the worker. The result appears on the next page "
+"load after completion."
 msgstr ""
 
 msgid "Transcription running..."
@@ -3228,14 +3461,18 @@ msgstr ""
 msgid "Username is required."
 msgstr ""
 
-msgid "Username must be 3-32 alphanumeric characters (hyphens and underscores allowed)."
+msgid ""
+"Username must be 3-32 alphanumeric characters (hyphens and underscores "
+"allowed)."
 msgstr ""
 
 msgid "Users & groups"
 msgstr ""
 
 #, python-format
-msgid "Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = presence, bars = login/pages/video/chat per day."
+msgid ""
+"Users A–Z · last %(days)s days (%(since)s – %(until)s). Heatmap = "
+"presence, bars = login/pages/video/chat per day."
 msgstr ""
 
 msgid "VOD access grants are currently only available for members."
@@ -3254,7 +3491,9 @@ msgstr ""
 msgid "VOD recordings (%(count)s)"
 msgstr ""
 
-msgid "VOD_SECRET_KEY must be set to a strong value before credentials can be stored."
+msgid ""
+"VOD_SECRET_KEY must be set to a strong value before credentials can be "
+"stored."
 msgstr ""
 
 msgid "VODs are recorded to disk"
@@ -3347,7 +3586,9 @@ msgstr ""
 msgid "WebDAV base URL must not contain a query or fragment."
 msgstr ""
 
-msgid "WebDAV base URL must not contain credentials; use the username and password fields."
+msgid ""
+"WebDAV base URL must not contain credentials; use the username and "
+"password fields."
 msgstr ""
 
 msgid "Webhook active."
@@ -3403,6 +3644,9 @@ msgstr ""
 msgid "active"
 msgstr ""
 
+msgid "an anonymous user"
+msgstr ""
+
 msgid "available"
 msgstr ""
 
@@ -3418,7 +3662,9 @@ msgstr ""
 msgid "done – please reload the page"
 msgstr ""
 
-msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
+msgid ""
+"drive.file = only files created by StreamVault (recommended). For "
+"existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr ""
 
 msgid "e.g. Google Drive archive"
@@ -3457,6 +3703,9 @@ msgid "never"
 msgstr ""
 
 msgid "not created"
+msgstr ""
+
+msgid "someone"
 msgstr ""
 
 #, python-format

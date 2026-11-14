@@ -62,10 +62,15 @@ def parse_privmsg(line: str) -> tuple[str, str, str, dict] | None:
                 continue
             key, value = tag.split("=", 1)
             tags[key] = _unescape_tag(value)
-    if " PRIVMSG " not in rest:
+    # Route on the real command token: text such as "x PRIVMSG y" inside a
+    # USERNOTICE or another command must not be read as a chat message.
+    prefix, _sep, rest = rest.partition(" ")
+    if not prefix.startswith(":"):
+        return None
+    command, _sep, payload = rest.lstrip(" ").partition(" ")
+    if command.upper() != "PRIVMSG":
         return None
     try:
-        prefix, payload = rest.split(" PRIVMSG ", 1)
         target, message = payload.split(" :", 1)
     except ValueError:
         return None

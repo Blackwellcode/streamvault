@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:41+0100\n"
+"POT-Creation-Date: 2026-11-12 15:50+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -144,6 +144,64 @@ msgstr "%(num)s일"
 #, python-format
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s은(는) OAuth를 지원하지 않습니다."
+
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "%(user)s 님이 Prime 구독에서 티어 %(tier)s 구독으로 전환했습니다!"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "%(user)s 님이 %(charity)s에 %(amount)s을(를) 기부했습니다!"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "%(user)s 님이 %(recipient)s 님에게 티어 %(tier)s 구독 %(months)s개월을 선물했습니다!"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "%(user)s 님이 %(recipient)s 님에게 티어 %(tier)s 구독을 선물했습니다!"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "%(user)s 님이 %(other)s 님에게 받은 선물 구독을 이어가고 있습니다!"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "%(user)s 님이 커뮤니티에 티어 %(tier)s 구독 %(num)d개를 선물합니다!"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s 님은 처음 오셨습니다. 인사해 주세요!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "%(user)s 님이 %(other)s 님에게 받은 선물을 %(recipient)s 님에게 전달합니다!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "%(user)s 님이 %(other)s 님에게 받은 선물을 커뮤니티에 전달합니다!"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "%(user)s 님이 시청자 %(num)d명과 함께 레이드 중입니다!"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "%(user)s 님이 새로운 %(bits)s 비트 배지를 획득했습니다!"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s 님이 티어 %(tier)s(으)로 구독했습니다."
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s 님이 Prime으로 구독했습니다."
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "%(user)s 님이 %(num)s회 연속으로 방송을 시청하여 시청 연속 기록을 세웠습니다!"
 
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = 클라우드 사본이 확인되면 즉시 삭제합니다."
@@ -298,8 +356,14 @@ msgstr "%(path)s도 함께 전송합니다."
 msgid "Also transfers preview images from %(path)s."
 msgstr "%(path)s의 미리보기 이미지도 함께 전송합니다."
 
+msgid "An anonymous user"
+msgstr "익명의 사용자"
+
 msgid "An upload for this file is already running."
 msgstr "이 파일의 업로드가 이미 실행 중입니다."
+
+msgid "Announcement"
+msgstr "공지"
 
 msgid "Anonymous"
 msgstr "익명"
@@ -560,6 +624,9 @@ msgstr "채팅 기록: %(user)s"
 
 msgid "Chat messages"
 msgstr "채팅 메시지"
+
+msgid "Chat notice"
+msgstr "채팅 알림"
 
 msgid "Chat replay"
 msgstr "채팅 다시보기"
@@ -1211,6 +1278,9 @@ msgstr "채팅 필터…"
 
 msgid "First"
 msgstr "처음"
+
+msgid "First message"
+msgstr "첫 메시지"
 
 msgid "First page"
 msgstr "첫 페이지"
@@ -2051,6 +2121,10 @@ msgstr "페이지 탐색"
 msgid "Pagination (top)"
 msgstr "페이지 탐색 (상단)"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "%(months)s개월분을 선결제했습니다."
+
 msgid "Password"
 msgstr "비밀번호"
 
@@ -2360,6 +2434,10 @@ msgid "Repeat password"
 msgstr "비밀번호 확인"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "@%(user)s 님에게 답장: %(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "'%(username)s' 신청을 거부하고 삭제했습니다."
 
@@ -2623,6 +2701,9 @@ msgstr "크기"
 
 msgid "Skip to content"
 msgstr "본문으로 건너뛰기"
+
+msgid "Someone"
+msgstr "누군가"
 
 msgid "Sort"
 msgstr "정렬"
@@ -2938,6 +3019,19 @@ msgstr "시스템 관리자의 비밀번호는 환경 변수로만 변경할 수
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "동영상 파일을 불러올 수 없거나 아직 트랜스코딩 중입니다."
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "이 채널에서 총 %(num)d개의 구독을 선물했습니다!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "%(months)s개월째 구독 중입니다!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "%(months)s개월째 구독 중이며, 현재 %(streak)s개월 연속입니다!"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "이 관리자 사용자는 보호되어 있어 삭제할 수 없습니다."
@@ -3398,6 +3492,9 @@ msgstr "객체 데이터베이스 기준"
 msgid "active"
 msgstr "활성"
 
+msgid "an anonymous user"
+msgstr "익명의 사용자"
+
 msgid "available"
 msgstr "있음"
 
@@ -3453,6 +3550,9 @@ msgstr "안 함"
 
 msgid "not created"
 msgstr "생성 안 됨"
+
+msgid "someone"
+msgstr "누군가"
 
 #, python-format
 msgid "today %(time)s"

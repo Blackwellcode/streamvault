@@ -5972,6 +5972,190 @@ body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live, .page-twi
 body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live, .page-twitch-watch, .page-twitch-watch-mobile) .chat-mod-text {
   font-weight: 650 !important;
 }
+
+/* --- Twitch-style chat: tokens ---------------------------------------------
+   Twitch's own colours are platform identity and stay the same in every theme;
+   text colours come from the theme (--tube-*). Bits text tints are the Twitch
+   tier hues lightened to >= 4.5:1 on every theme background, notice tint and
+   highlight tint (WCAG AA). */
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) {
+  --sv-twitch: #9147ff;
+  --sv-twitch-tint: rgba(145, 71, 255, 0.14);
+  --sv-twitch-ink: #bf94ff;
+  --sv-first-tint: rgba(191, 148, 255, 0.1);
+  --sv-highlight: #755ebc;
+  --sv-highlight-tint: rgba(117, 94, 188, 0.38);
+  --sv-power-gradient: linear-gradient(90deg, rgba(145, 71, 255, 0.35), rgba(255, 117, 230, 0.25));
+  --sv-announce-blue: linear-gradient(#00d6d6, #9146ff);
+  --sv-announce-green: linear-gradient(#00db84, #57bee6);
+  --sv-announce-orange: linear-gradient(#ffb31a, #e0e000);
+  --sv-announce-purple: linear-gradient(#9146ff, #ff75e6);
+  --sv-cheer-1: #9b9b9b;
+  --sv-cheer-100: #be80f0;
+  --sv-cheer-1000: #1db2a5;
+  --sv-cheer-5000: #14a1fe;
+  --sv-cheer-10000: #f87268;
+  --sv-chat-stripe: 4px;
+  --sv-chat-radius: 0 8px 8px 0;
+}
+
+/* --- USERNOTICE (subs, gifts, raids, announcements) --- */
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-notice {
+  padding: 6px 8px !important;
+  margin: 4px 0 !important;
+  border-left: var(--sv-chat-stripe) solid var(--sv-twitch) !important;
+  border-radius: var(--sv-chat-radius) !important;
+  background: var(--sv-twitch-tint) !important;
+  color: var(--tube-text, #efeff1) !important;
+}
+
+/* The templates keep empty badge/name slots in front of .chat-msg; on notice
+   lines they would add an empty line box above the header. */
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-notice .chat-text > :is(.chat-badges, .chat-user) {
+  display: none !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-notice .chat-text {
+  display: block !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-blue {
+  border-image: var(--sv-announce-blue) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-green {
+  border-image: var(--sv-announce-green) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-announce-orange {
+  border-image: var(--sv-announce-orange) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) :is(.chat-line-announce-purple, .chat-line-announce-primary) {
+  border-image: var(--sv-announce-purple) 1 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-icon {
+  flex: none !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-top: 1px !important;
+  fill: var(--sv-twitch-ink) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-icon-bits {
+  fill: var(--sv-cheer-100) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-body {
+  display: block !important;
+  margin-top: 4px !important;
+  font-weight: 400 !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-notice-user {
+  font-weight: 700 !important;
+}
+
+/* --- PRIVMSG decorations: highlight, first message, reply, cheer, power-ups --- */
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) :is(.chat-line-highlight, .chat-line-first, .chat-line-power-animated) {
+  padding: 6px 8px !important;
+  margin: 4px 0 !important;
+  border-radius: var(--sv-chat-radius) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-highlight {
+  border-left: var(--sv-chat-stripe) solid var(--sv-highlight) !important;
+  background: var(--sv-highlight-tint) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-first {
+  border-left: var(--sv-chat-stripe) solid var(--sv-twitch-ink) !important;
+  background: var(--sv-first-tint) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-power-animated {
+  border-left: var(--sv-chat-stripe) solid transparent !important;
+  border-image: var(--sv-announce-purple) 1 !important;
+  background: var(--sv-power-gradient) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-context {
+  display: block !important;
+  overflow: hidden !important;
+  margin-bottom: 2px !important;
+  color: var(--tube-text-2, #adadb8) !important;
+  font-size: 0.86em !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-context-first {
+  color: var(--sv-twitch-ink) !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-icon {
+  width: 1.15em !important;
+  height: 1.15em !important;
+  fill: currentColor !important;
+}
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-1 { color: var(--sv-cheer-1) !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-100 { color: var(--sv-cheer-100) !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-1000 { color: var(--sv-cheer-1000) !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-5000 { color: var(--sv-cheer-5000) !important; }
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-cheer-tier-10000 { color: var(--sv-cheer-10000) !important; }
+
+body:is(.page-vod, .page-live, .page-mobile-player, .page-twitch-live,
+  .page-twitch-watch, .page-twitch-watch-mobile) .chat-line-power-gigantified .chat-emote:last-of-type {
+  height: 4.5em !important;
+  max-width: 16em !important;
+}
+
 body:is(.page-vod,.page-live,.page-mobile-player) .chat-emote {
   display: inline-block;
   width: auto;

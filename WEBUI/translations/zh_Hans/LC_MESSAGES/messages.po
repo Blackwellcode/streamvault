@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:41+0100\n"
+"POT-Creation-Date: 2026-11-12 15:50+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -144,6 +144,64 @@ msgstr "%(num)s 天"
 #, python-format
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s 不支持 OAuth。"
+
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "%(user)s 已从 Prime 订阅转为 %(tier)s 级订阅！"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "%(user)s 向 %(charity)s 捐赠了 %(amount)s！"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "%(user)s 向 %(recipient)s 赠送了 %(months)s 个月的 %(tier)s 级订阅！"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "%(user)s 向 %(recipient)s 赠送了一个 %(tier)s 级订阅！"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "%(user)s 正在延续 %(other)s 赠送的订阅！"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "%(user)s 正在向社区赠送 %(num)d 个 %(tier)s 级订阅！"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s 是新来的。打个招呼吧！"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "%(user)s 将从 %(other)s 处收到的礼物传递给 %(recipient)s！"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "%(user)s 将从 %(other)s 处收到的礼物传递给社区！"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "%(user)s 正带着 %(num)d 名观众突袭！"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "%(user)s 刚刚获得了新的 %(bits)s Bits 徽章！"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s 订阅了 %(tier)s 级。"
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s 使用 Prime 订阅了。"
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "%(user)s 连续观看了 %(num)s 场直播，开启了观看连续纪录！"
 
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = 云端副本验证后立即删除。"
@@ -298,8 +356,14 @@ msgstr "同时传输 %(path)s。"
 msgid "Also transfers preview images from %(path)s."
 msgstr "同时传输 %(path)s 中的预览图。"
 
+msgid "An anonymous user"
+msgstr "一位匿名用户"
+
 msgid "An upload for this file is already running."
 msgstr "该文件已有上传任务正在运行。"
+
+msgid "Announcement"
+msgstr "公告"
 
 msgid "Anonymous"
 msgstr "匿名"
@@ -560,6 +624,9 @@ msgstr "聊天记录：%(user)s"
 
 msgid "Chat messages"
 msgstr "聊天消息"
+
+msgid "Chat notice"
+msgstr "聊天通知"
 
 msgid "Chat replay"
 msgstr "聊天回放"
@@ -1211,6 +1278,9 @@ msgstr "筛选聊天…"
 
 msgid "First"
 msgstr "第一个"
+
+msgid "First message"
+msgstr "首条消息"
 
 msgid "First page"
 msgstr "第一页"
@@ -2051,6 +2121,10 @@ msgstr "分页"
 msgid "Pagination (top)"
 msgstr "分页（顶部）"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "已预付 %(months)s 个月。"
+
 msgid "Password"
 msgstr "密码"
 
@@ -2360,6 +2434,10 @@ msgid "Repeat password"
 msgstr "再次输入密码"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "回复 @%(user)s：%(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "已拒绝并删除申请“%(username)s”。"
 
@@ -2623,6 +2701,9 @@ msgstr "大小"
 
 msgid "Skip to content"
 msgstr "跳到内容"
+
+msgid "Someone"
+msgstr "某人"
 
 msgid "Sort"
 msgstr "排序"
@@ -2938,6 +3019,19 @@ msgstr "系统管理员的密码只能通过环境变量更改。"
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "视频文件无法加载或仍在转码中。"
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "已在本频道共赠送 %(num)d 个订阅！"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "已订阅 %(months)s 个月！"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "已订阅 %(months)s 个月，当前连续 %(streak)s 个月！"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "此管理员用户受保护，无法删除。"
@@ -3398,6 +3492,9 @@ msgstr "根据对象数据库"
 msgid "active"
 msgstr "活跃"
 
+msgid "an anonymous user"
+msgstr "一位匿名用户"
+
 msgid "available"
 msgstr "可用"
 
@@ -3453,6 +3550,9 @@ msgstr "从不"
 
 msgid "not created"
 msgstr "未创建"
+
+msgid "someone"
+msgstr "某人"
 
 #, python-format
 msgid "today %(time)s"

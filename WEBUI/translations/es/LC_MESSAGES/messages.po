@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:41+0100\n"
+"POT-Creation-Date: 2026-11-12 15:50+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -150,6 +150,66 @@ msgstr "%(num)s días"
 #, python-format
 msgid "%(provider)s does not support OAuth."
 msgstr "%(provider)s no admite OAuth."
+
+#, python-format
+msgid "%(user)s converted from a Prime sub to a Tier %(tier)s sub!"
+msgstr "¡%(user)s pasó de una suscripción Prime a una de nivel %(tier)s!"
+
+#, python-format
+msgid "%(user)s donated %(amount)s to %(charity)s!"
+msgstr "¡%(user)s donó %(amount)s a %(charity)s!"
+
+#, python-format
+msgid "%(user)s gifted %(months)s months of Tier %(tier)s to %(recipient)s!"
+msgstr "¡%(user)s regaló %(months)s meses de nivel %(tier)s a %(recipient)s!"
+
+#, python-format
+msgid "%(user)s gifted a Tier %(tier)s sub to %(recipient)s!"
+msgstr "¡%(user)s regaló una suscripción de nivel %(tier)s a %(recipient)s!"
+
+#, python-format
+msgid "%(user)s is continuing the gift sub they got from %(other)s!"
+msgstr "¡%(user)s continúa la suscripción de regalo que recibió de %(other)s!"
+
+#, python-format
+msgid "%(user)s is gifting %(num)d Tier %(tier)s sub to the community!"
+msgid_plural "%(user)s is gifting %(num)d Tier %(tier)s subs to the community!"
+msgstr[0] "¡%(user)s regala %(num)d suscripción de nivel %(tier)s a la comunidad!"
+msgstr[1] "¡%(user)s regala %(num)d suscripciones de nivel %(tier)s a la comunidad!"
+
+#, python-format
+msgid "%(user)s is new here. Say hello!"
+msgstr "%(user)s es nuevo aquí. ¡Salúdalo!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to %(recipient)s!"
+msgstr "¡%(user)s pasa el regalo que recibió de %(other)s a %(recipient)s!"
+
+#, python-format
+msgid "%(user)s is paying forward the gift they got from %(other)s to the community!"
+msgstr "¡%(user)s pasa el regalo que recibió de %(other)s a la comunidad!"
+
+#, python-format
+msgid "%(user)s is raiding with %(num)d viewer!"
+msgid_plural "%(user)s is raiding with %(num)d viewers!"
+msgstr[0] "¡%(user)s está haciendo un raid con %(num)d espectador!"
+msgstr[1] "¡%(user)s está haciendo un raid con %(num)d espectadores!"
+
+#, python-format
+msgid "%(user)s just earned a new %(bits)s Bits badge!"
+msgstr "¡%(user)s acaba de conseguir una nueva insignia de %(bits)s Bits!"
+
+#, python-format
+msgid "%(user)s subscribed at Tier %(tier)s."
+msgstr "%(user)s se suscribió con nivel %(tier)s."
+
+#, python-format
+msgid "%(user)s subscribed with Prime."
+msgstr "%(user)s se suscribió con Prime."
+
+#, python-format
+msgid "%(user)s watched %(num)s consecutive streams and sparked a watch streak!"
+msgstr "¡%(user)s vio %(num)s directos seguidos y comenzó una racha de visualización!"
 
 msgid "0 = delete immediately once the cloud copy is verified."
 msgstr "0 = eliminar inmediatamente en cuanto se verifique la copia en la nube."
@@ -304,8 +364,14 @@ msgstr "También transfiere %(path)s."
 msgid "Also transfers preview images from %(path)s."
 msgstr "También transfiere las imágenes de vista previa de %(path)s."
 
+msgid "An anonymous user"
+msgstr "Un usuario anónimo"
+
 msgid "An upload for this file is already running."
 msgstr "Ya hay una subida en curso para este archivo."
+
+msgid "Announcement"
+msgstr "Anuncio"
 
 msgid "Anonymous"
 msgstr "Anónimo"
@@ -566,6 +632,9 @@ msgstr "Historial del chat: %(user)s"
 
 msgid "Chat messages"
 msgstr "Mensajes del chat"
+
+msgid "Chat notice"
+msgstr "Aviso del chat"
 
 msgid "Chat replay"
 msgstr "Repetición del chat"
@@ -1217,6 +1286,9 @@ msgstr "Filtrar chat…"
 
 msgid "First"
 msgstr "Primero"
+
+msgid "First message"
+msgstr "Primer mensaje"
 
 msgid "First page"
 msgstr "Primera página"
@@ -2057,6 +2129,10 @@ msgstr "Paginación"
 msgid "Pagination (top)"
 msgstr "Paginación (arriba)"
 
+#, python-format
+msgid "Paid for %(months)s months in advance."
+msgstr "Pagado con %(months)s meses de antelación."
+
 msgid "Password"
 msgstr "Contraseña"
 
@@ -2366,6 +2442,10 @@ msgid "Repeat password"
 msgstr "Repite la contraseña"
 
 #, python-format
+msgid "Replying to @%(user)s: %(msg)s"
+msgstr "Respondiendo a @%(user)s: %(msg)s"
+
+#, python-format
 msgid "Request '%(username)s' denied and deleted."
 msgstr "Solicitud «%(username)s» rechazada y eliminada."
 
@@ -2629,6 +2709,9 @@ msgstr "Tamaño"
 
 msgid "Skip to content"
 msgstr "Saltar al contenido"
+
+msgid "Someone"
+msgstr "Alguien"
 
 msgid "Sort"
 msgstr "Ordenar"
@@ -2944,6 +3027,20 @@ msgstr "La contraseña del administrador del sistema solo se puede cambiar media
 
 msgid "The video file could not be loaded or is still being transcoded."
 msgstr "No se pudo cargar el archivo de vídeo o todavía se está transcodificando."
+
+#, python-format
+msgid "They've gifted %(num)d sub in the channel!"
+msgid_plural "They've gifted %(num)d subs in the channel!"
+msgstr[0] "¡Ha regalado %(num)d suscripción en el canal!"
+msgstr[1] "¡Ha regalado %(num)d suscripciones en el canal!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months!"
+msgstr "¡Lleva %(months)s meses suscrito!"
+
+#, python-format
+msgid "They've subscribed for %(months)s months, currently on a %(streak)s month streak!"
+msgstr "¡Lleva %(months)s meses suscrito, con una racha actual de %(streak)s meses!"
 
 msgid "This admin user is protected and cannot be deleted."
 msgstr "Este usuario administrador está protegido y no se puede eliminar."
@@ -3405,6 +3502,9 @@ msgstr "según la base de datos de objetos"
 msgid "active"
 msgstr "activo"
 
+msgid "an anonymous user"
+msgstr "un usuario anónimo"
+
 msgid "available"
 msgstr "disponible"
 
@@ -3460,6 +3560,9 @@ msgstr "nunca"
 
 msgid "not created"
 msgstr "no creado"
+
+msgid "someone"
+msgstr "alguien"
 
 #, python-format
 msgid "today %(time)s"
