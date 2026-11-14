@@ -11,8 +11,7 @@ import time
 from typing import Any, Optional
 
 import requests
-
-from .base import StorageError
+from .base import StorageError, close_quietly
 
 logger = logging.getLogger("storage.http")
 
@@ -127,10 +126,7 @@ def request(
         if response.status_code not in statuses or attempt + 1 >= retries:
             return response
         delay = _retry_after_seconds(response, attempt)
-        try:
-            response.close()
-        except Exception:
-            pass
+        close_quietly(response, provider=provider)
         time.sleep(delay)
 
     raise StorageError(

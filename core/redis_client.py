@@ -12,6 +12,13 @@ from typing import Any, Optional, Dict
 
 logger = logging.getLogger("streamvault.redis")
 
+try:
+    from redis.exceptions import RedisError as _RedisError
+except ImportError:  # redis is optional; get_redis() then returns None
+    _RedisError = OSError
+# What a call on a connected client raises when Redis goes away.
+REDIS_ERRORS = (_RedisError, OSError)
+
 _REDIS_CLIENT = None
 _REDIS_AVAILABLE = None
 _LAST_CONNECT_TRY = 0
@@ -21,6 +28,17 @@ REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 REDIS_DB = int(os.environ.get("REDIS_DB", "0"))
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
+
+
+def _legacy_retry():
+    """Retry policy of redis-py 5: one immediate retry, on timeouts only."""
+    import socket
+
+    from redis.backoff import NoBackoff
+    from redis.exceptions import TimeoutError as RedisTimeoutError
+    from redis.retry import Retry
+
+    return Retry(NoBackoff(), 1, supported_errors=(RedisTimeoutError, socket.timeout))
 
 KEY_PREFIX = "streamvault:"
 TASK_QUEUE_KEY = f"{KEY_PREFIX}tasks:pending"
@@ -53,6 +71,12 @@ def get_redis():
             socket_timeout=3.0,
             socket_connect_timeout=3.0,
             retry_on_timeout=True,
+            # redis-py 8 changed the defaults: RESP3, and connection errors are
+            # retried too. Pin the redis-py 5 behaviour: RESP2 for older servers,
+            # one retry on timeouts only, so an unreachable Redis still falls
+            # back to local mode after a single connect attempt.
+            retry=_legacy_retry(),
+            protocol=2,
             max_connections=50,
             decode_responses=True,
         )
@@ -76,7 +100,8 @@ def is_available() -> bool:
         return False
     try:
         return bool(r.ping())
-    except Exception:
+    except REDIS_ERRORS as exc:
+        logger.warning("Redis ping failed: %s", exc)
         return False
 
 
@@ -126,8 +151,8 @@ def invalidate_dashboard_cache() -> bool:
         shm_path = "/dev/shm/streamrecorder_dashboard_media.json"
         if os.path.exists(shm_path):
             os.remove(shm_path)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("dashboard shm cache %s not removed: %s", shm_path, exc)
     return True
 
 
@@ -140,7 +165,8 @@ def delete_state(key: str) -> bool:
         full_key = f"{STATE_KEY_PREFIX}{key}"
         r.delete(full_key)
         return True
-    except Exception:
+    except REDIS_ERRORS as exc:
+        logger.warning("Redis state %s not deleted: %s", key, exc)
         return False
 
 
@@ -227,7 +253,8 @@ def get_queue_len() -> int:
         return 0
     try:
         return int(r.llen(TASK_QUEUE_KEY))
-    except Exception:
+    except REDIS_ERRORS as exc:
+        logger.warning("Redis queue length unavailable: %s", exc)
         return 0
 
 

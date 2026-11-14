@@ -363,7 +363,8 @@ def probe_duration_sec(path: str, http_headers: dict | None = None) -> float:
             text=True,
         )
         return float((result.stdout or "").strip() or 0.0)
-    except Exception:
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        logger.warning("ffprobe duration of %s failed: %s", path, exc)
         return 0.0
 
 
@@ -743,7 +744,10 @@ def estimate_recording_duration(input_path: str) -> float:
         try:
             with open(meta_path, "r", encoding="utf-8") as handle:
                 data = json.load(handle) or {}
-        except Exception:
+        except (OSError, ValueError) as exc:
+            logger.warning("Recording pointer %s unreadable: %s", meta_path, exc)
+            continue
+        if not isinstance(data, dict):
             continue
         names = []
         for key in ("record_file", "filename"):
@@ -1025,17 +1029,24 @@ def find_active_recording_file(archive_dir: str, source_channel: str = "") -> st
         try:
             with open(meta_path, "r", encoding="utf-8") as handle:
                 data = json.load(handle) or {}
-            names = []
-            for key in ("record_file", "filename"):
-                value = str(data.get(key) or "").strip()
-                if value and os.path.basename(value) == value and value not in names:
-                    names.append(value)
-            for name in names:
-                for path in _recording_candidate_paths(archive_dir, name):
+        except (OSError, ValueError) as exc:
+            logger.warning("Recording pointer %s unreadable: %s", meta_path, exc)
+            continue
+        if not isinstance(data, dict):
+            continue
+        names = []
+        for key in ("record_file", "filename"):
+            value = str(data.get(key) or "").strip()
+            if value and os.path.basename(value) == value and value not in names:
+                names.append(value)
+        for name in names:
+            for path in _recording_candidate_paths(archive_dir, name):
+                try:
                     if os.path.isfile(path) and os.path.getsize(path) > 100_000:
                         return path
-        except Exception:
-            continue
+                except OSError as exc:
+                    # The file vanished between the two checks (finished/renamed).
+                    logger.debug("Recording candidate %s gone: %s", path, exc)
     try:
         parts = [
             os.path.join(archive_dir, name)

@@ -15,6 +15,7 @@ import base64
 import io
 import json
 import os
+import sqlite3
 import stat
 import tempfile
 import time
@@ -2080,6 +2081,55 @@ class StoragePageTests(StorageTestBase):
         self.assertEqual(log_error.call_count, 1)
         self.assertNotIn("exc_info", log_error.call_args.kwargs)
         self.assertNotIn("supersecret", str(log_error.call_args))
+
+
+class StorageBookkeepingFailureTests(StorageTestBase):
+    """Database hiccups in side bookkeeping are logged, never fatal."""
+
+    def test_progress_update_on_locked_database_is_logged(self):
+        callback = service._progress_callback(1, 100)
+        locked = sqlite3.OperationalError("database is locked")
+        with mock.patch.object(service.database, "update_storage_object", side_effect=locked), \
+                self.assertLogs("storage.service", level="DEBUG") as logs:
+            callback(50, 100)
+        self.assertTrue(any("database is locked" in line for line in logs.output))
+
+    def test_progress_save_failures_warn_once_per_transfer_and_never_abort(self):
+        callback = service._progress_callback(1, 100)
+        clock = [1000.0]
+        with mock.patch.object(service.time, "time", side_effect=lambda: clock[0]), \
+                mock.patch.object(service.database, "update_storage_object",
+                                  side_effect=PermissionError("data dir read-only")), \
+                self.assertLogs("storage.service", level="DEBUG") as logs:
+            for done in (10, 30, 50, 70):
+                callback(done, 100)
+                clock[0] += 5
+        warnings = [line for line in logs.output if line.startswith("WARNING")]
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("data dir read-only", warnings[0])
+        self.assertEqual(len(logs.output), 4)
+
+    def test_restore_error_survives_failing_provider_error_bookkeeping(self):
+        path, obj = RestoreSafetyTests._restore_object(self, b"new", remote_size=3, local=b"older")
+        fake = RestoreSafetyTests._FakeDownloadProvider(error=StorageError("remote gone"))
+        locked = sqlite3.OperationalError("database is locked")
+        with mock.patch.object(service, "build_provider", return_value=fake), \
+                mock.patch.object(service.database, "set_storage_provider_error", side_effect=locked), \
+                self.assertLogs("storage.service", level="WARNING") as logs:
+            with self.assertRaises(StorageError) as ctx:
+                service.run_restore({"object_id": obj["id"]})
+        self.assertIn("remote gone", str(ctx.exception))
+        self.assertTrue(any("database is locked" in line for line in logs.output))
+        self.assertEqual(path.read_bytes(), b"older")
+
+    def test_failing_token_persistence_does_not_fail_the_request(self):
+        provider = DropboxProvider({})
+        provider.set_config_changed_callback(
+            mock.Mock(side_effect=sqlite3.OperationalError("database is locked"))
+        )
+        with self.assertLogs("storage.base", level="WARNING") as logs:
+            provider._config_changed()
+        self.assertTrue(any("dropbox" in line for line in logs.output))
 
 
 if __name__ == "__main__":

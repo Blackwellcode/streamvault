@@ -8,14 +8,19 @@ encryption and task scheduling live in :mod:`core.storage.service`.
 
 from __future__ import annotations
 
+import logging
 import mimetypes
 import os
 import posixpath
 import re
+import sqlite3
 from dataclasses import dataclass
-from typing import Callable, Iterable, Iterator, Optional
+from typing import Callable, Iterable, Iterator, Optional, Protocol
 
 from flask_babel import gettext, lazy_gettext
+from urllib3.exceptions import HTTPError as Urllib3HTTPError
+
+logger = logging.getLogger("storage.base")
 
 
 class StorageError(RuntimeError):
@@ -210,10 +215,16 @@ class StorageProvider:
             return
         try:
             callback(dict(self.config))
-        except Exception:
+        except (StorageError, sqlite3.Error, OSError, ValueError) as exc:
             # Token rotation must never make a request fail just because the
-            # optional persistence callback is unavailable.
-            pass
+            # optional persistence callback is unavailable. The rotated token
+            # stays valid in memory; after a restart the stored one is used,
+            # which a provider with single-use refresh tokens may reject.
+            logger.warning(
+                "%s: rotated credentials not persisted: %s",
+                self.type_id or "storage",
+                mask_error(exc),
+            )
 
     # ------------------------------------------------------------------
     # Configuration helpers
@@ -370,6 +381,33 @@ def mask_text(value) -> str:
         text,
     )
     return text[:500]
+
+
+class Closable(Protocol):
+    def close(self) -> None: ...
+
+
+def close_quietly(resource: Closable, *, provider: str = "") -> None:
+    """Release a response or stream body whose result is no longer needed.
+
+    Closing only hands the connection back to the pool; the transfer result
+    is already decided by then. A socket that is already gone (OSError,
+    including requests' ConnectionError) or a urllib3 protocol error while
+    draining must therefore not replace the caller's result or exception.
+    Anything else is a programming error and propagates.
+
+    Logged at debug, not warning: a peer that resets an idle or finished
+    connection is routine for every provider and changes no outcome, so a
+    warning would only add noise to every transfer log.
+    """
+    try:
+        resource.close()
+    except (OSError, Urllib3HTTPError) as exc:
+        logger.debug(
+            "%s: closing HTTP response failed: %s",
+            provider or "storage",
+            mask_error(exc),
+        )
 
 
 def mask_error(exc: Exception) -> str:

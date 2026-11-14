@@ -8,6 +8,7 @@ Legacy helpers are maintained for internal test suite compatibility.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import secrets
@@ -19,6 +20,8 @@ from flask_babel import gettext, lazy_gettext
 from werkzeug.security import generate_password_hash
 
 from core import database
+
+logger = logging.getLogger(__name__)
 
 VALID_ROLES = {"admin", "viewer", "user", "member", "live_only"}
 MEMBER_ROLE = "member"
@@ -93,7 +96,8 @@ def _expand_access_slugs(raw_slugs) -> set[str]:
 def list_default_vod_access_slugs() -> list[str]:
     try:
         rows = database.list_role_vod_access(MEMBER_ROLE)
-    except Exception:
+    except database.DB_ACCESS_ERRORS as exc:
+        logger.warning("VOD access defaults unreadable, using seed list: %s", exc)
         rows = []
     if rows:
         return list(rows)
@@ -110,8 +114,8 @@ def effective_vod_access_bases(role: str | None = None) -> list[str]:
         rows = database.list_role_vod_access(role_key)
         if rows:
             return rows
-    except Exception:
-        pass
+    except database.DB_ACCESS_ERRORS as exc:
+        logger.warning("VOD access for role %s unreadable, using defaults: %s", role_key, exc)
     return list_default_vod_access_slugs()
 
 

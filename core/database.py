@@ -6,6 +6,13 @@ import sqlite3
 import time
 
 logger = logging.getLogger("database")
+
+# What a caller of the get_db()-based helpers can see for reasons outside its
+# control: SQLite errors (locked, corrupt, read-only), OSError (get_db() creates
+# the data directory) and ValueError (a malformed stored value, for instance a
+# non-numeric record flag in _normalize_channel_row). Fallback handlers catch
+# exactly this tuple; anything else is a programming error and propagates.
+DB_ACCESS_ERRORS = (sqlite3.Error, OSError, ValueError)
 from functools import wraps
 from contextlib import contextmanager
 
