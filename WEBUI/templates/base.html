@@ -5,18 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}StreamVault{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" id="sv-ui-fonts" href="{{ UI_FONTS_HREF }}" media="print">
-    <script nonce="{{ csp_nonce() }}">
-      (function () {
-        var l = document.getElementById('sv-ui-fonts');
-        if (!l) return;
-        if (l.sheet) { l.media = 'all'; return; }
-        l.addEventListener('load', function () { l.media = 'all'; }, { once: true });
-      })();
-    </script>
-    <noscript><link rel="stylesheet" href="{{ UI_FONTS_HREF }}"></noscript>
+    <link rel="preload" href="{{ UI_FONTS_PRELOAD_HREF }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     {% include 'components/styles.html' %}
     {% include 'components/js_i18n.html' %}
     {% block head %}{% endblock %}

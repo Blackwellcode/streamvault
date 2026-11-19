@@ -8,6 +8,7 @@ import ipaddress
 import json
 import logging
 import math
+import mimetypes
 import os
 import re
 import secrets
@@ -286,11 +287,12 @@ def _compute_asset_version(static_dir):
 ASSET_VERSION = os.environ.get("VOD_ASSET_VERSION", "").strip() or _compute_asset_version(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 )
-UI_FONTS_HREF = (
-    "https://fonts.googleapis.com/css2?"
-    "family=IBM+Plex+Mono:wght@400;500;600&"
-    "family=Inter:wght@400;500;600;700&display=swap"
-)
+# UI fonts are self-hosted (static/fonts, SIL OFL 1.1): no visitor request goes
+# to Google Fonts. Templates get the versioned URLs from inject_theme_context().
+UI_FONTS_CSS = "fonts/fonts.css"
+UI_FONTS_PRELOAD = "fonts/inter-latin-wght-normal.woff2"
+# Python < 3.13 and minimal containers without /etc/mime.types do not know .woff2.
+mimetypes.add_type("font/woff2", ".woff2")
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -7637,7 +7639,8 @@ def inject_theme_context():
         "current_theme": theme,
         "theme_class": f"theme-{theme}",
         "ASSET_VERSION": ASSET_VERSION,
-        "UI_FONTS_HREF": UI_FONTS_HREF,
+        "UI_FONTS_HREF": url_for("static", filename=UI_FONTS_CSS, v=ASSET_VERSION),
+        "UI_FONTS_PRELOAD_HREF": url_for("static", filename=UI_FONTS_PRELOAD, v=ASSET_VERSION),
         "clip_settings": clip_engine.public_settings(),
         "downloads_enabled": downloads_enabled(),
         "public_shares_enabled": public_shares_enabled(),
@@ -10533,7 +10536,7 @@ def csp_injected_script_hashes():
 # Third-party hosts the UI talks to (chat emotes: BTTV/FFZ/7TV, sub emotes: ivr.fi;
 # clip editor slider: cdnjs). Keep in sync with static/chat_emotes.js.
 CSP_SCRIPT_HOSTS = "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
-CSP_STYLE_HOSTS = "https://fonts.googleapis.com https://cdnjs.cloudflare.com"
+CSP_STYLE_HOSTS = "https://cdnjs.cloudflare.com"
 # Images: any https source. Admins may set custom banner/avatar URLs on arbitrary
 # hosts (streamer page); images cannot execute script, the CSS url() value is
 # filtered by css_url(). Twitch/emote CDNs are covered by https:.
@@ -10579,7 +10582,7 @@ def set_security_headers(response):
         "script-src " + script_src + "; "
         "script-src-attr 'none'; "
         "style-src 'self' 'unsafe-inline' " + CSP_STYLE_HOSTS + "; "
-        "font-src 'self' https://fonts.gstatic.com data:; "
+        "font-src 'self' data:; "
         "img-src 'self' data: blob: " + CSP_IMG_HOSTS + "; "
         "media-src 'self' blob:; "
         "connect-src 'self' blob: " + CSP_CONNECT_HOSTS + ";"
