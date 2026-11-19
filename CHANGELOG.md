@@ -82,6 +82,16 @@ All notable changes to this project are documented here. The format follows
 - The nginx access log uses the `timed` format (no cookies, adds request and
   upstream time).
 
+### Added
+
+- `scripts/vod_retention.py`: deletes local archive VODs older than
+  `--days N` (dry run unless `--enforce`). Deletion uses the WebUI delete path
+  (tombstone, thumbnail, HLS, chapters, shares) and removes the VOD's metadata
+  and chat sidecars; folders with an active recording or remux are skipped.
+  Optional offload channels (`--offload-slugs`) are only deleted when listed
+  in an offload manifest. Example systemd service and timer in
+  `scripts/systemd/`; see INSTALL.md, "VOD retention".
+
 ### Changed
 
 - **S2, app factory and blueprints:** `create_app()` builds the web app;

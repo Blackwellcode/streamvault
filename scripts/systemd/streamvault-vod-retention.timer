@@ -1,0 +1,11 @@
+# Example timer: runs streamvault-vod-retention.service daily at 04:30.
+[Unit]
+Description=StreamVault - daily VOD retention
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
