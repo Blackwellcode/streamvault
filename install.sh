@@ -219,9 +219,13 @@ map \$http_upgrade \$streamvault_connection_upgrade {
     ''      close;
 }
 
+# Access log without cookies; rt/urt show slow requests and upstreams.
+log_format streamvault_timed '\$remote_addr - \$remote_user [\$time_local] "\$request" \$status \$body_bytes_sent "\$http_referer" "\$http_user_agent" rt=\$request_time urt=\$upstream_response_time';
+
 server {
     listen 80;
     server_name localhost;
+    access_log /var/log/nginx/streamvault.access.log streamvault_timed;
 
     sendfile on;
     tcp_nopush on;
@@ -309,6 +313,58 @@ server {
         }
         default_type application/octet-stream;
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # Direct live routes: the WebUI checks session and channel visibility
+    # for every request (auth_request), otherwise 401/403.
+    location = /_live_auth {
+        internal;
+        proxy_pass http://127.0.0.1:8080/api/live/auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI \$request_uri;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    # Real-time MPEG-TS fan-out of an optional livebot (127.0.0.1:8085).
+    # Without one nginx answers 502 and the player switches to LL-HLS.
+    location ~ ^/live/[A-Za-z0-9_-]+\.ts\$ {
+        auth_request /_live_auth;
+        proxy_pass http://127.0.0.1:8085;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_request_buffering off;
+        proxy_read_timeout 300s;
+        tcp_nodelay on;
+        chunked_transfer_encoding on;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header X-Accel-Buffering "no" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # LL-HLS playlist and segments straight from the live RAM disk.
+    location ~ ^/live/(?<hls_chan>[A-Za-z0-9_-]+)/(?<hls_file>(stream|index)\.m3u8|seg_[0-9]+\.ts)\$ {
+        auth_request /_live_auth;
+        alias ${RAMDISK_DIR}/\$hls_chan/\$hls_file;
+        open_file_cache off;
+        types {
+            application/vnd.apple.mpegurl m3u8;
+            video/mp2t ts;
+        }
+        default_type application/octet-stream;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;

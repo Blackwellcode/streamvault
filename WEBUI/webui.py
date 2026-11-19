@@ -10565,14 +10565,16 @@ def set_security_headers(response):
     # (onclick= ...) are blocked, so templates bind events with addEventListener.
     # worker-src / media blob: cover live clip overlay + HLS blob URLs.
     script_src = " ".join(["'self'", "'nonce-" + csp_nonce() + "'", *csp_injected_script_hashes(), CSP_SCRIPT_HOSTS])
+    # Twitch player frames are allowed only while the embed is switched on.
+    twitch_frame_hosts = " https://player.twitch.tv https://www.twitch.tv" if config.LIVE_TWITCH_EMBED else ""
     csp = (
         "default-src 'self'; "
         "base-uri 'self'; "
         "form-action 'self'; "
         "frame-ancestors 'self'; "
         "object-src 'none'; "
-        "frame-src 'self' https://player.twitch.tv https://www.twitch.tv; "
-        "child-src 'self' blob: https://player.twitch.tv https://www.twitch.tv; "
+        "frame-src 'self'" + twitch_frame_hosts + "; "
+        "child-src 'self' blob:" + twitch_frame_hosts + "; "
         "worker-src 'self' blob:; "
         "script-src " + script_src + "; "
         "script-src-attr 'none'; "
@@ -11746,7 +11748,7 @@ def twitch_watch(channel):
             login, role=current_user_role()
         ):
             abort(403)
-    parents = twitch_api.embed_parent_hosts(request.host)
+    embed_enabled = bool(config.LIVE_TWITCH_EMBED)
     stream = twitch_api.get_stream(login, monitored=login in set(twitch_api.monitored_twitch_logins()))
     if login in _recording_logins_set():
         stream = dict(stream)
@@ -11771,13 +11773,18 @@ def twitch_watch(channel):
         except database.DB_ACCESS_ERRORS as exc:
             logging.warning("Live watch %s: channel list unavailable: %s", login, exc)
 
-    # Default: Twitch embed without account cookies (iframe credentialless ≈ Incognito).
-    # Optional ?proxy=1 for server HLS when embed is blocked or unsupported.
+    # LIVE_TWITCH_EMBED off (default): server stream only. The Twitch player
+    # plays ads and hands the viewer's IP to Twitch, so ?embed=/?proxy= cannot
+    # bring it back.
+    # LIVE_TWITCH_EMBED on: Twitch embed without account cookies (iframe
+    # credentialless ≈ Incognito) on desktop; ?proxy=1 for the server stream.
     # When a Turbo/sub OAuth token is configured, default to the server proxy so
     # live watch gets hide_ads without joining chat as that account.
     proxy_arg = (request.args.get("proxy") or "").strip().lower()
     embed_arg = (request.args.get("embed") or "").strip().lower()
-    if proxy_arg in ("1", "true", "yes", "on") or embed_arg in ("0", "false", "no", "off"):
+    if not embed_enabled:
+        use_hls_proxy = True
+    elif proxy_arg in ("1", "true", "yes", "on") or embed_arg in ("0", "false", "no", "off"):
         use_hls_proxy = True
     elif proxy_arg in ("0", "false", "no", "off") or embed_arg in ("1", "true", "yes", "on"):
         use_hls_proxy = False
@@ -11812,8 +11819,12 @@ def twitch_watch(channel):
 
     chat_streamer = archive_name or login
     chat_feed_url = url_for("chat_live", streamer=chat_streamer)
-    watch_embed_url = url_for("twitch_watch", channel=login, embed=1)
-    watch_proxy_url = url_for("twitch_watch", channel=login, proxy=1)
+    if embed_enabled:
+        parents = twitch_api.embed_parent_hosts(request.host)
+        watch_proxy_url = url_for("twitch_watch", channel=login, proxy=1)
+    else:
+        parents = []
+        watch_proxy_url = url_for("twitch_watch", channel=login)
     live_debug = (request.args.get("debug") or "").strip().lower() in ("1", "true", "yes", "on")
     context = {
         "channel": login,
@@ -11823,7 +11834,6 @@ def twitch_watch(channel):
         "viewer_count": int(stream.get("viewer_count") or 0),
         "is_live": bool(stream.get("is_live")),
         "monitored": bool(stream.get("monitored")),
-        "player_url": twitch_api.player_embed_url(login, parents),
         "chat_feed_url": chat_feed_url,
         "chat_streamer": chat_streamer,
         "archive_name": archive_name,
@@ -11834,13 +11844,15 @@ def twitch_watch(channel):
         "hls_playlist_url": url_for("live_playlist", streamer=proxy_key) if use_hls_proxy else "",
         "hls_ready_url": url_for("api_live_ready", streamer=proxy_key) if use_hls_proxy else "",
         "hls_client_debug_url": url_for("api_live_client_debug"),
-        "watch_embed_url": watch_embed_url,
         "watch_proxy_url": watch_proxy_url,
         "live_oauth_enabled": bool(config.LIVE_TWITCH_OAUTH_ENABLED),
         "switcher": switcher,
-        "embed_parents": parents,
         "live_player_profile": "mobile" if is_mobile() else "desktop",
     }
+    if embed_enabled:
+        context["player_url"] = twitch_api.player_embed_url(login, parents)
+        context["watch_embed_url"] = url_for("twitch_watch", channel=login, embed=1)
+        context["embed_parents"] = parents
     template = twitch_templates.get_watch_template(mobile=is_mobile())
     resp = make_response(render_template_string(template, **context))
     resp.headers["Cache-Control"] = "no-store"
@@ -12007,6 +12019,42 @@ def chat_obs(streamer):
     resp.headers["Pragma"] = "no-cache"
     return resp
 
+
+
+# Direct live routes served by nginx after an auth_request subrequest:
+# /live/<channel>.ts (MPEG-TS fan-out) and the LL-HLS files in LIVE_HLS_DIR.
+_LIVE_DIRECT_URI_RE = re.compile(
+    r"^/live/([A-Za-z0-9_-]{1,64})(?:\.ts|/(?:stream|index)\.m3u8|/seg_[0-9]{1,12}\.ts)$"
+)
+
+
+def _live_auth_response(status):
+    resp = Response(status=status)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@live_bp.route("/api/live/auth", methods=["GET"])
+@limiter.exempt
+def api_live_auth():
+    """nginx ``auth_request`` target for the direct live routes.
+
+    nginx passes the original URI in ``X-Original-URI``. 204 = deliver,
+    401 = no valid session, 403 = channel not visible to this user or a URI
+    that is not a direct live route. Exempt from rate limiting: one viewer
+    causes about one subrequest per second (playlist and segments), and nginx
+    turns a 429 from the auth subrequest into a 500 for the player.
+    """
+    original = urllib.parse.urlsplit(request.headers.get("X-Original-URI", ""))
+    match = _LIVE_DIRECT_URI_RE.match(original.path)
+    if not match:
+        return _live_auth_response(403)
+    channel = match.group(1).lower()
+    if not session.get("logged_in") or session_is_expired():
+        return _live_auth_response(401)
+    if not can_view_streamer(channel):
+        return _live_auth_response(403)
+    return _live_auth_response(204)
 
 
 @live_bp.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
