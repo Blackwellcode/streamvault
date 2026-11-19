@@ -278,8 +278,9 @@ Nginx performs direct kernel-level offloading (`sendfile`) for video Range reque
 
 Save to `/etc/nginx/sites-available/streamvault.conf`:
 ```nginx
-# Access log without cookies; rt/urt show slow requests and upstreams.
-log_format streamvault_timed '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" rt=$request_time urt=$upstream_response_time';
+# Access log without cookies and query strings (no ?token= in the log);
+# rt/urt show slow requests and upstreams.
+log_format streamvault_timed '$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$http_referer" "$http_user_agent" rt=$request_time urt=$upstream_response_time';
 
 server {
     listen 80;
@@ -304,6 +305,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # Only the /_live_auth subrequest may carry this marker.
+        proxy_set_header X-StreamVault-Live-Auth "";
     }
 
     # 2. X-Accel-Redirect media offload.
@@ -379,6 +382,8 @@ server {
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
         proxy_set_header X-Original-URI $request_uri;
+        # Marks the request as nginx's auth subrequest; /api/live/auth answers 404 without it.
+        proxy_set_header X-StreamVault-Live-Auth 1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -423,7 +428,12 @@ Keep the aliases in sync with `VOD_BASE_DIR`, `VOD_FILES_DIR`, `VOD_THUMB_DIR`,
 files (LL-HLS) straight from nginx. Each request first goes to the WebUI
 through `auth_request /_live_auth` → `GET /api/live/auth`, which answers 204
 for a signed-in user who may see the channel, 401 without a valid session and
-403 for hidden channels or other paths. Any new direct live location must carry
+403 for hidden channels, other paths, live maintenance mode and mobile devices
+while mobile live is off. `/_live_auth` sets the header
+`X-StreamVault-Live-Auth: 1`; without it the endpoint answers 404, and every
+`location` that proxies to the WebUI must clear it
+(`proxy_set_header X-StreamVault-Live-Auth "";`) so clients cannot send it
+themselves. Any new direct live location must carry
 `auth_request /_live_auth`, otherwise the stream is public. `auth_request`
 needs `ngx_http_auth_request_module` (included in the Debian/Ubuntu nginx
 packages and the `nginx:alpine` image; check with `nginx -V`). StreamVault

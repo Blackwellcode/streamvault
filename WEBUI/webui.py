@@ -12024,8 +12024,11 @@ def chat_obs(streamer):
 # Direct live routes served by nginx after an auth_request subrequest:
 # /live/<channel>.ts (MPEG-TS fan-out) and the LL-HLS files in LIVE_HLS_DIR.
 _LIVE_DIRECT_URI_RE = re.compile(
-    r"^/live/([A-Za-z0-9_-]{1,64})(?:\.ts|/(?:stream|index)\.m3u8|/seg_[0-9]{1,12}\.ts)$"
+    r"/live/([A-Za-z0-9_-]{1,64})(?:\.ts|/(?:stream|index)\.m3u8|/seg_[0-9]{1,12}\.ts)"
 )
+# Set only by nginx in ``location = /_live_auth``; every proxy location to the
+# WebUI clears it, so a client cannot send it through nginx.
+LIVE_AUTH_MARKER_HEADER = "X-StreamVault-Live-Auth"
 
 
 def _live_auth_response(status):
@@ -12039,19 +12042,30 @@ def _live_auth_response(status):
 def api_live_auth():
     """nginx ``auth_request`` target for the direct live routes.
 
-    nginx passes the original URI in ``X-Original-URI``. 204 = deliver,
-    401 = no valid session, 403 = channel not visible to this user or a URI
-    that is not a direct live route. Exempt from rate limiting: one viewer
-    causes about one subrequest per second (playlist and segments), and nginx
-    turns a 429 from the auth subrequest into a 500 for the player.
+    nginx passes the original URI in ``X-Original-URI`` and marks the
+    subrequest with ``X-StreamVault-Live-Auth: 1``. 204 = deliver,
+    401 = no valid session, 403 = channel not visible to this user, live
+    maintenance mode, mobile device while mobile live is off, or a URI that
+    is not a direct live route; 404 = called without the nginx marker.
+    Exempt from rate limiting: one viewer causes about one subrequest per
+    second (playlist and segments), and nginx turns a 429 from the auth
+    subrequest into a 500 for the player.
     """
-    original = urllib.parse.urlsplit(request.headers.get("X-Original-URI", ""))
-    match = _LIVE_DIRECT_URI_RE.match(original.path)
+    if request.headers.get(LIVE_AUTH_MARKER_HEADER) != "1":
+        return _live_auth_response(404)
+    # Path only: cut the query string. No urlsplit, which reads "//host/..."
+    # as a network location instead of a path.
+    path = request.headers.get("X-Original-URI", "").split("?", 1)[0]
+    match = _LIVE_DIRECT_URI_RE.fullmatch(path)
     if not match:
         return _live_auth_response(403)
     channel = match.group(1).lower()
     if not session.get("logged_in") or session_is_expired():
         return _live_auth_response(401)
+    if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
+        return _live_auth_response(403)
+    if is_mobile() and not mobile_live_enabled():
+        return _live_auth_response(403)
     if not can_view_streamer(channel):
         return _live_auth_response(403)
     return _live_auth_response(204)

@@ -219,8 +219,9 @@ map \$http_upgrade \$streamvault_connection_upgrade {
     ''      close;
 }
 
-# Access log without cookies; rt/urt show slow requests and upstreams.
-log_format streamvault_timed '\$remote_addr - \$remote_user [\$time_local] "\$request" \$status \$body_bytes_sent "\$http_referer" "\$http_user_agent" rt=\$request_time urt=\$upstream_response_time';
+# Access log without cookies and query strings (no ?token= in the log);
+# rt/urt show slow requests and upstreams.
+log_format streamvault_timed '\$remote_addr - \$remote_user [\$time_local] "\$request_method \$uri \$server_protocol" \$status \$body_bytes_sent "\$http_referer" "\$http_user_agent" rt=\$request_time urt=\$upstream_response_time';
 
 server {
     listen 80;
@@ -252,6 +253,8 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        # Only the /_live_auth subrequest may carry this marker.
+        proxy_set_header X-StreamVault-Live-Auth "";
     }
 
     location /_protected/ {
@@ -326,6 +329,8 @@ server {
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
         proxy_set_header X-Original-URI \$request_uri;
+        # Marks the request as nginx's auth subrequest; /api/live/auth answers 404 without it.
+        proxy_set_header X-StreamVault-Live-Auth 1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;

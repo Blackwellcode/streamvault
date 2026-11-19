@@ -8,6 +8,7 @@ checked first by GET /api/live/auth with the original URI in X-Original-URI.
 from __future__ import annotations
 
 import pathlib
+import re
 import time
 import unittest
 from unittest import mock
@@ -20,6 +21,8 @@ except ImportError:  # run as tests.test_live_direct_auth
 from core import config, twitch_api  # noqa: E402
 
 AUTH = "/api/live/auth"
+MARKER = "X-StreamVault-Live-Auth"
+MOBILE_UA = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Mobile Safari/537.36"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DIRECT_URIS = (
     "/live/demochan.ts",
@@ -50,8 +53,10 @@ class LiveDirectAuthTests(IsolatedBaseTest):
             sess.update(logged_in=True, user_role="admin", username=config.VOD_USER,
                         login_time=now, last_active=now, _csrf_token="t")
 
-    def _auth(self, client, uri):
-        return client.get(AUTH, headers={"X-Original-URI": uri})
+    def _auth(self, client, uri, **headers):
+        # nginx marks its auth subrequest; without the marker Flask answers 404.
+        headers = {"X-Original-URI": uri, MARKER: "1", **headers}
+        return client.get(AUTH, headers=headers)
 
     def test_anonymous_is_denied_on_every_direct_route(self):
         for uri in DIRECT_URIS:
@@ -84,6 +89,42 @@ class LiveDirectAuthTests(IsolatedBaseTest):
                     "/vod/x.ts", "/live/demochan/seg_x.ts", "/live/demochan/other.m3u8"):
             with self.subTest(uri=uri):
                 self.assertEqual(self._auth(self.user, uri).status_code, 403)
+
+    def test_request_without_nginx_marker_is_not_found(self):
+        for marker in (None, "", "0", "true"):
+            with self.subTest(marker=marker):
+                headers = {"X-Original-URI": "/live/demochan.ts"}
+                if marker is not None:
+                    headers[MARKER] = marker
+                resp = self.user.get(AUTH, headers=headers)
+                self.assertEqual(resp.status_code, 404)
+                self.assertEqual(resp.get_data(), b"")
+
+    def test_uri_is_parsed_as_path_only(self):
+        # urlsplit read "//host/live/x.ts" as netloc "host" plus a matching path.
+        for uri in ("//evil.example/live/demochan.ts", "http://h/live/demochan.ts",
+                    "/live/demochan.ts#x", "/x/live/demochan.ts"):
+            with self.subTest(uri=uri):
+                self.assertEqual(self._auth(self.user, uri).status_code, 403)
+        self.assertEqual(self._auth(self.user, "/live/demochan.ts?token=a/b").status_code, 204)
+        # "$" also matched before a trailing newline (HTTP headers cannot carry one).
+        self.assertIsNone(self.webui._LIVE_DIRECT_URI_RE.fullmatch("/live/demochan.ts\n"))
+
+    def test_live_maintenance_blocks_unless_user_bypasses(self):
+        with mock.patch.object(self.webui, "maintenance_mode_enabled",
+                               side_effect=lambda scope="global": scope == "live"):
+            with mock.patch.object(self.webui, "current_user_bypasses_maintenance", return_value=False):
+                self.assertEqual(self._auth(self.user, "/live/demochan.ts").status_code, 403)
+            with mock.patch.object(self.webui, "current_user_bypasses_maintenance", return_value=True):
+                self.assertEqual(self._auth(self.user, "/live/demochan.ts").status_code, 204)
+
+    def test_mobile_device_blocked_while_mobile_live_is_off(self):
+        uri = "/live/demochan/stream.m3u8"
+        with mock.patch.object(self.webui, "mobile_live_enabled", return_value=False):
+            self.assertEqual(self._auth(self.user, uri, **{"User-Agent": MOBILE_UA}).status_code, 403)
+            self.assertEqual(self._auth(self.user, uri, **{"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}).status_code, 204)
+        with mock.patch.object(self.webui, "mobile_live_enabled", return_value=True):
+            self.assertEqual(self._auth(self.user, uri, **{"User-Agent": MOBILE_UA}).status_code, 204)
 
     def test_auth_endpoint_is_not_rate_limited(self):
         # One viewer causes about one auth subrequest per second (playlist and
@@ -139,6 +180,37 @@ class NginxDirectLiveRouteTests(unittest.TestCase):
                 self.assertIn("internal;", auth)
                 self.assertIn("/api/live/auth;", auth)
                 self.assertIn("X-Original-URI", auth)
+                self.assertIn("proxy_set_header X-StreamVault-Live-Auth 1;", auth)
+
+    def _location_blocks(self, text):
+        """(header, body) of every location block, nested braces included."""
+        blocks, current, depth = [], None, 0
+        for line in text.splitlines():
+            stripped = line.strip()
+            if current is None:
+                if stripped.startswith("location ") and stripped.endswith("{"):
+                    current, depth = [stripped], 1
+                continue
+            current.append(stripped)
+            depth += stripped.count("{") - stripped.count("}")
+            if depth == 0:
+                blocks.append((current[0], "\n".join(current[1:])))
+                current = None
+        return blocks
+
+    def test_app_proxy_locations_clear_the_live_auth_marker(self):
+        # A client must not be able to send the marker through nginx.
+        for name in self.CONFIGS:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            app_blocks = [
+                (head, body) for head, body in self._location_blocks(text)
+                if re.search(r"proxy_pass http://(app|127\.0\.0\.1):8080[;/]", body)
+                and head != "location = /_live_auth {"
+            ]
+            with self.subTest(config=name):
+                self.assertGreaterEqual(len(app_blocks), 1)
+                for head, body in app_blocks:
+                    self.assertIn('proxy_set_header X-StreamVault-Live-Auth "";', body, head)
 
     def test_access_log_has_no_cookies(self):
         for name in self.CONFIGS:
@@ -147,6 +219,18 @@ class NginxDirectLiveRouteTests(unittest.TestCase):
                 self.assertNotIn("http_cookie", text)
                 self.assertRegex(text, r"log_format (streamvault_)?timed ")
                 self.assertRegex(text, r"access_log \S+ (streamvault_)?timed;")
+
+    def test_access_log_has_no_query_strings(self):
+        # $request / $request_uri / $args would log ?token= and other secrets.
+        for name in self.CONFIGS:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            formats = re.findall(r"^log_format .*$", text, flags=re.MULTILINE)
+            with self.subTest(config=name):
+                self.assertEqual(len(formats), 1)
+                fmt = formats[0].replace("\\$", "$")
+                for variable in ("request", "request_uri", "args", "query_string", "http_cookie"):
+                    self.assertNotRegex(fmt, r"\$" + variable + r"(?![A-Za-z0-9_])", variable)
+                self.assertIn('"$request_method $uri $server_protocol"', fmt)
 
 
 if __name__ == "__main__":
