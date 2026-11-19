@@ -78,6 +78,11 @@
   let reconnectAttempt = 0;
   let waitStartedAt = Date.now();
   let lastDebugSent = 0;
+  // The /live/<channel>.ts fan-out is optional (an external livebot provides
+  // it). After repeated failures before the first frame, stay on LL-HLS.
+  let tsPlayed = false;
+  let tsFailuresBeforePlay = 0;
+  let preferLowLatencyHls = false;
   const profile = {{ (live_player_profile or 'desktop')|tojson }};
   const isMobilePlayer = profile === 'mobile'
     || document.body.classList.contains('page-twitch-watch-mobile')
@@ -126,6 +131,7 @@
   }
 
   function revealPlaying() {
+    if (mpegtsPlayer) tsPlayed = true;
     setWait(false, 'Live');
   }
 
@@ -277,7 +283,9 @@
     }
 
     if (targetVideo.canPlayType && targetVideo.canPlayType('application/vnd.apple.mpegurl')) {
-      targetVideo.src = hlsUrl;
+      // Native HLS (iOS/Safari): the Flask playlist checks the session itself,
+      // so playback does not depend on the direct nginx route.
+      targetVideo.src = playlistUrl || hlsUrl;
       targetVideo.addEventListener('error', function() {
         dbg('error', 'native_hls_error', { code: targetVideo.error ? targetVideo.error.code : 'unknown' });
         scheduleReconnect({{ _('HLS connection lost — reconnecting…')|tojson }});
@@ -305,9 +313,10 @@
       const mseSupported = window.mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
       const nativeHlsPreferred = window.StreamVaultHls && StreamVaultHls.preferNativeHls(video);
 
-      if (mseSupported && !nativeHlsPreferred) {
+      if (mseSupported && !nativeHlsPreferred && !preferLowLatencyHls) {
         dbg('info', 'init_mpegts_player', { channel: channelName });
-        const tsUrl = '/live/' + encodeURIComponent(channelName) + '.ts';
+        // Absolute URL: mpegts.js fetches inside a blob: worker without a base URL.
+        const tsUrl = new URL('/live/' + encodeURIComponent(channelName) + '.ts', window.location.href).href;
         mpegtsPlayer = mpegts.createPlayer({
           type: 'mse',
           isLive: true,
@@ -344,6 +353,13 @@
             detail: String(detail),
             info: String(info || '')
           });
+          if (!tsPlayed) {
+            tsFailuresBeforePlay += 1;
+            if (tsFailuresBeforePlay >= 2) {
+              preferLowLatencyHls = true;
+              dbg('warn', 'mpegts_unavailable_use_hls', { detail: String(tsFailuresBeforePlay) });
+            }
+          }
           scheduleReconnect({{ _('Real-time stream error — reconnecting…')|tojson }});
         });
 
