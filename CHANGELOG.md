@@ -18,10 +18,11 @@ All notable changes to this project are documented here. The format follows
   the new "log out everywhere" action (`POST /logout/all`) and every password
   change sign the account out on all devices.
 - **Overlay tokens in the query string are off by default.** The bundled
-  TTS/alert overlays read the token from `#token=` (or an old `?token=` URL)
-  and send it only as a header, so existing OBS sources keep working; move
-  the token behind `#` to keep it out of server logs. The `/tts/api/ack` and
-  `/alerts/api/ack` routes accept POST only.
+  alert overlay reads the token from `#token=` (or an old `?token=` URL)
+  and sends it only as a header, so existing OBS sources keep working; move
+  the token behind `#` to keep it out of server logs. `/alerts/api/ack`
+  accepts POST only, and `/alerts/api/next` returns `audio_url` without the
+  token (the overlay loads the audio with the header).
 - **Resource uploads use an allowlist** (documents, images, audio/video,
   archives; `VOD_FILES_ALLOWED_EXTENSIONS` overrides it). Existing files with
   other extensions are no longer served but can still be deleted.
@@ -33,16 +34,28 @@ All notable changes to this project are documented here. The format follows
   are running or when the archive cannot be scanned; `--force` overrides.
   `install.sh` exits with status 1 when it cannot scan the archive
   (`STREAMVAULT_FORCE_RESTART=1` overrides).
-- **OBS overlay URLs:** `/tts/overlay` and `/alerts/overlay` load without a
-  token. Pass the token in the URL fragment, for example
+- **OBS overlay URLs:** `/alerts/overlay` loads without a token. Pass the token in the URL fragment, for example
   `https://example.com/alerts/overlay#token=SECRET`; browsers never send the
   fragment to the server. The overlay APIs still require the token, as a
   header unless `OVERLAY_ALLOW_QUERY_TOKEN=true`.
+- **The live watch page no longer embeds the Twitch player by default.**
+  Every device plays the server stream (no Twitch ads, viewer IP addresses
+  stay away from Twitch); `?embed=`/`?proxy=` have no effect and the CSP no
+  longer allows Twitch frames. `LIVE_TWITCH_EMBED=true` restores the previous
+  behaviour (Docker: set it in `.env`).
+- **nginx: direct live routes need new locations.** Update your site from
+  `nginx.conf` / INSTALL.md section 6 (`/_live_auth`, `/live/<channel>.ts`,
+  `/live/<channel>/{stream,index}.m3u8`, `seg_N.ts`); without them the
+  desktop real-time player cannot start. Also add
+  `proxy_set_header X-StreamVault-Live-Auth 1;` to `location = /_live_auth`
+  and `proxy_set_header X-StreamVault-Live-Auth "";` to every location that
+  proxies to the WebUI; without the marker `/api/live/auth` answers 404 and
+  the live player gets no stream.
+- **Whisper transcription and the TTS overlay are removed** (environment
+  variables to drop and packages to uninstall: see "Removed" below).
 
 ### Security
 
-- Cancelling a transcription only signals a verified `run_transcribe.py`
-  process group, never PID 1 or the web worker's own group.
 - The Twitch OAuth token never falls back to the command line when its
   private config file cannot be written.
 - Login throttling counts only form submissions and groups IPv6 clients by
@@ -65,9 +78,45 @@ All notable changes to this project are documented here. The format follows
   inactive and environment accounts all pay the same password-hash cost.
   Client values in VOD debug logs are stripped of control characters.
 - Live-only accounts can no longer open the live clip editor.
+- The direct live routes (`/live/<channel>.ts`, LL-HLS playlist and
+  segments) are served by nginx only after `auth_request /_live_auth`
+  → `GET /api/live/auth` (session plus channel visibility; 401/403
+  otherwise). The auth endpoint is exempt from rate limiting, since one
+  viewer causes about one subrequest per second. It also honours live
+  maintenance mode and the mobile live switch like the other live routes,
+  matches the original URI as a plain path (no `//host/...` tricks) and
+  answers 404 unless nginx marks the subrequest (`X-StreamVault-Live-Auth`).
+- The nginx access log uses the `timed` format (no cookies, adds request and
+  upstream time) and logs `$request_method $uri $server_protocol` instead of
+  `$request`, so query strings such as `?token=` stay out of the log.
+  gunicorn (systemd units in `install.sh`/INSTALL.md, `docker-worker.conf`)
+  gets `--access-logformat` with the path `%(U)s` instead of the default
+  request line `%(r)s`; update existing units (`%%` there, systemd and
+  supervisor expand `%`).
+
+### Added
+
+- `scripts/vod_retention.py`: deletes local archive VODs older than
+  `--days N` (dry run unless `--enforce`). Deletion uses the WebUI delete path
+  (tombstone, thumbnail, HLS, chapters, shares) and removes the VOD's metadata
+  and chat sidecars; folders with an active recording or remux are skipped.
+  Optional offload channels (`--offload-slugs`) are only deleted when listed
+  in an offload manifest as `<channel>/<file>` (bare file names are ignored
+  with a warning, so a same-named VOD of another channel is never released).
+  An expired file whose stem is shared by a kept media file (`x.mkv` next to
+  `x.mp4`) is removed with a tombstone, share links and chapters for its own
+  file name only, without the stem's chat, metadata, thumbnail or chat
+  tombstone; names like `X.MP4`, which the WebUI does not serve, are skipped
+  with a warning. Example systemd service and timer in `scripts/systemd/`;
+  see INSTALL.md, "VOD retention".
 
 ### Changed
 
+- **Privacy: fonts are self-hosted; no requests to Google Fonts.** Inter and
+  IBM Plex Mono (Fontsource 5.3.0, SIL OFL 1.1, latin + latin-ext) ship in
+  `WEBUI/static/fonts/`; the CSP no longer allows `fonts.googleapis.com` or
+  `fonts.gstatic.com`. The monospace token now names IBM Plex Mono first, so
+  it renders instead of the Courier fallback.
 - **S2, app factory and blueprints:** `create_app()` builds the web app;
   routes are grouped into 12 blueprints whose endpoint names are unchanged
   (`url_for` keeps working; the URL map is identical). Caches shared between
@@ -94,6 +143,33 @@ All notable changes to this project are documented here. The format follows
 - `core.channels` holds the channel helpers shared by the web UI and the
   recorder; `core.database` no longer depends on Flask.
 
+### Removed
+
+- **Whisper transcription.** The transcript button and panel on the VOD page,
+  the `/vod/transcribe*` and `/vod/transcript/*` routes, `run_transcribe.py`,
+  the worker's ASR pool and the automatic transcription after each recording
+  are gone. A `transcribe` task still queued by an older release is failed
+  once with a log line and never retried. Existing `*.transcript.txt` files
+  stay on disk and can be deleted by hand.
+  Operators: drop `TRANSCRIBE_MODEL`, `TRANSCRIBE_THREADS`,
+  `TRANSCRIBE_LANGUAGE`, `TRANSCRIBE_BACKEND`, `WORKER_TRANSCRIBE_THREADS`,
+  `TASK_MAX_ATTEMPTS_TRANSCRIBE` and `STREAM_RECORDER_AUTO_TRANSCRIBE` from
+  the environment. The extras `transcribe` / `transcribe-fast` no longer
+  exist; `openai-whisper`, `faster-whisper`, `ctranslate2` and `torch` can be
+  uninstalled from the virtualenv (`pip uninstall openai-whisper
+  faster-whisper ctranslate2 torch`) if nothing else needs them.
+- **Text-to-speech overlay.** `/tts/overlay`, `/tts/api/*`, `/tts/audio/*`,
+  the `!tts` chat bot (`core/tts_bot.py`, `core/tts_service.py`) and the
+  `X-TTS-Token` header are gone. Operators: drop `TTS_ENABLED`,
+  `TTS_MAX_CHARS`, `TTS_COOLDOWN_SEC`, `TTS_MAX_QUEUE`, `TTS_DEFAULT_VOICE`,
+  `TTS_MOD_USERS`, `TWITCH_TTS_REWARD_IDS` and `TTS_OVERLAY_TOKEN_<CHANNEL>`;
+  `edge-tts` can be uninstalled. Remove the TTS browser source from OBS.
+  The alert overlay (`/alerts/*`) stays; its token is now `ALERT_OVERLAY_TOKEN`.
+  `TTS_OVERLAY_TOKEN` is still read as a fallback and logs a deprecation
+  warning; rename it.
+- **Leftovers of the WoW stalker module** (CSS for `page-stalk*`, sidebar
+  endpoints, the `/admin/stalk` guard and unused template constants).
+
 ### Fixed
 
 - No broad exception handler that only passes, continues or returns a
@@ -114,6 +190,13 @@ All notable changes to this project are documented here. The format follows
 - A deleted VOD or clip whose file was still on disk opened in the player:
   the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.
+- Desktop live player: `/live/<channel>.ts` was not routed by nginx and
+  ended in a redirect to the watch page. mpegts.js now gets an absolute URL
+  (its blob: worker has no base URL: "Failed to parse URL from
+  /live/<channel>.ts") and switches to LL-HLS after two failed attempts
+  before the first frame, because the MPEG-TS fan-out is an optional
+  external livebot. Native HLS (iOS/Safari) plays the session-checked
+  `/live/playlist/<channel>`.
 
 ## [0.1.0] - 2026-11-09
 

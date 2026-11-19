@@ -162,6 +162,7 @@ ExecStart=/opt/streamvault/venv/bin/gunicorn \
     --bind 127.0.0.1:8080 \
     --timeout 120 \
     --access-logfile /var/log/streamvault/access.log \
+    --access-logformat '%%(h)s %%(l)s %%(u)s %%(t)s "%%(m)s %%(U)s %%(H)s" %%(s)s %%(b)s "%%(f)s" "%%(a)s"' \
     --error-logfile /var/log/streamvault/error.log \
     WEBUI.webui:app
 Restart=always
@@ -170,6 +171,10 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 ```
+
+`--access-logformat` logs the path without query string (`%(U)s` instead of
+the default request line `%(r)s`), so `?token=` values stay out of the access
+log. systemd expands `%` itself, hence `%%` in the unit.
 
 ### Stream Recorder Daemon (`/etc/systemd/system/streamvault-recorder.service`)
 ```ini
@@ -221,6 +226,56 @@ sudo systemctl enable --now streamvault-recorder
 sudo systemctl enable --now streamvault-worker
 ```
 
+### VOD retention (optional)
+
+`scripts/vod_retention.py` deletes local archive VODs older than a number of
+days. It is independent of the cloud storage retention in section 7 and only
+touches the local disk.
+
+- **Dry run by default.** Without `--enforce` it only prints what it would
+  delete. Check the report before you enable deletion.
+- Deletion works like deleting a VOD in the WebUI: the VOD gets a
+  `deleted_media` tombstone (cloud sync does not bring it back), and its
+  thumbnail, HLS cache, chapters and share links are removed, plus its
+  metadata JSON, chat log and chat chunks. Clips are never touched.
+- Folders with an active recording or a running remux are skipped and retried
+  on the next run. Files with a `.part` or `.remux.lock` sibling and the file an
+  active recording points to are always kept.
+- Offload channels: `--offload-slugs a,b` (env `VOD_RETENTION_OFFLOAD_SLUGS`)
+  marks channels whose VODs another job copies elsewhere. Their VODs are only
+  deleted when they are listed in the offload manifest
+  (`--offload-manifest`, env `VOD_RETENTION_OFFLOAD_MANIFEST`, default
+  `<VOD_META_DIR>/offload_manifest.txt`), one `<channel>/<file>` entry per
+  line, for example `somechannel/somechannel_2024-01-01.mp4` (channel compared
+  case-insensitively, trailing `_` ignored). A bare file name is ignored with
+  a warning, so a same-named file of another offload channel is never
+  released. Let the offload job append an entry only after it verified the
+  copy (for example by checksum). Without a manifest nothing of these channels
+  is deleted.
+- If another media file with the same name stem stays (an expired `x.mkv`
+  next to a kept `x.mp4`, or the other way round), only the expired file is
+  deleted, with a tombstone and its share links and chapters; chat log,
+  metadata, thumbnail and HLS cache belong to the kept file.
+- Extensions are matched case-sensitively like the WebUI: `X.MP4` is not a
+  VOD there and is skipped with a warning.
+
+```bash
+# Report only, as the service user (the script reads /etc/streamvault/env itself):
+sudo -u streamvault /opt/streamvault/venv/bin/python3     /opt/streamvault/app/scripts/vod_retention.py --days 30
+# Delete:
+#   ... scripts/vod_retention.py --days 30 --enforce
+```
+
+Daily run with systemd: example units are in `scripts/systemd/`
+(`streamvault-vod-retention.service` runs a dry run, the timer starts it at
+04:30). Copy both to `/etc/systemd/system/`, adjust paths and `--days`, add
+`--enforce` to `ExecStart` once the dry-run report looks right, then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now streamvault-vod-retention.timer
+journalctl -u streamvault-vod-retention   # report of the last runs
+```
+
 ---
 
 ## 6. Nginx Reverse Proxy with X-Accel-Redirect
@@ -229,9 +284,14 @@ Nginx performs direct kernel-level offloading (`sendfile`) for video Range reque
 
 Save to `/etc/nginx/sites-available/streamvault.conf`:
 ```nginx
+# Access log without cookies and query strings (no ?token= in the log);
+# rt/urt show slow requests and upstreams.
+log_format streamvault_timed '$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$http_referer" "$http_user_agent" rt=$request_time urt=$upstream_response_time';
+
 server {
     listen 80;
     server_name vault.your-domain.example;
+    access_log /var/log/nginx/streamvault.access.log streamvault_timed;
 
     # Performance Tuning
     sendfile on;
@@ -251,6 +311,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # Only the /_live_auth subrequest may carry this marker.
+        proxy_set_header X-StreamVault-Live-Auth "";
     }
 
     # 2. X-Accel-Redirect media offload.
@@ -318,11 +380,72 @@ server {
         default_type application/octet-stream;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
     }
+
+    # 4. Direct live routes behind login (auth_request)
+    location = /_live_auth {
+        internal;
+        proxy_pass http://127.0.0.1:8080/api/live/auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri;
+        # Marks the request as nginx's auth subrequest; /api/live/auth answers 404 without it.
+        proxy_set_header X-StreamVault-Live-Auth 1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Real-time MPEG-TS from an optional livebot fan-out (127.0.0.1:8085).
+    location ~ ^/live/[A-Za-z0-9_-]+\.ts$ {
+        auth_request /_live_auth;
+        proxy_pass http://127.0.0.1:8085;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_request_buffering off;
+        proxy_read_timeout 300s;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header X-Accel-Buffering "no" always;
+    }
+
+    # LL-HLS playlist and segments from the live RAM disk.
+    location ~ ^/live/(?<hls_chan>[A-Za-z0-9_-]+)/(?<hls_file>(stream|index)\.m3u8|seg_[0-9]+\.ts)$ {
+        auth_request /_live_auth;
+        alias /dev/shm/streamvault_hls/$hls_chan/$hls_file;
+        open_file_cache off;
+        types {
+            application/vnd.apple.mpegurl m3u8;
+            video/mp2t ts;
+        }
+        default_type application/octet-stream;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+    }
 }
 ```
 
 Keep the aliases in sync with `VOD_BASE_DIR`, `VOD_FILES_DIR`, `VOD_THUMB_DIR`,
 `VOD_HLS_DIR` and `LIVE_HLS_DIR` if you changed those environment variables.
+
+**Direct live routes.** The live player fetches `/live/<channel>.ts`
+(real-time MPEG-TS) and `/live/<channel>/stream.m3u8` with its `seg_N.ts`
+files (LL-HLS) straight from nginx. Each request first goes to the WebUI
+through `auth_request /_live_auth` → `GET /api/live/auth`, which answers 204
+for a signed-in user who may see the channel, 401 without a valid session and
+403 for hidden channels, other paths, live maintenance mode and mobile devices
+while mobile live is off. `/_live_auth` sets the header
+`X-StreamVault-Live-Auth: 1`; without it the endpoint answers 404, and every
+`location` that proxies to the WebUI must clear it
+(`proxy_set_header X-StreamVault-Live-Auth "";`) so clients cannot send it
+themselves. Any new direct live location must carry
+`auth_request /_live_auth`, otherwise the stream is public. `auth_request`
+needs `ngx_http_auth_request_module` (included in the Debian/Ubuntu nginx
+packages and the `nginx:alpine` image; check with `nginx -V`). StreamVault
+does not ship the MPEG-TS fan-out: without a livebot on `127.0.0.1:8085` the
+`.ts` route answers 502 and the player switches to LL-HLS after two failed
+attempts.
 The `/_protected_files/` alias is only needed for legacy archives stored below
 `VOD_FILES_DIR`; new recordings normally live directly below `VOD_BASE_DIR`.
 

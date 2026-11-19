@@ -4,7 +4,6 @@ import os
 import shutil
 import sqlite3
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -66,17 +65,18 @@ WORKER_ID = f"{os.uname().nodename}:{os.getpid()}" if hasattr(os, "uname") else 
 # Parallel pools (env):
 #   WORKER_THUMB_THREADS       — IO pool for thumbnail (+ delete/empty); default 2
 #   WORKER_REMUX_THREADS       — CPU/media pool for remux_vod / remux_all; default 1
-#   WORKER_TRANSCRIBE_THREADS  — ASR pool for Whisper; default 1 (keep low if RAM-heavy)
 #   WORKER_STORAGE_THREADS     — network pool for cloud uploads/downloads; default 1
 WORKER_THUMB_THREADS = max(1, int(os.environ.get("WORKER_THUMB_THREADS", "2")))
 WORKER_REMUX_THREADS = max(1, int(os.environ.get("WORKER_REMUX_THREADS", "1")))
-WORKER_TRANSCRIBE_THREADS = max(1, int(os.environ.get("WORKER_TRANSCRIBE_THREADS", "1")))
 WORKER_STORAGE_THREADS = max(1, int(os.environ.get("WORKER_STORAGE_THREADS", "1")))
 IO_TASK_TYPES = frozenset({
     "thumbnail", "delete_folder", "empty_folder",
 })
 REMUX_TASK_TYPES = frozenset({"remux_vod", "remux_all"})
-ASR_TASK_TYPES = frozenset({"transcribe"})
+# Task types whose feature was removed. Rows still queued from an older
+# release are claimed by the IO pool and failed once with a log line, so they
+# neither crash the worker nor stay pending forever.
+RETIRED_TASK_TYPES = frozenset({"transcribe"})
 STORAGE_TASK_TYPES = frozenset({
     "storage_upload",
     "storage_sync",
@@ -89,7 +89,6 @@ TASK_MAX_ATTEMPTS = {
     "thumbnail": int(os.environ.get("TASK_MAX_ATTEMPTS_THUMBNAIL", "3")),
     "delete_folder": int(os.environ.get("TASK_MAX_ATTEMPTS_DELETE_FOLDER", "2")),
     "empty_folder": int(os.environ.get("TASK_MAX_ATTEMPTS_EMPTY_FOLDER", "2")),
-    "transcribe": int(os.environ.get("TASK_MAX_ATTEMPTS_TRANSCRIBE", "1")),
     "remux_all": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_ALL", "1")),
     "remux_vod": int(os.environ.get("TASK_MAX_ATTEMPTS_REMUX_VOD", "2")),
     "storage_upload": int(os.environ.get("TASK_MAX_ATTEMPTS_STORAGE_UPLOAD", "3")),
@@ -101,12 +100,11 @@ TASK_MAX_ATTEMPTS = {
 }
 REMUX_FILE_TIMEOUT_SEC = int(os.environ.get("REMUX_FILE_TIMEOUT_SEC", "7200"))
 
-_INFLIGHT = {"io": 0, "remux": 0, "asr": 0, "storage": 0}
+_INFLIGHT = {"io": 0, "remux": 0, "storage": 0}
 _INFLIGHT_LOCK = threading.Lock()
 _POOL_LIMITS = {
     "io": WORKER_THUMB_THREADS,
     "remux": WORKER_REMUX_THREADS,
-    "asr": WORKER_TRANSCRIBE_THREADS,
     "storage": WORKER_STORAGE_THREADS,
 }
 _LAST_STORAGE_CHECK = 0.0
@@ -966,47 +964,6 @@ def process_empty_folder(payload):
     return True
 
 
-def process_transcribe(payload):
-    media = _safe_path_under(payload.get('media'), config.BASE_DIR)
-    transcript = payload.get('transcript')
-    if transcript:
-        transcript = _safe_path_under(transcript, config.BASE_DIR)
-        if not transcript:
-            logging.error("Unsicherer Transcribe-Zielpfad abgelehnt: %s", payload.get("transcript"))
-            return False
-    if not media:
-        logging.error("Unsicherer oder fehlender Transcribe-Medienpfad: %s", payload.get("media"))
-        return False
-    logging.info(f"Starting transcribe task for: {media}")
-    try:
-        # Run the helper script so transcription runs in a separate process
-        run_py = os.path.join(config.APP_DIR, 'run_transcribe.py')
-        if not os.path.isfile(run_py):
-            logging.error("Transcribe-Helfer fehlt: %s", run_py)
-            return False
-        cmd = [sys.executable, run_py, media]
-        if transcript:
-            cmd.append(transcript)
-        # run synchronously so worker marks task complete/failed
-        # Own session: the runner leads its process group, so a cancel from the
-        # web UI can signal exactly this group and never the worker's own.
-        result = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            timeout=3600,
-            start_new_session=True,
-        )
-        if result.returncode != 0:
-            logging.error(f"Transcribe subprocess failed: {result.stderr}")
-            return False
-        logging.info(f"Transcribe subprocess finished: {result.stdout}")
-        return True
-    except Exception as exc:
-        logging.error(f"Transcribe task exception: {exc}")
-        return False
-
 def _write_remux_status(data):
     try:
         path = os.path.join(config.META_DIR, "remux_all_status.json")
@@ -1312,11 +1269,6 @@ def process_task(task_type, payload):
         if not ok:
             raise RuntimeError("empty_folder failed")
         return
-    if task_type == 'transcribe':
-        ok = process_transcribe(payload)
-        if not ok:
-            raise RuntimeError("transcribe failed")
-        return
     if task_type == 'remux_all':
         process_remux_all(payload)
         return
@@ -1347,11 +1299,9 @@ def process_task(task_type, payload):
 def _pool_name_for_task(task_type):
     if task_type in REMUX_TASK_TYPES:
         return "remux"
-    if task_type in ASR_TASK_TYPES:
-        return "asr"
     if task_type in STORAGE_TASK_TYPES:
         return "storage"
-    # thumbnail, delete/empty, and unknown → IO pool
+    # thumbnail, delete/empty, retired and unknown → IO pool
     return "io"
 
 
@@ -1361,10 +1311,9 @@ def _types_with_capacity():
     with _INFLIGHT_LOCK:
         if _INFLIGHT["io"] < _POOL_LIMITS["io"]:
             allowed.extend(IO_TASK_TYPES)
+            allowed.extend(RETIRED_TASK_TYPES)
         if _INFLIGHT["remux"] < _POOL_LIMITS["remux"]:
             allowed.extend(REMUX_TASK_TYPES)
-        if _INFLIGHT["asr"] < _POOL_LIMITS["asr"]:
-            allowed.extend(ASR_TASK_TYPES)
         if _INFLIGHT["storage"] < _POOL_LIMITS["storage"]:
             allowed.extend(STORAGE_TASK_TYPES)
     return allowed
@@ -1402,12 +1351,22 @@ def _submit_claimed_task(pools, pool_name, task):
         raise
 
 
+def _discard_retired_task(task):
+    """Fail a queued task of a removed feature once, without retry."""
+    message = f"task type '{task['type']}' was removed; task discarded"
+    logging.warning("Task %s verworfen: %s", task["id"], message)
+    database.fail_task(task["id"], message, max_attempts=1, worker_id=WORKER_ID)
+
+
 def _execute_claimed_task(task):
     """Run one claimed task in a pool thread; each DB op uses its own get_db()."""
     task_id = task["id"]
     task_type = task["type"]
     pool_name = _pool_name_for_task(task_type)
     try:
+        if task_type in RETIRED_TASK_TYPES:
+            _discard_retired_task(task)
+            return
         payload = json.loads(task["payload"] or "{}")
         process_task(task_type, payload)
         database.complete_task(task_id, worker_id=WORKER_ID)
@@ -1449,18 +1408,16 @@ def _execute_claimed_task(task):
 def main():
     init_db()
     logging.info(
-        "Worker gestartet: %s (thumb=%s remux=%s asr=%s storage=%s)",
+        "Worker gestartet: %s (thumb=%s remux=%s storage=%s)",
         WORKER_ID,
         WORKER_THUMB_THREADS,
         WORKER_REMUX_THREADS,
-        WORKER_TRANSCRIBE_THREADS,
         WORKER_STORAGE_THREADS,
     )
     with ThreadPoolExecutor(max_workers=WORKER_THUMB_THREADS, thread_name_prefix="worker-io") as io_pool, \
          ThreadPoolExecutor(max_workers=WORKER_REMUX_THREADS, thread_name_prefix="worker-remux") as remux_pool, \
-         ThreadPoolExecutor(max_workers=WORKER_TRANSCRIBE_THREADS, thread_name_prefix="worker-asr") as asr_pool, \
          ThreadPoolExecutor(max_workers=WORKER_STORAGE_THREADS, thread_name_prefix="worker-storage") as storage_pool:
-        pools = {"io": io_pool, "remux": remux_pool, "asr": asr_pool, "storage": storage_pool}
+        pools = {"io": io_pool, "remux": remux_pool, "storage": storage_pool}
         while True:
             try:
                 def _safe_run(func):

@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ _('Options & system control') }} — StreamVault</title>
-    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     {% include 'components/styles.html' %}
     <style>
       body.page-admin.ns-platform {
@@ -449,9 +448,7 @@
             <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
               <div class="panel">
                 <h3>{{ _('OBS overlays') }}</h3>
-                <p class="muted" style="margin:0 0 10px; font-size:12px;">{{ _('Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line.') }}</p>
-                <label for="obsTtsUrl" style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Text-to-speech overlay') }}</label>
-                <input id="obsTtsUrl" type="text" readonly value="{{ url_for('tts_overlay', _external=True) }}?streamer=CHANNEL#token=TOKEN" style="width:100%; box-sizing:border-box; margin-bottom:10px; font-family:var(--ns-font-mono);">
+                <p class="muted" style="margin:0 0 10px; font-size:12px;">{{ _('Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line.') }}</p>
                 <label for="obsAlertsUrl" style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;">{{ _('Alert sound overlay') }}</label>
                 <input id="obsAlertsUrl" type="text" readonly value="{{ url_for('alerts_overlay', _external=True) }}#token=TOKEN" style="width:100%; box-sizing:border-box; font-family:var(--ns-font-mono);">
               </div>

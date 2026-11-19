@@ -349,7 +349,9 @@ def append_client_debug(event: dict[str, Any]) -> None:
         if len(lines) > CLIENT_DEBUG_KEEP:
             CLIENT_DEBUG_PATH.write_text("\n".join(lines[-CLIENT_DEBUG_KEEP:]) + "\n", encoding="utf-8")
         st = Path(config.META_DIR).stat()
-        os.chown(CLIENT_DEBUG_PATH, st.st_uid, st.st_gid)
+        # os.chown only exists on POSIX; on Windows the file keeps its owner.
+        if hasattr(os, "chown"):
+            os.chown(CLIENT_DEBUG_PATH, st.st_uid, st.st_gid)
         os.chmod(CLIENT_DEBUG_PATH, 0o640)
     except OSError:
         pass

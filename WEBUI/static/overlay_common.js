@@ -1,4 +1,4 @@
-/* Shared helpers for the OBS overlays (tts_overlay.js, alerts_overlay.js).
+/* Shared helpers for the OBS alert overlay (alerts_overlay.js).
  *
  * - readToken(): token from #token= (preferred, never sent to the server) or a legacy
  *   ?token=; a query token is moved into the fragment with history.replaceState.
