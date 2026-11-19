@@ -47,7 +47,6 @@ review; corrections are very welcome (see [CONTRIBUTING.md](CONTRIBUTING.md#tran
 - **Live viewing** through a low-latency HLS restream from a RAM disk, so
   viewers watch through your server instead of the platform.
 - **Clips**: cut lossless clips in the browser (keyframe-aligned `-c copy`).
-- **Transcripts** with Whisper, run in a separate process.
 - **Cloud archive**: offload recordings to S3-compatible storage (AWS, R2, B2,
   Wasabi, MinIO, Hetzner), Google Drive, Dropbox, OneDrive or WebDAV.
   Credentials are encrypted with AES-GCM; uploads and local deletion are off
@@ -67,7 +66,7 @@ flowchart LR
     R -->|MP4| D[("Archive")]
     R -->|HLS| M[("RAM disk")]
     C --> D
-    W["Worker: remux, thumbnails,<br/>transcripts, cloud sync"] <--> D
+    W["Worker: remux, thumbnails,<br/>cloud sync"] <--> D
     U["Web UI (Flask)"] <--> S[("SQLite")]
     N["Nginx"] <-->|auth| U
     N -->|X-Accel-Redirect| D
@@ -101,12 +100,10 @@ the `VOD_USER` and `VOD_PASS` values from the command.
 
 | Feature | Package | Enable with |
 | --- | --- | --- |
-| Transcription (default backend) | `openai-whisper` (pulls `torch`) | `pip install openai-whisper` |
-| Faster CPU transcription | `faster-whisper` | `pip install faster-whisper`, `TRANSCRIBE_BACKEND=faster_whisper` |
 | Error reporting | `sentry-sdk` | `pip install "sentry-sdk[flask]"`, `SENTRY_DSN=...` |
 
-Without them StreamVault runs normally; transcription and error reporting
-are simply unavailable and the log says so.
+Without it StreamVault runs normally; error reporting is simply
+unavailable and the log says so.
 
 ## Installation
 

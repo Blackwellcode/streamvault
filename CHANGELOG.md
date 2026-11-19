@@ -94,6 +94,33 @@ All notable changes to this project are documented here. The format follows
 - `core.channels` holds the channel helpers shared by the web UI and the
   recorder; `core.database` no longer depends on Flask.
 
+### Removed
+
+- **Whisper transcription.** The transcript button and panel on the VOD page,
+  the `/vod/transcribe*` and `/vod/transcript/*` routes, `run_transcribe.py`,
+  the worker's ASR pool and the automatic transcription after each recording
+  are gone. A `transcribe` task still queued by an older release is failed
+  once with a log line and never retried. Existing `*.transcript.txt` files
+  stay on disk and can be deleted by hand.
+  Operators: drop `TRANSCRIBE_MODEL`, `TRANSCRIBE_THREADS`,
+  `TRANSCRIBE_LANGUAGE`, `TRANSCRIBE_BACKEND`, `WORKER_TRANSCRIBE_THREADS`,
+  `TASK_MAX_ATTEMPTS_TRANSCRIBE` and `STREAM_RECORDER_AUTO_TRANSCRIBE` from
+  the environment. The extras `transcribe` / `transcribe-fast` no longer
+  exist; `openai-whisper`, `faster-whisper`, `ctranslate2` and `torch` can be
+  uninstalled from the virtualenv (`pip uninstall openai-whisper
+  faster-whisper ctranslate2 torch`) if nothing else needs them.
+- **Text-to-speech overlay.** `/tts/overlay`, `/tts/api/*`, `/tts/audio/*`,
+  the `!tts` chat bot (`core/tts_bot.py`, `core/tts_service.py`) and the
+  `X-TTS-Token` header are gone. Operators: drop `TTS_ENABLED`,
+  `TTS_MAX_CHARS`, `TTS_COOLDOWN_SEC`, `TTS_MAX_QUEUE`, `TTS_DEFAULT_VOICE`,
+  `TTS_MOD_USERS`, `TWITCH_TTS_REWARD_IDS` and `TTS_OVERLAY_TOKEN_<CHANNEL>`;
+  `edge-tts` can be uninstalled. Remove the TTS browser source from OBS.
+  The alert overlay (`/alerts/*`) stays; its token is now `ALERT_OVERLAY_TOKEN`.
+  `TTS_OVERLAY_TOKEN` is still read as a fallback and logs a deprecation
+  warning; rename it.
+- **Leftovers of the WoW stalker module** (CSS for `page-stalk*`, sidebar
+  endpoints, the `/admin/stalk` guard and unused template constants).
+
 ### Fixed
 
 - No broad exception handler that only passes, continues or returns a

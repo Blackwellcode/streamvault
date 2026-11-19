@@ -30,7 +30,7 @@ python -m WEBUI.webui --host 127.0.0.1 --port 8080
 CI runs exactly these on Python 3.10, 3.11 and 3.12:
 
 ```bash
-python -m compileall -q core recorder WEBUI bin run_transcribe.py tests
+python -m compileall -q core recorder WEBUI bin tests
 ruff check .
 python -m unittest discover -s tests -v
 ```
