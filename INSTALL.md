@@ -238,11 +238,20 @@ touches the local disk.
   active recording points to are always kept.
 - Offload channels: `--offload-slugs a,b` (env `VOD_RETENTION_OFFLOAD_SLUGS`)
   marks channels whose VODs another job copies elsewhere. Their VODs are only
-  deleted when the file name is listed in the offload manifest
+  deleted when they are listed in the offload manifest
   (`--offload-manifest`, env `VOD_RETENTION_OFFLOAD_MANIFEST`, default
-  `<VOD_META_DIR>/offload_manifest.txt`, one file name per line). Let the
-  offload job append a name only after it verified the copy (for example by
-  checksum). Without a manifest nothing of these channels is deleted.
+  `<VOD_META_DIR>/offload_manifest.txt`), one `<channel>/<file>` entry per
+  line, for example `somechannel/somechannel_2024-01-01.mp4` (channel compared
+  case-insensitively, trailing `_` ignored). A bare file name is ignored with
+  a warning, so a same-named file of another offload channel is never
+  released. Let the offload job append an entry only after it verified the
+  copy (for example by checksum). Without a manifest nothing of these channels
+  is deleted.
+- If another media file with the same name stem stays (an expired `x.mkv`
+  next to a kept `x.mp4`), only the expired file is deleted; chat log,
+  metadata, thumbnail and HLS cache belong to the kept file.
+- Extensions are matched case-sensitively like the WebUI: `X.MP4` is not a
+  VOD there and is skipped with a warning.
 
 ```bash
 # Report only, as the service user (the script reads /etc/streamvault/env itself):

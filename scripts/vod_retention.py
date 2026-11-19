@@ -19,11 +19,23 @@ Never touched:
 * clips (``<archive>/clips``) and everything outside the direct archive
   folders of the base directory.
 
+If another media file with the same stem stays (``x.mkv`` expires while
+``x.mp4`` is kept), only the expired file itself is removed: chat log, chat
+chunks, metadata, thumbnail, HLS cache and tombstones are keyed by the stem and
+still belong to the remaining file.
+
+Extensions are matched case-sensitively like the WebUI resolver: ``X.MP4`` or
+``x.MKV`` are never served as VODs and are skipped with a warning.
+
 Offload channels (``--offload-slugs`` / ``VOD_RETENTION_OFFLOAD_SLUGS``): their
 VODs are copied elsewhere by an external job. A VOD of such a channel is only
-deleted when its file name is listed in the offload manifest (one file name
-per line, written by the offload job after a verified copy). Without a
-manifest nothing of these channels is deleted.
+deleted when it is listed in the offload manifest, one ``<channel>/<file>``
+entry per line (for example ``somechannel/somechannel_2024-01-01.mp4``),
+written by the offload job after a verified copy. The channel part is compared
+like the slugs (case-insensitive, trailing ``_`` ignored). Entries without a
+channel are ignored with a warning, so a file of one offload channel never
+releases a same-named file of another. Without a manifest nothing of these
+channels is deleted.
 """
 from __future__ import annotations
 
@@ -49,6 +61,10 @@ OFFLOAD_MANIFEST_NAME = "offload_manifest.txt"
 # BASE_DIR may be the application directory; these are never archive folders.
 _EXTRA_SKIP_DIRS = frozenset({"venv", "node_modules", "static", "templates"})
 _MEDIA_EXTENSIONS = (".mp4", ".mkv")
+# Any media file sharing a stem keeps the stem's sidecars alive.
+_SIBLING_MEDIA_EXTENSIONS = frozenset({
+    ".mp4", ".mkv", ".ts", ".webm", ".flv", ".mov", ".m4v", ".avi",
+})
 _DAY_SEC = 86400.0
 
 
@@ -105,16 +121,30 @@ def format_bytes(num_bytes: int) -> str:
 
 
 def is_archive_media_filename(filename: str) -> bool:
-    """True for final archive VOD names (mp4/mkv, no part/remux temporaries)."""
+    """True for final archive VOD names (mp4/mkv, no part/remux temporaries).
+
+    Case-sensitive like ``WEBUI.webui.resolve_media_path``: ``X.MP4`` is no
+    archive VOD (see ``has_foreign_extension_case``).
+    """
     from core.mp4_utils import is_archive_mp4_filename, is_transient_media_filename
 
     name = os.path.basename(str(filename or ""))
     if not name or name.startswith(".") or is_transient_media_filename(name):
         return False
-    lower = name.lower()
-    if lower.endswith(".mp4"):
+    if name.endswith(".mp4"):
         return is_archive_mp4_filename(name)
-    return lower.endswith(".mkv")
+    return name.endswith(".mkv")
+
+
+def has_foreign_extension_case(filename: str) -> bool:
+    """True for media names like ``X.MP4`` / ``x.Mkv`` that the WebUI ignores."""
+    from core.mp4_utils import is_transient_media_filename
+
+    name = os.path.basename(str(filename or ""))
+    if not name or name.startswith(".") or is_transient_media_filename(name):
+        return False
+    lower = name.lower()
+    return any(lower.endswith(ext) and not name.endswith(ext) for ext in _MEDIA_EXTENSIONS)
 
 
 def parse_offload_slugs(raw: str | None) -> frozenset[str]:
@@ -127,12 +157,26 @@ def parse_offload_slugs(raw: str | None) -> frozenset[str]:
     return frozenset(slugs)
 
 
+def _normalize_slug(name: str) -> str:
+    return str(name or "").strip().lower().rstrip("_")
+
+
 def is_offload_slug(dir_name: str, offload_slugs: frozenset[str]) -> bool:
-    return str(dir_name or "").strip().lower().rstrip("_") in offload_slugs
+    return _normalize_slug(dir_name) in offload_slugs
+
+
+def manifest_key(slug: str, filename: str) -> str:
+    """Manifest entry for a VOD: ``<normalized channel>/<file name>``."""
+    return f"{_normalize_slug(slug)}/{filename}"
 
 
 def load_offload_manifest(path: Path | None) -> set[str] | None:
-    """File names of verified offloaded VODs, or None when there is no manifest."""
+    """``<channel>/<file>`` keys of verified offloaded VODs (see ``manifest_key``).
+
+    None when there is no manifest. Entries without a channel part (a bare
+    file name) or with more than one path separator are ignored with a
+    warning: they cannot tell same-named files of two channels apart.
+    """
     if path is None:
         return None
     try:
@@ -143,12 +187,23 @@ def load_offload_manifest(path: Path | None) -> set[str] | None:
     except (OSError, UnicodeError) as exc:
         logger.error("Offload manifest unreadable: %s (%s); offload channels are kept", path, exc)
         return None
-    names = set()
-    for line in text.splitlines():
+    keys: set[str] = set()
+    ignored = 0
+    for number, line in enumerate(text.splitlines(), start=1):
         entry = line.strip().replace("\\", "/")
-        if entry and not entry.startswith("#"):
-            names.add(entry.rsplit("/", 1)[-1])
-    return names
+        if not entry or entry.startswith("#"):
+            continue
+        parts = entry.split("/")
+        if len(parts) != 2 or not _normalize_slug(parts[0]) or not parts[1].strip():
+            ignored += 1
+            logger.warning("Offload manifest %s line %d ignored: %r is not <channel>/<file>",
+                           path, number, entry)
+            continue
+        keys.add(manifest_key(parts[0], parts[1].strip()))
+    if ignored:
+        logger.warning("Offload manifest %s: %d entries without <channel>/<file> ignored",
+                       path, ignored)
+    return keys
 
 
 def _media_stem(name: str) -> str:
@@ -243,6 +298,10 @@ def find_expired_archives(
             continue
         for entry in entries:
             name = entry.name
+            if has_foreign_extension_case(name):
+                logger.warning("Skipping %s/%s: extension case differs from .mp4/.mkv "
+                               "(the WebUI does not serve it)", archive_dir.name, name)
+                continue
             if not is_archive_media_filename(name) or _media_stem(name) in protected:
                 continue
             if entry.is_symlink() or not entry.is_file():
@@ -255,7 +314,10 @@ def find_expired_archives(
                 continue
             if not inside or st.st_mtime >= cutoff:
                 continue
-            if offload and (offload_manifest is None or name not in offload_manifest):
+            if offload and (
+                offload_manifest is None
+                or manifest_key(archive_dir.name, name) not in offload_manifest
+            ):
                 held_back += 1
                 continue
             age_days = (current - st.st_mtime) / _DAY_SEC
@@ -273,6 +335,23 @@ def _sidecars(webui: ModuleType, path: Path) -> list[Path]:
     paths.append(path.parent / webui.CHAT_LOG_SUBDIR / f"{_media_stem(path.name)}.jsonl")
     paths.append(Path(chat_chunker.get_chunks_dir(str(path.parent.parent), path.parent.name, path.name)))
     return paths
+
+
+def other_media_with_stem(path: Path) -> list[Path]:
+    """Other media files in the same folder that share ``path``'s stem.
+
+    Raises OSError when the folder cannot be listed; the caller then counts the
+    VOD as failed instead of guessing.
+    """
+    stem = _media_stem(path.name)
+    found = []
+    for sibling in path.parent.iterdir():
+        if sibling.name == path.name:
+            continue
+        base, ext = os.path.splitext(sibling.name)
+        if base == stem and ext.lower() in _SIBLING_MEDIA_EXTENSIONS:
+            found.append(sibling)
+    return found
 
 
 def _remove_below(path: Path, root: Path) -> None:
@@ -298,7 +377,15 @@ def delete_candidate(candidate: Candidate) -> str:
     if folder_is_busy(archive_dir) or _media_stem(path.name) in protected_stems(archive_dir):
         logger.warning("Kept %s: recording or remux started meanwhile", path)
         return "kept"
-    if path.name.lower().endswith(".mp4"):
+    siblings = other_media_with_stem(path)
+    if siblings:
+        # Chat log, chunks, metadata, thumbnail, HLS cache and the chat
+        # tombstone are keyed by the stem and still belong to the kept file.
+        _remove_below(path, archive_dir)
+        logger.info("Deleted %s only; stem files kept for %s",
+                    path, ", ".join(sorted(s.name for s in siblings)))
+        return "deleted"
+    if path.name.endswith(".mp4"):
         # delete_video_file resolves the file itself (archive aliases first);
         # only hand it over when it resolves to exactly this file.
         resolved = webui.resolve_media_path(candidate.slug, path.name, "vod")
@@ -400,7 +487,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Comma list of offload channels (env VOD_RETENTION_OFFLOAD_SLUGS).")
     parser.add_argument("--offload-manifest", default=None,
                         help="Offload manifest (env VOD_RETENTION_OFFLOAD_MANIFEST, "
-                             f"default <VOD_META_DIR>/{OFFLOAD_MANIFEST_NAME}).")
+                             f"default <VOD_META_DIR>/{OFFLOAD_MANIFEST_NAME}); one "
+                             "<channel>/<file> entry per line, bare file names are ignored.")
     return parser
 
 
