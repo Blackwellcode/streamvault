@@ -221,6 +221,46 @@ sudo systemctl enable --now streamvault-recorder
 sudo systemctl enable --now streamvault-worker
 ```
 
+### VOD retention (optional)
+
+`scripts/vod_retention.py` deletes local archive VODs older than a number of
+days. It is independent of the cloud storage retention in section 7 and only
+touches the local disk.
+
+- **Dry run by default.** Without `--enforce` it only prints what it would
+  delete. Check the report before you enable deletion.
+- Deletion works like deleting a VOD in the WebUI: the VOD gets a
+  `deleted_media` tombstone (cloud sync does not bring it back), and its
+  thumbnail, HLS cache, chapters and share links are removed, plus its
+  metadata JSON, chat log and chat chunks. Clips are never touched.
+- Folders with an active recording or a running remux are skipped and retried
+  on the next run. Files with a `.part` or `.remux.lock` sibling and the file an
+  active recording points to are always kept.
+- Offload channels: `--offload-slugs a,b` (env `VOD_RETENTION_OFFLOAD_SLUGS`)
+  marks channels whose VODs another job copies elsewhere. Their VODs are only
+  deleted when the file name is listed in the offload manifest
+  (`--offload-manifest`, env `VOD_RETENTION_OFFLOAD_MANIFEST`, default
+  `<VOD_META_DIR>/offload_manifest.txt`, one file name per line). Let the
+  offload job append a name only after it verified the copy (for example by
+  checksum). Without a manifest nothing of these channels is deleted.
+
+```bash
+# Report only, as the service user (the script reads /etc/streamvault/env itself):
+sudo -u streamvault /opt/streamvault/venv/bin/python3     /opt/streamvault/app/scripts/vod_retention.py --days 30
+# Delete:
+#   ... scripts/vod_retention.py --days 30 --enforce
+```
+
+Daily run with systemd: example units are in `scripts/systemd/`
+(`streamvault-vod-retention.service` runs a dry run, the timer starts it at
+04:30). Copy both to `/etc/systemd/system/`, adjust paths and `--days`, add
+`--enforce` to `ExecStart` once the dry-run report looks right, then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now streamvault-vod-retention.timer
+journalctl -u streamvault-vod-retention   # report of the last runs
+```
+
 ---
 
 ## 6. Nginx Reverse Proxy with X-Accel-Redirect
