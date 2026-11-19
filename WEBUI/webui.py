@@ -85,7 +85,6 @@ from core import twitch_eventsub
 from core import twitch_templates
 from core import user_traffic
 from core import vod_watch_slots
-# Stalk module removed in open core
 from core.mp4_utils import (
     BROWSER_MP4_MOVFLAGS,
     finalize_if_fragmented,
@@ -170,7 +169,6 @@ TWITCH_APP_ACCESS_TOKEN = (
     os.environ.get("TWITCH_APP_ACCESS_TOKEN", "").strip()
 )
 MAIL_ADMIN_ENABLED = os.environ.get("VOD_MAIL_ADMIN_ENABLED", "false").lower() in ("true", "1", "yes")
-STALK_ENABLED = False
 
 
 def _env_int(name, default):
@@ -322,10 +320,6 @@ def load_html_template(name, fallback=""):
         return fallback
 
 
-TRANSCRIBE_MODEL = os.environ.get("TRANSCRIBE_MODEL", "tiny")
-TRANSCRIBE_THREADS = int(os.environ.get("TRANSCRIBE_THREADS", "1"))
-TRANSCRIBE_LANGUAGE = os.environ.get("TRANSCRIBE_LANGUAGE", "de")
-TRANSCRIBE_BACKEND = os.environ.get("TRANSCRIBE_BACKEND", "whisper").strip().lower() or "whisper"
 TWITCH_EVENTSUB_ENABLED = os.environ.get("TWITCH_EVENTSUB_ENABLED", "false").lower() in (
     "1",
     "true",
@@ -973,8 +967,6 @@ ADMIN_TRAFFIC_TEMPLATE = load_html_template("admin_traffic.html")
 ADMIN_USERS_TEMPLATE = load_html_template("admin_users.html")
 STORAGE_TEMPLATE = load_html_template("storage.html")
 MAIL_ADMIN_TEMPLATE = None
-STALK_ADMIN_TEMPLATE = None
-STALK_DETAIL_TEMPLATE = None
 CLIP_EDITOR_TEMPLATE = load_html_template("clip_editor.html")
 DISCORD_TOOL_TEMPLATE = None
 INDEX_TEMPLATE = load_html_template("index.html")
@@ -2199,10 +2191,6 @@ def count_active_recording_locks():
     return count
 
 
-def stalk_heartbeat_age_sec():
-    return None
-
-
 def _run_status_command(cmd):
     """Run a short status command; return (stdout, returncode, error)."""
     try:
@@ -2359,44 +2347,6 @@ def render_prometheus_metrics():
 def eventsub_is_live(login):
     """Cached EventSub live flag for future recorder/livebot use (None if unknown)."""
     return twitch_eventsub.is_live(login)
-
-
-def resolve_transcribe_backend(preferred=None):
-    """Select whisper backend; fall back to openai-whisper if faster_whisper missing."""
-    preferred = (
-        preferred
-        if preferred is not None
-        else os.environ.get("TRANSCRIBE_BACKEND", TRANSCRIBE_BACKEND)
-    )
-    preferred = str(preferred or "whisper").strip().lower() or "whisper"
-    if preferred == "faster_whisper":
-        try:
-            from faster_whisper import WhisperModel  # noqa: F401
-            return "faster_whisper"
-        except ImportError:
-            logging.warning(
-                "TRANSCRIBE_BACKEND=faster_whisper but faster-whisper is not installed; "
-                "falling back to openai-whisper"
-            )
-            return "whisper"
-    return "whisper"
-
-
-def load_transcribe_model(backend=None):
-    backend = resolve_transcribe_backend(backend)
-    if backend == "faster_whisper":
-        from faster_whisper import WhisperModel
-        return backend, WhisperModel(TRANSCRIBE_MODEL, device="cpu", compute_type="int8")
-    import whisper
-    return backend, whisper.load_model(TRANSCRIBE_MODEL)
-
-
-def run_transcribe_audio(backend, model, audio_path):
-    if backend == "faster_whisper":
-        segments, _info = model.transcribe(audio_path, language=TRANSCRIBE_LANGUAGE)
-        return "".join(seg.text for seg in segments).strip()
-    result = model.transcribe(audio_path, language=TRANSCRIBE_LANGUAGE, task="transcribe")
-    return str(result.get("text") or "").strip()
 
 
 def favorites_path():
@@ -3996,364 +3946,6 @@ def remux_media_file(file_path, reencode_audio=False):
             os.remove(lock_path)
         except OSError:
             pass
-
-
-def _setup_transcribe_threads():
-    for key in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
-        os.environ.setdefault(key, str(TRANSCRIBE_THREADS))
-    try:
-        import torch
-        torch.set_num_threads(TRANSCRIBE_THREADS)
-    except (ImportError, RuntimeError) as exc:
-        logging.info("torch thread limit not applied: %s", exc)
-
-
-def transcript_path_for_media(file_path):
-    base, _ = os.path.splitext(file_path)
-    return f"{base}.transcript.txt"
-
-
-def transcript_status_path(transcript_path):
-    return f"{transcript_path}.status.json"
-
-
-def transcript_lock_path(transcript_path):
-    return f"{transcript_path}.lock"
-
-
-TRANSCRIBE_RUNNER_MARKER = "run_transcribe"
-
-
-def _proc_identity(pid):
-    """(cmdline, start_epoch) of a Linux process from /proc, or None if unknown.
-
-    start_epoch is None when /proc/stat or the clock tick rate is unavailable.
-    """
-    proc_dir = os.path.join("/proc", str(int(pid)))
-    try:
-        with open(os.path.join(proc_dir, "cmdline"), "rb") as fh:
-            cmdline = fh.read().replace(b"\0", b" ").decode("utf-8", "replace").strip()
-    except FileNotFoundError:
-        return None
-    except OSError as exc:
-        logging.warning("Cannot read cmdline of PID %s: %s", pid, exc)
-        return None
-    start_epoch = None
-    try:
-        with open(os.path.join(proc_dir, "stat"), "r", encoding="utf-8") as fh:
-            stat_fields = fh.read().rsplit(")", 1)[1].split()
-        # Field 22 (starttime) is index 19 after the "(comm)" part.
-        start_ticks = int(stat_fields[19])
-        boot_time = None
-        with open("/proc/stat", "r", encoding="utf-8") as fh:
-            for line in fh:
-                if line.startswith("btime "):
-                    boot_time = int(line.split()[1])
-                    break
-        ticks = os.sysconf("SC_CLK_TCK")
-        if boot_time is not None and ticks > 0:
-            start_epoch = boot_time + start_ticks / float(ticks)
-    except (OSError, ValueError, IndexError) as exc:
-        logging.warning("Cannot read start time of PID %s: %s", pid, exc)
-    return cmdline, start_epoch
-
-
-def transcribe_cancel_pgid(pid, lock_mtime=None):
-    """Process group of a transcription runner that may be signalled, else None.
-
-    The PID comes from a lock file on disk, so it is untrusted: it may be stale
-    (reused by an unrelated process), 1, or the web worker's own group. Only a
-    run_transcribe.py process that leads its own process group (the worker
-    starts it with start_new_session=True) and started before the lock file was
-    written qualifies. Without POSIX process groups nothing is signalled.
-    """
-    if not hasattr(os, "killpg") or not hasattr(os, "getpgid") or not hasattr(os, "getpgrp"):
-        return None
-    try:
-        pid = int(pid)
-    except (TypeError, ValueError):
-        return None
-    if pid <= 1 or pid == os.getpid():
-        return None
-    try:
-        pgid = os.getpgid(pid)
-    except ProcessLookupError:
-        return None
-    except OSError as exc:
-        logging.warning("Cannot read process group of PID %s: %s", pid, exc)
-        return None
-    if pgid <= 1 or pgid == os.getpgrp() or pgid != pid:
-        logging.warning("Refusing to signal process group %s from transcript lock (PID %s)", pgid, pid)
-        return None
-    identity = _proc_identity(pid)
-    if identity is None:
-        return None
-    cmdline, start_epoch = identity
-    if TRANSCRIBE_RUNNER_MARKER not in cmdline:
-        logging.warning("PID %s from transcript lock is not a transcription runner", pid)
-        return None
-    if lock_mtime is not None and start_epoch is not None and start_epoch > float(lock_mtime) + 5:
-        logging.warning("PID %s started after its transcript lock was written (PID reuse)", pid)
-        return None
-    return pgid
-
-
-def read_transcript_lock_pid(lock_path):
-    """First integer token of a transcript lock file, or None."""
-    try:
-        with open(lock_path, "r", encoding="utf-8") as fh:
-            data = fh.read().strip()
-    except FileNotFoundError:
-        return None
-    except OSError as exc:
-        logging.warning("Cannot read transcript lock %s: %s", lock_path, exc)
-        return None
-    if not data:
-        return None
-    try:
-        return int(data.split()[0])
-    except ValueError:
-        logging.warning("Transcript lock %s holds no PID", lock_path)
-        return None
-
-
-def get_media_duration(file_path):
-    ffprobe = shutil.which("ffprobe") or "ffprobe"
-    cmd = [
-        ffprobe,
-        "-v",
-        "error",
-        "-show_entries",
-        "format=duration",
-        "-of",
-        "default=noprint_wrappers=1:nokey=1",
-        file_path,
-    ]
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        if result.returncode != 0:
-            return None
-        return float(result.stdout.strip())
-    except (OSError, subprocess.SubprocessError, ValueError) as exc:
-        logging.warning("ffprobe duration failed: %s", exc)
-        return None
-
-
-def load_transcript_status(transcript_path):
-    status_path = transcript_status_path(transcript_path)
-    if not os.path.exists(status_path):
-        return None
-    try:
-        with open(status_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError) as exc:
-        logging.warning("Status file %s unreadable: %s", status_path, exc)
-        return None
-
-
-def set_transcript_status(transcript_path, state, percent=0, message="", error=None):
-    status_path = transcript_status_path(transcript_path)
-    data = {
-        "state": state,
-        "percent": max(0, min(100, int(percent or 0))),
-        "message": message or "",
-        "error": error,
-        "updated": time.time(),
-    }
-    try:
-        os.makedirs(os.path.dirname(status_path) or '.', exist_ok=True)
-        tmp = f"{status_path}.tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f)
-            f.flush()
-            os.fsync(f.fileno())
-        try:
-            os.replace(tmp, status_path)
-        except Exception:
-            # final attempt: write directly
-            with open(status_path, "w", encoding="utf-8") as f:
-                json.dump(data, f)
-    except Exception as exc:
-        logging.warning("Could not write transcript status %s: %s", status_path, exc)
-    return data
-
-
-def remove_stale_transcript_lock(transcript_path, max_age=7200):
-    lock_path = transcript_lock_path(transcript_path)
-    if not os.path.exists(lock_path):
-        return False
-    try:
-        if time.time() - os.path.getmtime(lock_path) > max_age:
-            logging.warning("Stale transcript lock removed: %s", lock_path)
-            os.remove(lock_path)
-            return True
-    except Exception as exc:
-        logging.warning("Could not inspect/remove stale transcript lock %s: %s", lock_path, exc)
-    return False
-
-
-def transcribe_media_file(file_path, transcript_path=None):
-    if not file_path or not os.path.exists(file_path):
-        return False, gettext("File not found")
-    if transcript_path is None:
-        transcript_path = transcript_path_for_media(file_path)
-    if os.path.exists(transcript_path):
-        logging.info("Transcript already exists for %s", file_path)
-        set_transcript_status(transcript_path, "finished", 100, gettext("Transcript available"))
-        return True, gettext("Transcript already exists")
-
-    lock_path = transcript_lock_path(transcript_path)
-    if os.path.exists(lock_path):
-        if remove_stale_transcript_lock(transcript_path):
-            logging.info("Removed stale transcript lock for %s", file_path)
-        else:
-            return False, gettext("Transcription is already running")
-
-    try:
-        # create lock file and write PID so we can cancel the job later
-        fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        try:
-            try:
-                os.write(fd, str(os.getpid()).encode())
-            except OSError as exc:
-                # Without a PID the job just cannot be cancelled by signal.
-                logging.warning("Could not write PID into transcript lock %s: %s", lock_path, exc)
-        finally:
-            os.close(fd)
-    except FileExistsError:
-        return False, gettext("Transcription is already running")
-
-    tmpdir = tempfile.mkdtemp(prefix="transcribe_")
-    try:
-        set_transcript_status(transcript_path, "running", 5, gettext("Extracting audio..."))
-        ffmpeg = shutil.which("ffmpeg") or "ffmpeg"
-        audio_path = os.path.join(tmpdir, "audio.wav")
-        ffmpeg_cmd = [ffmpeg, "-y", "-i", file_path, "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", audio_path]
-        result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=300)
-        if result.returncode != 0 or not os.path.exists(audio_path):
-            err = result.stderr.strip() or gettext("Audio extraction error")
-            set_transcript_status(transcript_path, "error", 0, gettext("Audio extraction failed"), err)
-            return False, err
-
-        duration = get_media_duration(audio_path) or 0.0
-        segment_length = 60 if duration > 180 else 30
-        total_segments = max(1, math.ceil(duration / segment_length))
-
-        set_transcript_status(transcript_path, "running", 10, gettext("Loading model..."))
-        backend, model = load_transcribe_model()
-
-        transcripts = []
-        for index in range(total_segments):
-            start = index * segment_length
-            if start >= duration:
-                break
-            segment_file = os.path.join(tmpdir, f"segment_{index}.wav")
-            seg_duration = min(segment_length, duration - start)
-            seg_cmd = [
-                ffmpeg,
-                "-y",
-                "-ss",
-                str(start),
-                "-t",
-                str(seg_duration),
-                "-i",
-                audio_path,
-                "-f",
-                "wav",
-                segment_file,
-            ]
-            seg_result = subprocess.run(seg_cmd, capture_output=True, text=True, timeout=180)
-            if seg_result.returncode != 0 or not os.path.exists(segment_file):
-                err = seg_result.stderr.strip() or gettext("Error creating the audio segment")
-                set_transcript_status(transcript_path, "error", 0, gettext("Segment creation failed"), err)
-                return False, err
-
-            text_seg = run_transcribe_audio(backend, model, segment_file)
-            transcripts.append(text_seg)
-
-            # Percent calculation: extraction 5% + model load 5% + segments 85% + save 5%
-            seg_percent = int(((index + 1) / total_segments) * 85)
-            percent = 5 + 5 + seg_percent
-            percent = max(5, min(95, percent))
-            set_transcript_status(transcript_path, "running", percent, gettext("Transcribing segment %(index)s/%(total)s (%(percent)s%%)", index=index + 1, total=total_segments, percent=percent))
-
-            # Periodically persist a partial transcript so users see incremental output
-            try:
-                if (index + 1) % 5 == 0 or (index + 1) == total_segments:
-                    os.makedirs(os.path.dirname(transcript_path) or '.', exist_ok=True)
-                    partial_tmp = f"{transcript_path}.partial.tmp"
-                    partial_final = f"{transcript_path}.partial"
-                    with open(partial_tmp, 'w', encoding='utf-8') as pf:
-                        pf.write("\n\n".join([t for t in transcripts if t]))
-                        pf.flush()
-                        os.fsync(pf.fileno())
-                    try:
-                        os.replace(partial_tmp, partial_final)
-                    except Exception:
-                        # best-effort
-                        with open(partial_final, 'w', encoding='utf-8') as pf:
-                            pf.write("\n\n".join([t for t in transcripts if t]))
-            except (OSError, ValueError) as exc:
-                logging.warning("Partial transcript %s not written: %s", transcript_path, exc)
-
-        transcript_text = "\n\n".join([t for t in transcripts if t])
-        if not transcript_text:
-            set_transcript_status(transcript_path, "error", 0, gettext("No transcript output received"))
-            return False, gettext("No transcript output received")
-
-        set_transcript_status(transcript_path, "running", 95, gettext("Saving transcript..."))
-        os.makedirs(os.path.dirname(transcript_path) or '.', exist_ok=True)
-        tmp_final = f"{transcript_path}.tmp"
-        try:
-            with open(tmp_final, "w", encoding="utf-8") as f:
-                f.write(transcript_text)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(tmp_final, transcript_path)
-            # remove any partial file
-            try:
-                partial = f"{transcript_path}.partial"
-                if os.path.exists(partial):
-                    os.remove(partial)
-            except OSError as exc:
-                logging.warning("Partial transcript for %s not removed: %s", transcript_path, exc)
-            set_transcript_status(transcript_path, "finished", 100, gettext("Transcript finished"))
-            logging.info("Transcription finished: %s", transcript_path)
-            return True, gettext("Transcript created")
-        except Exception as exc:
-            set_transcript_status(transcript_path, "error", 0, gettext("Saving transcript failed"), str(exc))
-            return False, gettext("Saving transcript failed: %(error)s", error=exc)
-    except subprocess.TimeoutExpired:
-        err = gettext("Transcription timed out")
-        set_transcript_status(transcript_path, "error", 0, err)
-        return False, err
-    except Exception as exc:
-        err = str(exc)
-        set_transcript_status(transcript_path, "error", 0, gettext("Transcription failed"), err)
-        logging.error("Transcription failed for %s: %s", file_path, exc)
-        return False, gettext("Transcription failed: %(error)s", error=exc)
-    finally:
-        try:
-            if os.path.exists(lock_path):
-                os.remove(lock_path)
-        except OSError:
-            pass
-        try:
-            shutil.rmtree(tmpdir)
-        except OSError:
-            pass
-
-
-def load_transcript(file_path):
-    transcript_path = transcript_path_for_media(file_path)
-    if os.path.exists(transcript_path):
-        try:
-            with open(transcript_path, "r", encoding="utf-8") as f:
-                return f.read().strip()
-        except (OSError, ValueError) as exc:
-            logging.warning("Transcript %s unreadable: %s", transcript_path, exc)
-            return None
-    return None
 
 
 def hls_status(streamer, filename):
@@ -6995,7 +6587,7 @@ def task_payload_label(task_type, payload):
     if not isinstance(payload, dict):
         return ""
     candidates = []
-    for key in ("media", "input_path", "thumb_path", "path", "transcript"):
+    for key in ("media", "input_path", "thumb_path", "path"):
         value = payload.get(key)
         if value:
             candidates.append(os.path.basename(str(value)))
@@ -7691,7 +7283,6 @@ def _path_requires_rules_acceptance(path: str) -> bool:
         "/manifest",
         "/sw.",
         "/favicon",
-        "/tts/",
         "/alerts/",
         "/api/twitch/eventsub",
         "/public/",
@@ -7715,7 +7306,6 @@ def _path_exempt_from_maintenance(path: str) -> bool:
         "/favicon",
         "/agb",
         "/datenschutz",
-        "/tts/",
         "/alerts/",
         "/api/twitch/eventsub",
     )
@@ -7906,8 +7496,6 @@ def csrf_protect():
     # Mail web routes removed — always 404 regardless of legacy enable flags.
     if request.path == "/admin/mail" or request.path.startswith("/admin/mail/"):
         abort(404)
-    if request.path == "/admin/stalk" or request.path.startswith("/admin/stalk/"):
-        abort(404)
     # Keep the login cookie alive while the account still exists and is active.
     if session.get("logged_in"):
         ctx = _get_current_user_context()
@@ -7980,11 +7568,10 @@ def csrf_protect():
         and not _path_exempt_from_maintenance(request.path)
     ):
         return _maintenance_response(gettext("The mobile version of StreamVault is currently under maintenance. Please use the desktop version."))
-    # Token-auth TTS / alert overlay APIs (OBS browser source) — not session CSRF.
+    # Token-auth alert overlay APIs (OBS browser source) — not session CSRF.
     # Twitch EventSub webhooks authenticate via HMAC signature, not CSRF.
     if (
-        request.path.startswith("/tts/")
-        or request.path.startswith("/alerts/")
+        request.path.startswith("/alerts/")
         or request.path == "/api/twitch/eventsub"
     ):
         return
@@ -8051,7 +7638,6 @@ def inject_theme_context():
         "theme_class": f"theme-{theme}",
         "ASSET_VERSION": ASSET_VERSION,
         "UI_FONTS_HREF": UI_FONTS_HREF,
-        "stalk_enabled": False,
         "clip_settings": clip_engine.public_settings(),
         "downloads_enabled": downloads_enabled(),
         "public_shares_enabled": public_shares_enabled(),
@@ -10197,28 +9783,6 @@ def vod_view(streamer, filename):
             hls_ready = False
         else:
             hls_playlist_url = url_for("hls_playlist", streamer=streamer, filename=filename, v=hls_version)
-    transcript_text = load_transcript(file_path) if file_path else None
-    transcript_status = None
-    if file_path:
-        transcript_path = transcript_path_for_media(file_path)
-        transcript_status = load_transcript_status(transcript_path)
-        if transcript_text and (not transcript_status or transcript_status.get("state") != "finished"):
-            transcript_status = {"state": "finished", "percent": 100, "message": gettext("Transcript finished"), "error": None}
-        elif transcript_status is None:
-            lock_path = transcript_lock_path(transcript_path)
-            if os.path.exists(lock_path):
-                transcript_status = {"state": "running", "percent": 0, "message": gettext("Transcription running..."), "error": None}
-
-        # If no final transcript yet, but a partial exists, show it in the UI
-        if not transcript_text:
-            try:
-                partial_path = f"{transcript_path}.partial"
-                if os.path.exists(partial_path):
-                    with open(partial_path, 'r', encoding='utf-8') as pf:
-                        transcript_text = pf.read().strip()
-            except (OSError, UnicodeDecodeError) as exc:
-                logging.warning("Partial transcript %s unreadable: %s", transcript_path, exc)
-
     vod_display_title = vod_meta.get("display_title") or vod_meta.get("title") or filename
     vod_description = clean_vod_description(vod_meta.get("description") or "")
     vod_platform = vod_meta.get("platform", "")
@@ -10284,123 +9848,11 @@ def vod_view(streamer, filename):
         vod_duration_sec=vod_duration_sec,
         watch_key=vod_watch_key(streamer, filename),
         done_key=vod_done_key(streamer, filename),
-        transcript_text=transcript_text,
-        transcript_status=transcript_status,
         seek_profile=seek_profile,
         seek_repair_pending=seek_repair_pending,
         related_recordings=related_recordings,
         vod_slot=vod_slot_client_config(streamer, filename),
     )
-
-
-@vod_bp.route("/vod/transcribe/status/<streamer>/<filename>")
-@login_required
-def vod_transcribe_status(streamer, filename):
-    abort_vod_denied()
-    file_path = resolve_media_path(streamer, filename, "vod")
-    if not file_path:
-        abort(404)
-    transcript_path = transcript_path_for_media(file_path)
-    status = load_transcript_status(transcript_path)
-    if not status:
-        lock_path = transcript_lock_path(transcript_path)
-        if os.path.exists(lock_path):
-            status = {"state": "running", "percent": 0, "message": gettext("Transcription running..."), "error": None}
-        else:
-            status = {"state": "idle", "percent": 0, "message": gettext("No transcription active"), "error": None}
-    if status.get("state") == "finished" and not os.path.exists(transcript_path):
-        status = {"state": "error", "percent": status.get("percent", 0), "message": gettext("Transcript missing despite finished status"), "error": None}
-    return jsonify(status)
-
-
-@vod_bp.route("/vod/transcribe/cancel/<streamer>/<filename>", methods=["POST"])
-@admin_required
-def vod_transcribe_cancel(streamer, filename):
-    file_path = resolve_media_path(streamer, filename, "vod")
-    if not file_path:
-        abort(404)
-    transcript_path = transcript_path_for_media(file_path)
-    lock_path = transcript_lock_path(transcript_path)
-    if not os.path.exists(lock_path):
-        msg = gettext("No running transcription found.")
-        return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
-
-    # The PID in the lock file is untrusted: only a plausible runner group is signalled.
-    pid = read_transcript_lock_pid(lock_path)
-    try:
-        lock_mtime = os.path.getmtime(lock_path)
-    except OSError:
-        lock_mtime = None
-
-    try:
-        import signal
-        pgid = transcribe_cancel_pgid(pid, lock_mtime) if pid else None
-        if pgid:
-            try:
-                os.killpg(pgid, signal.SIGTERM)
-                logging.info("Transcription process group %s terminated", pgid)
-            except ProcessLookupError:
-                logging.info("Transcription process group %s already gone", pgid)
-            except OSError as exc:
-                logging.warning("Could not terminate transcription group %s: %s", pgid, exc)
-        elif pid:
-            logging.warning("Transcript lock PID %s not signalled (not a verified runner)", pid)
-        # ensure lock removed and status set
-        try:
-            os.remove(lock_path)
-        except FileNotFoundError:
-            pass
-        except OSError as exc:
-            logging.warning("Could not remove transcript lock %s: %s", lock_path, exc)
-        set_transcript_status(transcript_path, "error", 0, gettext("Transcription cancelled"), gettext("cancelled"))
-        msg = gettext("Transcription cancelled.")
-    except Exception as exc:
-        logging.exception("Could not cancel transcribe: %s", exc)
-        msg = gettext("Error cancelling the transcription")
-    return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
-
-
-@vod_bp.route("/vod/transcribe/<streamer>/<filename>", methods=["POST"])
-@admin_required
-def vod_transcribe(streamer, filename):
-    file_path = resolve_media_path(streamer, filename, "vod")
-    if not file_path:
-        abort(404)
-    transcript_path = transcript_path_for_media(file_path)
-    lock_path = transcript_lock_path(transcript_path)
-    if os.path.exists(transcript_path):
-        msg = gettext("Transcript already exists.")
-    elif os.path.exists(lock_path):
-        if remove_stale_transcript_lock(transcript_path, max_age=7200):
-            logging.info("Removed stale transcript lock before restart: %s", lock_path)
-            try:
-                database.add_task('transcribe', {'media': file_path, 'transcript': transcript_path})
-                msg = gettext("Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion.")
-            except Exception as exc:
-                logging.exception("Could not enqueue transcribe task: %s", exc)
-                msg = gettext("Error queuing the transcription")
-        else:
-            msg = gettext("Transcription is already running. Please reload later.")
-    else:
-        try:
-            database.add_task('transcribe', {'media': file_path, 'transcript': transcript_path})
-            msg = gettext("Transcription queued in the worker. The result appears on the next page load after completion.")
-        except Exception as exc:
-            logging.exception("Could not enqueue transcribe task: %s", exc)
-            msg = gettext("Error queuing the transcription")
-    return redirect(url_for("vod_view", streamer=streamer, filename=filename, msg=msg))
-
-
-@vod_bp.route("/vod/transcript/<streamer>/<filename>")
-@login_required
-def vod_transcript_download(streamer, filename):
-    file_path = resolve_media_path(streamer, filename, "vod")
-    if not file_path:
-        abort(404)
-    transcript_path = transcript_path_for_media(file_path)
-    if not os.path.exists(transcript_path):
-        abort(404)
-    return send_file(transcript_path, mimetype="text/plain", as_attachment=True, download_name=os.path.basename(transcript_path))
 
 
 @vod_bp.route("/vod/remux/<streamer>/<filename>", methods=["POST"])
@@ -10499,8 +9951,6 @@ def clip_view(streamer, filename):
         vod_duration_sec=clip_duration_sec,
         watch_key=vod_watch_key(streamer, filename),
         done_key=vod_done_key(streamer, filename),
-        transcript_text=None,
-        transcript_status=None,
         seek_profile={"needs_repair": False},
         seek_repair_pending=False,
         related_recordings=[],
@@ -10855,7 +10305,7 @@ def mobile_app_head_tags():
     <link rel="apple-touch-icon" sizes="180x180" href="{url_for('apple_touch_icon')}">
     <link rel="icon" type="image/png" sizes="192x192" href="{url_for('app_icon_png', size=192)}">
     <link rel="icon" type="image/png" sizes="512x512" href="{url_for('app_icon_png', size=512)}">
-    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal","#btnTranscriptToggle","#vodTranscriptPanel",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
+    <script>(function(){{if(!Promise.allSettled){{Promise.allSettled=function(p){{return Promise.all(Array.prototype.map.call(p,function(x){{return Promise.resolve(x).then(function(v){{return{{status:"fulfilled",value:v}};}}).catch(function(r){{return{{status:"rejected",reason:r}};}});}}));}};}}if(window.fetch&&window.Request){{try{{if(new Request("/").credentials==="omit"){{var _f=window.fetch;window.fetch=function(u,o){{if((!o||!o.credentials)&&typeof u==="string"&&(u.charAt(0)==="/"||u.indexOf(location.origin)===0)){{o=Object.assign({{credentials:"same-origin"}},o||{{}});}}return _f.call(this,u,o);}};}}}}catch(e){{}}}}var MOBILE_TV_PARITY_SELECTORS=[".ns-command-rail",".ns-workspace-header .ns-search-box",".ns-workspace-header p","body.page-index .ns-workspace-header",".nebula-side-rail",".nebula-empty-live-banner",".nebula-hero-play-icon",".nebula-vod-play-overlay","#self-password-modal",".chat-filter-bar",".vod-description",".mobile-vod-description","#btnAdminMetaToggle","#adminMetaEditorPanel","#vodAdminMetaOverlay",".nebula-page-title","#btnOpenEditor","#vodEditorModal",".vod-file-actions form[action*=\x27vod_remux\x27]",".vod-file-actions a[title=\x27Download\x27]",".vod-file-actions button[title=\x27In Discord hochladen\x27]",".vod-file-actions button[title=\x27Teilen\x27]",".mobile-action-bar button[title=\x27Teilen\x27]",".kicker-type",".twitch-monitored-pill",".twitch-switcher"];function syncMobileTvParity(){{var isMob=(window.innerWidth>0&&window.innerWidth<=768)||/Mobi|Android/i.test(navigator.userAgent);document.documentElement.classList.toggle("is-mobile-view",isMob);if(!isMob||!document.body)return;var q=MOBILE_TV_PARITY_SELECTORS.join(",");var nodes=document.querySelectorAll(q);for(var i=0;i<nodes.length;i++){{if(nodes[i]&&nodes[i].parentNode)nodes[i].parentNode.removeChild(nodes[i]);}}}}window.__nsSyncMobileTvParity=syncMobileTvParity;if(document.readyState==="loading"){{document.addEventListener("DOMContentLoaded",syncMobileTvParity,{{once:true}});}}else{{syncMobileTvParity();}}var _rt=null;window.addEventListener("resize",function(){{if(_rt)clearTimeout(_rt);_rt=setTimeout(syncMobileTvParity,120);}},{{passive:true}});}})();</script>
     <script>
       (function() {{
         if ("serviceWorker" in navigator) {{
@@ -11103,7 +10553,6 @@ def set_security_headers(response):
         path.startswith("/live/obs/")
         or path.startswith("/chat/obs/")
         or path.startswith("/alerts/overlay")
-        or path.startswith("/tts/overlay")
     ):
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
     else:
@@ -11314,8 +10763,6 @@ def public_view(token):
         vod_duration_sec=public_duration_sec,
         watch_key=vod_watch_key(streamer, filename),
         done_key=vod_done_key(streamer, filename),
-        transcript_text=None,
-        transcript_status=None,
         seek_profile={"needs_repair": False},
         seek_repair_pending=False,
         related_recordings=[],
@@ -12781,18 +12228,14 @@ def _overlay_token_from_request(*preferred_headers):
     if not _OVERLAY_QUERY_TOKEN_LOGGED:
         logging.info(
             "Overlay auth accepted query-string token (OBS compat); "
-            "prefer X-TTS-Token / X-Alert-Token headers"
+            "prefer the X-Alert-Token header"
         )
         _OVERLAY_QUERY_TOKEN_LOGGED = True
     return query_token
 
 
-def _tts_token_from_request():
-    return _overlay_token_from_request("X-TTS-Token", "X-Alert-Token")
-
-
 def _alert_token_from_request():
-    return _overlay_token_from_request("X-Alert-Token", "X-TTS-Token")
+    return _overlay_token_from_request("X-Alert-Token")
 
 
 @app.after_request
@@ -12800,117 +12243,9 @@ def _overlay_query_token_warning(response):
     if getattr(g, "overlay_query_token_used", False):
         response.headers["Warning"] = (
             '299 - "Overlay token passed via query string; '
-            'prefer X-TTS-Token / X-Alert-Token header"'
+            'prefer the X-Alert-Token header"'
         )
     return response
-
-
-def _tts_streamer_from_request():
-    name = (request.args.get("streamer") or "").strip()
-    if not name and request.is_json:
-        body = request.get_json(silent=True) or {}
-        name = str(body.get("streamer") or "").strip()
-    return name
-
-
-@overlays_bp.route("/tts/overlay")
-@limiter.limit("120 per minute")
-def tts_overlay():
-    """Static overlay shell for OBS (no data in it). OBS cannot send headers, so the
-    page itself needs no token; every /tts/api/* call still requires one."""
-    g.private_page = True
-    path = os.path.join(os.path.dirname(__file__), "static", "tts_overlay.html")
-    return send_file(path, mimetype="text/html; charset=utf-8", max_age=0)
-
-
-@overlays_bp.route("/tts/api/next")
-@limiter.limit("300 per minute")
-def tts_api_next():
-    from core import tts_service
-
-    if not tts_service.token_ok_for(_tts_token_from_request(), _tts_streamer_from_request()):
-        abort(401)
-    streamer = _tts_streamer_from_request()
-    item = tts_service.claim_next(streamer)
-    if not item:
-        return jsonify({"item": None})
-    token = _tts_token_from_request()
-    audio_url = (
-        f"/tts/audio/{item.get('audio')}"
-        f"?token={urllib.parse.quote(token)}&streamer={urllib.parse.quote(streamer)}"
-    )
-    return jsonify(
-        {
-            "item": {
-                "id": item.get("id"),
-                "user": item.get("user"),
-                "text": item.get("text"),
-                "voice": item.get("voice"),
-                "audio_url": audio_url,
-            }
-        }
-    )
-
-
-@overlays_bp.route("/tts/api/ack", methods=["POST"])
-@limiter.limit("300 per minute")
-def tts_api_ack():
-    from core import tts_service
-
-    if not tts_service.token_ok_for(_tts_token_from_request(), _tts_streamer_from_request()):
-        abort(401)
-    streamer = _tts_streamer_from_request()
-    item_id = (request.args.get("id") or "").strip()
-    if not item_id and request.is_json:
-        body = request.get_json(silent=True) or {}
-        item_id = str(body.get("id") or "").strip()
-    if not item_id:
-        abort(400)
-    ok = tts_service.ack_item(streamer, item_id)
-    return jsonify({"ok": ok})
-
-
-@overlays_bp.route("/tts/api/skipcheck")
-@limiter.limit("300 per minute")
-def tts_api_skipcheck():
-    from core import tts_service
-
-    if not tts_service.token_ok_for(_tts_token_from_request(), _tts_streamer_from_request()):
-        abort(401)
-    streamer = _tts_streamer_from_request()
-    item_id = (request.args.get("id") or "").strip()
-    if not item_id:
-        abort(400)
-    return jsonify({"skip": tts_service.should_skip_playing(streamer, item_id)})
-
-
-@overlays_bp.route("/tts/api/status")
-@limiter.limit("60 per minute")
-def tts_api_status():
-    from core import tts_service
-
-    if not tts_service.token_ok_for(_tts_token_from_request(), _tts_streamer_from_request()):
-        abort(401)
-    return jsonify(tts_service.queue_status(_tts_streamer_from_request()))
-
-
-@overlays_bp.route("/tts/audio/<path:filename>")
-@limiter.limit("300 per minute")
-def tts_audio(filename):
-    from core import tts_service
-
-    if not tts_service.token_ok_for(_tts_token_from_request(), _tts_streamer_from_request()):
-        abort(401)
-    safe = os.path.basename(filename)
-    streamer = tts_service._norm(_tts_streamer_from_request())
-    if streamer and not safe.startswith(streamer + "_"):
-        abort(404)
-    if not safe.endswith(".mp3") or ".." in safe or "/" in safe:
-        abort(404)
-    path = os.path.join(tts_service.tts_dir(), safe)
-    if not os.path.isfile(path):
-        abort(404)
-    return send_file(path, mimetype="audio/mpeg", conditional=True)
 
 
 @overlays_bp.route("/alerts/overlay")
@@ -13215,8 +12550,8 @@ def delete_folder_route(streamer):
         msg = gettext("Folder not found or invalid.")
         return redirect(url_for('index', channels_msg=msg))
 
-# Ensure baseline users exist (runs on import for Gunicorn). The standalone
-# transcription helper imports this module in a child process and must not
+# Ensure baseline users exist (runs on import for Gunicorn). CLI scripts and
+# smoke tests that import this module with STREAMVAULT_IMPORT_ONLY=1 must not
 # mutate users or start background sync threads.
 _IMPORT_ONLY = os.environ.get("STREAMVAULT_IMPORT_ONLY", "").lower() in (
     "1",

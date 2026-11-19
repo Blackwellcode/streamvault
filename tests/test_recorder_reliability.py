@@ -54,8 +54,7 @@ except ImportError:
     _numpy.ndarray = object
     sys.modules["numpy"] = _numpy
 
-import WEBUI  # noqa: F401,E402  (parent package for the helper import test)
-import run_transcribe  # noqa: E402
+import WEBUI  # noqa: F401,E402
 from core import config, database  # noqa: E402
 from core.health import parse_supervisor_status, parse_systemctl_show  # noqa: E402
 from recorder import Streamrecorder as recorder  # noqa: E402
@@ -296,13 +295,6 @@ class WorkerFolderSafetyTests(IsolatedBaseTest):
         os.utime(part, (old, old))
         self.assertFalse(worker._folder_has_active_recording(str(directory)))
 
-    def test_transcribe_missing_helper_fails_clearly(self):
-        media = self.base / "media.mp4"
-        media.write_bytes(b"video")
-        missing_app = self.base / "missing-app"
-        with mock.patch.object(worker.config, "APP_DIR", str(missing_app)):
-            self.assertFalse(worker.process_transcribe({"media": str(media)}))
-
     def test_delete_folder_defers_while_recording_active(self):
         directory = self._folder()
         (directory / "recording.mp4.part").write_bytes(b"in progress")
@@ -382,30 +374,6 @@ class TaskRequeueTests(IsolatedBaseTest):
             conn.close()
         self.assertEqual(row["status"], "failed")
         self.assertIn("max attempts", row["error"])
-
-
-class RunTranscribeTests(unittest.TestCase):
-    def setUp(self):
-        # run_transcribe.main sets STREAMVAULT_IMPORT_ONLY process-wide; restore it.
-        env = mock.patch.dict(os.environ)
-        env.start()
-        self.addCleanup(env.stop)
-
-    def test_usage_error(self):
-        self.assertEqual(run_transcribe.main([]), 2)
-
-    def test_delegates_to_existing_webui_implementation(self):
-        fake_module = types.ModuleType("WEBUI.webui")
-        fake_module.transcribe_media_file = mock.Mock(return_value=(True, "fertig"))
-        with mock.patch.dict(sys.modules, {"WEBUI.webui": fake_module}):
-            self.assertEqual(
-                run_transcribe.main(["media.mp4", "transcript.txt"]),
-                0,
-            )
-        fake_module.transcribe_media_file.assert_called_once_with(
-            "media.mp4", "transcript.txt"
-        )
-        self.assertEqual(os.environ.get("STREAMVAULT_IMPORT_ONLY"), "1")
 
 
 class HealthStatusTests(unittest.TestCase):

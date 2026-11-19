@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ja\n"
@@ -423,12 +423,6 @@ msgstr "エリアのメンテナンスと除外ユーザーを保存しました
 msgid "At least 8 characters"
 msgstr "8 文字以上"
 
-msgid "Audio extraction error"
-msgstr "音声抽出エラー"
-
-msgid "Audio extraction failed"
-msgstr "音声の抽出に失敗しました"
-
 msgid "August"
 msgstr "8月"
 
@@ -712,9 +706,6 @@ msgstr "クリップ（%(count)s）"
 msgid "Close"
 msgstr "閉じる"
 
-msgid "Close transcript"
-msgstr "文字起こしを閉じる"
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr "クラウドの削除をキューに追加しました（タスク #%(task)s）。"
@@ -822,9 +813,6 @@ msgstr "新しいユーザーを作成"
 
 msgid "Create new user group"
 msgstr "新しいユーザーグループを作成"
-
-msgid "Create transcript"
-msgstr "文字起こしを作成"
 
 msgid "Create user"
 msgstr "ユーザーを作成"
@@ -1012,9 +1000,6 @@ msgstr "完了"
 msgid "Download"
 msgstr "ダウンロード"
 
-msgid "Download TXT"
-msgstr "TXT をダウンロード"
-
 msgid "Download all"
 msgstr "すべてダウンロード"
 
@@ -1149,17 +1134,11 @@ msgstr "現在のパスワードを入力"
 msgid "Error"
 msgstr "エラー"
 
-msgid "Error cancelling the transcription"
-msgstr "文字起こしのキャンセル中にエラーが発生しました"
-
 msgid "Error changing the password."
 msgstr "パスワードの変更中にエラーが発生しました。"
 
 msgid "Error creating group"
 msgstr "グループの作成中にエラーが発生しました"
-
-msgid "Error creating the audio segment"
-msgstr "音声セグメントの作成中にエラーが発生しました"
 
 msgid "Error creating the user."
 msgstr "ユーザーの作成中にエラーが発生しました。"
@@ -1181,9 +1160,6 @@ msgstr "管理パネルの読み込み中にエラーが発生しました。し
 
 msgid "Error loading the traffic overview."
 msgstr "トラフィック概要の読み込み中にエラーが発生しました。"
-
-msgid "Error queuing the transcription"
-msgstr "文字起こしをキューに追加する際にエラーが発生しました"
 
 msgid "Error saving group"
 msgstr "グループの保存中にエラーが発生しました"
@@ -1225,9 +1201,6 @@ msgstr "有効期限"
 msgid "Exported by StreamVault"
 msgstr "StreamVault によるエクスポート"
 
-msgid "Extracting audio..."
-msgstr "音声を抽出中…"
-
 msgid "Failed"
 msgstr "失敗"
 
@@ -1254,9 +1227,6 @@ msgstr "ファイルマネージャー"
 
 msgid "File name"
 msgstr "ファイル名"
-
-msgid "File not found"
-msgstr "ファイルが見つかりません"
 
 msgid "File not found locally."
 msgstr "ローカルにファイルが見つかりません。"
@@ -1676,9 +1646,6 @@ msgstr "平均負荷（1 分 / 5 分）:"
 msgid "Loading chat…"
 msgstr "チャットを読み込み中…"
 
-msgid "Loading model..."
-msgstr "モデルを読み込み中…"
-
 msgid "Loading streams…"
 msgstr "配信を読み込み中…"
 
@@ -1950,20 +1917,8 @@ msgstr "録画が見つかりません。"
 msgid "No results."
 msgstr "結果はありません。"
 
-msgid "No running transcription found."
-msgstr "実行中の文字起こしが見つかりません。"
-
 msgid "No streams"
 msgstr "配信なし"
-
-msgid "No transcript output received"
-msgstr "文字起こしの出力がありません"
-
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
-msgstr "文字起こしはまだありません。サーバー上でローカルに生成されるため、長い VOD では時間がかかることがあります。"
-
-msgid "No transcription active"
-msgstr "実行中の文字起こしはありません"
 
 msgid "No videos found."
 msgstr "動画が見つかりません。"
@@ -2326,8 +2281,8 @@ msgstr "最近のタスクエラー"
 msgid "Recently watched"
 msgstr "最近視聴した配信"
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
-msgstr "ブラウザソース用の推奨 URL です。TOKEN を TTS_OVERLAY_TOKEN または ALERT_OVERLAY_TOKEN の値に置き換えてください。# 以降の部分は OBS 内に留まり、サーバーにはリクエストヘッダーとしてのみ届き、ログには残りません。"
+msgid "Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "ブラウザソース用の推奨 URL です。TOKEN を ALERT_OVERLAY_TOKEN の値に置き換えてください。# 以降の部分は OBS 内に留まり、サーバーにはリクエストヘッダーとしてのみ届き、ログには残りません。"
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "推奨。不完全なアップロードによるデータ損失を防ぎます。"
@@ -2495,9 +2450,6 @@ msgstr "ルール本文"
 msgid "Running"
 msgstr "実行中"
 
-msgid "Running…"
-msgstr "実行中…"
-
 msgid "S3-compatible"
 msgstr "S3 互換"
 
@@ -2545,16 +2497,6 @@ msgstr "保存済み – 維持する場合は空欄のまま"
 
 msgid "Saved."
 msgstr "保存しました。"
-
-msgid "Saving transcript failed"
-msgstr "文字起こしの保存に失敗しました"
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr "文字起こしの保存に失敗しました: %(error)s"
-
-msgid "Saving transcript..."
-msgstr "文字起こしを保存中…"
 
 msgid "Saving…"
 msgstr "保存中…"
@@ -2619,9 +2561,6 @@ msgstr "シークの修復はすでに実行中です（%(status)s）。"
 
 msgid "Seek repair queued."
 msgstr "シークの修復をキューに追加しました。"
-
-msgid "Segment creation failed"
-msgstr "セグメントの作成に失敗しました"
 
 msgid "Select folders to unlock:"
 msgstr "解放するフォルダーを選択:"
@@ -2723,9 +2662,6 @@ msgstr "ソース"
 #, python-format
 msgid "Source %(name)s not found."
 msgstr "ソース %(name)s が見つかりません。"
-
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "古いロックを削除し、文字起こしをワーカーのキューに追加しました。完了後、次回のページ読み込み時に結果が表示されます。"
 
 msgid "Start"
 msgstr "開始"
@@ -2945,9 +2881,6 @@ msgstr "利用規約のバージョンが古くなっています — ページ�
 msgid "Test"
 msgstr "テスト"
 
-msgid "Text-to-speech overlay"
-msgstr "読み上げオーバーレイ"
-
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "ご理解いただきありがとうございます。権限のあるユーザーはログインページからサインインできます。"
 
@@ -3103,62 +3036,6 @@ msgstr "トラフィック"
 
 msgid "Traffic overview"
 msgstr "トラフィック概要"
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr "セグメント %(index)s/%(total)s を文字起こし中（%(percent)s%%）"
-
-msgid "Transcript"
-msgstr "文字起こし"
-
-msgid "Transcript already exists"
-msgstr "文字起こしはすでに存在します"
-
-msgid "Transcript already exists."
-msgstr "文字起こしはすでに存在します。"
-
-msgid "Transcript available"
-msgstr "文字起こしあり"
-
-msgid "Transcript created"
-msgstr "文字起こしを作成しました"
-
-msgid "Transcript finished"
-msgstr "文字起こしが完了しました"
-
-msgid "Transcript missing despite finished status"
-msgstr "完了ステータスなのに文字起こしがありません"
-
-msgid "Transcript progress"
-msgstr "文字起こしの進捗"
-
-msgid "Transcription cancelled"
-msgstr "文字起こしをキャンセルしました"
-
-msgid "Transcription cancelled."
-msgstr "文字起こしをキャンセルしました。"
-
-msgid "Transcription failed"
-msgstr "文字起こしに失敗しました"
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr "文字起こしに失敗しました: %(error)s"
-
-msgid "Transcription is already running"
-msgstr "文字起こしはすでに実行中です"
-
-msgid "Transcription is already running. Please reload later."
-msgstr "文字起こしはすでに実行中です。後で再読み込みしてください。"
-
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "文字起こしをワーカーのキューに追加しました。完了後、次回のページ読み込み時に結果が表示されます。"
-
-msgid "Transcription running..."
-msgstr "文字起こしを実行中…"
-
-msgid "Transcription timed out"
-msgstr "文字起こしがタイムアウトしました"
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
 msgstr "新しい録画と定期的なアーカイブ同期をクラウドに転送します。"
@@ -3495,20 +3372,8 @@ msgstr "有効"
 msgid "an anonymous user"
 msgstr "匿名ユーザー"
 
-msgid "available"
-msgstr "あり"
-
-msgid "being created"
-msgstr "作成中"
-
-msgid "cancelled"
-msgstr "キャンセル済み"
-
 msgid "disabled"
 msgstr "無効"
-
-msgid "done – please reload the page"
-msgstr "完了 – ページを再読み込みしてください"
 
 msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr "drive.file = StreamVault が作成したファイルのみ（推奨）。既存のフォルダーを使う場合は、必要に応じて https://www.googleapis.com/auth/drive を使用してください。"
@@ -3547,9 +3412,6 @@ msgstr "最大 300 秒"
 
 msgid "never"
 msgstr "なし"
-
-msgid "not created"
-msgstr "未作成"
 
 msgid "someone"
 msgstr "誰か"

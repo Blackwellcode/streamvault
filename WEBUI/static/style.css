@@ -3609,42 +3609,6 @@ body.page-vod .main-col {
 body.page-vod .player-wrapper {
   flex: 0 0 auto !important;
 }
-body.page-vod .transcript-status-message {
-  margin-top: 4px;
-  color: var(--ns-muted);
-  font-size: var(--sv-text-xs);
-  line-height: 1.35;
-}
-body.page-vod .transcript-status-card {
-  padding: 14px !important;
-  background: rgba(73, 199, 192, 0.08) !important;
-  border-color: rgba(73, 199, 192, 0.26) !important;
-}
-body.page-vod .transcript-percent {
-  flex: 0 0 auto;
-  min-width: 54px;
-  text-align: right;
-  color: var(--ns-text);
-  font-size: var(--sv-text-xs);
-  font-weight: 900;
-}
-body.page-vod .transcript-progress {
-  margin-top: 10px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: var(--nebula-radius-full);
-  background: rgba(255,255,255,0.08);
-}
-body.page-vod .transcript-progress > div {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--ns-accent), var(--ns-warm));
-}
-body.page-vod .transcript-error {
-  margin-top: 8px;
-  color: #fda4af;
-  font-size: var(--sv-text-xs);
-}
 body.page-vod .chat-line {
   grid-template-columns: 40px minmax(0, 1fr) !important;
 }
@@ -4252,7 +4216,7 @@ body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-
 body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) .muted {
   color: var(--ns-muted) !important;
 }
-body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is( .panel, .stat-card, .card, .overview-section, .mgmt-section, .share-box, .upload-section, .file-card, .folder-card, .video-card, .controls-panel, .vod-tools-panel, .chat-panel, .transcript-status-card, .mplus-panel, .mplus-stat, .mplus-compare-hero > div ) {
+body:is(.page-index,.page-channels,.page-streamer,.page-admin,.page-files,.page-search,.page-discord-tool,.page-vod,.page-live,.page-hls,.page-mplus) :is( .panel, .stat-card, .card, .overview-section, .mgmt-section, .share-box, .upload-section, .file-card, .folder-card, .video-card, .controls-panel, .vod-tools-panel, .chat-panel, .mplus-panel, .mplus-stat, .mplus-compare-hero > div ) {
   border: 1px solid var(--ns-line) !important;
   border-radius: var(--ns-radius) !important;
   background: var(--ns-panel) !important;
@@ -5231,10 +5195,6 @@ body.page-vod .vod-file-action.is-error {
   }
   body.page-vod .vod-facts {
     gap: 14px !important;
-  }
-  body.page-vod .transcript-status-card[data-state="finished"],
-  body.page-vod .transcript-status-card[data-state="idle"] {
-    display: none !important;
   }
   body.page-vod .chat-panel {
     height: calc(100vh - 32px) !important;
@@ -6299,148 +6259,6 @@ body.page-search .log-word-hit {
     flex-wrap: wrap !important;
   }
 }
-/* Transcript panel (in-flow; replaces clipped absolute dropdown) */
-body.page-vod .vod-transcript-panel {
-  margin: 0 !important;
-  padding: 12px 14px !important;
-  display: none !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-  border: 1px solid var(--tube-line) !important;
-  border-radius: var(--nebula-radius-sm) !important;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 48px),
-    var(--tube-surface) !important;
-  box-shadow: none !important;
-}
-body.page-vod .vod-transcript-panel.is-open,
-body.page-vod .vod-transcript-panel:not([hidden]) {
-  display: flex !important;
-}
-body.page-vod .vod-transcript-panel-head {
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-}
-body.page-vod .vod-transcript-kicker {
-  margin: 0 0 2px !important;
-  color: var(--tube-muted) !important;
-  font-size: var(--sv-min-text) !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
-  text-transform: uppercase !important;
-}
-body.page-vod .vod-transcript-panel-head h2 {
-  margin: 0 !important;
-  color: var(--tube-text) !important;
-  font-size: var(--sv-text-md) !important;
-  font-weight: 800 !important;
-  line-height: 1.2 !important;
-}
-body.page-vod .vod-transcript-panel-meta {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex: 0 0 auto !important;
-}
-body.page-vod .vod-transcript-panel-meta span,
-body.page-vod .transcript-status-message,
-body.page-vod .transcript-percent {
-  color: var(--tube-muted) !important;
-  font-size: var(--sv-min-text) !important;
-}
-body.page-vod .vod-transcript-close {
-  min-height: 30px !important;
-  padding: 0 10px !important;
-  border: 1px solid var(--tube-line) !important;
-  border-radius: var(--nebula-radius-sm) !important;
-  color: var(--tube-text-2) !important;
-  background: var(--tube-surface-2) !important;
-  font-size: var(--sv-min-text) !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-}
-body.page-vod .vod-transcript-close:hover {
-  color: var(--tube-text) !important;
-  border-color: #3a3a3a !important;
-}
-body.page-vod #btnTranscriptToggle.is-active {
-  color: var(--tube-text) !important;
-  border-color: var(--tube-line) !important;
-  background: var(--tube-surface-2) !important;
-}
-body.page-vod .vod-transcript-panel .transcript-status-card {
-  position: relative !important;
-  margin: 0 !important;
-  padding: 10px 12px !important;
-  border: 1px solid var(--tube-line-soft) !important;
-  border-radius: var(--nebula-radius-sm) !important;
-  background: rgba(0, 0, 0, 0.28) !important;
-}
-body.page-vod .vod-transcript-panel .transcript-progress {
-  height: 4px !important;
-  margin: 8px 0 4px !important;
-}
-body.page-vod .vod-transcript-body {
-  max-height: min(42vh, 420px) !important;
-  margin: 0 !important;
-  padding: 12px !important;
-  overflow: auto !important;
-  border: 1px solid var(--tube-line-soft) !important;
-  border-radius: var(--nebula-radius-sm) !important;
-  color: var(--tube-text-2) !important;
-  background: rgba(0, 0, 0, 0.35) !important;
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace !important;
-  white-space: pre-wrap !important;
-}
-body.page-vod .vod-transcript-empty {
-  margin: 0 !important;
-  color: var(--tube-muted) !important;
-  font-size: var(--sv-text-xs) !important;
-  line-height: 1.45 !important;
-}
-body.page-vod .vod-transcript-actions {
-  margin: 0 !important;
-  display: flex !important;
-  gap: 8px !important;
-}
-body.page-vod .vod-transcript-start,
-body.page-vod .vod-transcript-download {
-  min-height: 34px !important;
-  padding: 7px 12px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border: 1px solid var(--tube-line) !important;
-  border-radius: var(--nebula-radius-sm) !important;
-  color: var(--tube-text-2) !important;
-  background: var(--tube-surface-2) !important;
-  font-size: var(--sv-min-text) !important;
-  font-weight: 700 !important;
-  text-decoration: none !important;
-  cursor: pointer !important;
-}
-body.page-vod .vod-transcript-start:hover,
-body.page-vod .vod-transcript-download:hover {
-  color: var(--tube-text) !important;
-  border-color: #3a3a3a !important;
-}
-body.page-vod .vod-transcript-start:disabled {
-  opacity: 0.55 !important;
-  cursor: default !important;
-}
-@media (max-width: 720px) {
-  body.page-vod .vod-transcript-body {
-    max-height: 48vh !important;
-  }
-  body.page-vod .vod-transcript-panel-head {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-  body.page-vod .vod-transcript-panel-meta {
-    justify-content: space-between !important;
-  }
-}
 @media (min-width: 921px) {
   body:is( .page-index, .page-channels, .page-streamer, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool ) .main {
     padding: 0 18px 24px !important;
@@ -7175,26 +6993,6 @@ body.page-mobile-player .header {
 }
 .related-recording-card:hover {
   border-color: var(--tube-accent, var(--accent));
-}
-/* WoW Stalk admin */
-body.page-stalk label span {
-  display: block;
-  margin-bottom: 7px;
-  color: var(--text-muted);
-  font-size: var(--sv-text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-body.page-stalk .badge.success {
-  background: rgba(34,197,94,.2);
-  color: #86efac;
-}
-body.page-stalk .success {
-  color: #86efac;
-}
-body.page-stalk .fail {
-  color: #f87171;
 }
 /* ===== Twitch Live Hub + Embed Watch (StreamVault) ===== */
 .sr-only {

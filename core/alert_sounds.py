@@ -77,11 +77,28 @@ def enabled() -> bool:
     )
 
 
+_LEGACY_TOKEN_WARNED = False
+
+
 def overlay_token() -> str:
-    return (
-        os.environ.get("ALERT_OVERLAY_TOKEN", "").strip()
-        or os.environ.get("TTS_OVERLAY_TOKEN", "").strip()
-    )
+    """Token for the alert overlay API.
+
+    ``TTS_OVERLAY_TOKEN`` is the old name from when the alert overlay shared its
+    token with the removed TTS overlay. It is still read as a fallback and logs a
+    deprecation warning once per process.
+    """
+    global _LEGACY_TOKEN_WARNED
+    token = os.environ.get("ALERT_OVERLAY_TOKEN", "").strip()
+    if token:
+        return token
+    legacy = os.environ.get("TTS_OVERLAY_TOKEN", "").strip()
+    if legacy and not _LEGACY_TOKEN_WARNED:
+        logger.warning(
+            "TTS_OVERLAY_TOKEN is deprecated for the alert overlay; "
+            "rename it to ALERT_OVERLAY_TOKEN"
+        )
+        _LEGACY_TOKEN_WARNED = True
+    return legacy
 
 
 def token_ok(provided: str) -> bool:

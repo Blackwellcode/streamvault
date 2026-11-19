@@ -303,16 +303,6 @@ class PrivmsgMetaTests(unittest.TestCase):
         )
 
 
-class TtsBotRoutingTests(unittest.TestCase):
-    def test_usernotice_mentioning_privmsg_is_not_a_chat_message(self):
-        from core import tts_bot
-
-        line = "@msg-id=announcement :tmi.twitch.tv USERNOTICE #chan :x PRIVMSG #chan :!tts hi"
-        self.assertIsNone(tts_bot.parse_privmsg(line))
-        parsed = tts_bot.parse_privmsg("@display-name=Bob :bob!bob@bob.tmi.twitch.tv PRIVMSG #chan :!tts hi")
-        self.assertEqual(parsed[:3], ("chan", "Bob", "!tts hi"))
-
-
 class ChatApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
