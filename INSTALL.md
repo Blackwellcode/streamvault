@@ -229,9 +229,13 @@ Nginx performs direct kernel-level offloading (`sendfile`) for video Range reque
 
 Save to `/etc/nginx/sites-available/streamvault.conf`:
 ```nginx
+# Access log without cookies; rt/urt show slow requests and upstreams.
+log_format streamvault_timed '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" rt=$request_time urt=$upstream_response_time';
+
 server {
     listen 80;
     server_name vault.your-domain.example;
+    access_log /var/log/nginx/streamvault.access.log streamvault_timed;
 
     # Performance Tuning
     sendfile on;
@@ -318,11 +322,65 @@ server {
         default_type application/octet-stream;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
     }
+
+    # 4. Direct live routes behind login (auth_request)
+    location = /_live_auth {
+        internal;
+        proxy_pass http://127.0.0.1:8080/api/live/auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Real-time MPEG-TS from an optional livebot fan-out (127.0.0.1:8085).
+    location ~ ^/live/[A-Za-z0-9_-]+\.ts$ {
+        auth_request /_live_auth;
+        proxy_pass http://127.0.0.1:8085;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_request_buffering off;
+        proxy_read_timeout 300s;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header X-Accel-Buffering "no" always;
+    }
+
+    # LL-HLS playlist and segments from the live RAM disk.
+    location ~ ^/live/(?<hls_chan>[A-Za-z0-9_-]+)/(?<hls_file>(stream|index)\.m3u8|seg_[0-9]+\.ts)$ {
+        auth_request /_live_auth;
+        alias /dev/shm/streamvault_hls/$hls_chan/$hls_file;
+        open_file_cache off;
+        types {
+            application/vnd.apple.mpegurl m3u8;
+            video/mp2t ts;
+        }
+        default_type application/octet-stream;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+    }
 }
 ```
 
 Keep the aliases in sync with `VOD_BASE_DIR`, `VOD_FILES_DIR`, `VOD_THUMB_DIR`,
 `VOD_HLS_DIR` and `LIVE_HLS_DIR` if you changed those environment variables.
+
+**Direct live routes.** The live player fetches `/live/<channel>.ts`
+(real-time MPEG-TS) and `/live/<channel>/stream.m3u8` with its `seg_N.ts`
+files (LL-HLS) straight from nginx. Each request first goes to the WebUI
+through `auth_request /_live_auth` → `GET /api/live/auth`, which answers 204
+for a signed-in user who may see the channel, 401 without a valid session and
+403 for hidden channels or other paths. Any new direct live location must carry
+`auth_request /_live_auth`, otherwise the stream is public. `auth_request`
+needs `ngx_http_auth_request_module` (included in the Debian/Ubuntu nginx
+packages and the `nginx:alpine` image; check with `nginx -V`). StreamVault
+does not ship the MPEG-TS fan-out: without a livebot on `127.0.0.1:8085` the
+`.ts` route answers 502 and the player switches to LL-HLS after two failed
+attempts.
 The `/_protected_files/` alias is only needed for legacy archives stored below
 `VOD_FILES_DIR`; new recordings normally live directly below `VOD_BASE_DIR`.
 

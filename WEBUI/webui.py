@@ -12562,6 +12562,42 @@ def chat_obs(streamer):
 
 
 
+# Direct live routes served by nginx after an auth_request subrequest:
+# /live/<channel>.ts (MPEG-TS fan-out) and the LL-HLS files in LIVE_HLS_DIR.
+_LIVE_DIRECT_URI_RE = re.compile(
+    r"^/live/([A-Za-z0-9_-]{1,64})(?:\.ts|/(?:stream|index)\.m3u8|/seg_[0-9]{1,12}\.ts)$"
+)
+
+
+def _live_auth_response(status):
+    resp = Response(status=status)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@live_bp.route("/api/live/auth", methods=["GET"])
+@limiter.exempt
+def api_live_auth():
+    """nginx ``auth_request`` target for the direct live routes.
+
+    nginx passes the original URI in ``X-Original-URI``. 204 = deliver,
+    401 = no valid session, 403 = channel not visible to this user or a URI
+    that is not a direct live route. Exempt from rate limiting: one viewer
+    causes about one subrequest per second (playlist and segments), and nginx
+    turns a 429 from the auth subrequest into a 500 for the player.
+    """
+    original = urllib.parse.urlsplit(request.headers.get("X-Original-URI", ""))
+    match = _LIVE_DIRECT_URI_RE.match(original.path)
+    if not match:
+        return _live_auth_response(403)
+    channel = match.group(1).lower()
+    if not session.get("logged_in") or session_is_expired():
+        return _live_auth_response(401)
+    if not can_view_streamer(channel):
+        return _live_auth_response(403)
+    return _live_auth_response(204)
+
+
 @live_bp.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def live_playlist(streamer):
