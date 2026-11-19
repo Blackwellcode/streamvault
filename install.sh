@@ -153,7 +153,7 @@ Group=${SERVICE_USER}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=${ENV_FILE}
 Environment="PYTHONPATH=${APP_DIR}:${APP_DIR}/WEBUI"
-ExecStart=${VENV_DIR}/bin/gunicorn --workers 4 --worker-class gthread --threads 4 --bind 127.0.0.1:8080 --timeout 120 --access-logfile ${LOG_DIR}/webui_access.log --error-logfile ${LOG_DIR}/webui_error.log WEBUI.webui:app
+ExecStart=${VENV_DIR}/bin/gunicorn --workers 4 --worker-class gthread --threads 4 --bind 127.0.0.1:8080 --timeout 120 --access-logfile ${LOG_DIR}/webui_access.log --access-logformat '%%(h)s %%(l)s %%(u)s %%(t)s "%%(m)s %%(U)s %%(H)s" %%(s)s %%(b)s "%%(f)s" "%%(a)s"' --error-logfile ${LOG_DIR}/webui_error.log WEBUI.webui:app
 Restart=always
 RestartSec=5s
 

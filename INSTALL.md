@@ -162,6 +162,7 @@ ExecStart=/opt/streamvault/venv/bin/gunicorn \
     --bind 127.0.0.1:8080 \
     --timeout 120 \
     --access-logfile /var/log/streamvault/access.log \
+    --access-logformat '%%(h)s %%(l)s %%(u)s %%(t)s "%%(m)s %%(U)s %%(H)s" %%(s)s %%(b)s "%%(f)s" "%%(a)s"' \
     --error-logfile /var/log/streamvault/error.log \
     WEBUI.webui:app
 Restart=always
@@ -170,6 +171,10 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 ```
+
+`--access-logformat` logs the path without query string (`%(U)s` instead of
+the default request line `%(r)s`), so `?token=` values stay out of the access
+log. systemd expands `%` itself, hence `%%` in the unit.
 
 ### Stream Recorder Daemon (`/etc/systemd/system/streamvault-recorder.service`)
 ```ini

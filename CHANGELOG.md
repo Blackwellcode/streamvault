@@ -89,6 +89,10 @@ All notable changes to this project are documented here. The format follows
 - The nginx access log uses the `timed` format (no cookies, adds request and
   upstream time) and logs `$request_method $uri $server_protocol` instead of
   `$request`, so query strings such as `?token=` stay out of the log.
+  gunicorn (systemd units in `install.sh`/INSTALL.md, `docker-worker.conf`)
+  gets `--access-logformat` with the path `%(U)s` instead of the default
+  request line `%(r)s`; update existing units (`%%` there, systemd and
+  supervisor expand `%`).
 
 ### Added
 

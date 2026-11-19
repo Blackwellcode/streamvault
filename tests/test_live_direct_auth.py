@@ -233,5 +233,50 @@ class NginxDirectLiveRouteTests(unittest.TestCase):
                 self.assertIn('"$request_method $uri $server_protocol"', fmt)
 
 
+class GunicornAccessLogTests(unittest.TestCase):
+    """gunicorn's default access format logs %(r)s, the request line with ?token=."""
+
+    # All three run gunicorn through systemd or supervisor, which both expand
+    # "%" themselves: the format must be written with "%%".
+    CONFIGS = ("install.sh", "INSTALL.md", "docker-worker.conf")
+    FORMAT = '%(h)s %(l)s %(u)s %(t)s "%(m)s %(U)s %(H)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+    def _gunicorn_commands(self, text):
+        joined = re.sub(r"\\\n\s*", " ", text)  # shell/systemd line continuations
+        return [line for line in joined.splitlines()
+                if re.search(r"(ExecStart=|command=)\S*/gunicorn ", line)]
+
+    def test_every_gunicorn_start_logs_without_query_string(self):
+        for name in self.CONFIGS:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            commands = self._gunicorn_commands(text)
+            with self.subTest(config=name):
+                self.assertGreaterEqual(len(commands), 1)
+                for command in commands:
+                    self.assertIn("--access-logfile", command)
+                    match = re.search(r"--access-logformat '([^']*)'", command)
+                    self.assertIsNotNone(match, command)
+                    raw = match.group(1)
+                    self.assertNotRegex(raw, r"(?<!%)%(?!%)", "unescaped % for systemd/supervisor")
+                    fmt = raw.replace("%%", "%")
+                    self.assertEqual(fmt, self.FORMAT)
+                    for atom in ("%(r)s", "%(q)s"):
+                        self.assertNotIn(atom, fmt)
+
+    def test_no_other_gunicorn_start_without_format(self):
+        for path in ROOT.rglob("*"):
+            if not path.is_file() or path.suffix not in ("", ".sh", ".md", ".conf", ".yml", ".service"):
+                continue
+            if {".git", ".venv", "venv", "node_modules", "tests"} & set(path.relative_to(ROOT).parts):
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue  # binary file, cannot hold a start command
+            for command in self._gunicorn_commands(text):
+                with self.subTest(path=str(path.relative_to(ROOT))):
+                    self.assertIn("--access-logformat", command)
+
+
 if __name__ == "__main__":
     unittest.main()
