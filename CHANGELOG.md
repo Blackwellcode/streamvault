@@ -38,6 +38,15 @@ All notable changes to this project are documented here. The format follows
   `https://example.com/alerts/overlay#token=SECRET`; browsers never send the
   fragment to the server. The overlay APIs still require the token, as a
   header unless `OVERLAY_ALLOW_QUERY_TOKEN=true`.
+- **The live watch page no longer embeds the Twitch player by default.**
+  Every device plays the server stream (no Twitch ads, viewer IP addresses
+  stay away from Twitch); `?embed=`/`?proxy=` have no effect and the CSP no
+  longer allows Twitch frames. `LIVE_TWITCH_EMBED=true` restores the previous
+  behaviour (Docker: set it in `.env`).
+- **nginx: direct live routes need new locations.** Update your site from
+  `nginx.conf` / INSTALL.md section 6 (`/_live_auth`, `/live/<channel>.ts`,
+  `/live/<channel>/{stream,index}.m3u8`, `seg_N.ts`); without them the
+  desktop real-time player cannot start.
 
 ### Security
 
@@ -65,6 +74,13 @@ All notable changes to this project are documented here. The format follows
   inactive and environment accounts all pay the same password-hash cost.
   Client values in VOD debug logs are stripped of control characters.
 - Live-only accounts can no longer open the live clip editor.
+- The direct live routes (`/live/<channel>.ts`, LL-HLS playlist and
+  segments) are served by nginx only after `auth_request /_live_auth`
+  → `GET /api/live/auth` (session plus channel visibility; 401/403
+  otherwise). The auth endpoint is exempt from rate limiting, since one
+  viewer causes about one subrequest per second.
+- The nginx access log uses the `timed` format (no cookies, adds request and
+  upstream time).
 
 ### Changed
 
@@ -114,6 +130,13 @@ All notable changes to this project are documented here. The format follows
 - A deleted VOD or clip whose file was still on disk opened in the player:
   the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.
+- Desktop live player: `/live/<channel>.ts` was not routed by nginx and
+  ended in a redirect to the watch page. mpegts.js now gets an absolute URL
+  (its blob: worker has no base URL: "Failed to parse URL from
+  /live/<channel>.ts") and switches to LL-HLS after two failed attempts
+  before the first frame, because the MPEG-TS fan-out is an optional
+  external livebot. Native HLS (iOS/Safari) plays the session-checked
+  `/live/playlist/<channel>`.
 
 ## [0.1.0] - 2026-11-09
 
