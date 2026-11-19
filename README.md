@@ -221,3 +221,10 @@ can support further development:
 ## License
 
 [MIT](LICENSE)
+
+The bundled UI fonts Inter and IBM Plex Mono (`WEBUI/static/fonts/`) are
+licensed under the SIL Open Font License 1.1; see
+[LICENSE-Inter.txt](WEBUI/static/fonts/LICENSE-Inter.txt) and
+[LICENSE-IBM-Plex-Mono.txt](WEBUI/static/fonts/LICENSE-IBM-Plex-Mono.txt).
+They are served by StreamVault itself; browsers make no request to Google
+Fonts.

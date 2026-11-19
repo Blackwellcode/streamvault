@@ -94,6 +94,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Privacy: fonts are self-hosted; no requests to Google Fonts.** Inter and
+  IBM Plex Mono (Fontsource 5.3.0, SIL OFL 1.1, latin + latin-ext) ship in
+  `WEBUI/static/fonts/`; the CSP no longer allows `fonts.googleapis.com` or
+  `fonts.gstatic.com`. The monospace token now names IBM Plex Mono first, so
+  it renders instead of the Courier fallback.
 - **S2, app factory and blueprints:** `create_app()` builds the web app;
   routes are grouped into 12 blueprints whose endpoint names are unchanged
   (`url_for` keeps working; the URL map is identical). Caches shared between
