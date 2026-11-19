@@ -163,6 +163,7 @@ Docker). The most important ones:
 | `VOD_SECURE_COOKIES` | `false` | Set to `true` once HTTPS is in place. |
 | `VOD_TRUSTED_PROXIES` | `127.0.0.1,::1` | Proxies (IPs or CIDR) whose `X-Real-IP` is trusted for rate limits. |
 | `LIVE_HLS_DIR` | `/dev/shm/streamvault_hls` | RAM disk for live HLS segments. |
+| `LIVE_TWITCH_EMBED` | `false` | Twitch player embed on the live page. Off: server stream only (no Twitch ads, viewer IPs stay private). |
 | `VOD_USE_X_ACCEL` | `true` | Let Nginx serve video files. |
 | `STORAGE_ENCRYPTION_KEY` | `VOD_SECRET_KEY` | Key for stored cloud credentials. Keep it stable. |
 | `REDIS_URL` | *none* | Optional Redis cache. |

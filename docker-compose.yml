@@ -51,6 +51,8 @@ services:
       - VOD_SHARE_TTL_SEC=${VOD_SHARE_TTL_SEC:-604800}
       - VOD_USE_X_ACCEL=true
       - LIVE_HLS_DIR=/app/.hls_live
+      # Twitch player embed on the live page (default off: server stream only, no ads).
+      - LIVE_TWITCH_EMBED=${LIVE_TWITCH_EMBED:-false}
       # Public base URL for share links and OAuth callbacks, e.g. https://recorder.example.com
       - VOD_PUBLIC_BASE=${VOD_PUBLIC_BASE:-}
       # Background task pool sizing.
