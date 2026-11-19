@@ -4421,6 +4421,11 @@ html {
   color-scheme: dark;
   background: var(--tube-bg);
 }
+/* Code samples use the UI mono font (IBM Plex Mono) instead of the browser's
+   default monospace; :where() keeps specificity at 0, so page rules still win. */
+:where(code, kbd, samp, pre) {
+  font-family: var(--ns-font-mono);
+}
 body:is( .page-index, .page-channels, .page-streamer, .page-vod, .page-live, .page-admin, .page-mail, .page-files, .page-search, .page-discord-tool, .page-mplus, .page-hls, .page-clip-editor ) {
   min-height: 100vh !important;
   margin: 0 !important;
@@ -7268,17 +7273,17 @@ body.page-twitch-watch .twitch-proxy-status {
   color: var(--nebula-text-muted);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
-body.page-twitch-watch .twitch-proxy-wait-card {
+body:is(.page-twitch-watch, .page-twitch-watch-mobile) .twitch-proxy-wait-card {
   max-width: 420px;
   text-align: center;
   display: grid;
   gap: 8px;
   color: var(--nebula-text-main);
 }
-body.page-twitch-watch .twitch-proxy-wait-card strong {
+body:is(.page-twitch-watch, .page-twitch-watch-mobile) .twitch-proxy-wait-card strong {
   font-size: var(--sv-text-base);
 }
-body.page-twitch-watch .twitch-proxy-wait-card p {
+body:is(.page-twitch-watch, .page-twitch-watch-mobile) .twitch-proxy-wait-card p {
   margin: 0;
   color: var(--nebula-text-secondary);
   font-size: var(--sv-text-md);
@@ -7477,12 +7482,12 @@ body.page-twitch-watch .twitch-offline-banner {
   color: #fecaca;
   font-size: var(--sv-text-sm);
 }
-body.page-twitch-watch .twitch-chat-empty {
+body:is(.page-twitch-watch, .page-twitch-watch-mobile) .twitch-chat-empty {
   padding: 14px 16px;
   color: var(--text-muted);
   font-size: var(--sv-text-sm);
 }
-body.page-twitch-watch .twitch-chat-empty.compact {
+body:is(.page-twitch-watch, .page-twitch-watch-mobile) .twitch-chat-empty.compact {
   padding: 8px 10px;
   font-size: var(--sv-text-xs);
 }

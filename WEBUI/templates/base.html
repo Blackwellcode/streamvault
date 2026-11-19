@@ -6,7 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}StreamVault{% endblock %}</title>
     <link rel="preload" href="{{ UI_FONTS_PRELOAD_HREF }}" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     {% include 'components/styles.html' %}
     {% include 'components/js_i18n.html' %}
     {% block head %}{% endblock %}

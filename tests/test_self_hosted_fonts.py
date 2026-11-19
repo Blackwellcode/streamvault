@@ -71,6 +71,40 @@ class FontFilesTests(unittest.TestCase):
                 self.assertTrue(stack.startswith("'IBM Plex Mono'"), stack)
 
 
+class StandalonePagesLoadFontsTests(unittest.TestCase):
+    TEMPLATES_DIR = os.path.join(WEBUI_DIR, "templates")
+    # OBS overlays render in system fonts on a transparent background.
+    SYSTEM_FONT_OVERLAYS = {"chat_obs.html", "live_obs.html"}
+
+    def test_shared_stylesheet_include_links_fonts_css(self):
+        styles = _read(os.path.join(self.TEMPLATES_DIR, "components", "styles.html"))
+        self.assertEqual(styles.count('<link rel="stylesheet" href="{{ UI_FONTS_HREF }}">'), 1)
+
+    def test_every_standalone_page_includes_the_shared_stylesheets(self):
+        for name in sorted(os.listdir(self.TEMPLATES_DIR)):
+            if not name.endswith(".html"):
+                continue
+            source = _read(os.path.join(self.TEMPLATES_DIR, name))
+            if "{% extends" in source or "<head" not in source.lower():
+                continue
+            with self.subTest(template=name):
+                if name in self.SYSTEM_FONT_OVERLAYS:
+                    self.assertNotRegex(source, r"font-family:[^;]*(Inter|IBM Plex|--ns-font|--nebula-font)")
+                else:
+                    self.assertIn("{% include 'components/styles.html' %}", source)
+                    self.assertNotIn("UI_FONTS_HREF", source)
+
+    def test_code_elements_use_the_mono_token(self):
+        css = _read(os.path.join(WEBUI_DIR, "static", "style.css"))
+        self.assertRegex(css, r":where\(code, kbd, samp, pre\) \{\s+font-family: var\(--ns-font-mono\);")
+
+    def test_mobile_live_page_shares_wait_card_and_chat_empty_styles(self):
+        css = _read(os.path.join(WEBUI_DIR, "static", "style.css"))
+        for selector in (".twitch-proxy-wait-card {", ".twitch-chat-empty {", ".twitch-chat-empty.compact {"):
+            with self.subTest(selector=selector):
+                self.assertIn("body:is(.page-twitch-watch, .page-twitch-watch-mobile) " + selector, css)
+
+
 class NoGoogleFontsInSourcesTests(unittest.TestCase):
     def test_templates_and_inline_templates_do_not_reference_google_fonts(self):
         for base, _dirs, files in os.walk(WEBUI_DIR):
@@ -103,7 +137,7 @@ class RenderedPagesUseLocalFontsTests(IsolatedBaseTest):
         self.assertEqual(resp.status_code, 200)
         body = resp.get_data(as_text=True)
         self.assertIsNone(GOOGLE_FONT_HOSTS.search(body))
-        self.assertRegex(body, FONTS_CSS_LINK)
+        self.assertEqual(len(FONTS_CSS_LINK.findall(body)), 1)
         csp = resp.headers.get("Content-Security-Policy") or resp.headers.get(
             "Content-Security-Policy-Report-Only", "")
         self.assertIsNone(GOOGLE_FONT_HOSTS.search(csp))
@@ -118,7 +152,9 @@ class RenderedPagesUseLocalFontsTests(IsolatedBaseTest):
         body = self._assert_local_fonts(self.client.get("/", headers={"User-Agent": DESKTOP_UA}))
         self.assertRegex(
             body,
-            r'<link rel="preload" href="/static/fonts/inter-latin-wght-normal\.woff2\?v=[^"]+" '
+            # Same URL as url(./inter-latin-wght-normal.woff2) in fonts.css (no ?v=),
+            # otherwise the browser fetches the font twice.
+            r'<link rel="preload" href="/static/fonts/inter-latin-wght-normal\.woff2" '
             r'as="font" type="font/woff2" crossorigin>',
         )
 

@@ -7640,7 +7640,8 @@ def inject_theme_context():
         "theme_class": f"theme-{theme}",
         "ASSET_VERSION": ASSET_VERSION,
         "UI_FONTS_HREF": url_for("static", filename=UI_FONTS_CSS, v=ASSET_VERSION),
-        "UI_FONTS_PRELOAD_HREF": url_for("static", filename=UI_FONTS_PRELOAD, v=ASSET_VERSION),
+        # No ?v=: must equal the url() in fonts.css, or the preload is fetched twice.
+        "UI_FONTS_PRELOAD_HREF": url_for("static", filename=UI_FONTS_PRELOAD),
         "clip_settings": clip_engine.public_settings(),
         "downloads_enabled": downloads_enabled(),
         "public_shares_enabled": public_shares_enabled(),
