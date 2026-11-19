@@ -20,9 +20,10 @@ Never touched:
   folders of the base directory.
 
 If another media file with the same stem stays (``x.mkv`` expires while
-``x.mp4`` is kept), only the expired file itself is removed: chat log, chat
-chunks, metadata, thumbnail, HLS cache and tombstones are keyed by the stem and
-still belong to the remaining file.
+``x.mp4`` is kept, or the other way round), only the expired file itself is
+removed, with a tombstone, share links and chapters for exactly its file name:
+chat log, chat chunks, metadata, thumbnail, HLS cache and the chat tombstone
+are keyed by the stem and still belong to the remaining file.
 
 Extensions are matched case-sensitively like the WebUI resolver: ``X.MP4`` or
 ``x.MKV`` are never served as VODs and are skipped with a warning.
@@ -366,6 +367,42 @@ def _remove_below(path: Path, root: Path) -> None:
         path.unlink()
 
 
+def _forget_single_file(webui: ModuleType, slug: str, path: Path, archive_dir: Path) -> None:
+    """File-name-keyed cleanup for a VOD whose stem lives on in another file.
+
+    Writes the ``deleted_media`` tombstone for exactly this file name (not
+    the stem's chat log), removes its share links and chapters file and
+    clears the WebUI listing caches. Stem-keyed files stay untouched.
+    """
+    from core import database
+
+    filename = path.name
+    slugs = {slug, webui.archive_name_for(slug) or slug}
+    try:
+        slugs.update(webui.related_archive_slugs(slug) or [])
+    except database.DB_ACCESS_ERRORS as exc:
+        logger.warning("Tombstone for %s/%s without archive aliases (database error): %s",
+                       slug, filename, exc)
+    for name in sorted(s for s in slugs if s):
+        database.upsert_deleted_media(name, filename, file_id=None, deleted_by=None)
+    webui.remove_shares_for(slug, filename, "vod")
+    chapters = webui.chapter_path(slug, filename)
+    if chapters:
+        chap = Path(chapters)
+        if chap.exists() or chap.is_symlink():
+            try:
+                _remove_below(chap, archive_dir)
+            except OSError as exc:
+                logger.error("Chapters %s of %s not removed: %s", chap, filename, exc)
+    webui._VOD_LIST_CACHE.pop(slug, None)
+    webui.STREAMER_CACHE["ts"] = 0
+    webui.bust_media_cache()
+    try:
+        webui.invalidate_dashboard_media_cache()
+    except OSError as exc:
+        logger.warning("Dashboard cache not invalidated after deleting %s: %s", filename, exc)
+
+
 def delete_candidate(candidate: Candidate) -> str:
     """Delete one VOD like the WebUI does, plus its sidecars.
 
@@ -382,6 +419,7 @@ def delete_candidate(candidate: Candidate) -> str:
         # Chat log, chunks, metadata, thumbnail, HLS cache and the chat
         # tombstone are keyed by the stem and still belong to the kept file.
         _remove_below(path, archive_dir)
+        _forget_single_file(webui, candidate.slug, path, archive_dir)
         logger.info("Deleted %s only; stem files kept for %s",
                     path, ", ".join(sorted(s.name for s in siblings)))
         return "deleted"

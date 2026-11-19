@@ -104,7 +104,8 @@ All notable changes to this project are documented here. The format follows
   in an offload manifest as `<channel>/<file>` (bare file names are ignored
   with a warning, so a same-named VOD of another channel is never released).
   An expired file whose stem is shared by a kept media file (`x.mkv` next to
-  `x.mp4`) is removed alone, without the stem's chat, metadata, thumbnail or
+  `x.mp4`) is removed with a tombstone, share links and chapters for its own
+  file name only, without the stem's chat, metadata, thumbnail or chat
   tombstone; names like `X.MP4`, which the WebUI does not serve, are skipped
   with a warning. Example systemd service and timer in `scripts/systemd/`;
   see INSTALL.md, "VOD retention".

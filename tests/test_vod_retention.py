@@ -265,6 +265,36 @@ class SharedStemTests(RetentionTestBase):
         self.assertFalse(database.is_deleted_media(streamer="alpha", filename="alpha_x.jsonl"))
         self.assertFalse(database.is_deleted_media(streamer="alpha", filename=mp4.name))
 
+    def test_expired_mp4_next_to_kept_mkv_gets_tombstone_and_loses_shares(self):
+        mp4 = self.touch("alpha/alpha_x.mp4", age_days=40)
+        mkv = self.touch("alpha/alpha_x.mkv", age_days=2)
+        chapters = self.touch("alpha/alpha_x.mp4.chapters.txt", age_days=40)
+        kept = [
+            mkv,
+            self.touch("alpha/alpha_x.json", age_days=40),
+            self.touch("alpha/chat_logs/alpha_x.jsonl", age_days=40),
+            self.touch("alpha/chat_chunks/alpha_x/0.json", age_days=40),
+            self.touch(".thumbs/alpha/alpha_x.jpg", age_days=40),
+            self.touch(".hls/alpha/alpha_x/index.m3u8", age_days=40),
+        ]
+        share = {"streamer": "alpha", "filename": mp4.name, "route": "vod",
+                 "created_at": time.time(), "views": 0}
+        other = dict(share, filename="alpha_other.mp4")
+        self.webui.save_shares({"tok_mp4": share, "tok_other": other})
+
+        rc, out = self.run_quiet(self.base, 14, True)
+
+        self.assertEqual(rc, 0, out)
+        self.assertIn("DELETED       alpha/alpha_x.mp4", out)
+        self.assertFalse(mp4.exists())
+        self.assertFalse(chapters.exists())
+        for path in kept:
+            self.assertTrue(path.exists(), path)
+        self.assertTrue(database.is_deleted_media(streamer="alpha", filename=mp4.name))
+        self.assertFalse(database.is_deleted_media(streamer="alpha", filename="alpha_x.jsonl"))
+        self.assertFalse(database.is_deleted_media(streamer="alpha", filename=mkv.name))
+        self.assertEqual(set(self.webui.load_shares()), {"tok_other"})
+
     def test_both_expired_twins_are_deleted_with_sidecars(self):
         mkv = self.touch("alpha/alpha_x.mkv", age_days=40)
         mp4 = self.touch("alpha/alpha_x.mp4", age_days=40)

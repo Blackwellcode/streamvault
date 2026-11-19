@@ -253,7 +253,8 @@ touches the local disk.
   copy (for example by checksum). Without a manifest nothing of these channels
   is deleted.
 - If another media file with the same name stem stays (an expired `x.mkv`
-  next to a kept `x.mp4`), only the expired file is deleted; chat log,
+  next to a kept `x.mp4`, or the other way round), only the expired file is
+  deleted, with a tombstone and its share links and chapters; chat log,
   metadata, thumbnail and HLS cache belong to the kept file.
 - Extensions are matched case-sensitively like the WebUI: `X.MP4` is not a
   VOD there and is skipped with a warning.
