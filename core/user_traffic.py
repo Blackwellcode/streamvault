@@ -30,7 +30,6 @@ _SKIP_PREFIXES = (
     "/_protected",
     "/chat/tube/",
     "/api/",
-    "/tts/",
     "/alerts/",
     "/favicon",
     "/app-icon",

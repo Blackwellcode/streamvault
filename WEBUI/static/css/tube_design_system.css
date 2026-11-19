@@ -629,16 +629,14 @@ body.ns-platform .ns-app-main {
    ADMIN PANEL COMPLETE VISUAL OVERHAUL ("STREAMVAULT COMMAND")
    ========================================================================== */
 body.ns-platform.page-admin .main,
-body.ns-platform.page-admin-traffic .main,
-body.ns-platform.page-stalk-admin .main {
+body.ns-platform.page-admin-traffic .main {
   margin-left: var(--ns-rail-width) !important;
   width: calc(100% - var(--ns-rail-width)) !important;
   padding: 28px 36px 64px !important;
 }
 /* 1. Header Styling */
 body.ns-platform.page-admin .header,
-body.ns-platform.page-admin-traffic .header,
-body.ns-platform.page-stalk-admin .header {
+body.ns-platform.page-admin-traffic .header {
   border-bottom: 1px solid var(--ns-border-subtle) !important;
   padding-bottom: 20px !important;
   margin-bottom: 24px !important;
@@ -647,8 +645,7 @@ body.ns-platform.page-stalk-admin .header {
   justify-content: space-between !important;
 }
 body.ns-platform.page-admin .page-title,
-body.ns-platform.page-admin-traffic .page-title,
-body.ns-platform.page-stalk-admin .page-title {
+body.ns-platform.page-admin-traffic .page-title {
   font-size: var(--sv-text-2xl) !important;
   font-weight: 800 !important;
   letter-spacing: -0.02em !important;
@@ -689,10 +686,9 @@ body.ns-platform.page-admin .admin-tab-btn.active {
   background: var(--ns-brand-crimson) !important;
   box-shadow: 0 2px 10px rgba(225, 29, 72, 0.3) !important;
 }
-/* 3. Panel & Card System in Admin & Stalk */
+/* 3. Panel & Card System in Admin */
 body.ns-platform.page-admin .panel,
-body.ns-platform.page-admin-traffic .panel,
-body.ns-platform.page-stalk-admin .panel {
+body.ns-platform.page-admin-traffic .panel {
   background: var(--ns-bg-surface) !important;
   border: 1px solid var(--ns-border-subtle) !important;
   border-radius: var(--ns-radius-lg) !important;
@@ -700,8 +696,7 @@ body.ns-platform.page-stalk-admin .panel {
   box-shadow: var(--ns-shadow-sm) !important;
   margin-bottom: 24px !important;
 }
-body.ns-platform.page-admin .panel h3,
-body.ns-platform.page-stalk-admin .panel h3 {
+body.ns-platform.page-admin .panel h3 {
   font-size: var(--sv-text-md) !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
@@ -716,9 +711,7 @@ body.ns-platform.page-stalk-admin .panel h3 {
 body.ns-platform.page-admin input[type="text"],
 body.ns-platform.page-admin input[type="password"],
 body.ns-platform.page-admin input[type="number"],
-body.ns-platform.page-admin select,
-body.ns-platform.page-stalk-admin input[type="text"],
-body.ns-platform.page-stalk-admin select {
+body.ns-platform.page-admin select {
   background-color: var(--ns-bg-surface-raised) !important;
   border: 1px solid var(--ns-border-subtle) !important;
   border-radius: var(--ns-radius-md) !important;
@@ -726,14 +719,11 @@ body.ns-platform.page-stalk-admin select {
   padding: 9px 12px !important;
   font-size: var(--sv-text-sm) !important;
 }
-body.ns-platform.page-admin input:focus,
-body.ns-platform.page-stalk-admin input:focus {
+body.ns-platform.page-admin input:focus {
   border-color: var(--ns-brand-crimson) !important;
 }
 body.ns-platform.page-admin button:where(:not(.sv-btn))[type="submit"]:where(:not(.sv-btn)),
-body.ns-platform.page-admin .btn-primary,
-body.ns-platform.page-stalk-admin button:where(:not(.sv-btn))[type="submit"]:where(:not(.sv-btn)),
-body.ns-platform.page-stalk-admin .btn-primary {
+body.ns-platform.page-admin .btn-primary {
   background: var(--ns-brand-crimson) !important;
   color: #fff !important;
   border: none !important;
@@ -744,20 +734,17 @@ body.ns-platform.page-stalk-admin .btn-primary {
   cursor: pointer !important;
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease !important;
 }
-body.ns-platform.page-admin button:where(:not(.sv-btn))[type="submit"]:hover,
-body.ns-platform.page-stalk-admin button:where(:not(.sv-btn))[type="submit"]:hover {
+body.ns-platform.page-admin button:where(:not(.sv-btn))[type="submit"]:hover {
   background: var(--ns-brand-crimson-hover) !important;
 }
 /* 5. User Management & Data Tables */
-body.ns-platform.page-admin table,
-body.ns-platform.page-stalk-admin table {
+body.ns-platform.page-admin table {
   width: 100% !important;
   border-collapse: collapse !important;
   font-size: var(--sv-text-sm) !important;
   margin-top: 12px !important;
 }
-body.ns-platform.page-admin th,
-body.ns-platform.page-stalk-admin th {
+body.ns-platform.page-admin th {
   padding: 12px 14px !important;
   border-bottom: 1px solid var(--ns-border-subtle) !important;
   color: var(--ns-text-muted) !important;
@@ -767,14 +754,12 @@ body.ns-platform.page-stalk-admin th {
   letter-spacing: 0.04em !important;
   text-align: left !important;
 }
-body.ns-platform.page-admin td,
-body.ns-platform.page-stalk-admin td {
+body.ns-platform.page-admin td {
   padding: 12px 14px !important;
   border-bottom: 1px solid var(--ns-border-subtle) !important;
   color: var(--ns-text-secondary) !important;
 }
-body.ns-platform.page-admin tr:hover td,
-body.ns-platform.page-stalk-admin tr:hover td {
+body.ns-platform.page-admin tr:hover td {
   background: var(--ns-bg-surface-raised) !important;
   color: var(--ns-text-primary) !important;
 }
@@ -783,7 +768,7 @@ body.ns-platform.page-stalk-admin tr:hover td {
 .ns-command-rail .ns-rail-nav,
 body .ns-command-rail nav,
 body.ns-platform .ns-command-rail nav,
-body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-command-rail nav {
+body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live) .ns-command-rail nav {
   min-height: 0 !important;
   height: auto !important;
   max-height: none !important;
@@ -852,7 +837,7 @@ body .ns-command-rail {
 }
 .ns-command-rail .ns-logout-btn button.ns-rail-item,
 body .ns-command-rail .ns-logout-btn button:where(:not(.sv-btn)).ns-rail-item,
-body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-command-rail .ns-logout-btn button:where(:not(.sv-btn)) {
+body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live) .ns-command-rail .ns-logout-btn button:where(:not(.sv-btn)) {
   width: 44px !important;
   height: 44px !important;
   border-radius: var(--ns-radius-md, 10px) !important;
@@ -889,8 +874,6 @@ body.page-clip-editor .main,
 body.page-clip-editor > .main,
 body.page-admin .main,
 body.page-admin > .main,
-body.page-stalk .main,
-body.page-stalk > .main,
 body.page-files .main,
 body.page-files > .main,
 body.page-search .main,
@@ -953,7 +936,6 @@ body:is(.page-vod, .page-live) .vod-inline-tool {
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease !important;
 }
 body:is(.page-vod, .page-live) #btnInstantClip,
-body:is(.page-vod, .page-live) #btnTranscriptToggle,
 body:is(.page-vod, .page-live) .vod-file-action {
   background: var(--ns-bg-surface-raised) !important;
   color: var(--ns-text-primary) !important;
@@ -966,7 +948,6 @@ body:is(.page-vod, .page-live) #btnOpenEditor:hover {
   border-color: var(--ns-brand-crimson-hover) !important;
 }
 body:is(.page-vod, .page-live) #btnInstantClip:hover,
-body:is(.page-vod, .page-live) #btnTranscriptToggle:hover,
 body:is(.page-vod, .page-live) .vod-file-action:hover {
   background: var(--ns-bg-surface-hover) !important;
   border-color: var(--ns-border-medium) !important;
@@ -2259,8 +2240,8 @@ video,
   body.ns-platform > .main,
   body.ns-platform .main,
   body.ns-platform .ns-app-main,
-  body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .main,
-  body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live, .page-stalk) .ns-app-main {
+  body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live) .main,
+  body:is(.page-index, .page-channels, .page-streamer, .page-admin, .page-files, .page-search, .page-discord-tool, .page-vod, .page-live) .ns-app-main {
     margin-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -3135,8 +3116,6 @@ body:is(.page-twitch-watch-mobile, .page-mobile-player) .mobile-vod-details .vod
   .mobile-vod-description,
   #btnAdminMetaToggle,
   #btnOpenEditor,
-  #btnTranscriptToggle,
-  #vodTranscriptPanel,
   #vodAdminMetaOverlay,
   .chat-filter-bar,
   .twitch-monitored-pill,

@@ -168,7 +168,6 @@ AUTO_REMUX = os.environ.get('STREAM_RECORDER_AUTO_REMUX', 'true').lower() in ('t
 SYNC_REMUX = os.environ.get('STREAM_RECORDER_SYNC_REMUX', 'false').lower() in ('true', '1', 'yes')
 REENCODE_AUDIO = os.environ.get('STREAM_RECORDER_REENCODE_AUDIO', 'false').lower() in ('true', '1', 'yes')
 REMUX_TIMEOUT = int(os.environ.get('STREAM_RECORDER_REMUX_TIMEOUT', '600'))
-AUTO_TRANSCRIBE = os.environ.get('STREAM_RECORDER_AUTO_TRANSCRIBE', 'true').lower() in ('true', '1', 'yes')
 THUMB_LOCK_STALE_SEC = int(os.environ.get('THUMB_LOCK_STALE_SEC', '3600'))
 # Stream copy (no transcode) when possible; fall back to software encode on failure.
 COPY_MODE = os.environ.get('STREAM_RECORDER_COPY_MODE', 'true').lower() in ('true', '1', 'yes')
@@ -3611,20 +3610,6 @@ def record_stream(source_channel, chat_text_file, recordings_dir, runner=None, p
                                 short_recording=short_recording,
                             ):
                                 maybe_enqueue_storage_upload(finalized_path)
-                            if (not short_recording) and AUTO_TRANSCRIBE and (
-                                finalized_path.lower().endswith(".mp4") or os.path.exists(output_file)
-                            ):
-                                media_for_tx = output_file if os.path.exists(output_file) else finalized_path
-                                if media_for_tx.lower().endswith(".mp4"):
-                                    transcript_path = os.path.splitext(output_file)[0] + ".transcript.txt"
-                                    try:
-                                        database.add_task(
-                                            'transcribe',
-                                            {'media': output_file, 'transcript': transcript_path},
-                                        )
-                                        logger.info(f"Automatische Transkription eingeordnet: {output_file}")
-                                    except Exception as exc:
-                                        logger.error(f"Konnte automatische Transkription nicht einreihen: {exc}")
                         cleanup_duplicate_recordings(
                             recordings_dir,
                             output_file,

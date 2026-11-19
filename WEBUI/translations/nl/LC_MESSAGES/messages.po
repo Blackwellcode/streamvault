@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: nl\n"
@@ -431,12 +431,6 @@ msgstr "Onderhoud per onderdeel en uitgezonderde gebruikers opgeslagen."
 msgid "At least 8 characters"
 msgstr "Minimaal 8 tekens"
 
-msgid "Audio extraction error"
-msgstr "Fout bij audio-extractie"
-
-msgid "Audio extraction failed"
-msgstr "Audio-extractie mislukt"
-
 msgid "August"
 msgstr "augustus"
 
@@ -720,9 +714,6 @@ msgstr "Clips (%(count)s)"
 msgid "Close"
 msgstr "Sluiten"
 
-msgid "Close transcript"
-msgstr "Transcript sluiten"
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr "Cloudverwijdering in wachtrij (taak #%(task)s)."
@@ -830,9 +821,6 @@ msgstr "Nieuwe gebruiker aanmaken"
 
 msgid "Create new user group"
 msgstr "Nieuwe gebruikersgroep aanmaken"
-
-msgid "Create transcript"
-msgstr "Transcript maken"
 
 msgid "Create user"
 msgstr "Gebruiker aanmaken"
@@ -1020,9 +1008,6 @@ msgstr "Klaar"
 msgid "Download"
 msgstr "Downloaden"
 
-msgid "Download TXT"
-msgstr "TXT downloaden"
-
 msgid "Download all"
 msgstr "Alles downloaden"
 
@@ -1157,17 +1142,11 @@ msgstr "Huidig wachtwoord invoeren"
 msgid "Error"
 msgstr "Fout"
 
-msgid "Error cancelling the transcription"
-msgstr "Fout bij annuleren van de transcriptie"
-
 msgid "Error changing the password."
 msgstr "Fout bij wijzigen van het wachtwoord."
 
 msgid "Error creating group"
 msgstr "Fout bij aanmaken van groep"
-
-msgid "Error creating the audio segment"
-msgstr "Fout bij aanmaken van het audiosegment"
 
 msgid "Error creating the user."
 msgstr "Fout bij aanmaken van de gebruiker."
@@ -1189,9 +1168,6 @@ msgstr "Fout bij laden van het adminpaneel. Probeer het later opnieuw."
 
 msgid "Error loading the traffic overview."
 msgstr "Fout bij laden van het verkeersoverzicht."
-
-msgid "Error queuing the transcription"
-msgstr "Fout bij in de wachtrij plaatsen van de transcriptie"
 
 msgid "Error saving group"
 msgstr "Fout bij opslaan van groep"
@@ -1233,9 +1209,6 @@ msgstr "Verloopt"
 msgid "Exported by StreamVault"
 msgstr "Geëxporteerd door StreamVault"
 
-msgid "Extracting audio..."
-msgstr "Audio extraheren…"
-
 msgid "Failed"
 msgstr "Mislukt"
 
@@ -1262,9 +1235,6 @@ msgstr "Bestandsbeheer"
 
 msgid "File name"
 msgstr "Bestandsnaam"
-
-msgid "File not found"
-msgstr "Bestand niet gevonden"
 
 msgid "File not found locally."
 msgstr "Bestand lokaal niet gevonden."
@@ -1684,9 +1654,6 @@ msgstr "Gemiddelde belasting (1m / 5m):"
 msgid "Loading chat…"
 msgstr "Chat laden…"
 
-msgid "Loading model..."
-msgstr "Model laden…"
-
 msgid "Loading streams…"
 msgstr "Streams laden…"
 
@@ -1958,20 +1925,8 @@ msgstr "Geen opnames gevonden."
 msgid "No results."
 msgstr "Geen resultaten."
 
-msgid "No running transcription found."
-msgstr "Geen lopende transcriptie gevonden."
-
 msgid "No streams"
 msgstr "Geen streams"
-
-msgid "No transcript output received"
-msgstr "Geen transcriptie-uitvoer ontvangen"
-
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
-msgstr "Nog geen transcript. Het wordt lokaal op de server gegenereerd en kan bij lange VOD's even duren."
-
-msgid "No transcription active"
-msgstr "Geen transcriptie actief"
 
 msgid "No videos found."
 msgstr "Geen video's gevonden."
@@ -2334,8 +2289,8 @@ msgstr "Recente taakfouten"
 msgid "Recently watched"
 msgstr "Onlangs bekeken"
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
-msgstr "Aanbevolen URL's voor de browserbron. Vervang TOKEN door de waarde van TTS_OVERLAY_TOKEN of ALERT_OVERLAY_TOKEN. Het deel na # blijft in OBS en bereikt de server alleen als request-header, nooit in een logregel."
+msgid "Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "Aanbevolen URL voor de browserbron. Vervang TOKEN door de waarde van ALERT_OVERLAY_TOKEN. Het deel na # blijft in OBS en bereikt de server alleen als request-header, nooit in een logregel."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "Aanbevolen. Voorkomt gegevensverlies door onvolledige uploads."
@@ -2503,9 +2458,6 @@ msgstr "Regeltekst"
 msgid "Running"
 msgstr "Bezig"
 
-msgid "Running…"
-msgstr "Bezig…"
-
 msgid "S3-compatible"
 msgstr "S3-compatibel"
 
@@ -2553,16 +2505,6 @@ msgstr "Opgeslagen – leeg laten om te behouden"
 
 msgid "Saved."
 msgstr "Opgeslagen."
-
-msgid "Saving transcript failed"
-msgstr "Transcript opslaan mislukt"
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr "Transcript opslaan mislukt: %(error)s"
-
-msgid "Saving transcript..."
-msgstr "Transcript opslaan…"
 
 msgid "Saving…"
 msgstr "Opslaan…"
@@ -2627,9 +2569,6 @@ msgstr "Zoekreparatie loopt al (%(status)s)."
 
 msgid "Seek repair queued."
 msgstr "Zoekreparatie in wachtrij."
-
-msgid "Segment creation failed"
-msgstr "Segment maken mislukt"
 
 msgid "Select folders to unlock:"
 msgstr "Selecteer mappen om vrij te geven:"
@@ -2731,9 +2670,6 @@ msgstr "Bron"
 #, python-format
 msgid "Source %(name)s not found."
 msgstr "Bron %(name)s niet gevonden."
-
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "Verouderde vergrendeling verwijderd, transcriptie in de wachtrij van de worker geplaatst. Het resultaat verschijnt na afronding bij het volgende laden van de pagina."
 
 msgid "Start"
 msgstr "Start"
@@ -2953,9 +2889,6 @@ msgstr "Versie van de voorwaarden verouderd — laad de pagina opnieuw en accept
 msgid "Test"
 msgstr "Testen"
 
-msgid "Text-to-speech overlay"
-msgstr "Tekst-naar-spraak-overlay"
-
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "Bedankt voor je begrip. Bevoegde gebruikers kunnen inloggen via de inlogpagina."
 
@@ -3113,62 +3046,6 @@ msgstr "Verkeer"
 
 msgid "Traffic overview"
 msgstr "Verkeersoverzicht"
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr "Segment %(index)s/%(total)s transcriberen (%(percent)s%%)"
-
-msgid "Transcript"
-msgstr "Transcript"
-
-msgid "Transcript already exists"
-msgstr "Transcript bestaat al"
-
-msgid "Transcript already exists."
-msgstr "Transcript bestaat al."
-
-msgid "Transcript available"
-msgstr "Transcript beschikbaar"
-
-msgid "Transcript created"
-msgstr "Transcript gemaakt"
-
-msgid "Transcript finished"
-msgstr "Transcript voltooid"
-
-msgid "Transcript missing despite finished status"
-msgstr "Transcript ontbreekt ondanks voltooide status"
-
-msgid "Transcript progress"
-msgstr "Voortgang transcriptie"
-
-msgid "Transcription cancelled"
-msgstr "Transcriptie geannuleerd"
-
-msgid "Transcription cancelled."
-msgstr "Transcriptie geannuleerd."
-
-msgid "Transcription failed"
-msgstr "Transcriptie mislukt"
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr "Transcriptie mislukt: %(error)s"
-
-msgid "Transcription is already running"
-msgstr "Transcriptie loopt al"
-
-msgid "Transcription is already running. Please reload later."
-msgstr "Transcriptie loopt al. Laad later opnieuw."
-
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "Transcriptie in de wachtrij van de worker geplaatst. Het resultaat verschijnt na afronding bij het volgende laden van de pagina."
-
-msgid "Transcription running..."
-msgstr "Transcriptie bezig…"
-
-msgid "Transcription timed out"
-msgstr "Time-out bij transcriptie"
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
 msgstr "Nieuwe opnames en periodieke archiefsyncs naar de cloud overzetten."
@@ -3505,20 +3382,8 @@ msgstr "actief"
 msgid "an anonymous user"
 msgstr "een anonieme gebruiker"
 
-msgid "available"
-msgstr "aanwezig"
-
-msgid "being created"
-msgstr "wordt aangemaakt"
-
-msgid "cancelled"
-msgstr "geannuleerd"
-
 msgid "disabled"
 msgstr "uitgeschakeld"
-
-msgid "done – please reload the page"
-msgstr "klaar – laad de pagina opnieuw"
 
 msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr "drive.file = alleen bestanden die door StreamVault zijn aangemaakt (aanbevolen). Gebruik voor bestaande mappen zo nodig https://www.googleapis.com/auth/drive."
@@ -3557,9 +3422,6 @@ msgstr "max. 300s"
 
 msgid "never"
 msgstr "nooit"
-
-msgid "not created"
-msgstr "niet aangemaakt"
 
 msgid "someone"
 msgstr "iemand"

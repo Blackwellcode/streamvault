@@ -54,7 +54,7 @@ class AppFactoryTests(IsolatedBaseTest):
         endpoints = {rule.endpoint for rule in self.webui.app.url_map.iter_rules()}
         self.assertFalse({e for e in endpoints if "." in e})
         for name in ("login", "logout", "index", "vod_view", "media", "public_media",
-                     "admin_view", "healthz", "files_upload", "tts_api_ack"):
+                     "admin_view", "healthz", "files_upload", "alerts_api_ack"):
             with self.subTest(endpoint=name):
                 self.assertIn(name, endpoints)
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ko\n"
@@ -423,12 +423,6 @@ msgstr "영역 점검 및 예외 사용자가 저장되었습니다."
 msgid "At least 8 characters"
 msgstr "최소 8자"
 
-msgid "Audio extraction error"
-msgstr "오디오 추출 오류"
-
-msgid "Audio extraction failed"
-msgstr "오디오 추출 실패"
-
 msgid "August"
 msgstr "8월"
 
@@ -712,9 +706,6 @@ msgstr "클립 (%(count)s)"
 msgid "Close"
 msgstr "닫기"
 
-msgid "Close transcript"
-msgstr "스크립트 닫기"
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr "클라우드 삭제가 대기열에 추가되었습니다 (작업 #%(task)s)."
@@ -822,9 +813,6 @@ msgstr "새 사용자 만들기"
 
 msgid "Create new user group"
 msgstr "새 사용자 그룹 만들기"
-
-msgid "Create transcript"
-msgstr "스크립트 만들기"
 
 msgid "Create user"
 msgstr "사용자 만들기"
@@ -1012,9 +1000,6 @@ msgstr "완료"
 msgid "Download"
 msgstr "다운로드"
 
-msgid "Download TXT"
-msgstr "TXT 다운로드"
-
 msgid "Download all"
 msgstr "모두 다운로드"
 
@@ -1149,17 +1134,11 @@ msgstr "현재 비밀번호 입력"
 msgid "Error"
 msgstr "오류"
 
-msgid "Error cancelling the transcription"
-msgstr "스크립트 생성 취소 중 오류"
-
 msgid "Error changing the password."
 msgstr "비밀번호 변경 중 오류가 발생했습니다."
 
 msgid "Error creating group"
 msgstr "그룹 생성 중 오류"
-
-msgid "Error creating the audio segment"
-msgstr "오디오 구간 생성 중 오류"
 
 msgid "Error creating the user."
 msgstr "사용자 생성 중 오류가 발생했습니다."
@@ -1181,9 +1160,6 @@ msgstr "관리자 패널을 불러오는 중 오류가 발생했습니다. 나�
 
 msgid "Error loading the traffic overview."
 msgstr "트래픽 개요를 불러오는 중 오류가 발생했습니다."
-
-msgid "Error queuing the transcription"
-msgstr "스크립트 생성 대기열 추가 중 오류"
 
 msgid "Error saving group"
 msgstr "그룹 저장 중 오류"
@@ -1225,9 +1201,6 @@ msgstr "만료"
 msgid "Exported by StreamVault"
 msgstr "StreamVault에서 내보냄"
 
-msgid "Extracting audio..."
-msgstr "오디오 추출 중…"
-
 msgid "Failed"
 msgstr "실패"
 
@@ -1254,9 +1227,6 @@ msgstr "파일 관리자"
 
 msgid "File name"
 msgstr "파일 이름"
-
-msgid "File not found"
-msgstr "파일을 찾을 수 없음"
 
 msgid "File not found locally."
 msgstr "로컬에서 파일을 찾을 수 없습니다."
@@ -1676,9 +1646,6 @@ msgstr "평균 부하 (1분 / 5분):"
 msgid "Loading chat…"
 msgstr "채팅 불러오는 중…"
 
-msgid "Loading model..."
-msgstr "모델 불러오는 중…"
-
 msgid "Loading streams…"
 msgstr "스트림 불러오는 중…"
 
@@ -1950,20 +1917,8 @@ msgstr "녹화를 찾을 수 없습니다."
 msgid "No results."
 msgstr "결과가 없습니다."
 
-msgid "No running transcription found."
-msgstr "실행 중인 스크립트 생성이 없습니다."
-
 msgid "No streams"
 msgstr "스트림 없음"
-
-msgid "No transcript output received"
-msgstr "스크립트 출력을 받지 못했습니다"
-
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
-msgstr "아직 스크립트가 없습니다. 서버에서 로컬로 생성되며 긴 VOD는 시간이 걸릴 수 있습니다."
-
-msgid "No transcription active"
-msgstr "진행 중인 스크립트 생성 없음"
 
 msgid "No videos found."
 msgstr "동영상을 찾을 수 없습니다."
@@ -2326,8 +2281,8 @@ msgstr "최근 작업 오류"
 msgid "Recently watched"
 msgstr "최근 시청"
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
-msgstr "브라우저 소스용 권장 URL입니다. TOKEN을 TTS_OVERLAY_TOKEN 또는 ALERT_OVERLAY_TOKEN 값으로 바꾸세요. # 뒤의 부분은 OBS에 남고 서버에는 요청 헤더로만 전달되며 로그에는 남지 않습니다."
+msgid "Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "브라우저 소스용 권장 URL입니다. TOKEN을 ALERT_OVERLAY_TOKEN 값으로 바꾸세요. # 뒤의 부분은 OBS에 남고 서버에는 요청 헤더로만 전달되며 로그에는 남지 않습니다."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "권장. 불완전한 업로드로 인한 데이터 손실을 방지합니다."
@@ -2495,9 +2450,6 @@ msgstr "규칙 본문"
 msgid "Running"
 msgstr "실행 중"
 
-msgid "Running…"
-msgstr "실행 중…"
-
 msgid "S3-compatible"
 msgstr "S3 호환"
 
@@ -2545,16 +2497,6 @@ msgstr "저장됨 – 유지하려면 비워 두기"
 
 msgid "Saved."
 msgstr "저장했습니다."
-
-msgid "Saving transcript failed"
-msgstr "스크립트 저장 실패"
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr "스크립트 저장 실패: %(error)s"
-
-msgid "Saving transcript..."
-msgstr "스크립트 저장 중…"
 
 msgid "Saving…"
 msgstr "저장 중…"
@@ -2619,9 +2561,6 @@ msgstr "탐색 복구가 이미 실행 중입니다 (%(status)s)."
 
 msgid "Seek repair queued."
 msgstr "탐색 복구가 대기열에 추가되었습니다."
-
-msgid "Segment creation failed"
-msgstr "세그먼트 생성 실패"
 
 msgid "Select folders to unlock:"
 msgstr "허용할 폴더 선택:"
@@ -2723,9 +2662,6 @@ msgstr "소스"
 #, python-format
 msgid "Source %(name)s not found."
 msgstr "소스 %(name)s을(를) 찾을 수 없습니다."
-
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "오래된 잠금을 제거하고 스크립트 생성을 워커 대기열에 추가했습니다. 완료 후 다음 로드 시 결과가 표시됩니다."
 
 msgid "Start"
 msgstr "시작"
@@ -2945,9 +2881,6 @@ msgstr "약관 버전이 만료되었습니다 — 페이지를 새로고침하�
 msgid "Test"
 msgstr "테스트"
 
-msgid "Text-to-speech overlay"
-msgstr "음성 변환 오버레이"
-
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "양해해 주셔서 감사합니다. 권한이 있는 사용자는 로그인 페이지에서 로그인할 수 있습니다."
 
@@ -3103,62 +3036,6 @@ msgstr "트래픽"
 
 msgid "Traffic overview"
 msgstr "트래픽 개요"
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr "세그먼트 %(index)s/%(total)s 변환 중 (%(percent)s%%)"
-
-msgid "Transcript"
-msgstr "스크립트"
-
-msgid "Transcript already exists"
-msgstr "스크립트가 이미 있음"
-
-msgid "Transcript already exists."
-msgstr "스크립트가 이미 있습니다."
-
-msgid "Transcript available"
-msgstr "스크립트 있음"
-
-msgid "Transcript created"
-msgstr "스크립트 생성됨"
-
-msgid "Transcript finished"
-msgstr "스크립트 완료"
-
-msgid "Transcript missing despite finished status"
-msgstr "완료 상태이지만 스크립트가 없음"
-
-msgid "Transcript progress"
-msgstr "자막 변환 진행률"
-
-msgid "Transcription cancelled"
-msgstr "스크립트 생성 취소됨"
-
-msgid "Transcription cancelled."
-msgstr "스크립트 생성을 취소했습니다."
-
-msgid "Transcription failed"
-msgstr "스크립트 생성 실패"
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr "스크립트 생성 실패: %(error)s"
-
-msgid "Transcription is already running"
-msgstr "스크립트 생성이 이미 실행 중"
-
-msgid "Transcription is already running. Please reload later."
-msgstr "스크립트 생성이 이미 실행 중입니다. 나중에 새로고침하세요."
-
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "스크립트 생성이 워커 대기열에 추가되었습니다. 완료 후 다음 로드 시 결과가 표시됩니다."
-
-msgid "Transcription running..."
-msgstr "스크립트 생성 중…"
-
-msgid "Transcription timed out"
-msgstr "스크립트 생성 시간 초과"
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
 msgstr "새 녹화와 주기적인 아카이브 동기화를 클라우드로 전송합니다."
@@ -3495,20 +3372,8 @@ msgstr "활성"
 msgid "an anonymous user"
 msgstr "익명의 사용자"
 
-msgid "available"
-msgstr "있음"
-
-msgid "being created"
-msgstr "생성 중"
-
-msgid "cancelled"
-msgstr "취소됨"
-
 msgid "disabled"
 msgstr "비활성화됨"
-
-msgid "done – please reload the page"
-msgstr "완료 – 페이지를 새로고침하세요"
 
 msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr "drive.file = StreamVault가 만든 파일만(권장). 기존 폴더를 쓰려면 필요 시 https://www.googleapis.com/auth/drive를 사용하세요."
@@ -3547,9 +3412,6 @@ msgstr "최대 300초"
 
 msgid "never"
 msgstr "안 함"
-
-msgid "not created"
-msgstr "생성 안 됨"
 
 msgid "someone"
 msgstr "누군가"

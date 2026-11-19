@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_Hans\n"
@@ -423,12 +423,6 @@ msgstr "区域维护和豁免用户已成功保存。"
 msgid "At least 8 characters"
 msgstr "至少 8 个字符"
 
-msgid "Audio extraction error"
-msgstr "音频提取出错"
-
-msgid "Audio extraction failed"
-msgstr "音频提取失败"
-
 msgid "August"
 msgstr "八月"
 
@@ -712,9 +706,6 @@ msgstr "剪辑（%(count)s）"
 msgid "Close"
 msgstr "关闭"
 
-msgid "Close transcript"
-msgstr "关闭转录文本"
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr "云端删除已加入队列（任务 #%(task)s）。"
@@ -822,9 +813,6 @@ msgstr "创建新用户"
 
 msgid "Create new user group"
 msgstr "创建新用户组"
-
-msgid "Create transcript"
-msgstr "创建转录文本"
 
 msgid "Create user"
 msgstr "创建用户"
@@ -1012,9 +1000,6 @@ msgstr "完成"
 msgid "Download"
 msgstr "下载"
 
-msgid "Download TXT"
-msgstr "下载 TXT"
-
 msgid "Download all"
 msgstr "全部下载"
 
@@ -1149,17 +1134,11 @@ msgstr "输入当前密码"
 msgid "Error"
 msgstr "错误"
 
-msgid "Error cancelling the transcription"
-msgstr "取消转录时出错"
-
 msgid "Error changing the password."
 msgstr "修改密码时出错。"
 
 msgid "Error creating group"
 msgstr "创建用户组时出错"
-
-msgid "Error creating the audio segment"
-msgstr "创建音频片段时出错"
 
 msgid "Error creating the user."
 msgstr "创建用户时出错。"
@@ -1181,9 +1160,6 @@ msgstr "加载管理面板时出错。请稍后重试。"
 
 msgid "Error loading the traffic overview."
 msgstr "加载流量概览时出错。"
-
-msgid "Error queuing the transcription"
-msgstr "转录加入队列时出错"
 
 msgid "Error saving group"
 msgstr "保存用户组时出错"
@@ -1225,9 +1201,6 @@ msgstr "到期"
 msgid "Exported by StreamVault"
 msgstr "由 StreamVault 导出"
 
-msgid "Extracting audio..."
-msgstr "正在提取音频…"
-
 msgid "Failed"
 msgstr "失败"
 
@@ -1254,9 +1227,6 @@ msgstr "文件管理器"
 
 msgid "File name"
 msgstr "文件名"
-
-msgid "File not found"
-msgstr "未找到文件"
 
 msgid "File not found locally."
 msgstr "本地未找到文件。"
@@ -1676,9 +1646,6 @@ msgstr "平均负载（1 分钟 / 5 分钟）："
 msgid "Loading chat…"
 msgstr "正在加载聊天…"
 
-msgid "Loading model..."
-msgstr "正在加载模型…"
-
 msgid "Loading streams…"
 msgstr "正在加载直播…"
 
@@ -1950,20 +1917,8 @@ msgstr "未找到录制。"
 msgid "No results."
 msgstr "无结果。"
 
-msgid "No running transcription found."
-msgstr "未找到正在进行的转录。"
-
 msgid "No streams"
 msgstr "没有直播"
-
-msgid "No transcript output received"
-msgstr "未收到转录输出"
-
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
-msgstr "尚无转录文本。转录在服务器本地生成，长 VOD 可能需要一段时间。"
-
-msgid "No transcription active"
-msgstr "没有进行中的转录"
 
 msgid "No videos found."
 msgstr "未找到视频。"
@@ -2326,8 +2281,8 @@ msgstr "最近的任务错误"
 msgid "Recently watched"
 msgstr "最近观看"
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
-msgstr "推荐的浏览器源 URL。请将 TOKEN 替换为 TTS_OVERLAY_TOKEN 或 ALERT_OVERLAY_TOKEN 的值。# 之后的部分保留在 OBS 中，只以请求头形式发送到服务器，不会出现在日志中。"
+msgid "Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "推荐的浏览器源 URL。请将 TOKEN 替换为 ALERT_OVERLAY_TOKEN 的值。# 之后的部分保留在 OBS 中，只以请求头形式发送到服务器，不会出现在日志中。"
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "推荐。防止因上传不完整造成数据丢失。"
@@ -2495,9 +2450,6 @@ msgstr "规则文本"
 msgid "Running"
 msgstr "运行中"
 
-msgid "Running…"
-msgstr "运行中…"
-
 msgid "S3-compatible"
 msgstr "兼容 S3"
 
@@ -2545,16 +2497,6 @@ msgstr "已保存——留空则保留"
 
 msgid "Saved."
 msgstr "已保存。"
-
-msgid "Saving transcript failed"
-msgstr "保存转录文本失败"
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr "保存转录文本失败：%(error)s"
-
-msgid "Saving transcript..."
-msgstr "正在保存转录文本…"
 
 msgid "Saving…"
 msgstr "正在保存…"
@@ -2619,9 +2561,6 @@ msgstr "跳转修复已在运行（%(status)s）。"
 
 msgid "Seek repair queued."
 msgstr "跳转修复已加入队列。"
-
-msgid "Segment creation failed"
-msgstr "片段创建失败"
 
 msgid "Select folders to unlock:"
 msgstr "选择要开放的文件夹："
@@ -2723,9 +2662,6 @@ msgstr "来源"
 #, python-format
 msgid "Source %(name)s not found."
 msgstr "未找到来源 %(name)s。"
-
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "已移除过期锁，转录已加入工作进程队列。完成后下次加载页面时将显示结果。"
 
 msgid "Start"
 msgstr "开始"
@@ -2945,9 +2881,6 @@ msgstr "条款版本已过期——请刷新页面并重新接受。"
 msgid "Test"
 msgstr "测试"
 
-msgid "Text-to-speech overlay"
-msgstr "文字转语音叠加层"
-
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "感谢理解。授权用户可通过登录页面登录。"
 
@@ -3103,62 +3036,6 @@ msgstr "流量"
 
 msgid "Traffic overview"
 msgstr "流量概览"
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr "正在转录片段 %(index)s/%(total)s（%(percent)s%%）"
-
-msgid "Transcript"
-msgstr "转录文本"
-
-msgid "Transcript already exists"
-msgstr "转录文本已存在"
-
-msgid "Transcript already exists."
-msgstr "转录文本已存在。"
-
-msgid "Transcript available"
-msgstr "转录文本可用"
-
-msgid "Transcript created"
-msgstr "转录文本已创建"
-
-msgid "Transcript finished"
-msgstr "转录文本已完成"
-
-msgid "Transcript missing despite finished status"
-msgstr "状态为已完成，但缺少转录文本"
-
-msgid "Transcript progress"
-msgstr "转写进度"
-
-msgid "Transcription cancelled"
-msgstr "转录已取消"
-
-msgid "Transcription cancelled."
-msgstr "转录已取消。"
-
-msgid "Transcription failed"
-msgstr "转录失败"
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr "转录失败：%(error)s"
-
-msgid "Transcription is already running"
-msgstr "转录已在运行"
-
-msgid "Transcription is already running. Please reload later."
-msgstr "转录已在运行。请稍后刷新。"
-
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "转录已加入工作进程队列。完成后下次加载页面时将显示结果。"
-
-msgid "Transcription running..."
-msgstr "正在转录…"
-
-msgid "Transcription timed out"
-msgstr "转录超时"
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
 msgstr "将新录制和定期存档同步传输到云端。"
@@ -3495,20 +3372,8 @@ msgstr "活跃"
 msgid "an anonymous user"
 msgstr "一位匿名用户"
 
-msgid "available"
-msgstr "可用"
-
-msgid "being created"
-msgstr "正在创建"
-
-msgid "cancelled"
-msgstr "已取消"
-
 msgid "disabled"
 msgstr "已停用"
-
-msgid "done – please reload the page"
-msgstr "完成——请刷新页面"
 
 msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr "drive.file = 仅限 StreamVault 创建的文件（推荐）。如需使用现有文件夹，请按需使用 https://www.googleapis.com/auth/drive。"
@@ -3547,9 +3412,6 @@ msgstr "最长 300 秒"
 
 msgid "never"
 msgstr "从不"
-
-msgid "not created"
-msgstr "未创建"
 
 msgid "someone"
 msgstr "某人"
