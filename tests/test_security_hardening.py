@@ -431,6 +431,28 @@ class SmallHardeningTests(WebTestBase):
             self.assertEqual(client.get("/alerts/api/next", headers={"X-Alert-Token": "good"}).status_code, 200)
             self.assertEqual(client.get("/alerts/api/next", headers={"X-Alert-Token": "bad"}).status_code, 401)
 
+    def test_alert_audio_url_carries_no_token_and_loads_with_header(self):
+        from core import alert_sounds
+        client = self.webui.app.test_client()
+        sounds = self.base / "alert_sounds"
+        sounds.mkdir()
+        (sounds / "live.mp3").write_bytes(b"ID3fake")
+        item = {"id": "a1", "event": "live", "label": "Live"}
+        with mock.patch.object(alert_sounds, "token_ok", side_effect=lambda t: t == "good-secret"), \
+                mock.patch.object(alert_sounds, "claim_next", return_value=item), \
+                mock.patch.object(alert_sounds, "ensure_sound_files"), \
+                mock.patch.object(alert_sounds, "sounds_dir", return_value=str(sounds)):
+            body = client.get("/alerts/api/next", headers={"X-Alert-Token": "good-secret"}).get_json()
+            audio_url = body["item"]["audio_url"]
+            # The overlay fetches the audio with the header (overlay_common.js createAudio).
+            self.assertEqual(audio_url, "/alerts/audio/live.mp3")
+            self.assertNotIn("good-secret", audio_url)
+            self.assertEqual(client.get(audio_url).status_code, 401)
+            audio = client.get(audio_url, headers={"X-Alert-Token": "good-secret"})
+            self.assertEqual(audio.status_code, 200)
+            self.assertEqual(audio.get_data(), b"ID3fake")
+            audio.close()
+
     def test_anonymous_healthz_has_no_disk_data(self):
         response = self.webui.app.test_client().get("/healthz")
         self.assertIn(response.status_code, (200, 503))

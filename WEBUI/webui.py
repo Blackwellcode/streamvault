@@ -12329,12 +12329,10 @@ def alerts_api_next():
     item = alert_sounds.claim_next()
     if not item:
         return jsonify({"item": None})
-    token = _alert_token_from_request()
     event = str(item.get("event") or "")
-    audio_url = (
-        f"/alerts/audio/{urllib.parse.quote(event)}.mp3"
-        f"?token={urllib.parse.quote(token)}"
-    )
+    # No token in the URL: overlay_common.js fetches the audio with the
+    # X-Alert-Token header and plays it from a blob URL.
+    audio_url = f"/alerts/audio/{urllib.parse.quote(event)}.mp3"
     return jsonify(
         {
             "item": {
