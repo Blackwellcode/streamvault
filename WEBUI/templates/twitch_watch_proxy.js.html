@@ -166,7 +166,13 @@
     video._streamVaultBuffering = false;
   }
 
+  let nativeErrorHandler = null;
+
   function destroyPlayers() {
+    if (nativeErrorHandler) {
+      video.removeEventListener('error', nativeErrorHandler);
+      nativeErrorHandler = null;
+    }
     if (telemetryTimer) {
       clearInterval(telemetryTimer);
       telemetryTimer = null;
@@ -388,10 +394,11 @@
       // Native HLS (iOS/Safari): the Flask playlist checks the session itself,
       // so playback does not depend on the direct nginx route.
       targetVideo.src = playlistUrl || hlsUrl;
-      targetVideo.addEventListener('error', function() {
+      nativeErrorHandler = function() {
         dbg('error', 'native_hls_error', { code: targetVideo.error ? targetVideo.error.code : 'unknown' });
         scheduleReconnect({{ _('HLS connection lost — reconnecting…')|tojson }});
-      }, { once: true });
+      };
+      targetVideo.addEventListener('error', nativeErrorHandler, { once: true });
       tryAutoplay();
       startTelemetry('NATIVE-HLS');
       return;

@@ -147,6 +147,22 @@ jobs:
           test ! -s dirty.txt
           sudo streamvault update
 
+      - name: Failed nginx test is rolled back and the next run recovers
+        run: |
+          echo 'broken {' | sudo tee /etc/nginx/conf.d/broken.conf > /dev/null
+          if sudo ./install.sh; then echo "install.sh ignored a failing nginx -t"; exit 1; fi
+          test -f /etc/nginx/sites-available/streamvault.conf.rejected
+          sudo rm /etc/nginx/conf.d/broken.conf
+          sudo nginx -t
+          sudo ./install.sh
+          test ! -e /etc/nginx/sites-available/streamvault.conf.new
+          curl -sf http://127.0.0.1/login > /dev/null
+
+      - name: Large anonymous bodies are refused by nginx
+        run: |
+          head -c 3000000 /dev/zero > big.bin
+          test "$(curl -s -o /dev/null -w '%{http_code}' --data-binary @big.bin http://127.0.0.1/login)" = "413"
+
       - name: Second run keeps an edited nginx site
         run: |
           sudo sed -i 's/server_name _;/server_name edited.example;/' /etc/nginx/sites-available/streamvault.conf
@@ -162,7 +178,7 @@ jobs:
 
       - name: Logs on failure
         if: failure()
-        run: sudo journalctl --no-pager -u 'streamvault-*' -n 200
+        run: sudo journalctl --no-pager -u "streamvault-*" -n 2000 | grep -v "badge image download"
 
   upgrade:
     name: Upgrade from 0.1.1
@@ -194,7 +210,7 @@ jobs:
 
       - name: Logs on failure
         if: failure()
-        run: sudo journalctl --no-pager -u 'streamvault-*' -n 200
+        run: sudo journalctl --no-pager -u "streamvault-*" -n 2000 | grep -v "badge image download"
 
   quickstart:
     name: README demo

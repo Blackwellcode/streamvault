@@ -6855,7 +6855,8 @@ _LIVE_ASSERT_TS = {}
 _LIVE_ASSERT_INTERVAL_SEC = 15.0
 
 
-_LIVE_CHANNEL_RE = re.compile(r"[a-z0-9_]{1,64}")
+# Same limit as recorder/livebot.py, which cleans up only names it accepts.
+_LIVE_CHANNEL_RE = re.compile(r"[a-z0-9_]{1,25}")
 
 
 def live_channel_name(streamer):

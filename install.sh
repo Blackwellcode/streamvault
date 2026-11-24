@@ -249,6 +249,8 @@ if [[ -d /etc/nginx/sites-available ]]; then
     SITE_FILE=/etc/nginx/sites-available/streamvault.conf
     SITE_LINK=/etc/nginx/sites-enabled/streamvault.conf
     SITE_HASH_FILE="${CONFIG_DIR}/nginx-site.sha256"
+    # The untouched site of 0.1.0 and 0.1.1, which kept no hash file.
+    SITE_HASH_0_1=6672e16dbe3102c7601876703cff0c4a22fa49de973b3c1d3fdf87e21cb2b60a
     SITE_TARGET="${SITE_FILE}"
     SITE_BACKUP=""
     DISABLED_STOCK=0
@@ -258,9 +260,7 @@ if [[ -d /etc/nginx/sites-available ]]; then
         SITE_HASH="$(sha256sum "${SITE_FILE}" | cut -d' ' -f1)"
         if [[ -r "${SITE_HASH_FILE}" ]]; then
             [[ "$(cat "${SITE_HASH_FILE}")" == "${SITE_HASH}" ]] || SITE_TARGET="${SITE_FILE}.new"
-        elif grep -qE 'ssl|443|return[[:space:]]+30' "${SITE_FILE}" \
-            || ! grep -qE '^[[:space:]]*server_name[[:space:]]+localhost;' "${SITE_FILE}"; then
-            # Written by release 0.1, which kept no hash, and edited since.
+        elif [[ "${SITE_HASH}" != "${SITE_HASH_0_1}" ]]; then
             SITE_TARGET="${SITE_FILE}.new"
         fi
         if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
@@ -323,7 +323,8 @@ server {
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
-    client_max_body_size 4G;
+    # Uploads have their own location below.
+    client_max_body_size 2m;
 
     gzip on;
     # Everything goes through the proxy; without gzip_proxied nothing is compressed.
@@ -346,6 +347,23 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         # Only the /_live_auth subrequest may carry this marker.
         proxy_set_header X-StreamVault-Live-Auth "";
+    }
+
+    # Only these admin uploads may be large; the app checks the session before it
+    # reads them, and without request buffering nginx spools nothing to disk.
+    location ~ ^/(files/upload|admin/banner/update|streamer/[^/]+/(banner|avatar)/update)\$ {
+        client_max_body_size 4G;
+        proxy_request_buffering off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-StreamVault-Live-Auth "";
+        proxy_connect_timeout 600;
+        proxy_send_timeout 600;
+        proxy_read_timeout 600;
     }
 
     location /_protected/ {
@@ -470,6 +488,8 @@ server {
 }
 EOF
     if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
+        # At once, so a file of an interrupted run is not mistaken for an edit.
+        sha256sum "${SITE_FILE}" | cut -d' ' -f1 > "${SITE_HASH_FILE}"
         LINK_EXISTED=0
         [[ -e "${SITE_LINK}" ]] && LINK_EXISTED=1
         ln -sf "${SITE_FILE}" "${SITE_LINK}"
@@ -477,9 +497,11 @@ EOF
     if ! nginx -t; then
         # Leave nothing behind that keeps nginx from starting after a reboot.
         if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
+            mv -f "${SITE_FILE}" "${SITE_FILE}.rejected"
+            rm -f "${SITE_HASH_FILE}"
             if [[ -n "${SITE_BACKUP}" ]]; then
-                cp -a "${SITE_FILE}" "${SITE_FILE}.rejected"
                 cp -a "${SITE_BACKUP}" "${SITE_FILE}"
+                sha256sum "${SITE_FILE}" | cut -d' ' -f1 > "${SITE_HASH_FILE}"
             fi
             [[ "${LINK_EXISTED}" == "1" ]] || rm -f "${SITE_LINK}"
             [[ "${DISABLED_STOCK}" == "0" ]] || ln -s "${STOCK_FILE}" "${STOCK_LINK}"
@@ -487,9 +509,7 @@ EOF
         echo -e "${RED}[ERROR] nginx -t failed; the previous sites are active again. Fix the configuration and re-run.${NC}"
         exit 1
     fi
-    if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
-        sha256sum "${SITE_FILE}" | cut -d' ' -f1 > "${SITE_HASH_FILE}"
-    else
+    if [[ "${SITE_TARGET}" != "${SITE_FILE}" ]]; then
         echo -e "${YELLOW}${BOLD}[!] ${SITE_FILE} was edited and stays in use.${NC}"
         echo -e "${YELLOW}    Merge the new live locations from ${SITE_TARGET}; until then live playback does not work.${NC}"
     fi

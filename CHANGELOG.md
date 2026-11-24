@@ -114,7 +114,8 @@ All notable changes to this project are documented here. The format follows
 - The clip editor, live, VOD and mobile player pages pass names, the chat URL
   and the start time to JavaScript as JSON; the clip editor's `?t=` is parsed
   as a number.
-- nginx no longer forwards the session cookie to the livebot.
+- nginx no longer forwards the session cookie to the livebot and accepts bodies
+  above 2 MB only on the admin upload routes, unbuffered.
 
 ### Added
 
@@ -231,6 +232,8 @@ All notable changes to this project are documented here. The format follows
   the previous sites.
 - Docker: `./data` is handed to the app user on start and the recorder log
   moved to `./data/.meta/logs`, so the stack runs from a fresh clone.
+- The recorder creates the database itself when it starts before the WebUI; it
+  used to crash once on a fresh installation.
 - The README demo used `VOD_USER=admin`, which StreamVault rejects.
 - `/api/live/ready` answered 500 when the Twitch lookup failed; outages are
   now logged once per minute and channel.

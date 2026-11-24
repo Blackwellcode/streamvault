@@ -18,7 +18,7 @@ from core import config, database, twitch_api  # noqa: E402
 
 CHANNEL = "demochan"
 BAD_NAMES = ("%2e", "%2e%2e", "%0A", "demochan%0A", "demo%0Achan", "%20demochan", "demo%20chan",
-             "demo-chan", "..%5cx", "dem%C3%B6chan", "a" * 65)
+             "demo-chan", "..%5cx", "dem%C3%B6chan", "a" * 26, "a" * 65)
 
 
 class HeartbeatBase(IsolatedBaseTest):
@@ -129,7 +129,7 @@ class MarkerTests(HeartbeatBase):
         self.assertIn("Live heartbeat for demochan failed", "".join(logs.output))
 
     def test_invalid_names_create_nothing(self):
-        for name in (None, "", ".", "..", "\n", "demochan\n", "demo\nchan", "a/b", "a\\b", "demöchan", "a" * 65):
+        for name in (None, "", ".", "..", "\n", "demochan\n", "demo\nchan", "a/b", "a\\b", "demöchan", "a" * 26, "a" * 65):
             with self.subTest(name=name):
                 self.webui.touch_live_heartbeat(name)
         self.assertFalse(os.path.exists(config.LIVE_HLS_ROOT))

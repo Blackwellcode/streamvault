@@ -353,7 +353,8 @@ server {
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
-    client_max_body_size 4G;
+    # Uploads have their own location below.
+    client_max_body_size 2m;
 
     gzip on;
     # Everything goes through the proxy; without gzip_proxied nothing is compressed.
@@ -376,6 +377,23 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         # Only the /_live_auth subrequest may carry this marker.
         proxy_set_header X-StreamVault-Live-Auth "";
+    }
+
+    # Only these admin uploads may be large; the app checks the session before it
+    # reads them, and without request buffering nginx spools nothing to disk.
+    location ~ ^/(files/upload|admin/banner/update|streamer/[^/]+/(banner|avatar)/update)$ {
+        client_max_body_size 4G;
+        proxy_request_buffering off;
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-StreamVault-Live-Auth "";
+        proxy_connect_timeout 600;
+        proxy_send_timeout 600;
+        proxy_read_timeout 600;
     }
 
     location /_protected/ {

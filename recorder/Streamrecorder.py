@@ -3992,6 +3992,9 @@ if __name__ == "__main__":
 
     acquire_instance_lock()
 
+    # On a fresh installation the recorder may start before the WebUI.
+    database.init_db()
+
     # Phase 1: Reconcile orphaned recordings and stale metadata across all channels on startup
     try:
         startup_channels = load_all_channels()
