@@ -63,6 +63,7 @@ from markupsafe import Markup, escape
 from werkzeug.routing import BuildError
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import safe_join, secure_filename
+from werkzeug.wsgi import LimitedStream
 
 # `_` is used as a throwaway name throughout this module, so translations use the
 # full names (both are extracted by pybabel by default).
@@ -7493,11 +7494,34 @@ def login_page_redirect():
     return redirect(url_for("login"))
 
 
+# JSON bodies are read into memory before the sender is authenticated (CSRF
+# token, overlay token, EventSub signature). Form and multipart bodies keep
+# their own limits (MAX_FORM_MEMORY_SIZE, nginx client_max_body_size).
+MAX_JSON_BODY_BYTES = 1024 * 1024
+
+
+def limit_json_body():
+    """Reject JSON bodies above MAX_JSON_BODY_BYTES (413) before any byte is parsed."""
+    if not request.is_json and request.path != "/api/twitch/eventsub":
+        return
+    if (request.content_length or 0) > MAX_JSON_BODY_BYTES:
+        abort(413)
+    # Chunked bodies announce no size, so read at most one byte too many; the data
+    # stays cached for get_json(). Request.max_content_length is no substitute: it is
+    # read-only before Flask 3.1, and a full read silently truncates at the limit.
+    request.environ["wsgi.input"] = LimitedStream(
+        request.environ["wsgi.input"], MAX_JSON_BODY_BYTES + 1, is_max=True
+    )
+    if len(request.get_data()) > MAX_JSON_BODY_BYTES:
+        abort(413)
+
+
 @app.before_request
 def csrf_protect():
     # Mail web routes removed — always 404 regardless of legacy enable flags.
     if request.path == "/admin/mail" or request.path.startswith("/admin/mail/"):
         abort(404)
+    limit_json_body()
     # Keep the login cookie alive while the account still exists and is active.
     if session.get("logged_in"):
         ctx = _get_current_user_context()
@@ -11669,12 +11693,21 @@ def api_live_debug(streamer=None):
     return jsonify({"ok": True, "report": report})
 
 
+MAX_CLIENT_DEBUG_BODY_BYTES = 16 * 1024
+
+
 @live_bp.route("/api/live/client-debug", methods=["POST"])
 @login_required
+@limiter.limit("60 per minute")  # the player sends at most one info event per 4 s
 def api_live_client_debug():
     """Receive sanitized proxy-player telemetry from the watch page."""
     from core import live_watch_diag
 
+    # A chunked body has no Content-Length; limit_json_body already capped it.
+    if (request.content_length or 0) > MAX_CLIENT_DEBUG_BODY_BYTES or (
+        request.is_json and len(request.get_data()) > MAX_CLIENT_DEBUG_BODY_BYTES
+    ):
+        abort(413)
     payload = request.get_json(silent=True) or {}
     if not isinstance(payload, dict):
         abort(400)

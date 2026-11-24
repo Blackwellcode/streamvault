@@ -199,9 +199,9 @@
     if (window.StreamVaultHls && StreamVaultHls.preferNativeHls(video)) {
       video.src = mediaUrl;
     }
-    const chatUrl = "{{ chat_url }}";
+    const chatUrl = {{ (chat_url or '')|tojson }};
     const vodPositionKey = {{ watch_key|tojson }};
-    const legacyVodPositionKey = 'vod_pos_v2_{{ filename }}';
+    const legacyVodPositionKey = {{ ('vod_pos_v2_' ~ filename)|tojson }};
     const vodDoneKey = {{ done_key|tojson }};
     const vodUrlStart = parseFloat(new URLSearchParams(window.location.search).get('t'));
     const requestedVodStart = Number.isFinite(vodUrlStart) ? vodUrlStart : NaN;

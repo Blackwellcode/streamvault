@@ -330,7 +330,7 @@
             settings: window.CLIP_SETTINGS
           });
         }
-        const key = 'vod_pos_v2_{{ streamer }}_{{ filename }}';
+        const key = {{ ('vod_pos_v2_' ~ streamer ~ '_' ~ filename)|tojson }};
         const doneKey = {{ done_key|tojson }};
         const RESUME_END_GUARD_SEC = 30;
         const urlParams = new URLSearchParams(window.location.search);
@@ -1082,7 +1082,7 @@
                 const titleInput = document.getElementById('vodAdminTitleInput');
                 const titleEl = document.getElementById('vod-title');
                 if (titleEl && titleInput) {
-                  titleEl.textContent = titleInput.value.trim() || '{{ filename }}';
+                  titleEl.textContent = titleInput.value.trim() || {{ filename|tojson }};
                 }
                 if (statusSpan) {
                   statusSpan.textContent = '✓ ' + {{ _('Saved')|tojson }};

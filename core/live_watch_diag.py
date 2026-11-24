@@ -6,7 +6,9 @@ Never includes tokens, cookies, or env secrets.
 
 from __future__ import annotations
 
+import json
 import logging
+import math
 import os
 import re
 import subprocess
@@ -23,6 +25,9 @@ LIVE_WATCH_DEMAND_SEC = int(os.environ.get("LIVE_WATCH_DEMAND_SEC", "120"))
 LIVE_STALL_RESTART_SEC = int(os.environ.get("LIVE_STALL_RESTART_SEC", "12"))
 CLIENT_DEBUG_PATH = Path(config.META_DIR) / "live_watch_client.jsonl"
 CLIENT_DEBUG_KEEP = 500
+CLIENT_DEBUG_MAX_BYTES = 1024 * 1024
+CLIENT_DEBUG_MAX_WAITED_SEC = 86400.0
+CLIENT_DEBUG_MAX_RECONNECTS = 100000.0
 
 
 def _age(path: str | Path, now: float | None = None) -> float | None:
@@ -322,56 +327,108 @@ def collect_report(
     }
 
 
+def _clean_text(value: Any, limit: int) -> str:
+    """Printable text of at most `limit` characters.
+
+    Control characters, line separators and bidi marks become spaces, so a
+    client cannot forge lines or send terminal escapes to whoever reads the log.
+    """
+    return "".join(ch if ch.isprintable() else " " for ch in str(value or "")[:limit])
+
+
+def _bounded_number(value: Any, upper: float, field: str) -> float | None:
+    """`value` as a finite number within 0..upper; None if it is not a number."""
+    if value is None:
+        return None
+    try:
+        if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+            raise TypeError(type(value).__name__)
+        number = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        # Only the error class: the message would quote the client's value.
+        logger.warning("client debug: %s is not a number (%s)", field, type(exc).__name__)
+        return None
+    if not math.isfinite(number):
+        logger.warning("client debug: %s is not finite", field)
+        return None
+    return min(max(number, 0.0), upper)
+
+
+def _client_debug_lines() -> list[str]:
+    """Lines of the newest CLIENT_DEBUG_MAX_BYTES of the log, oldest first."""
+    with open(CLIENT_DEBUG_PATH, "rb") as handle:
+        start = max(0, handle.seek(0, 2) - CLIENT_DEBUG_MAX_BYTES)
+        handle.seek(start)
+        data = handle.read(CLIENT_DEBUG_MAX_BYTES)
+    if start:
+        # The cut usually falls inside a line: drop the fragment.
+        data = data.partition(b"\n")[2]
+    # Not splitlines(): it also splits at U+2028, U+0085 and others inside a record.
+    lines = data.decode("utf-8", errors="replace").split("\n")
+    return [line.rstrip("\r") for line in lines if line.strip()]
+
+
 def append_client_debug(event: dict[str, Any]) -> None:
     """Append a sanitized client debug event (proxy player telemetry)."""
+    waited = _bounded_number(event.get("waited_sec"), CLIENT_DEBUG_MAX_WAITED_SEC, "waited_sec")
+    attempt = _bounded_number(
+        event.get("reconnect_attempt"), CLIENT_DEBUG_MAX_RECONNECTS, "reconnect_attempt"
+    )
     Path(config.META_DIR).mkdir(parents=True, exist_ok=True)
     payload = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "epoch": time.time(),
-        "channel": str(event.get("channel") or "")[:64],
-        "mode": str(event.get("mode") or "")[:32],
-        "level": str(event.get("level") or "info")[:16],
-        "event": str(event.get("event") or "")[:64],
-        "detail": str(event.get("detail") or "")[:500],
+        "channel": _clean_text(event.get("channel"), 64),
+        "mode": _clean_text(event.get("mode"), 32),
+        "level": _clean_text(event.get("level") or "info", 16),
+        "event": _clean_text(event.get("event"), 64),
+        "detail": _clean_text(event.get("detail"), 500),
         "ready": bool(event.get("ready")),
-        "waited_sec": event.get("waited_sec"),
-        "fatal_type": str(event.get("fatal_type") or "")[:64],
-        "fatal_details": str(event.get("fatal_details") or "")[:240],
-        "reconnect_attempt": event.get("reconnect_attempt"),
-        "user_agent": str(event.get("user_agent") or "")[:160],
+        "waited_sec": waited,
+        "fatal_type": _clean_text(event.get("fatal_type"), 64),
+        "fatal_details": _clean_text(event.get("fatal_details"), 240),
+        "reconnect_attempt": None if attempt is None else int(attempt),
+        "user_agent": _clean_text(event.get("user_agent"), 160),
     }
-    with open(CLIENT_DEBUG_PATH, "a", encoding="utf-8") as handle:
-        import json
-
-        handle.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    with open(CLIENT_DEBUG_PATH, "a", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=True, allow_nan=False) + "\n")
     try:
-        lines = CLIENT_DEBUG_PATH.read_text(encoding="utf-8").splitlines()
-        if len(lines) > CLIENT_DEBUG_KEEP:
-            CLIENT_DEBUG_PATH.write_text("\n".join(lines[-CLIENT_DEBUG_KEEP:]) + "\n", encoding="utf-8")
+        lines = _client_debug_lines()
+        if len(lines) > CLIENT_DEBUG_KEEP or CLIENT_DEBUG_PATH.stat().st_size > CLIENT_DEBUG_MAX_BYTES:
+            kept = "\n".join(lines[-CLIENT_DEBUG_KEEP:]) + "\n"
+            CLIENT_DEBUG_PATH.write_bytes(kept.encode("utf-8"))
         st = Path(config.META_DIR).stat()
         # os.chown only exists on POSIX; on Windows the file keeps its owner.
         if hasattr(os, "chown"):
             os.chown(CLIENT_DEBUG_PATH, st.st_uid, st.st_gid)
         os.chmod(CLIENT_DEBUG_PATH, 0o640)
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.warning("client debug: %s not trimmed or chmodded: %s", CLIENT_DEBUG_PATH, exc)
 
 
 def read_client_debug_tail(n: int = 20) -> list[dict]:
-    import json
-
     if not CLIENT_DEBUG_PATH.is_file():
         return []
     try:
-        lines = CLIENT_DEBUG_PATH.read_text(encoding="utf-8").splitlines()[-max(1, n) :]
-    except OSError:
+        lines = _client_debug_lines()[-max(1, n) :]
+    except OSError as exc:
+        logger.warning("client debug: %s unreadable: %s", CLIENT_DEBUG_PATH, exc)
         return []
     out = []
+    skipped = 0
     for line in lines:
         try:
-            out.append(json.loads(line))
-        except json.JSONDecodeError:
+            record = json.loads(line)
+        except (ValueError, RecursionError):
+            # Not JSON, an oversized integer literal, or nested beyond the parser.
+            skipped += 1
             continue
+        if isinstance(record, dict):
+            out.append(record)
+        else:
+            skipped += 1
+    if skipped:
+        logger.warning("client debug: skipped %d malformed line(s) in %s", skipped, CLIENT_DEBUG_PATH)
     return out
 
 
@@ -404,8 +461,10 @@ def human_print(report: dict[str, Any]) -> str:
     if clients:
         lines.append("Client debug (tail):")
         for ev in clients[-8:]:
+            # Entries written by older versions may still hold control characters.
             lines.append(
-                f"  {ev.get('ts')} {ev.get('channel')} {ev.get('event')} "
-                f"{ev.get('detail') or ev.get('fatal_type') or ''}"
+                f"  {_clean_text(ev.get('ts'), 32)} {_clean_text(ev.get('channel'), 64)} "
+                f"{_clean_text(ev.get('event'), 64)} "
+                f"{_clean_text(ev.get('detail') or ev.get('fatal_type'), 500)}"
             )
     return "\n".join(lines)
