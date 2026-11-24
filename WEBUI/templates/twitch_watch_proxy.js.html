@@ -78,11 +78,15 @@
   let reconnectAttempt = 0;
   let waitStartedAt = Date.now();
   let lastDebugSent = 0;
-  // The /live/<channel>.ts fan-out is optional (an external livebot provides
-  // it). After repeated failures before the first frame, stay on LL-HLS.
+  const lastDebugByEvent = {};
+  // The /live/<channel>.ts fan-out needs livebot. After repeated failures, before
+  // the first frame or in a short time afterwards, stay on LL-HLS.
   let tsPlayed = false;
   let tsFailuresBeforePlay = 0;
+  let tsFailuresAfterPlay = [];
   let preferLowLatencyHls = false;
+  // Set once the direct nginx playlist failed; then hls.js uses the Flask playlist.
+  let directHlsFailed = false;
   const profile = {{ (live_player_profile or 'desktop')|tojson }};
   const isMobilePlayer = profile === 'mobile'
     || document.body.classList.contains('page-twitch-watch-mobile')
@@ -108,6 +112,10 @@
       if (!clientDebugUrl) return;
       const now = Date.now();
       if (level !== 'error' && level !== 'warn' && now - lastDebugSent < 4000) return;
+      // Warnings and errors too: a stuck ready poll would post one event per poll.
+      const eventKey = (level || '') + ':' + (eventName || '');
+      if (now - (lastDebugByEvent[eventKey] || 0) < 15000) return;
+      lastDebugByEvent[eventKey] = now;
       lastDebugSent = now;
       fetch(clientDebugUrl, {
         method: 'POST',
@@ -140,12 +148,24 @@
     if (video.currentTime > 0) revealPlaying();
   });
 
+  // Pause for buffering. The flag tells media_session.js that this is neither the
+  // user nor the browser, so it neither resumes early nor remembers a user pause.
+  function holdPlayback() {
+    video._streamVaultBuffering = true;
+    if (!video.paused) video.pause();
+  }
+
+  function releasePlayback() {
+    video._streamVaultBuffering = false;
+  }
+
   function destroyPlayers() {
     if (telemetryTimer) {
       clearInterval(telemetryTimer);
       telemetryTimer = null;
     }
     if (mpegtsPlayer) {
+      holdPlayback();
       try {
         mpegtsPlayer.pause();
         mpegtsPlayer.unload();
@@ -162,16 +182,29 @@
 
   function stopReadyPoll() {
     if (!readyPoll) return;
-    clearInterval(readyPoll);
+    clearTimeout(readyPoll);
     readyPoll = null;
+  }
+
+  // Fast while a fresh pipeline normally comes up, then slower, so a stream that
+  // never starts does not keep polling 2.5 times per second.
+  function readyPollDelayMs(baseMs) {
+    const waited = Date.now() - waitStartedAt;
+    if (waited < 15000) return baseMs;
+    if (waited < 60000) return Math.max(baseMs, 1500);
+    return Math.max(baseMs, 4000);
   }
 
   function ensureReadyPoll(intervalMs) {
     stopReadyPoll();
-    readyPoll = setInterval(function() {
+    const baseMs = intervalMs || 1000;
+    function tick() {
+      readyPoll = null;
       if (ready) return;
       checkPlaylist();
-    }, intervalMs || 1000);
+      readyPoll = setTimeout(tick, readyPollDelayMs(baseMs));
+    }
+    readyPoll = setTimeout(tick, baseMs);
   }
 
   function reconnectDelayMs() {
@@ -189,9 +222,55 @@
     reconnectAttempt += 1;
     reconnectTimer = setTimeout(function() {
       reconnectTimer = null;
+      // Each reconnect gets a fresh fast-poll window.
+      waitStartedAt = Date.now();
       checkPlaylist();
       ensureReadyPoll(1000);
     }, delay);
+  }
+
+  // Calls done() once `seconds` are buffered ahead of currentTime. maxWaitMs counts
+  // from the first buffered data: on a cold start the server needs several seconds
+  // before the first byte. Hard cap 30 s, so a stream without data never blocks.
+  function whenBuffered(targetVideo, seconds, maxWaitMs, done) {
+    const startedAt = Date.now();
+    let firstDataAt = 0;
+    (function check() {
+      const now = Date.now();
+      const b = targetVideo.buffered;
+      const ahead = b && b.length ? b.end(b.length - 1) - targetVideo.currentTime : 0;
+      if (ahead > 0 && !firstDataAt) firstDataAt = now;
+      const waitedForData = firstDataAt ? now - firstDataAt : 0;
+      if (ahead >= seconds || waitedForData >= maxWaitMs || now - startedAt >= 30000) {
+        done();
+        return;
+      }
+      setTimeout(check, 100);
+    })();
+  }
+
+  // Counts a failed real-time connection; after repeated failures HLS is used.
+  function noteTsFailure() {
+    if (!tsPlayed) {
+      tsFailuresBeforePlay += 1;
+      if (tsFailuresBeforePlay >= 2) preferLowLatencyHls = true;
+    } else {
+      const now = Date.now();
+      tsFailuresAfterPlay = tsFailuresAfterPlay.filter(function(t) { return now - t < 120000; });
+      tsFailuresAfterPlay.push(now);
+      if (tsFailuresAfterPlay.length >= 3) preferLowLatencyHls = true;
+    }
+    if (preferLowLatencyHls) {
+      dbg('warn', 'mpegts_unavailable_use_hls', { detail: tsFailuresBeforePlay + '/' + tsFailuresAfterPlay.length });
+    }
+  }
+
+  // Which playlist hls.js loads, and when a failed load switches to the other one.
+  function hlsSourceUrl(directUrl) {
+    return directHlsFailed && playlistUrl ? playlistUrl : directUrl;
+  }
+  function shouldUseFlaskPlaylist(details) {
+    return !directHlsFailed && !!playlistUrl && /^manifest(Load|Parsing)/.test(String(details || ''));
   }
 
   function tryAutoplay() {
@@ -238,6 +317,7 @@
 
   function initLowLatencyHlsPlayer(targetVideo, fallbackUrl) {
     dbg('info', 'init_ll_hls_fallback', { url: fallbackUrl });
+    releasePlayback();
     const hlsUrl = fallbackUrl || ('/live/' + encodeURIComponent(channelName) + '/stream.m3u8');
 
     if (window.Hls && Hls.isSupported()) {
@@ -264,6 +344,14 @@
         if (!data) return;
         if (!data.fatal) return;
         dbg('error', 'hls_fatal', { detail: String(data.details || data.type || '') });
+        if (shouldUseFlaskPlaylist(data.details)) {
+          // No direct nginx route (404) or not allowed there: the WebUI serves the
+          // same segments after its own session check.
+          directHlsFailed = true;
+          dbg('warn', 'hls_direct_failed_use_webui', { detail: String(data.response && data.response.code || '') });
+          hls.loadSource(hlsSourceUrl(hlsUrl));
+          return;
+        }
         if (data.type === Hls.ErrorTypes.NETWORK_ERROR && net < 6) {
           net += 1;
           hls.startLoad();
@@ -277,7 +365,7 @@
         scheduleReconnect({{ _('HLS connection lost — reconnecting…')|tojson }});
       });
 
-      hls.loadSource(hlsUrl);
+      hls.loadSource(hlsSourceUrl(hlsUrl));
       hls.attachMedia(targetVideo);
       return;
     }
@@ -300,9 +388,16 @@
     dbg('error', 'playback_unsupported', {});
   }
 
+  function canUseRealtimeTs() {
+    const mseSupported = window.mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
+    const nativeHlsPreferred = window.StreamVaultHls && StreamVaultHls.preferNativeHls(video);
+    return !!(mseSupported && !nativeHlsPreferred && !preferLowLatencyHls);
+  }
+
   function startPlayer() {
     if (ready) return;
     ready = true;
+    if (waitText) waitText.hidden = false;
     reconnectAttempt = 0;
     stopReadyPoll();
     destroyPlayers();
@@ -310,10 +405,7 @@
 
     try {
       // 1. Primary: mpegts.js Ultra-Low-Latency Byte-Stream
-      const mseSupported = window.mpegts && mpegts.getFeatureList && mpegts.getFeatureList().mseLivePlayback;
-      const nativeHlsPreferred = window.StreamVaultHls && StreamVaultHls.preferNativeHls(video);
-
-      if (mseSupported && !nativeHlsPreferred && !preferLowLatencyHls) {
+      if (canUseRealtimeTs()) {
         dbg('info', 'init_mpegts_player', { channel: channelName });
         // Absolute URL: mpegts.js fetches inside a blob: worker without a base URL.
         const tsUrl = new URL('/live/' + encodeURIComponent(channelName) + '.ts', window.location.href).href;
@@ -327,24 +419,34 @@
           enableStashBuffer: false,
           stashInitialSize: isMobilePlayer ? 384 : 128,
           liveBufferLatencyChasing: true,
-          liveBufferLatencyMaxLatency: isMobilePlayer ? 2.5 : 1.5,
-          liveBufferLatencyMinRemain: isMobilePlayer ? 0.6 : 0.4,
+          liveBufferLatencyMaxLatency: isMobilePlayer ? 2.5 : 3.0,
+          liveBufferLatencyMinRemain: isMobilePlayer ? 0.6 : 1.0,
           liveSync: true,
-          liveSyncMaxLatency: isMobilePlayer ? 2.5 : 1.5,
-          liveSyncTargetLatency: isMobilePlayer ? 1.0 : 0.6,
+          liveSyncMaxLatency: isMobilePlayer ? 2.5 : 3.0,
+          liveSyncTargetLatency: isMobilePlayer ? 1.0 : 1.5,
           liveSyncPlaybackRate: 1.08,
           autoCleanupSourceBuffer: true,
           autoCleanupMaxBackwardDuration: 10,
           autoCleanupMinBackwardDuration: 5
         });
 
+        // Start buffer: playing from the live edge left about 0.3 s of headroom and
+        // audio dropped out on every network hiccup.
+        const startBufferSec = isMobilePlayer ? 1.0 : 1.5;
+        const playerAtStart = mpegtsPlayer;
+        video.autoplay = false;
+        holdPlayback();
         mpegtsPlayer.attachMediaElement(video);
         mpegtsPlayer.load();
-        const p = mpegtsPlayer.play();
-        if (p && typeof p.catch === 'function') {
-          p.catch(function() {});
-        }
-        tryAutoplay();
+        whenBuffered(video, startBufferSec, 5000, function() {
+          if (mpegtsPlayer !== playerAtStart) return;
+          releasePlayback();
+          const p = playerAtStart.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(function() {});
+          }
+          tryAutoplay();
+        });
         startTelemetry('ULTRA-LOW-LATENCY MPEG-TS');
 
         mpegtsPlayer.on(mpegts.Events.ERROR, function(type, detail, info) {
@@ -353,14 +455,16 @@
             detail: String(detail),
             info: String(info || '')
           });
-          if (!tsPlayed) {
-            tsFailuresBeforePlay += 1;
-            if (tsFailuresBeforePlay >= 2) {
-              preferLowLatencyHls = true;
-              dbg('warn', 'mpegts_unavailable_use_hls', { detail: String(tsFailuresBeforePlay) });
-            }
-          }
+          noteTsFailure();
           scheduleReconnect({{ _('Real-time stream error — reconnecting…')|tojson }});
+        });
+        // The server closes the connection when its pipeline ends; mpegts.js reports
+        // that as a regular end, and without this the last frame would stay frozen.
+        mpegtsPlayer.on(mpegts.Events.LOADING_COMPLETE, function() {
+          if (mpegtsPlayer !== playerAtStart) return;
+          dbg('warn', 'mpegts_ended', {});
+          noteTsFailure();
+          scheduleReconnect({{ _('Connection lost — reconnecting…')|tojson }});
         });
 
         return;
@@ -381,8 +485,8 @@
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden && video.buffered && video.buffered.length > 0) {
       const end = video.buffered.end(video.buffered.length - 1);
-      if (end - video.currentTime > 2.0) {
-        video.currentTime = Math.max(0, end - 0.5);
+      if (end - video.currentTime > 3.0) {
+        video.currentTime = Math.max(0, end - 1.5);
       }
     }
   });
@@ -407,6 +511,7 @@
         }
         const waitedSec = Math.round((Date.now() - waitStartedAt) / 1000);
         if (data && data.twitch_live === false && waitedSec >= 20) {
+          if (waitText) waitText.hidden = true;
           setWait(true, {{ _('Streamer is currently offline.')|tojson }});
           dbg('warn', 'offline', { detail: 'twitch_live=false' });
           return;
@@ -452,9 +557,38 @@
     ? {{ _('Server is loading the stream (Turbo, without viewer list)…')|tojson }}
     : {{ _('Server is loading the stream (without Twitch account)…')|tojson }});
   try { dbg('info', 'proxy_boot', {}); } catch (e) {}
-  checkPlaylist();
-  ensureReadyPoll(400);
+  if (canUseRealtimeTs()) {
+    // Fast start: livebot holds the .ts request until the first byte, so waiting for
+    // the HLS playlist (about 2.5 s later on a cold start) only adds delay.
+    startPlayer();
+  } else {
+    checkPlaylist();
+    ensureReadyPoll(400);
+  }
   setInterval(touchHeartbeat, 15000);
+
+  // Rebuffer: after a stall continue only with about 1 s in the buffer. Otherwise
+  // the player stays at 0.4-0.6 s and stalls again on the next hiccup.
+  const REBUFFER_SEC = 1.0;
+  let hasPlayed = false;
+  let rebuffering = false;
+  video.addEventListener('playing', function() { hasPlayed = true; });
+  function rebufferAfterStall() {
+    if (rebuffering || !hasPlayed || !ready || !mpegtsPlayer || video.paused) return;
+    const b = video.buffered;
+    if (b && b.length && b.end(b.length - 1) - video.currentTime >= REBUFFER_SEC) return;
+    rebuffering = true;
+    const playerAtStall = mpegtsPlayer;
+    holdPlayback();
+    whenBuffered(video, REBUFFER_SEC, 5000, function() {
+      rebuffering = false;
+      if (mpegtsPlayer !== playerAtStall) return;
+      releasePlayback();
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(function() {});
+    });
+  }
+  video.addEventListener('waiting', rebufferAfterStall);
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && !ready) {
       scheduleReconnect({{ _('Reconnecting…')|tojson }});

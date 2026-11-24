@@ -1160,6 +1160,16 @@ def _gql_post(query: str, variables: dict | None = None) -> dict | None:
     return None
 
 
+def gql_stream_is_live(login: str) -> bool | None:
+    """Uncached live check: True, False, or None when Twitch did not answer."""
+    payload = _gql_post(
+        "query ($login: String!) { user(login: $login) { stream { id } } }", {"login": login}
+    )
+    if not isinstance(payload, dict) or payload.get("errors") or not isinstance(payload.get("data"), dict):
+        return None
+    return bool((payload["data"].get("user") or {}).get("stream"))
+
+
 def fetch_gql_chat_badges(login: str = "") -> list[dict]:
     """Fetch official Twitch chat badge assets via public GQL (Helix/public badges API fallback)."""
     badges: list[dict] = []

@@ -46,6 +46,19 @@ def _env_flag(name, default=False):
     return str(raw).strip().lower() in ("1", "true", "yes", "on")
 
 
+def _env_int(name, default, minimum=0, maximum=None):
+    raw = os.environ.get(name)
+    if raw is None or str(raw).strip() == "":
+        return default
+    try:
+        value = int(str(raw).strip())
+    except ValueError:
+        logger.warning("%s is not a whole number; using %s", name, default)
+        return default
+    value = max(minimum, value)
+    return value if maximum is None else min(maximum, value)
+
+
 def _normalize_twitch_oauth_token(token):
     token = str(token or "").strip()
     if token.lower().startswith("oauth:"):
@@ -143,6 +156,28 @@ if os.path.isdir("/dev/shm"):
 else:
     DEFAULT_LIVE_HLS_ROOT = os.path.join(BASE_DIR, ".hls_live")
 LIVE_HLS_ROOT = os.environ.get("LIVE_HLS_DIR", DEFAULT_LIVE_HLS_ROOT)
+
+# Live restream daemon (recorder/livebot.py): pulls a Twitch channel only while
+# somebody watches it and serves it as MPEG-TS and HLS.
+LIVEBOT_ENABLED = _env_flag("LIVEBOT_ENABLED", True)
+# The TS port has no login of its own; nginx checks every request first
+# (auth_request). Bind another address only inside a private network (Docker).
+LIVEBOT_HOST = os.environ.get("LIVEBOT_HOST", "").strip() or "127.0.0.1"
+LIVEBOT_PORT = _env_int("LIVEBOT_PORT", 8085, minimum=1, maximum=65535)
+LIVEBOT_MAX_CHANNELS = _env_int("LIVEBOT_MAX_CHANNELS", 4, minimum=1)
+LIVEBOT_MAX_VIEWERS = _env_int("LIVEBOT_MAX_VIEWERS", 20, minimum=1)
+# HLS window in segments of about 2 s.
+LIVEBOT_HLS_LIST_SIZE = _env_int("LIVEBOT_HLS_LIST_SIZE", 20, minimum=5)
+LIVE_STREAM_QUALITY = os.environ.get("LIVE_STREAM_QUALITY", "").strip() or "best,720p60,480p30"
+LIVE_TWITCH_LOW_LATENCY = _env_flag("LIVE_TWITCH_LOW_LATENCY", True)
+# A channel counts as watched while its demand marker is younger than this. The
+# watch page renews it every 15 s; browsers throttle background tabs to 60 s.
+LIVE_WATCH_DEMAND_SEC = _env_int("LIVE_WATCH_DEMAND_SEC", 120, minimum=75)
+# Streamlink drops ad segments, so a 3-minute ad break delivers no data at all.
+LIVE_STALL_RESTART_SEC = _env_int("LIVE_STALL_RESTART_SEC", 240, minimum=30)
+LIVE_OFFLINE_RECHECK_SEC = _env_int("LIVE_OFFLINE_RECHECK_SEC", 30, minimum=5)
+LIVE_RETRY_BACKOFF_CAP_SEC = _env_int("LIVE_RETRY_BACKOFF_CAP_SEC", 60, minimum=2)
+LIVE_HLS_MIN_FREE_MB = _env_int("LIVE_HLS_MIN_FREE_MB", 128, minimum=32)
 
 SECRET_KEY = os.environ.get("VOD_SECRET_KEY", "change-me")
 
