@@ -101,7 +101,7 @@ has_force() {
 cmd_start() {
     require_root
     echo -e "${BLUE}[*] Starting StreamVault daemons...${NC}"
-    systemctl start streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+    systemctl start streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service
     echo -e "${GREEN}[OK] Services started successfully.${NC}"
 }
 
@@ -109,7 +109,7 @@ cmd_stop() {
     require_root
     guard_recordings "$(has_force "$@")"
     echo -e "${BLUE}[*] Stopping StreamVault daemons...${NC}"
-    systemctl stop streamvault-worker.service streamvault-recorder.service streamvault-webui.service
+    systemctl stop streamvault-livebot.service streamvault-worker.service streamvault-recorder.service streamvault-webui.service
     echo -e "${GREEN}[OK] Services stopped.${NC}"
 }
 
@@ -118,7 +118,7 @@ cmd_restart() {
     local target="all" arg
     for arg in "$@"; do
         case "$arg" in
-            webui|recorder|worker|all) target="$arg" ;;
+            webui|recorder|worker|livebot|all) target="$arg" ;;
             --force) ;;
             *) echo -e "${RED}[ERROR] Unknown restart target: $arg${NC}"; exit 1 ;;
         esac
@@ -129,7 +129,7 @@ cmd_restart() {
     fi
     echo -e "${BLUE}[*] Restarting StreamVault daemons (${target})...${NC}"
     if [[ "$target" == "all" ]]; then
-        systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+        systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service
     else
         systemctl restart "streamvault-${target}.service"
     fi
@@ -139,7 +139,7 @@ cmd_restart() {
 cmd_status() {
     header
     echo -e "${BOLD}Daemons Status:${NC}"
-    systemctl status streamvault-webui.service streamvault-recorder.service streamvault-worker.service --no-pager -l || true
+    systemctl status streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service --no-pager -l || true
     echo ""
     echo -e "${BOLD}Storage & RAM-Disk:${NC}"
     df -h /dev/shm | grep -v "udev" || true
@@ -159,10 +159,13 @@ cmd_logs() {
             journalctl -u streamvault-worker.service -f -n 50
             ;;
         all)
-            journalctl -u streamvault-webui.service -u streamvault-recorder.service -u streamvault-worker.service -f -n 50
+            journalctl -u streamvault-webui.service -u streamvault-recorder.service -u streamvault-worker.service -u streamvault-livebot.service -f -n 50
+            ;;
+        livebot)
+            journalctl -u streamvault-livebot.service -f -n 50
             ;;
         *)
-            echo -e "${RED}[ERROR] Unknown service: $target (use webui, recorder, worker, or all)${NC}"
+            echo -e "${RED}[ERROR] Unknown service: $target (use webui, recorder, worker, livebot, or all)${NC}"
             exit 1
             ;;
     esac
@@ -173,10 +176,15 @@ cmd_update() {
     guard_recordings "$(has_force "$@")"
     echo -e "${BLUE}[*] Updating StreamVault from Git...${NC}"
     cd "${APP_DIR}"
+    if [[ ! -d "${APP_DIR}/.git" ]]; then
+        echo -e "${RED}[ERROR] ${APP_DIR} is not a git checkout (installed from an archive or by release 0.1).${NC}"
+        echo -e "${RED}        Update with: git clone https://github.com/Blackwellcode/streamvault.git && cd streamvault && sudo ./install.sh${NC}"
+        exit 1
+    fi
     # Repository and venv belong to the service user; root never runs git hooks.
     runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" pull --ff-only
     runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --upgrade -r requirements.txt
-    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service
     echo -e "${GREEN}[OK] Update completed and daemons restarted.${NC}"
 }
 

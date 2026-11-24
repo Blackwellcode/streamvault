@@ -94,6 +94,20 @@ All notable changes to this project are documented here. The format follows
   request line `%(r)s`; update existing units (`%%` there, systemd and
   supervisor expand `%`).
 
+- The gunicorn access log percent-encodes client-controlled values
+  (`--logger-class WEBUI.gunicorn_logging.EscapedPathLogger`), and both access
+  logs drop the query string and fragment of the referer, so requests can no
+  longer forge log lines, inject terminal escapes or leak tokens through it.
+- JSON request bodies, including chunked ones, are limited to 1 MiB before
+  authentication (413); uploads are unaffected.
+- `/api/live/client-debug` accepts at most 16 KB and 60 requests per minute,
+  stores only finite bounded numbers and printable text, and keeps its log
+  below 1 MiB; malformed log lines are skipped and reported.
+- The clip editor, live, VOD and mobile player pages pass names, the chat URL
+  and the start time to JavaScript as JSON; the clip editor's `?t=` is parsed
+  as a number.
+- nginx no longer forwards the session cookie to the livebot.
+
 ### Added
 
 - `scripts/vod_retention.py`: deletes local archive VODs older than
@@ -107,8 +121,12 @@ All notable changes to this project are documented here. The format follows
   `x.mp4`) is removed with a tombstone, share links and chapters for its own
   file name only, without the stem's chat, metadata, thumbnail or chat
   tombstone; names like `X.MP4`, which the WebUI does not serve, are skipped
-  with a warning. Example systemd service and timer in `scripts/systemd/`;
-  see INSTALL.md, "VOD retention".
+  with a warning. The tombstone is written first and taken back if the file
+  stays; a database error fails only that VOD (exit code 1). VODs being
+  watched, needed by a cloud task or, with auto-upload on, without a confirmed
+  remote copy are kept. Invalid offload slugs are refused, as are links leaving
+  the archive. Example systemd service and timer in `scripts/systemd/` (they
+  follow `VOD_RETENTION_DAYS`); see INSTALL.md, "VOD retention".
 
 ### Changed
 
@@ -187,6 +205,15 @@ All notable changes to this project are documented here. The format follows
     stop a recording, but they now log a throttled warning.
   - Broad handlers that do something other than these three patterns still
     exist and log nothing.
+- Restoring a VOD from cloud storage removes its `deleted_media` tombstone;
+  before, the restored file stayed hidden.
+- `install.sh` and `bin/streamvault` are executable, the installer keeps the
+  git history of an official clone so `streamvault update` works, the site
+  answers by IP address (the untouched Debian/Ubuntu placeholder site is
+  disabled) and an existing site file is backed up before it is rewritten.
+- Docker: `./data` is handed to the app user on start, so a fresh clone can
+  create its database.
+- The README demo used `VOD_USER=admin`, which StreamVault rejects.
 - A deleted VOD or clip whose file was still on disk opened in the player:
   the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.
@@ -197,6 +224,17 @@ All notable changes to this project are documented here. The format follows
   before the first frame, because the MPEG-TS fan-out is an optional
   external livebot. Native HLS (iOS/Safari) plays the session-checked
   `/live/playlist/<channel>`.
+
+## [0.1.1] - 2026-11-24
+
+Released from the `release/0.1.1` branch (0.1.0 plus this fix).
+
+### Security
+
+- Fixed reflected XSS in the clip editor: the Share button rendered the
+  `clip_name` query parameter into an inline handler. A crafted link could
+  run script in a signed-in user's session after a click on **Share**
+  (GHSA-qc69-h632-qxmg, affects 0.1.0). No configuration change is needed.
 
 ## [0.1.0] - 2026-11-09
 

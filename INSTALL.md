@@ -30,7 +30,7 @@ sudo ./install.sh
 - Installs all apt dependencies (`ffmpeg`, `python3-venv`, `nginx`, `sqlite3`).
 - Sets up system user `streamvault` and directories (`/opt/streamvault`, `/var/lib/streamvault`).
 - Generates cryptographically secure secrets in `/etc/streamvault/env`.
-- Deploys and enables systemd daemons (`streamvault-webui.service`, `streamvault-recorder.service`, `streamvault-worker.service`).
+- Deploys and enables systemd daemons (`streamvault-webui.service`, `streamvault-recorder.service`, `streamvault-worker.service`, `streamvault-livebot.service`).
 - Configures Nginx with `X-Accel-Redirect` byte-range media offloading.
 - **Registers the global Linux management command** `/usr/local/bin/streamvault`:
 
@@ -59,7 +59,7 @@ cp .env.example .env
 Edit `.env` and set strong credentials:
 ```bash
 nano .env
-# Set VOD_USER, VOD_PASS, and VOD_SECRET_KEY
+# Set VOD_USER (not "admin"), VOD_PASS, and VOD_SECRET_KEY
 ```
 
 ### Step 3: Launch Containers
@@ -161,6 +161,7 @@ ExecStart=/opt/streamvault/venv/bin/gunicorn \
     --threads 4 \
     --bind 127.0.0.1:8080 \
     --timeout 120 \
+    --logger-class WEBUI.gunicorn_logging.EscapedPathLogger \
     --access-logfile /var/log/streamvault/access.log \
     --access-logformat '%%(h)s %%(l)s %%(u)s %%(t)s "%%(m)s %%(U)s %%(H)s" %%(s)s %%(b)s "%%(f)s" "%%(a)s"' \
     --error-logfile /var/log/streamvault/error.log \
@@ -174,7 +175,8 @@ WantedBy=multi-user.target
 
 `--access-logformat` logs the path without query string (`%(U)s` instead of
 the default request line `%(r)s`), so `?token=` values stay out of the access
-log. systemd expands `%` itself, hence `%%` in the unit.
+log. The logger class escapes control characters in the decoded path and drops
+the query string of the referer. systemd expands `%` itself, hence `%%` in the unit.
 
 ### Stream Recorder Daemon (`/etc/systemd/system/streamvault-recorder.service`)
 ```ini
@@ -190,6 +192,27 @@ WorkingDirectory=/opt/streamvault/app
 EnvironmentFile=/etc/streamvault/env
 Environment="PYTHONPATH=/opt/streamvault/app"
 ExecStart=/opt/streamvault/venv/bin/python3 recorder/Streamrecorder.py
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Live Restream Daemon (`/etc/systemd/system/streamvault-livebot.service`)
+```ini
+[Unit]
+Description=StreamVault - Live Restream Daemon
+After=network.target streamvault-webui.service
+
+[Service]
+Type=simple
+User=streamvault
+Group=streamvault
+WorkingDirectory=/opt/streamvault/app
+EnvironmentFile=/etc/streamvault/env
+Environment="PYTHONPATH=/opt/streamvault/app"
+ExecStart=/opt/streamvault/venv/bin/python3 recorder/livebot.py
 Restart=always
 RestartSec=10s
 
@@ -224,6 +247,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now streamvault-webui
 sudo systemctl enable --now streamvault-recorder
 sudo systemctl enable --now streamvault-worker
+sudo systemctl enable --now streamvault-livebot
 ```
 
 ### VOD retention (optional)
@@ -235,9 +259,24 @@ touches the local disk.
 - **Dry run by default.** Without `--enforce` it only prints what it would
   delete. Check the report before you enable deletion.
 - Deletion works like deleting a VOD in the WebUI: the VOD gets a
-  `deleted_media` tombstone (cloud sync does not bring it back), and its
-  thumbnail, HLS cache, chapters and share links are removed, plus its
-  metadata JSON, chat log and chat chunks. Clips are never touched.
+  `deleted_media` tombstone before its file is removed. Cloud sync only uploads
+  and never brings a file back; restoring a VOD from the storage page removes
+  its tombstone, so it is visible again. Thumbnail, HLS cache, chapters, share
+  links, metadata JSON, `<stem>.transcript.txt`, chat log and chat chunks are
+  removed. Clips are never touched.
+- A VOD is kept while somebody watches it (admins and setups with
+  `VOD_MAX_CONCURRENT_WATCHERS=0` are not tracked), while a cloud task still
+  needs it and, with cloud auto-upload on, until a current remote copy is
+  confirmed (checked with the provider right before deletion unless
+  `verify_before_local_delete` is off). Folders with an unreadable
+  `.current_recording*.json` are skipped; a file changed since the scan is kept.
+- Each real archive folder is handled once; links are aliases and share its
+  offload protection. Links to other drives or nested folders, and the
+  configured files/metadata/thumbnail/HLS/cache folders, are skipped.
+- Offload slugs may contain letters, digits, `_`, `-` and `.`; anything else
+  exits with 2, as does a slug without an archive folder with `--enforce`
+  (dry run: warning).
+- A failure affects one VOD only; the run continues and exits with 1.
 - Folders with an active recording or a running remux are skipped and retried
   on the next run. Files with a `.part` or `.remux.lock` sibling and the file an
   active recording points to are always kept.
@@ -268,7 +307,8 @@ sudo -u streamvault /opt/streamvault/venv/bin/python3     /opt/streamvault/app/s
 
 Daily run with systemd: example units are in `scripts/systemd/`
 (`streamvault-vod-retention.service` runs a dry run, the timer starts it at
-04:30). Copy both to `/etc/systemd/system/`, adjust paths and `--days`, add
+04:30). Copy both to `/etc/systemd/system/`, adjust the paths, set
+`VOD_RETENTION_DAYS` in `/etc/streamvault/env` (default 90) and add
 `--enforce` to `ExecStart` once the dry-run report looks right, then:
 ```bash
 sudo systemctl daemon-reload
@@ -284,29 +324,46 @@ Nginx performs direct kernel-level offloading (`sendfile`) for video Range reque
 
 Save to `/etc/nginx/sites-available/streamvault.conf`:
 ```nginx
+# WebSocket upgrades only when the client asks for one.
+map $http_upgrade $streamvault_connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 # Access log without cookies and query strings (no ?token= in the log);
 # rt/urt show slow requests and upstreams.
-log_format streamvault_timed '$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$http_referer" "$http_user_agent" rt=$request_time urt=$upstream_response_time';
+map $http_referer $streamvault_referer {
+    default "-";
+    "~^(?<sv_referer_path>[^?#]+)" $sv_referer_path;
+}
+log_format streamvault_timed '$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$streamvault_referer" "$http_user_agent" rt=$request_time urt=$upstream_response_time';
 
 server {
     listen 80;
     server_name vault.your-domain.example;
     access_log /var/log/nginx/streamvault.access.log streamvault_timed;
 
-    # Performance Tuning
     sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
     client_max_body_size 4G;
 
-    # Gzip Compression
     gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml;
+    # Everything goes through the proxy; without gzip_proxied nothing is compressed.
+    gzip_proxied any;
+    gzip_vary on;
+    gzip_types text/plain text/css application/json application/javascript text/javascript text/xml;
 
-    # 1. Reverse Proxy to Python WebUI
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
     location / {
         proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $streamvault_connection_upgrade;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -315,44 +372,37 @@ server {
         proxy_set_header X-StreamVault-Live-Auth "";
     }
 
-    # 2. X-Accel-Redirect media offload.
-    # WebUI emits /_protected/<archive>/<file>; archives live directly below
-    # VOD_BASE_DIR (not below VOD_BASE_DIR/files).
     location /_protected/ {
         internal;
         alias /var/lib/streamvault/data/;
-        sendfile on;
-        sendfile_max_chunk 1m;
-        output_buffers 2 1m;
-        gzip off;
-        add_header Accept-Ranges bytes always;
+        mp4;
+        mp4_buffer_size 1m;
+        mp4_max_buffer_size 10m;
     }
 
-    # Legacy archives below VOD_FILES_DIR (default VOD_BASE_DIR/files).
     location /_protected_files/ {
         internal;
         alias /var/lib/streamvault/data/files/;
-        sendfile on;
-        sendfile_max_chunk 1m;
-        output_buffers 2 1m;
-        gzip off;
-        add_header Accept-Ranges bytes always;
+        mp4;
+        mp4_buffer_size 1m;
+        mp4_max_buffer_size 10m;
     }
 
     location /_protected_vodcache/ {
         internal;
         alias /var/lib/streamvault/data/.vodcache/;
-        sendfile on;
-        sendfile_max_chunk 1m;
-        output_buffers 2 1m;
-        gzip off;
     }
 
+    # A location with its own add_header drops the server-level ones, so the
+    # security headers are repeated wherever add_header is used.
     location /_protected_thumbs/ {
         internal;
         alias /var/lib/streamvault/data/.thumbs/;
-        expires 1d;
-        add_header Cache-Control "public";
+        # Thumbnails sit behind login: never in shared caches.
+        add_header Cache-Control "private, max-age=86400" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
     location /_protected_hls/ {
@@ -364,10 +414,12 @@ server {
             video/mp4 m4s mp4;
         }
         default_type application/octet-stream;
-        add_header Cache-Control "no-cache";
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
-    # 3. Live HLS RAM-Disk offload
     location /_protected_hls_live/ {
         internal;
         alias /dev/shm/streamvault_hls/;
@@ -378,10 +430,14 @@ server {
             video/mp4 m4s mp4;
         }
         default_type application/octet-stream;
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
-    # 4. Direct live routes behind login (auth_request)
+    # Direct live routes: the WebUI checks session and channel visibility
+    # for every request (auth_request), otherwise 401/403.
     location = /_live_auth {
         internal;
         proxy_pass http://127.0.0.1:8080/api/live/auth;
@@ -396,22 +452,31 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Real-time MPEG-TS from an optional livebot fan-out (127.0.0.1:8085).
+    # Real-time MPEG-TS from the livebot service (127.0.0.1:8085). If it is not
+    # running nginx answers 502 and the player switches to HLS.
     location ~ ^/live/[A-Za-z0-9_-]+\.ts$ {
         auth_request /_live_auth;
         proxy_pass http://127.0.0.1:8085;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        # The session was checked above; the livebot never needs the cookie.
+        proxy_set_header Cookie "";
         proxy_buffering off;
         proxy_cache off;
         proxy_request_buffering off;
         proxy_read_timeout 300s;
+        tcp_nodelay on;
+        chunked_transfer_encoding on;
         add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
         add_header X-Accel-Buffering "no" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
-    # LL-HLS playlist and segments from the live RAM disk.
+    # LL-HLS playlist and segments straight from the live RAM disk.
     location ~ ^/live/(?<hls_chan>[A-Za-z0-9_-]+)/(?<hls_file>(stream|index)\.m3u8|seg_[0-9]+\.ts)$ {
         auth_request /_live_auth;
         alias /dev/shm/streamvault_hls/$hls_chan/$hls_file;
@@ -422,6 +487,9 @@ server {
         }
         default_type application/octet-stream;
         add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 }
 ```
@@ -442,10 +510,13 @@ while mobile live is off. `/_live_auth` sets the header
 themselves. Any new direct live location must carry
 `auth_request /_live_auth`, otherwise the stream is public. `auth_request`
 needs `ngx_http_auth_request_module` (included in the Debian/Ubuntu nginx
-packages and the `nginx:alpine` image; check with `nginx -V`). StreamVault
-does not ship the MPEG-TS fan-out: without a livebot on `127.0.0.1:8085` the
-`.ts` route answers 502 and the player switches to LL-HLS after two failed
-attempts.
+packages and the `nginx:alpine` image; check with `nginx -V`). Maintenance
+mode (503) and missing terms consent (400) reach the player as 500, because
+`auth_request` only passes 401 and 403 on; the stream stays closed.
+The `.ts` route and the HLS files come from the `livebot` service
+(`recorder/livebot.py`, `127.0.0.1:8085`). Keep it on the loopback address: it
+trusts nginx to check the session. While it is not running the `.ts` route
+answers 502 and live playback stays empty.
 The `/_protected_files/` alias is only needed for legacy archives stored below
 `VOD_FILES_DIR`; new recordings normally live directly below `VOD_BASE_DIR`.
 
@@ -454,6 +525,22 @@ Enable site and restart Nginx:
 sudo ln -sf /etc/nginx/sites-available/streamvault.conf /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+### HTTPS
+
+Point a domain at the server, set it as `server_name` in
+`/etc/nginx/sites-available/streamvault.conf`, then:
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d vault.your-domain.example
+```
+
+Set `VOD_SECURE_COOKIES=true` and
+`VOD_PUBLIC_BASE=https://vault.your-domain.example` in `/etc/streamvault/env`
+and run `sudo streamvault restart webui`. Re-running `install.sh` rewrites the
+site file; the previous one is kept next to it as
+`streamvault.conf.bak.<timestamp>`.
 
 ---
 

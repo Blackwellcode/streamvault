@@ -33,7 +33,7 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 python scripts/demo_seed.py --base-dir ./demo-data
 VOD_BASE_DIR=./demo-data VOD_USE_X_ACCEL=false \
-VOD_USER=admin VOD_PASS='choose-a-password' \
+VOD_USER=demo VOD_PASS='choose-a-password' \
 VOD_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')" \
 python -m WEBUI.webui --host 127.0.0.1 --port 8080
 ```
@@ -49,8 +49,10 @@ cd /tmp/streamvault && sudo ./install.sh
 ```
 
 The installer sets up FFmpeg, Nginx and a Python environment, creates the
-`streamvault` service user, registers the systemd services and prints a
-generated admin password. Afterwards manage the installation with:
+`streamvault` service user, registers the systemd services and generates an
+admin password (user `vaultadmin`; read it with
+`sudo grep '^VOD_PASS=' /etc/streamvault/env`). Afterwards manage the
+installation with:
 
 ```bash
 streamvault status         # services, health, RAM disk
@@ -68,7 +70,7 @@ cd streamvault
 cp .env.example .env
 python3 -c "import secrets; print('VOD_PASS=' + secrets.token_urlsafe(24))"
 python3 -c "import secrets; print('VOD_SECRET_KEY=' + secrets.token_hex(32))"
-# put both values and VOD_USER into .env, then:
+# put both values and VOD_USER (not "admin") into .env, then:
 docker compose up -d --build
 ```
 
@@ -94,9 +96,11 @@ the internet** and set `VOD_SECURE_COOKIES=true` once it is.
 
 - VOD player with chat replay in sync with the video, including badges and
   emotes.
-- Live viewing through a low-latency HLS restream from a RAM disk, so viewers
-  watch through your server instead of the platform. The Twitch player embed
-  is optional (`LIVE_TWITCH_EMBED`) and off by default.
+- Live viewing through your server: the `livebot` service fetches a Twitch
+  stream once while someone watches and serves it as real-time MPEG-TS with an
+  HLS fallback from a RAM disk. Streamlink filters Twitch ad segments, so
+  viewers get no player ads; during an ad break the picture can pause. The
+  Twitch player embed is optional (`LIVE_TWITCH_EMBED`) and off by default.
 - Lossless clips cut in the browser (keyframe-aligned `-c copy`).
 - OBS overlays for chat and alert sounds.
 
@@ -137,17 +141,19 @@ flowchart LR
     P["Twitch / YouTube"] -->|Streamlink, yt-dlp| R["Recorder"]
     P -->|IRC| C["Chat archiver"]
     R -->|MP4| D[("Archive")]
-    R -->|HLS| M[("RAM disk")]
+    P -->|Streamlink| L["Livebot"]
+    L -->|HLS| M[("RAM disk")]
     C --> D
     W["Worker: remux, thumbnails,<br/>cloud sync"] <--> D
     U["Web UI (Flask)"] <--> S[("SQLite")]
     N["Nginx"] <-->|auth| U
     N -->|X-Accel-Redirect| D
     N --> M
+    N --> L
     B["Browser"] <--> N
 ```
 
-Three services run side by side: `recorder`, `worker` and `webui`.
+Four services run side by side: `recorder`, `worker`, `livebot` and `webui`.
 
 ## Screenshots
 
@@ -167,15 +173,16 @@ Three services run side by side: `recorder`, `worker` and `webui`.
 
 - **No third-party fonts.** Inter and IBM Plex Mono are served by StreamVault
   itself; browsers make no request to Google Fonts.
-- **No Twitch embed by default.** Every device plays the server stream, so
-  viewers see no Twitch ads and their IP addresses stay away from Twitch.
-  `LIVE_TWITCH_EMBED=true` brings the embed back.
+- **No Twitch embed by default.** Every device plays the server stream, so the
+  Twitch player never runs in the viewer's browser and the video comes from
+  your server. `LIVE_TWITCH_EMBED=true` brings the embed back.
 - **Tokens stay out of logs.** The Nginx and gunicorn access logs record the
   path without the query string, and overlay tokens go in the URL fragment
   (`#token=`), which browsers never send to the server.
-- **Exception: chat emotes and badges.** The chat view loads emote lists and
-  images from third parties (7TV, BetterTTV, FrankerFaceZ, ivr.fi and the
-  Twitch CDN), so viewers' browsers contact those services.
+- **Exceptions.** The chat view loads emote lists and images from 7TV,
+  BetterTTV, FrankerFaceZ, ivr.fi and the Twitch CDN, the live overview loads
+  preview images from the Twitch CDN, and the live player and the clip editor
+  load scripts from jsDelivr and cdnjs. Viewers' browsers contact those hosts.
 
 ## Upgrading from 0.1
 

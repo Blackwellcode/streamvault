@@ -83,6 +83,12 @@ if [[ -f "${SCRIPT_DIR}/WEBUI/webui.py" ]]; then
     echo -e "${CYAN}[*] Copying from local source tree (${SCRIPT_DIR})...${NC}"
     [[ -r "${EXCLUDES_FILE}" ]] || { echo -e "${RED}[ERROR] ${EXCLUDES_FILE} missing.${NC}"; exit 1; }
     rsync -a --exclude-from="${EXCLUDES_FILE}" "${SCRIPT_DIR}/" "${APP_DIR}/"
+    # 'streamvault update' pulls with git, so the history of an official clone
+    # comes along. Checkouts of other remotes are copied without it.
+    SOURCE_ORIGIN="$(git -c safe.directory='*' -C "${SCRIPT_DIR}" config --get remote.origin.url 2>/dev/null || true)"
+    if [[ -d "${SCRIPT_DIR}/.git" && "${SOURCE_ORIGIN}" =~ ^https://github\.com/Blackwellcode/streamvault(\.git)?/?$ ]]; then
+        rsync -a "${SCRIPT_DIR}/.git/" "${APP_DIR}/.git/"
+    fi
     chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
 else
     echo -e "${CYAN}[*] Cloning from GitHub repository (${REPO_URL})...${NC}"
@@ -153,7 +159,7 @@ Group=${SERVICE_USER}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=${ENV_FILE}
 Environment="PYTHONPATH=${APP_DIR}:${APP_DIR}/WEBUI"
-ExecStart=${VENV_DIR}/bin/gunicorn --workers 4 --worker-class gthread --threads 4 --bind 127.0.0.1:8080 --timeout 120 --access-logfile ${LOG_DIR}/webui_access.log --access-logformat '%%(h)s %%(l)s %%(u)s %%(t)s "%%(m)s %%(U)s %%(H)s" %%(s)s %%(b)s "%%(f)s" "%%(a)s"' --error-logfile ${LOG_DIR}/webui_error.log WEBUI.webui:app
+ExecStart=${VENV_DIR}/bin/gunicorn --workers 4 --worker-class gthread --threads 4 --bind 127.0.0.1:8080 --timeout 120 --logger-class WEBUI.gunicorn_logging.EscapedPathLogger --access-logfile ${LOG_DIR}/webui_access.log --access-logformat '%%(h)s %%(l)s %%(u)s %%(t)s "%%(m)s %%(U)s %%(H)s" %%(s)s %%(b)s "%%(f)s" "%%(a)s"' --error-logfile ${LOG_DIR}/webui_error.log WEBUI.webui:app
 Restart=always
 RestartSec=5s
 
@@ -201,8 +207,28 @@ RestartSec=10s
 WantedBy=multi-user.target
 EOF
 
+cat > /etc/systemd/system/streamvault-livebot.service <<EOF
+[Unit]
+Description=StreamVault - Live Restream Daemon
+After=network.target streamvault-webui.service
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_USER}
+WorkingDirectory=${APP_DIR}
+EnvironmentFile=${ENV_FILE}
+Environment="PYTHONPATH=${APP_DIR}"
+ExecStart=${VENV_DIR}/bin/python3 recorder/livebot.py
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
-systemctl enable streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+systemctl enable streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service
 
 # 8. Registering Global CLI Binary
 echo -e "${BLUE}[8/8] Registering global command '/usr/local/bin/streamvault'...${NC}"
@@ -212,7 +238,29 @@ ln -sf "${APP_DIR}/bin/streamvault" /usr/local/bin/streamvault
 # Nginx Site Setup
 if [[ -d /etc/nginx/sites-available ]]; then
     echo -e "${CYAN}[*] Configuring Nginx reverse proxy...${NC}"
-    cat > /etc/nginx/sites-available/streamvault.conf <<EOF
+    SITE_FILE=/etc/nginx/sites-available/streamvault.conf
+    # Keep manual changes (for example TLS) of an earlier run.
+    if [[ -f "${SITE_FILE}" ]]; then
+        cp -a "${SITE_FILE}" "${SITE_FILE}.bak.$(date +%Y%m%d_%H%M%S)"
+    fi
+    # The stock Debian/Ubuntu site answers every request by IP address with the
+    # nginx welcome page. Disable it only while it is that untouched placeholder.
+    STOCK_SITE=/etc/nginx/sites-enabled/default
+    if [[ -L "${STOCK_SITE}" ]] && grep -q 'root /var/www/html' "${STOCK_SITE}" \
+        && ! grep -qE '^[[:space:]]*(proxy_pass|return|rewrite)' "${STOCK_SITE}"; then
+        rm -f "${STOCK_SITE}"
+        echo -e "${CYAN}[*] Disabled the stock nginx site (still in /etc/nginx/sites-available/default).${NC}"
+    fi
+    # Only one site may be the default server.
+    LISTEN_DEFAULT=" default_server"
+    for site in /etc/nginx/sites-enabled/*; do
+        [[ -e "${site}" && "$(basename "${site}")" != "streamvault.conf" ]] || continue
+        if grep -qE '^[[:space:]]*listen[^;#]*default_server' "${site}"; then
+            LISTEN_DEFAULT=""
+            echo -e "${YELLOW}[!] ${site} is the nginx default server; set server_name in ${SITE_FILE}.${NC}"
+        fi
+    done
+    cat > "${SITE_FILE}" <<EOF
 # WebSocket upgrades only when the client asks for one.
 map \$http_upgrade \$streamvault_connection_upgrade {
     default upgrade;
@@ -221,11 +269,15 @@ map \$http_upgrade \$streamvault_connection_upgrade {
 
 # Access log without cookies and query strings (no ?token= in the log);
 # rt/urt show slow requests and upstreams.
-log_format streamvault_timed '\$remote_addr - \$remote_user [\$time_local] "\$request_method \$uri \$server_protocol" \$status \$body_bytes_sent "\$http_referer" "\$http_user_agent" rt=\$request_time urt=\$upstream_response_time';
+map \$http_referer \$streamvault_referer {
+    default "-";
+    "~^(?<sv_referer_path>[^?#]+)" \$sv_referer_path;
+}
+log_format streamvault_timed '\$remote_addr - \$remote_user [\$time_local] "\$request_method \$uri \$server_protocol" \$status \$body_bytes_sent "\$streamvault_referer" "\$http_user_agent" rt=\$request_time urt=\$upstream_response_time';
 
 server {
-    listen 80;
-    server_name localhost;
+    listen 80${LISTEN_DEFAULT};
+    server_name _;
     access_log /var/log/nginx/streamvault.access.log streamvault_timed;
 
     sendfile on;
@@ -337,8 +389,8 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
-    # Real-time MPEG-TS fan-out of an optional livebot (127.0.0.1:8085).
-    # Without one nginx answers 502 and the player switches to LL-HLS.
+    # Real-time MPEG-TS from the livebot service (127.0.0.1:8085). If it is not
+    # running nginx answers 502 and the player switches to HLS.
     location ~ ^/live/[A-Za-z0-9_-]+\.ts\$ {
         auth_request /_live_auth;
         proxy_pass http://127.0.0.1:8085;
@@ -346,6 +398,8 @@ server {
         proxy_set_header Connection "";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
+        # The session was checked above; the livebot never needs the cookie.
+        proxy_set_header Cookie "";
         proxy_buffering off;
         proxy_cache off;
         proxy_request_buffering off;
@@ -400,7 +454,7 @@ elif [[ "${GUARD_RC}" == "1" ]]; then
     echo -e "${YELLOW}[!] Services were NOT restarted. Run 'streamvault restart' once the recordings"
     echo -e "    are finished, or re-run with STREAMVAULT_FORCE_RESTART=1.${NC}"
 else
-    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service
+    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service
 fi
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"

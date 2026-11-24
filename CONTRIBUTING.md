@@ -19,7 +19,7 @@ pip install -r requirements.txt ruff
 Run the app locally:
 
 ```bash
-export VOD_USER=admin VOD_PASS='choose-a-password' \
+export VOD_USER=demo VOD_PASS='choose-a-password' \
        VOD_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')" \
        VOD_BASE_DIR="$PWD/data"
 python -m WEBUI.webui --host 127.0.0.1 --port 8080
