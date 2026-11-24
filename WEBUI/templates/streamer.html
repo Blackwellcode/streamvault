@@ -40,11 +40,11 @@
         <div>
           <h2 class="nebula-profile-name">{{ display_name or streamer }}</h2>
           <div class="nebula-profile-tags">
-            <span class="ns-status-indicator {% if online or streamer in live_channels %}is-recording{% endif %}">
+            <span class="ns-status-indicator {% if online %}is-recording{% endif %}">
               <span class="ns-pulse-dot"></span>
               {% if online %}ON AIR{% else %}OFFLINE{% endif %}
             </span>
-            {% if streamer in live_channels %}<span class="ns-pill ns-pill-live">{{ _('Recording active') }}</span>{% endif %}
+            {% if online %}<span class="ns-pill ns-pill-live">{{ _('Recording active') }}</span>{% endif %}
             <span>•</span>
             <span>{{ _('%(count)s recordings', count=cnt_vod) }}</span>
             <span>•</span>

@@ -83,13 +83,19 @@ if [[ -f "${SCRIPT_DIR}/WEBUI/webui.py" ]]; then
     echo -e "${CYAN}[*] Copying from local source tree (${SCRIPT_DIR})...${NC}"
     [[ -r "${EXCLUDES_FILE}" ]] || { echo -e "${RED}[ERROR] ${EXCLUDES_FILE} missing.${NC}"; exit 1; }
     rsync -a --exclude-from="${EXCLUDES_FILE}" "${SCRIPT_DIR}/" "${APP_DIR}/"
-    # 'streamvault update' pulls with git, so the history of an official clone
-    # comes along. Checkouts of other remotes are copied without it.
-    SOURCE_ORIGIN="$(git -c safe.directory='*' -C "${SCRIPT_DIR}" config --get remote.origin.url 2>/dev/null || true)"
-    if [[ -d "${SCRIPT_DIR}/.git" && "${SOURCE_ORIGIN}" =~ ^https://github\.com/Blackwellcode/streamvault(\.git)?/?$ ]]; then
-        rsync -a "${SCRIPT_DIR}/.git/" "${APP_DIR}/.git/"
-    fi
     chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}"
+    # 'streamvault update' pulls with git, so the history of an official clone
+    # comes along. Hooks and the config stay behind: they may hold credentials
+    # or commands. Checkouts of other remotes are copied without history.
+    SOURCE_ORIGIN="$(git -c safe.directory='*' -C "${SCRIPT_DIR}" config --get remote.origin.url 2>/dev/null || true)"
+    if [[ -d "${SCRIPT_DIR}/.git" && ! -L "${SCRIPT_DIR}/.git" && "${SCRIPT_DIR}" != "${APP_DIR}" \
+        && "${SOURCE_ORIGIN}" =~ ^https://github\.com/Blackwellcode/streamvault(\.git)?/?$ ]]; then
+        rsync -a --exclude=/hooks/ --exclude=/config "${SCRIPT_DIR}/.git/" "${APP_DIR}/.git/"
+        chown -R "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}/.git"
+        runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" init -q
+        runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" config remote.origin.url "${REPO_URL}"
+        runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+    fi
 else
     echo -e "${CYAN}[*] Cloning from GitHub repository (${REPO_URL})...${NC}"
     # The checkout belongs to the service user; git runs as that user so root
@@ -241,28 +247,59 @@ ln -sf "${APP_DIR}/bin/streamvault" /usr/local/bin/streamvault
 if [[ -d /etc/nginx/sites-available ]]; then
     echo -e "${CYAN}[*] Configuring Nginx reverse proxy...${NC}"
     SITE_FILE=/etc/nginx/sites-available/streamvault.conf
-    # Keep manual changes (for example TLS) of an earlier run.
+    SITE_LINK=/etc/nginx/sites-enabled/streamvault.conf
+    SITE_HASH_FILE="${CONFIG_DIR}/nginx-site.sha256"
+    SITE_TARGET="${SITE_FILE}"
+    SITE_BACKUP=""
+    DISABLED_STOCK=0
+    # Only a file this installer wrote and nobody changed is replaced. A site with
+    # TLS, its own server_name or any other edit stays in use.
     if [[ -f "${SITE_FILE}" ]]; then
-        cp -a "${SITE_FILE}" "${SITE_FILE}.bak.$(date +%Y%m%d_%H%M%S)"
-    fi
-    # The stock Debian/Ubuntu site answers every request by IP address with the
-    # nginx welcome page. Disable it only while it is that untouched placeholder.
-    STOCK_SITE=/etc/nginx/sites-enabled/default
-    if [[ -L "${STOCK_SITE}" ]] && grep -q 'root /var/www/html' "${STOCK_SITE}" \
-        && ! grep -qE '^[[:space:]]*(proxy_pass|return|rewrite)' "${STOCK_SITE}"; then
-        rm -f "${STOCK_SITE}"
-        echo -e "${CYAN}[*] Disabled the stock nginx site (still in /etc/nginx/sites-available/default).${NC}"
-    fi
-    # Only one site may be the default server.
-    LISTEN_DEFAULT=" default_server"
-    for site in /etc/nginx/sites-enabled/*; do
-        [[ -e "${site}" && "$(basename "${site}")" != "streamvault.conf" ]] || continue
-        if grep -qE '^[[:space:]]*listen[^;#]*default_server' "${site}"; then
-            LISTEN_DEFAULT=""
-            echo -e "${YELLOW}[!] ${site} is the nginx default server; set server_name in ${SITE_FILE}.${NC}"
+        SITE_HASH="$(sha256sum "${SITE_FILE}" | cut -d' ' -f1)"
+        if [[ -r "${SITE_HASH_FILE}" ]]; then
+            [[ "$(cat "${SITE_HASH_FILE}")" == "${SITE_HASH}" ]] || SITE_TARGET="${SITE_FILE}.new"
+        elif grep -qE 'ssl|443|return[[:space:]]+30' "${SITE_FILE}" \
+            || ! grep -qE '^[[:space:]]*server_name[[:space:]]+localhost;' "${SITE_FILE}"; then
+            # Written by release 0.1, which kept no hash, and edited since.
+            SITE_TARGET="${SITE_FILE}.new"
         fi
-    done
-    cat > "${SITE_FILE}" <<EOF
+        if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
+            SITE_BACKUP="${SITE_FILE}.bak.$(date +%Y%m%d_%H%M%S)"
+            cp -a "${SITE_FILE}" "${SITE_BACKUP}"
+        fi
+    fi
+    # The stock Debian/Ubuntu site answers requests by IP address with the nginx
+    # welcome page. Disable it only while the package's own file is unchanged and
+    # its web root holds nothing but the placeholder page.
+    STOCK_LINK=/etc/nginx/sites-enabled/default
+    STOCK_FILE=/etc/nginx/sites-available/default
+    if [[ "${SITE_TARGET}" == "${SITE_FILE}" && -L "${STOCK_LINK}" && -f "${STOCK_FILE}" \
+        && "$(readlink -f "${STOCK_LINK}")" == "${STOCK_FILE}" ]]; then
+        # Not in a pipe: pipefail would abort when the package is unknown.
+        STOCK_CONFFILES="$(dpkg-query -W -f='${Conffiles}\n' nginx-common 2>/dev/null || true)"
+        STOCK_MD5="$(awk '$1 == "/etc/nginx/sites-available/default" {print $2}' <<<"${STOCK_CONFFILES}")"
+        STOCK_ROOT="$(ls -A /var/www/html 2>/dev/null || true)"
+        if [[ -n "${STOCK_MD5}" && "$(md5sum "${STOCK_FILE}" | cut -d' ' -f1)" == "${STOCK_MD5}" \
+            && ( -z "${STOCK_ROOT}" || "${STOCK_ROOT}" == "index.nginx-debian.html" ) ]]; then
+            rm -f "${STOCK_LINK}"
+            DISABLED_STOCK=1
+            echo -e "${CYAN}[*] Disabled the stock nginx site (still in ${STOCK_FILE}).${NC}"
+        fi
+    fi
+    # Only one site may be the default server of port 80. Ask nginx itself, so
+    # conf.d and nginx.conf count as well; our own file does not.
+    LISTEN_DEFAULT=" default_server"
+    NGINX_DUMP="$(nginx -T 2>/dev/null || true)"
+    OTHER_DEFAULT="$(awk '
+        /^# configuration file / { own = ($4 ~ /streamvault\.conf:?$/); next }
+        !own { sub(/#.*/, ""); while (match($0, /listen[^;]*default_server[^;]*;/)) {
+                   entry = substr($0, RSTART, RLENGTH); $0 = substr($0, RSTART + RLENGTH)
+                   if (entry !~ /:?443|unix:/) print entry } }' <<<"${NGINX_DUMP}" | head -n 1)"
+    if [[ -n "${OTHER_DEFAULT}" ]]; then
+        LISTEN_DEFAULT=""
+        echo -e "${YELLOW}[!] Another site is the nginx default server; set server_name in ${SITE_FILE}.${NC}"
+    fi
+    cat > "${SITE_TARGET}" <<EOF
 # WebSocket upgrades only when the client asks for one.
 map \$http_upgrade \$streamvault_connection_upgrade {
     default upgrade;
@@ -432,12 +469,33 @@ server {
     }
 }
 EOF
-    ln -sf /etc/nginx/sites-available/streamvault.conf /etc/nginx/sites-enabled/
+    if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
+        LINK_EXISTED=0
+        [[ -e "${SITE_LINK}" ]] && LINK_EXISTED=1
+        ln -sf "${SITE_FILE}" "${SITE_LINK}"
+    fi
     if ! nginx -t; then
-        echo -e "${RED}[ERROR] nginx -t failed; nginx was not reloaded. Fix the configuration and re-run.${NC}"
+        # Leave nothing behind that keeps nginx from starting after a reboot.
+        if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
+            if [[ -n "${SITE_BACKUP}" ]]; then
+                cp -a "${SITE_FILE}" "${SITE_FILE}.rejected"
+                cp -a "${SITE_BACKUP}" "${SITE_FILE}"
+            fi
+            [[ "${LINK_EXISTED}" == "1" ]] || rm -f "${SITE_LINK}"
+            [[ "${DISABLED_STOCK}" == "0" ]] || ln -s "${STOCK_FILE}" "${STOCK_LINK}"
+        fi
+        echo -e "${RED}[ERROR] nginx -t failed; the previous sites are active again. Fix the configuration and re-run.${NC}"
         exit 1
     fi
-    systemctl reload nginx
+    if [[ "${SITE_TARGET}" == "${SITE_FILE}" ]]; then
+        sha256sum "${SITE_FILE}" | cut -d' ' -f1 > "${SITE_HASH_FILE}"
+    else
+        echo -e "${YELLOW}${BOLD}[!] ${SITE_FILE} was edited and stays in use.${NC}"
+        echo -e "${YELLOW}    Merge the new live locations from ${SITE_TARGET}; until then live playback does not work.${NC}"
+    fi
+    systemctl enable nginx >/dev/null 2>&1 || echo -e "${YELLOW}[!] nginx does not start at boot (systemctl enable nginx).${NC}"
+    # Also starts nginx when it is installed but not running.
+    systemctl reload-or-restart nginx
 fi
 
 # Start services. A re-run on a live system must not split running recordings.
@@ -467,4 +525,5 @@ echo -e "  ${CYAN}${BOLD}streamvault status${NC}     - View running daemons and 
 echo -e "  ${CYAN}${BOLD}streamvault logs${NC}       - Stream real-time logs"
 echo -e "  ${CYAN}${BOLD}streamvault restart${NC}    - Restart services"
 echo -e "\nConfiguration: ${CONFIG_DIR}/env"
-echo -e "Web Access:    http://localhost"
+echo -e "Web Access:    http://<server address>"
+echo -e "${YELLOW}Logins travel unencrypted until HTTPS is set up: INSTALL.md, section 6.${NC}"

@@ -43,6 +43,8 @@ services:
       # Archives, database and caches live in ./data, never in the code tree.
       - VOD_BASE_DIR=/app/data
       - RECORDINGS_BASE_DIR=/app/data
+      # The code tree belongs to the host user and is not writable here.
+      - STREAMRECORDER_LOG_DIR=/app/data/.meta/logs
       - VOD_USER=${VOD_USER:?set VOD_USER in .env}
       - VOD_PASS=${VOD_PASS:?set VOD_PASS in .env}
       - VOD_SECRET_KEY=${VOD_SECRET_KEY:?set VOD_SECRET_KEY in .env}

@@ -143,6 +143,13 @@
     setWait(false, 'Live');
   }
 
+  // A live stream never ends for the player: whatever says so is a broken pipeline
+  // (HLS, also native; the real-time player reconnects in its own handler).
+  video.addEventListener('ended', function() {
+    if (!ready) return;
+    dbg('warn', 'playback_ended', {});
+    scheduleReconnect({{ _('Connection lost — reconnecting…')|tojson }});
+  });
   video.addEventListener('playing', revealPlaying);
   video.addEventListener('timeupdate', function() {
     if (video.currentTime > 0) revealPlaying();
@@ -350,6 +357,13 @@
           directHlsFailed = true;
           dbg('warn', 'hls_direct_failed_use_webui', { detail: String(data.response && data.response.code || '') });
           hls.loadSource(hlsSourceUrl(hlsUrl));
+          return;
+        }
+        if (/^manifest/.test(String(data.details || ''))) {
+          // startLoad() never reloads a manifest that failed. Start over through the
+          // ready poll, and with the direct playlist again.
+          directHlsFailed = false;
+          scheduleReconnect({{ _('HLS connection lost — reconnecting…')|tojson }});
           return;
         }
         if (data.type === Hls.ErrorTypes.NETWORK_ERROR && net < 6) {

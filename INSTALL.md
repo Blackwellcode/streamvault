@@ -12,7 +12,7 @@ This document provides a comprehensive, production-tested deployment guide for *
 | **CPU** | 2 vCPUs | 4+ vCPUs |
 | **RAM** | 2 GB RAM | 4+ GB RAM (allows 1 GB RAM-Disk for live HLS) |
 | **Storage** | 20 GB (App + DB) | Fast NVMe / SSD for VOD cache & recordings |
-| **Software** | Python 3.11+, FFmpeg 6+, Nginx 1.22+, SQLite 3.37+ | Redis 7+ (optional high-concurrency caching) |
+| **Software** | Python 3.10+, FFmpeg 4.4+, Nginx 1.18+, SQLite 3.37+ | Redis 7+ (optional high-concurrency caching) |
 
 ---
 
@@ -39,6 +39,7 @@ streamvault status       # Check daemons and live health
 streamvault logs webui   # View WebUI log stream
 streamvault logs recorder # View Stream Recorder log stream
 streamvault logs worker  # View background task worker log stream
+streamvault logs livebot # View live restream log stream
 streamvault restart      # Restart application daemons
 streamvault update       # Pull updates, upgrade dependencies, and reload
 streamvault check        # Validate Python syntax & Nginx configurations
@@ -67,7 +68,7 @@ nano .env
 docker compose up -d --build
 ```
 Access the application at `http://localhost:8090` (proxied by Nginx). The
-Compose stack runs WebUI, recorder and worker under supervisord; the `hls_live`
+Compose stack runs WebUI, recorder, worker and livebot under supervisord; the `hls_live`
 volume is shared between the app and Nginx containers.
 
 ---
@@ -279,6 +280,9 @@ touches the local disk.
   exits with 2, as does a slug without an archive folder with `--enforce`
   (dry run: warning).
 - A failure affects one VOD only; the run continues and exits with 1.
+- `--enforce` exits with 2 and deletes nothing when the database is missing,
+  unreadable or incomplete; a dry run without a database only warns that uploads
+  and playback are not checked.
 - Folders with an active recording or a running remux are skipped and retried
   on the next run. Files with a `.part` or `.remux.lock` sibling and the file an
   active recording points to are always kept.
@@ -545,9 +549,9 @@ sudo certbot --nginx -d vault.your-domain.example
 
 Set `VOD_SECURE_COOKIES=true` and
 `VOD_PUBLIC_BASE=https://vault.your-domain.example` in `/etc/streamvault/env`
-and run `sudo streamvault restart webui`. Re-running `install.sh` rewrites the
-site file; the previous one is kept next to it as
-`streamvault.conf.bak.<timestamp>`.
+and run `sudo streamvault restart webui`. Re-running `install.sh` keeps a site
+file you changed and writes its version to `streamvault.conf.new`, so you can
+merge new locations.
 
 ---
 

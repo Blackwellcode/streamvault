@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import bisect
+import errno
 import glob
 import hashlib
 import http.client
@@ -17,6 +18,7 @@ import shutil
 import smtplib
 import socket
 import ssl
+import stat
 import struct
 import subprocess
 import tempfile
@@ -41,6 +43,7 @@ import yt_dlp
 from flask import (
     Blueprint,
     Flask,
+    Request,
     Response,
     abort,
     current_app,
@@ -1783,7 +1786,7 @@ _RATE_LIMITED_SUPPRESSED = {}
 _RATE_LIMITED_LOCK = threading.Lock()
 
 
-def _warn_rate_limited(site, message, *args):
+def _warn_rate_limited(site, message, *args, exc_info=False):
     """Log a warning at most once per minute and call site.
 
     Access checks and media lookups run for every entry of a list and on
@@ -1803,7 +1806,7 @@ def _warn_rate_limited(site, message, *args):
     if repeats:
         message += " (%d more since the last warning)"
         args = args + (repeats,)
-    logging.warning(message, *args)
+    logging.warning(message, *args, exc_info=exc_info)
 
 
 class _ChatLineSkips:
@@ -2065,11 +2068,17 @@ def active_recording_archives():
     return names
 
 
-def add_live_channel(channel):
-    # notify=0 marks a row that exists only for watching: livebot removes it once
-    # nobody watches. add_channel_db() (a live-only channel of the admin) sets 1.
-    conn = database.get_db()
-    try:
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def add_live_channel(channel, force=False):
+    """Make ``channel`` watchable; ``force`` (admin start) always sets live=1.
+
+    notify=0 marks a row that exists only for watching: livebot removes it once
+    nobody watches. add_channel_db() (a live-only channel of the admin) sets 1.
+    Watching sets live=1 only where livebot.reset_live_flag() clears it again; the
+    flag of a live-only channel (record=0, notify=1) belongs to the recorder's
+    live monitor. livebot itself works from the demand markers, not the flag.
+    """
+    with database.db_transaction() as conn:
         conn.execute(
             """
             INSERT OR IGNORE INTO channels (name, record, live, chat, platform, archive_name, notify)
@@ -2077,19 +2086,21 @@ def add_live_channel(channel):
             """,
             (channel, channel),
         )
-        conn.execute("UPDATE channels SET live=1 WHERE name=?", (channel,))
-        conn.commit()
-    finally:
-        conn.close()
+        conn.execute(
+            "UPDATE channels SET live=1 WHERE name=? AND (? OR record=1 OR COALESCE(notify, 1)=0)",
+            (channel, 1 if force else 0),
+        )
 
+
+@database.db_retry(max_retries=5, delay=0.1, backoff=2.0)
 def remove_live_channel(channel):
-    conn = database.get_db()
-    try:
+    """Clear live=1; delete the row only if it existed just for watching (notify=0)."""
+    with database.db_transaction() as conn:
         conn.execute("UPDATE channels SET live=0 WHERE name=?", (channel,))
-        conn.execute("DELETE FROM channels WHERE name=? AND record=0 AND live=0 AND chat=0", (channel,))
-        conn.commit()
-    finally:
-        conn.close()
+        conn.execute(
+            "DELETE FROM channels WHERE name=? AND record=0 AND live=0 AND chat=0 AND COALESCE(notify, 1)=0",
+            (channel,),
+        )
 
 def clear_live_hls(except_channel=None):
     if not os.path.isdir(config.LIVE_HLS_ROOT):
@@ -6844,38 +6855,89 @@ _LIVE_ASSERT_TS = {}
 _LIVE_ASSERT_INTERVAL_SEC = 15.0
 
 
-def touch_live_heartbeat(streamer):
-    """Signal livebot that a viewer wants HLS (creates dir even before playlist exists)."""
-    live_dir, _ = live_paths(streamer)
-    if not live_dir:
+_LIVE_CHANNEL_RE = re.compile(r"[a-z0-9_]{1,64}")
+
+
+def live_channel_name(streamer):
+    """Channel name of a live URL ("DemoChan", "@demochan" -> "demochan") or None.
+
+    Nothing is stripped out: "demo\\nchan" or ".." is no channel, not another one.
+    """
+    name = str(streamer or "").lower().removeprefix("@")
+    return name if _LIVE_CHANNEL_RE.fullmatch(name) else None
+
+
+def live_channel_or_404(streamer):
+    channel = live_channel_name(streamer)
+    if not channel:
+        abort(404)
+    return channel
+
+
+def _set_mode(fd, path, mode):
+    """chmod through the open descriptor: never follows a symlink swapped in later."""
+    if not hasattr(os, "fchmod") or os.name == "nt":  # Windows has no POSIX modes
         return
     try:
-        os.makedirs(live_dir, exist_ok=True)
-        try:
-            os.chmod(live_dir, 0o777)
-        except OSError:
-            pass
-        heartbeat = os.path.join(live_dir, ".heartbeat")
-        with open(heartbeat, "a", encoding="utf-8"):
-            os.utime(heartbeat, None)
-        try:
-            os.chmod(heartbeat, 0o666)
-        except OSError:
-            pass
+        if stat.S_IMODE(os.fstat(fd).st_mode) != mode:
+            os.fchmod(fd, mode)
+    except OSError as exc:
+        _warn_rate_limited("live-marker-mode", "Mode of %s not set: %s", path, exc)
+
+
+def _ensure_marker_dir(path):
+    """Directory 0755: only the service user writes, nginx reads the HLS files."""
+    os.makedirs(path, mode=0o755, exist_ok=True)
+    if os.path.islink(path):
+        raise OSError(errno.ELOOP, "marker directory is a symlink", path)
+    if os.name == "nt":  # directories cannot be opened there
+        return
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        _set_mode(fd, path, 0o755)
+    finally:
+        os.close(fd)
+
+
+def _touch_marker(path):
+    """Write the current time into a regular file (0644), never through a symlink."""
+    if not hasattr(os, "O_NOFOLLOW") and os.path.islink(path):
+        raise OSError(errno.ELOOP, "marker is a symlink", path)
+    # O_NONBLOCK: a FIFO in place of the marker must not block the request.
+    flags = os.O_WRONLY | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    fd = os.open(path, flags, 0o644)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise OSError(errno.EINVAL, "marker is not a regular file", path)
+        _set_mode(fd, path, 0o644)
+        os.ftruncate(fd, 0)
+        os.write(fd, str(time.time()).encode("ascii"))
+    finally:
+        os.close(fd)
+
+
+def _is_youtube_channel(channel):
+    """True for a channel row of another platform: livebot only pulls twitch.tv/<name>."""
+    try:
+        conf = database.get_channel_config(channel) or {}
+    except database.DB_ACCESS_ERRORS as exc:
+        _warn_rate_limited("live-platform", "Platform of %s unknown (database error): %s", channel, exc)
+        return False
+    return str(conf.get("platform") or "").strip().lower() in ("youtube", "yt")
+
+
+def touch_live_heartbeat(streamer):
+    """Signal livebot that a viewer wants HLS (creates dir even before playlist exists)."""
+    channel = live_channel_name(streamer)
+    live_dir = safe_join(config.LIVE_HLS_ROOT, channel) if channel else None
+    if not live_dir or _is_youtube_channel(channel):
+        return
+    try:
+        _ensure_marker_dir(live_dir)
+        _touch_marker(os.path.join(live_dir, ".heartbeat"))
         demand_dir = os.path.join(config.META_DIR, "live_watch_demand")
-        os.makedirs(demand_dir, exist_ok=True)
-        try:
-            os.chmod(demand_dir, 0o777)
-        except OSError:
-            pass
-        channel = os.path.basename(live_dir)
-        demand_path = os.path.join(demand_dir, f"{channel}.ts")
-        with open(demand_path, "w", encoding="utf-8") as handle:
-            handle.write(str(time.time()))
-        try:
-            os.chmod(demand_path, 0o666)
-        except OSError:
-            pass
+        _ensure_marker_dir(demand_dir)
+        _touch_marker(os.path.join(demand_dir, f"{channel}.ts"))
         # Re-assert live=1 while watch UI is open, but throttle DB writes.
         now = time.time()
         last = float(_LIVE_ASSERT_TS.get(channel) or 0.0)
@@ -6885,8 +6947,8 @@ def touch_live_heartbeat(streamer):
                 add_live_channel(channel)
             except (sqlite3.Error, OSError) as exc:
                 logging.warning("live=1 for %s not re-asserted: %s", channel, exc)
-    except Exception as exc:  # heartbeat is advisory; the watch page must still load
-        logging.warning("Live heartbeat for %s failed: %s", channel, exc)
+    except OSError as exc:  # heartbeat is advisory; the watch page must still load
+        _warn_rate_limited("live-heartbeat", "Live heartbeat for %s failed: %s", channel, exc)
 
 
 def live_playlist_fresh(streamer):
@@ -7496,25 +7558,48 @@ def login_page_redirect():
     return redirect(url_for("login"))
 
 
-# JSON bodies are read into memory before the sender is authenticated (CSRF
-# token, overlay token, EventSub signature). Form and multipart bodies keep
-# their own limits (MAX_FORM_MEMORY_SIZE, nginx client_max_body_size).
-MAX_JSON_BODY_BYTES = 1024 * 1024
+# Bodies are read before the sender is known: the CSRF token, the overlay token and
+# the EventSub signature are part of them. Werkzeug does not bound urlencoded and
+# JSON bodies (MAX_FORM_MEMORY_SIZE only applies to multipart fields) and spools
+# multipart files to disk without limit, so every body is capped here. No route
+# needs more: the largest form is a 4000 character description.
+MAX_REQUEST_BODY_BYTES = 1024 * 1024
+# Each field becomes several Python objects: "a&a&a..." multiplies in memory.
+MAX_FORM_FIELDS = 5000
+# The only routes that take files; all of them are admin_required. For admins
+# nginx client_max_body_size is the limit there.
+UPLOAD_ENDPOINTS = frozenset((
+    "files_upload", "streamer_banner_update", "admin_banner_update", "streamer_avatar_update",
+))
 
 
-def limit_json_body():
-    """Reject JSON bodies above MAX_JSON_BODY_BYTES (413) before any byte is parsed."""
-    if not request.is_json and request.path != "/api/twitch/eventsub":
+def limit_request_body():
+    """Reject oversized bodies (413) before any byte is parsed.
+
+    Runs after the session was validated. Whatever the Content-Type (or none),
+    the method or the path: only a logged-in admin may send more, as a multipart
+    upload to one of the UPLOAD_ENDPOINTS.
+    """
+    if (
+        request.mimetype == "multipart/form-data"
+        and request.endpoint in UPLOAD_ENDPOINTS
+        and session.get("logged_in")
+        and current_user_is_admin()
+    ):
         return
-    if (request.content_length or 0) > MAX_JSON_BODY_BYTES:
+    if (request.content_length or 0) > MAX_REQUEST_BODY_BYTES:
         abort(413)
     # Chunked bodies announce no size, so read at most one byte too many; the data
-    # stays cached for get_json(). Request.max_content_length is no substitute: it is
-    # read-only before Flask 3.1, and a full read silently truncates at the limit.
+    # stays cached for form, files and get_json(). Request.max_content_length is no
+    # substitute: it is read-only before Flask 3.1, and a full read silently
+    # truncates at the limit.
     request.environ["wsgi.input"] = LimitedStream(
-        request.environ["wsgi.input"], MAX_JSON_BODY_BYTES + 1, is_max=True
+        request.environ["wsgi.input"], MAX_REQUEST_BODY_BYTES + 1, is_max=True
     )
-    if len(request.get_data()) > MAX_JSON_BODY_BYTES:
+    body = request.get_data()
+    if len(body) > MAX_REQUEST_BODY_BYTES:
+        abort(413)
+    if request.mimetype == "application/x-www-form-urlencoded" and body.count(b"&") >= MAX_FORM_FIELDS:
         abort(413)
 
 
@@ -7523,7 +7608,6 @@ def csrf_protect():
     # Mail web routes removed — always 404 regardless of legacy enable flags.
     if request.path == "/admin/mail" or request.path.startswith("/admin/mail/"):
         abort(404)
-    limit_json_body()
     # Keep the login cookie alive while the account still exists and is active.
     if session.get("logged_in"):
         ctx = _get_current_user_context()
@@ -7596,6 +7680,7 @@ def csrf_protect():
         and not _path_exempt_from_maintenance(request.path)
     ):
         return _maintenance_response(gettext("The mobile version of StreamVault is currently under maintenance. Please use the desktop version."))
+    limit_request_body()
     # Token-auth alert overlay APIs (OBS browser source) — not session CSRF.
     # Twitch EventSub webhooks authenticate via HMAC signature, not CSRF.
     if (
@@ -7611,12 +7696,15 @@ def csrf_protect():
             provided = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
         if not provided and request.is_json:
             body = request.get_json(silent=True) or {}
-            if isinstance(body, dict):
-                provided = body.get("csrf_token")
+            if isinstance(body, dict) and isinstance(body.get("csrf_token"), str):
+                provided = body["csrf_token"]
+        # Bytes: compare_digest raises TypeError for str with non-ASCII characters.
         if (
             not token
             or not provided
-            or not secrets.compare_digest(str(token), str(provided))
+            or not secrets.compare_digest(
+                str(token).encode("utf-8"), str(provided).encode("utf-8", "surrogatepass")
+            )
         ):
             # Successful login rotates the session; a duplicate form POST can then
             # arrive with the old CSRF token. Keep the user in the app instead of
@@ -7795,7 +7883,7 @@ def login():
                 return redirect(url_for("agb_view"))
             return redirect(login_redirect_target())
 
-        logging.warning(f"LOGIN FAILED: {ip} (user: {username})")
+        logging.warning("LOGIN FAILED: %s (user: %s)", ip, log_safe(username))
         add_login_attempt(ip, username)
         log_login_attempt(ip, username, False)
         error = gettext("Login failed.")
@@ -8993,7 +9081,7 @@ def live_watch():
     """Start anonymous HLS watch for any Twitch channel (recording optional)."""
     if is_mobile() and not mobile_live_enabled():
         return redirect_mobile_live_disabled()
-    channel = twitch_api.normalize_login(request.form.get("channel"))
+    channel = live_channel_name(twitch_api.normalize_login(request.form.get("channel")))
     if not channel:
         return redirect(url_for("index", channels_msg=gettext("Invalid Twitch channel.")))
     # Members may only open live channels from their VOD allowlist.
@@ -9062,7 +9150,7 @@ def live_control_start(streamer):
     channel = normalize_channel_name(streamer)
     if not channel:
         return redirect(url_for("streamer_view", streamer=streamer, live_msg=gettext("Invalid channel.")))
-    add_live_channel(channel)
+    add_live_channel(channel, force=True)
     return redirect(url_for("live_view", streamer=channel))
 
 
@@ -11307,7 +11395,7 @@ def clip_live(streamer):
         request.headers.get("X-Requested-With") == "XMLHttpRequest"
         or request.accept_mimetypes.accept_json
     )
-    live_key = normalize_channel_name(streamer) or streamer
+    live_key = live_channel_or_404(normalize_channel_name(streamer))
     output_streamer = normalize_channel_name(request.form.get("clip_streamer") or "") or live_key
 
     def respond(ok, message, status=200, clip_filename=None, job=None):
@@ -11450,6 +11538,7 @@ def clip_instant(streamer):
         )
     else:
         # Embed-watch has no local player; still wake live HLS so clips can cut.
+        live_key = live_channel_or_404(live_key)
         try:
             add_live_channel(live_key)
             touch_live_heartbeat(live_key)
@@ -11705,10 +11794,8 @@ def api_live_client_debug():
     """Receive sanitized proxy-player telemetry from the watch page."""
     from core import live_watch_diag
 
-    # A chunked body has no Content-Length; limit_json_body already capped it.
-    if (request.content_length or 0) > MAX_CLIENT_DEBUG_BODY_BYTES or (
-        request.is_json and len(request.get_data()) > MAX_CLIENT_DEBUG_BODY_BYTES
-    ):
+    # Already read and cached by limit_request_body, which also bounds chunked bodies.
+    if len(request.get_data()) > MAX_CLIENT_DEBUG_BODY_BYTES:
         abort(413)
     payload = request.get_json(silent=True) or {}
     if not isinstance(payload, dict):
@@ -11741,9 +11828,7 @@ def api_live_client_debug():
 @login_required
 def api_live_ready(streamer):
     """Poll whether the anonymous livebot HLS proxy is ready for playback."""
-    channel = normalize_channel_name(streamer) or twitch_api.normalize_login(streamer)
-    if not channel:
-        abort(404)
+    channel = live_channel_or_404(streamer)
     abort_hidden_streamer(channel)
     # Keep demand warm and live=1 asserted while the watch UI polls.
     touch_live_heartbeat(channel)
@@ -11755,7 +11840,7 @@ def api_live_ready(streamer):
         twitch_live = bool(info.get("is_live"))
     except Exception:
         # The player keeps polling; a failed lookup must not break it.
-        current_app.logger.exception("Live status of %s not available", channel)
+        _warn_rate_limited(f"live-ready:{channel}", "Live status of %s not available", channel, exc_info=True)
     # Recorder/HLS can be ahead of Helix; never tell the phone "offline" while we ingest.
     if twitch_live is not True:
         if ready or current_recording_info(channel) is not None:
@@ -11779,9 +11864,7 @@ def twitch_watch(channel):
         return _maintenance_response(gettext("The live stream area is currently under maintenance."))
     if is_mobile() and not mobile_live_enabled():
         return redirect_mobile_live_disabled()
-    login = twitch_api.normalize_login(channel)
-    if not login:
-        abort(404)
+    login = live_channel_or_404(twitch_api.normalize_login(channel))
     from core import tube_auth
 
     if tube_auth.is_member(current_user_role()):
@@ -11970,7 +12053,8 @@ def api_twitch_stream(login):
 def live_view(streamer):
     if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
         return _maintenance_response(gettext("The live stream area is currently under maintenance."))
-    channel = normalize_channel_name(streamer) or twitch_api.normalize_login(streamer) or streamer
+    # Lenient on purpose: bookmarks may carry the display name.
+    channel = live_channel_or_404(normalize_channel_name(streamer))
     abort_hidden_streamer(channel)
     if is_mobile() and not mobile_live_enabled():
         return redirect_mobile_live_disabled()
@@ -12026,9 +12110,7 @@ def live_view(streamer):
 @login_required
 def live_obs(streamer):
     """Fullscreen picture and sound for an OBS browser source."""
-    channel = normalize_channel_name(streamer) or ""
-    if not channel or channel != str(streamer or "").strip().lower():
-        abort(404)
+    channel = live_channel_or_404(streamer)
     abort_hidden_streamer(channel)
     try:
         add_live_channel(channel)
@@ -12115,6 +12197,7 @@ def api_live_auth():
 @live_bp.route("/live/playlist/<streamer>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def live_playlist(streamer):
+    streamer = live_channel_or_404(streamer)
     abort_hidden_streamer(streamer)
     touch_live_heartbeat(streamer)
     if not live_playlist_fresh(streamer):
@@ -12140,6 +12223,7 @@ def live_playlist(streamer):
 @live_bp.route("/live/segment/<streamer>/<segment>", methods=_MEDIA_HTTP_METHODS)
 @media_login_required
 def live_segment(streamer, segment):
+    streamer = live_channel_or_404(streamer)
     abort_hidden_streamer(streamer)
     touch_live_heartbeat(streamer)
     if os.path.basename(segment) != segment:
@@ -12317,8 +12401,9 @@ def _overlay_token_from_request(*preferred_headers):
 
     body_token = ""
     if request.is_json:
-        body = request.get_json(silent=True) or {}
-        body_token = str(body.get("token") or "").strip()
+        body = request.get_json(silent=True)
+        if isinstance(body, dict) and isinstance(body.get("token"), str):
+            body_token = body["token"].strip()
     if body_token:
         return body_token
 
@@ -12395,8 +12480,9 @@ def alerts_api_ack():
         abort(401)
     item_id = (request.args.get("id") or "").strip()
     if not item_id and request.is_json:
-        body = request.get_json(silent=True) or {}
-        item_id = str(body.get("id") or "").strip()
+        body = request.get_json(silent=True)
+        if isinstance(body, dict) and isinstance(body.get("id"), (str, int)):
+            item_id = str(body["id"] or "").strip()
     if not item_id:
         abort(400)
     return jsonify({"ok": alert_sounds.ack(item_id)})
@@ -12989,9 +13075,51 @@ def streamer_avatar_update(streamer):
     return redirect(url_for("streamer_view", streamer=streamer))
 
 
+class AppRequest(Request):
+    """Request whose JSON parser answers 400 instead of failing on deep nesting."""
+
+    def get_json(self, *args, **kwargs):
+        try:
+            return super().get_json(*args, **kwargs)
+        except RecursionError:  # not a ValueError, so silent=True does not cover it
+            logging.warning("JSON nested too deeply from %s on %s", get_client_ip(), self.endpoint)
+            abort(400)
+
+
+def _escape_log_text(text):
+    """Non-printable characters (line breaks, ESC, bidi marks ...) as \\n, \\x1b, \\u2028 ..."""
+    return "".join(
+        ch if ch.isprintable() else ch.encode("unicode_escape").decode("ascii") for ch in text
+    )
+
+
+class _LogEscapeFilter(logging.Filter):
+    """One log record is one line: Flask logs the percent-decoded request path.
+
+    Traceback lines stay separate lines but are indented, so text inside an
+    exception message cannot pass for a record of its own.
+    """
+
+    def filter(self, record):
+        try:
+            message = record.getMessage()
+        except (TypeError, ValueError):
+            return True  # wrong arguments: the handler reports the call site itself
+        record.msg, record.args = _escape_log_text(message), ()
+        if record.exc_info and record.exc_info[0] and not record.exc_text:
+            lines = logging.Formatter().formatException(record.exc_info).split("\n")
+            record.exc_text = "\n".join("  " + _escape_log_text(line) for line in lines)
+        return True
+
+
+_LOG_ESCAPE_FILTER = _LogEscapeFilter()
+
+
 def create_app(settings=None):
     """Build the Flask application. ``settings`` override config values (tests)."""
     flask_app = Flask(__name__)
+    flask_app.request_class = AppRequest
+    flask_app.logger.addFilter(_LOG_ESCAPE_FILTER)  # idempotent
     flask_app.secret_key = load_secret_key()
     flask_app.config.update(
         SESSION_COOKIE_HTTPONLY=True,

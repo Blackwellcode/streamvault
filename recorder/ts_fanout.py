@@ -40,11 +40,16 @@ class MpegTsBroadcaster:
         self._pmt_pid = None
 
     def start(self, stdout_pipe):
-        self.running = True
-        self.thread = threading.Thread(
+        thread = threading.Thread(
             target=self._reader_loop, args=(stdout_pipe,), daemon=True, name=f"ts-fanout-{self.channel}"
         )
-        self.thread.start()
+        self.running = True
+        try:
+            thread.start()
+        except RuntimeError:  # can't start new thread
+            self.running = False
+            raise
+        self.thread = thread  # only a started thread may be joined
 
     def subscribe(self, max_viewers=None):
         """Queue of TS chunks for one viewer; None when the viewer limit is reached."""

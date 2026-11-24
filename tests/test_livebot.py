@@ -6,9 +6,11 @@ always a fake.
 
 from __future__ import annotations
 
+import errno
 import os
 import subprocess
 import sys
+import threading
 import time
 import unittest
 from unittest import mock
@@ -294,6 +296,8 @@ class CommandTests(LivebotBase):
         self.assertEqual(value["-hls_segment_filename"], os.path.join("/x/hls", "seg_%05d.ts"))
         self.assertIn("pipe:1", cmd)
         self.assertEqual(cmd.count("copy"), 2)
+        # An input option, so it has to stand before -i: remote data opens no files or URLs.
+        self.assertEqual(cmd[cmd.index("-i") - 2:cmd.index("-i")], ["-protocol_whitelist", "pipe"])
         self.assertEqual(cmd[-1], os.path.join("/x/hls", "stream.m3u8"))
 
 
@@ -388,6 +392,88 @@ class RestartTests(LivebotBase):
             self.assertEqual(bot.get_or_start(CHANNEL), (None, 503))
         self.assertEqual(FakeWorker.started, [])
 
+    def test_http_client_finds_the_backoff_while_twitch_is_asked(self):
+        """The slow part of a restart (stop, live check) must not be a way around it."""
+        bot = self.fake_bot(alive=True)
+        self.mark()
+        bot.tick()
+        seen = []
+
+        def is_live(_channel):
+            seen.append(bot.get_or_start(CHANNEL))
+            return True
+
+        def stop(worker):
+            seen.append(bot.get_or_start(CHANNEL))
+
+        bot.is_live = is_live
+        with mock.patch.object(FakeWorker, "alive", False), mock.patch.object(FakeWorker, "stop", stop):
+            bot.tick()
+        self.assertEqual(seen, [(None, 503), (None, 503)])
+        self.assertEqual(len(FakeWorker.started), 1)
+        self.assertFalse(bot.retry[CHANNEL]["offline"], "Twitch said live")
+
+    def test_backoff_survives_a_check_longer_than_itself(self):
+        bot = self.fake_bot(alive=True)
+        self.mark()
+        bot.tick()
+        seen = []
+
+        def is_live(_channel):
+            bot.retry[CHANNEL]["next"] = 0.0  # the check took longer than the backoff
+            seen.append(bot.get_or_start(CHANNEL))
+            return False
+
+        bot.is_live = is_live
+        with mock.patch.object(FakeWorker, "alive", False):
+            bot.tick()
+        self.assertEqual(seen, [(None, 503)])
+        self.assertTrue(bot.retry[CHANNEL]["offline"])
+        self.assertGreater(bot.retry[CHANNEL]["next"], time.time() + config.LIVE_OFFLINE_RECHECK_SEC - 5)
+
+    def test_unanswered_live_check_does_not_hold_up_the_loop(self):
+        bot = self.fake_bot()
+        release = threading.Event()
+        self.addCleanup(release.set)
+        bot.is_live = lambda _channel: release.wait(20)
+        started = time.monotonic()
+        with mock.patch.object(livebot, "LIVE_CHECK_TIMEOUT_SEC", 0.2), \
+                self.assertLogs("livebot", level="WARNING"):
+            bot.retry[CHANNEL] = {"fails": 1, "next": 0.0, "offline": True}
+            self.assertFalse(bot._still_offline(CHANNEL))
+        self.assertLess(time.monotonic() - started, 5)
+
+    def test_missing_thread_stops_the_children_and_schedules_a_retry(self):
+        self.mark()
+        proc = mock.Mock(pid=2 ** 22, stdout=mock.MagicMock())
+        proc.poll.return_value = None
+        real_start = threading.Thread.start
+
+        def start(thread):
+            if thread.name.startswith("ts-fanout"):
+                raise RuntimeError("can't start new thread")
+            real_start(thread)
+
+        bot = livebot.LiveBot(source_command=lambda *_args: ["streamlink"], is_live=mock.Mock())
+        with mock.patch.object(livebot, "_tool", return_value="ffmpeg"), \
+                mock.patch.object(livebot.SubprocessRunner, "popen", return_value=proc), \
+                mock.patch.object(livebot, "stop_process") as stop_process, \
+                mock.patch.object(threading.Thread, "start", start), \
+                self.assertLogs("livebot", level="ERROR"):
+            self.assertEqual(bot.get_or_start(CHANNEL), (None, 503))
+        self.assertEqual([call.args[0] for call in stop_process.call_args_list], [proc, proc])
+        self.assertEqual(bot.retry[CHANNEL]["fails"], 1)
+        self.assertEqual(bot.streams, {})
+
+    def test_shutdown_without_free_threads_still_stops_everything(self):
+        bot = self.fake_bot()
+        self.mark()
+        bot.tick()
+        worker = bot.streams[CHANNEL]
+        with mock.patch.object(livebot, "ThreadPoolExecutor", side_effect=RuntimeError("can't start new thread")):
+            bot.shutdown()
+        self.assertTrue(worker.stopped)
+
     def test_proxy_is_skipped_after_failed_starts(self):
         bot = self.fake_bot()
         for fails, use_proxy in ((0, True), (livebot.PROXY_DIRECT_AFTER_FAILS, False)):
@@ -462,6 +548,63 @@ class CleanupTests(LivebotBase):
         self.assertIn("Could not write header", worker.log_tail("ffmpeg.log"))
         self.assertEqual(worker.log_tail("missing.log"), "-")
 
+    def test_trimming_never_follows_a_symlink(self):
+        directory = self._files("ffmpeg.log", "streamlink.log")
+        worker = livebot.StreamWorker(CHANNEL)
+        real_open = os.open
+
+        def nofollow(path, flags, *args):
+            # What the kernel answers for a symlink opened with O_NOFOLLOW.
+            if str(path).startswith(directory):
+                raise OSError(errno.ELOOP, "Too many levels of symbolic links")
+            return real_open(path, flags, *args)
+
+        with mock.patch.object(livebot, "PIPELINE_LOG_MAX_BYTES", 0), \
+                mock.patch.object(livebot.os, "open", nofollow), self.assertLogs("livebot", level="WARNING"):
+            worker.trim_logs()
+        self.assertEqual(os.path.getsize(os.path.join(directory, "ffmpeg.log")), 1)
+
+    @unittest.skipUnless(os.name == "posix", "symlinks need POSIX")
+    def test_planted_symlinks_are_removed_and_their_targets_stay(self):
+        victim = self.base / "victim"
+        victim.write_text("keep", encoding="utf-8")
+        directory = self._files()
+        for name in ("stream.m3u8", "seg_00000.ts.tmp", "ffmpeg.log"):
+            os.symlink(victim, os.path.join(directory, name))
+        with mock.patch.object(livebot, "PIPELINE_LOG_MAX_BYTES", 0):
+            livebot.StreamWorker(CHANNEL).trim_logs()
+        livebot.prepare_hls_dir(CHANNEL)
+        self.assertEqual(os.listdir(directory), [])
+        self.assertEqual(victim.read_text(encoding="utf-8"), "keep")
+
+    def _start_is_refused(self):
+        worker = livebot.StreamWorker(CHANNEL, source_command=lambda *_args: ["streamlink"])
+        with mock.patch.object(livebot.SubprocessRunner, "popen", side_effect=AssertionError("started")), \
+                mock.patch.object(livebot, "_tool", return_value="ffmpeg"), \
+                self.assertLogs("livebot", level="ERROR") as logs:
+            self.assertFalse(worker.start())
+        return " ".join(logs.output)
+
+    def test_directory_of_another_user_is_refused(self):
+        directory = self._files("seg_00001.ts")
+        with mock.patch.object(livebot.os, "geteuid", return_value=os.stat(directory).st_uid + 1, create=True):
+            self.assertIn("belongs to uid", self._start_is_refused())
+
+    def test_leftover_that_cannot_be_removed_is_refused(self):
+        directory = self._files()
+        os.mkdir(os.path.join(directory, "stream.m3u8"))
+        self._start_is_refused()
+
+    @unittest.skipUnless(os.name == "posix", "symlinks need POSIX")
+    def test_symlinked_directory_is_refused(self):
+        target = self.base / "elsewhere"
+        target.mkdir()
+        (target / "seg_00001.ts").write_text("keep", encoding="utf-8")
+        os.makedirs(config.LIVE_HLS_ROOT, exist_ok=True)
+        os.symlink(target, os.path.join(config.LIVE_HLS_ROOT, CHANNEL))
+        self.assertIn("symlink", self._start_is_refused())
+        self.assertTrue((target / "seg_00001.ts").exists())
+
     def test_large_pipeline_log_is_trimmed(self):
         self._files("ffmpeg.log", "streamlink.log")
         worker = livebot.StreamWorker(CHANNEL)
@@ -515,6 +658,37 @@ class ChannelTableTests(LivebotBase):
         self.add_row("watch_only", notify=0)
         bot.tick()
         self.assertEqual(self._rows(), {})
+
+
+    def test_chat_clip_flag_starts_nothing_and_is_cleared(self):
+        from recorder import chat_clip
+        bot = self.fake_bot()
+        self.add_row(CHANNEL, record=1, live=0)
+        with mock.patch.object(chat_clip, "clip_enabled_for", return_value=True):
+            chat_clip.ensure_live_hls_enabled(CHANNEL)
+        self.assertEqual(self._rows(), {CHANNEL: True})
+        bot.tick()
+        self.assertEqual((bot.streams, self._rows()), ({}, {CHANNEL: False}))
+
+    def test_streamer_page_shows_recording_not_the_live_flag(self):
+        """live=1 only means that somebody opened the watch page."""
+        from WEBUI import webui
+        try:
+            from webui_test_helpers import admin_test_client
+        except ImportError:  # run as tests.test_livebot
+            from tests.webui_test_helpers import admin_test_client
+        self.add_row(CHANNEL, record=1, live=1)
+        (self.base / CHANNEL).mkdir()
+        client = admin_test_client()
+        for recording, expected in ((None, False), ({"filename": "x.mp4"}, True)):
+            with self.subTest(recording=recording), \
+                    mock.patch.object(webui, "current_recording_info", return_value=recording),                     mock.patch.object(webui, "update_profiles_background"),                     mock.patch.object(webui, "get_twitch_profile_and_banner", return_value=("", "")), \
+                    mock.patch.object(twitch_api, "get_stream", return_value={}), \
+                    mock.patch.object(twitch_api, "get_streams_by_logins", return_value={}):
+                body = client.get(f"/streamer/{CHANNEL}", headers={"Accept-Language": "en"}).get_data(as_text=True)
+            self.assertIn("nebula-profile-tags", body)
+            self.assertEqual('ns-pill ns-pill-live">' in body, expected)
+            self.assertEqual("ns-status-indicator is-recording" in body, expected)
 
 
 class LiveCheckTests(unittest.TestCase):

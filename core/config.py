@@ -119,8 +119,7 @@ else:
     )
 LIVE_TWITCH_OAUTH_ENABLED = bool(LIVE_TWITCH_OAUTH_TOKEN)
 MOBILE_LIVE_ENABLED = _env_flag("MOBILE_LIVE_ENABLED", True)
-# Off: the live watch page plays only the server stream (no Twitch ads, the
-# viewer's IP never reaches Twitch). On: the Twitch player embed is the desktop
+# Off: the live watch page plays only the server stream (recorder/livebot.py). On: the Twitch player embed is the desktop
 # default again and ?embed=/?proxy= switch between both players.
 LIVE_TWITCH_EMBED = _env_flag("LIVE_TWITCH_EMBED", False)
 

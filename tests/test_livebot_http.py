@@ -229,6 +229,19 @@ class PipelineTests(_ServerBase):
         self.assertEqual(os.listdir(self.hls_dir), [".heartbeat"], "viewer marker stays, files go")
         self.assertEqual(self.bot.streams, {})
 
+    def test_end_of_the_source_never_marks_the_playlist_as_finished(self):
+        # hls.js and Safari stop reloading at #EXT-X-ENDLIST and freeze.
+        command = [FFMPEG, *GENERATOR_ARGS[:-1], "-t", "5", GENERATOR_ARGS[-1]]
+        worker = livebot.StreamWorker(CHANNEL, source_command=lambda *_args: command)
+        self.addCleanup(worker.stop)
+        self.assertTrue(worker.start())
+        processes = [worker.process_streamlink, worker.process_ffmpeg]
+        self.assertTrue(wait_until(lambda: all(proc.poll() is not None for proc in processes)))
+        self.assertEqual([proc.returncode for proc in processes], [0, 0])
+        text = Path(self.hls_dir, "stream.m3u8").read_text(encoding="utf-8")
+        self.assertIn("seg_00000.ts", text)
+        self.assertNotIn("#EXT-X-ENDLIST", text)
+
     def test_dead_source_is_detected_and_restarted_after_backoff(self):
         self.mark()
         self.bot.tick()

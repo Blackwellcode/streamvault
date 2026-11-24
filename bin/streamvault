@@ -34,13 +34,13 @@ usage() {
     echo -e "${BOLD}Usage:${NC} streamvault [COMMAND] [OPTIONS]"
     echo ""
     echo -e "${BOLD}Service Management:${NC}"
-    echo -e "  ${GREEN}start${NC}             Start WebUI, Recorder and Worker daemons"
+    echo -e "  ${GREEN}start${NC}             Start WebUI, Recorder, Worker and Livebot daemons"
     echo -e "  ${GREEN}stop${NC} [--force]    Stop all running daemons"
     echo -e "  ${GREEN}restart${NC} [service] [--force]"
-    echo -e "                    Restart all daemons or one (webui, recorder, worker)."
+    echo -e "                    Restart all daemons or one (webui, recorder, worker, livebot)."
     echo -e "                    Refuses to cut active recordings unless --force is given."
     echo -e "  ${GREEN}status${NC}            Display health, system load, and systemd status"
-    echo -e "  ${GREEN}logs${NC} [service]    Follow live logs (webui, recorder, worker, or all)"
+    echo -e "  ${GREEN}logs${NC} [service]    Follow live logs (webui, recorder, worker, livebot, or all)"
     echo ""
     echo -e "${BOLD}Operations:${NC}"
     echo -e "  ${GREEN}update${NC} [--force]  Pull latest Git commit, upgrade deps, and restart"
@@ -181,10 +181,21 @@ cmd_update() {
         echo -e "${RED}        Update with: git clone https://github.com/Blackwellcode/streamvault.git && cd streamvault && sudo ./install.sh${NC}"
         exit 1
     fi
+    if ! runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" symbolic-ref -q HEAD >/dev/null; then
+        echo -e "${RED}[ERROR] ${APP_DIR} is pinned to a release tag; there is no branch to pull.${NC}"
+        echo -e "${RED}        Install the new release with install.sh from its own checkout.${NC}"
+        exit 1
+    fi
     # Repository and venv belong to the service user; root never runs git hooks.
-    runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" pull --ff-only
+    runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" pull --ff-only origin "$(runuser -u "${SERVICE_USER}" -- git -C "${APP_DIR}" symbolic-ref --short HEAD)"
     runuser -u "${SERVICE_USER}" -- "${VENV_DIR}/bin/pip" install --upgrade -r requirements.txt
-    systemctl restart streamvault-webui.service streamvault-recorder.service streamvault-worker.service streamvault-livebot.service
+    local units=(streamvault-webui.service streamvault-recorder.service streamvault-worker.service)
+    if systemctl cat streamvault-livebot.service >/dev/null 2>&1; then
+        units+=(streamvault-livebot.service)
+    else
+        echo -e "${YELLOW}[!] No livebot unit; re-run install.sh from a fresh clone to get live playback.${NC}"
+    fi
+    systemctl restart "${units[@]}"
     echo -e "${GREEN}[OK] Update completed and daemons restarted.${NC}"
 }
 

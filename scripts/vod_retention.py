@@ -27,7 +27,8 @@ Never touched:
 The tombstone is written before the file is removed and taken back when the
 file stays. A database error fails that VOD only: it is kept, the run goes on
 with the next one and ends with exit code 1. Size and modification time are
-compared with the scan right before the file is removed.
+compared with the scan right before the file is removed. ``--enforce`` refuses
+to run (exit code 2) when the database is missing, unreadable or incomplete.
 
 If another media file with the same stem stays (``x.mkv`` expires while
 ``x.mp4`` is kept, or the other way round), only the expired file itself is
@@ -58,6 +59,7 @@ import logging
 import os
 import re
 import shutil
+import sqlite3
 import stat
 import sys
 import time
@@ -81,6 +83,11 @@ _SIBLING_MEDIA_EXTENSIONS = frozenset({
     ".mp4", ".mkv", ".ts", ".webm", ".flv", ".mov", ".m4v", ".avi",
 })
 _DAY_SEC = 86400.0
+# Read by the upload, playback and tombstone checks before a deletion.
+_REQUIRED_TABLES = frozenset({
+    "channels", "deleted_media", "storage_objects", "storage_providers",
+    "system_state", "tasks", "vod_watch_slots",
+})
 _OFFLOAD_SLUG_RE = re.compile(r"[a-z0-9_][a-z0-9_.-]*")
 
 
@@ -393,14 +400,51 @@ def unmatched_offload_slugs(base_dir: Path, offload_slugs: frozenset[str]) -> li
     return sorted(offload_slugs - known)
 
 
+def _database_file() -> str:
+    """The database ``core.database.get_db`` opens."""
+    env_base = os.environ.get("VOD_BASE_DIR")
+    return os.path.join(env_base, "streamrecorder.db") if env_base else _config().DB_FILE
+
+
+def database_problem() -> str:
+    """Why the database cannot vouch for a deletion ("" = usable).
+
+    Opens it read-only: ``get_db`` and the WebUI import would create an empty
+    one, whose defaults (no uploads, auto-upload off) protect nothing.
+    """
+    db_file = _database_file()
+    if not os.path.isfile(db_file):
+        return f"database {db_file} missing"
+    try:
+        conn = sqlite3.connect(f"{Path(db_file).resolve().as_uri()}?mode=ro", uri=True, timeout=10.0)
+        try:
+            rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        finally:
+            conn.close()
+    except sqlite3.Error as exc:
+        return f"database {db_file} unreadable: {exc}"
+    missing = sorted(_REQUIRED_TABLES - {str(row[0]) for row in rows})
+    if missing:
+        return f"database {db_file} lacks tables: {', '.join(missing)}"
+    return ""
+
+
+def _enforce_allowed() -> bool:
+    """Must run before the WebUI import, which creates a missing database."""
+    problem = database_problem()
+    if problem:
+        logger.error("--enforce refused, nothing deleted: %s "
+                     "(cloud uploads and playback cannot be checked)", problem)
+    return not problem
+
+
 def _state_checks_available(base_dir: Path) -> bool:
     """False when the configured database does not describe base_dir (foreign dry run)."""
     config = _config()
     if _real_key(base_dir) != _real_key(config.BASE_DIR):
         logger.warning("%s is not VOD_BASE_DIR: cloud uploads and playback are not checked", base_dir)
         return False
-    env_base = os.environ.get("VOD_BASE_DIR")
-    db_file = os.path.join(env_base, "streamrecorder.db") if env_base else config.DB_FILE
+    db_file = _database_file()
     if not os.path.isfile(db_file):
         logger.warning("Database %s missing: cloud uploads and playback are not checked", db_file)
         return False
@@ -699,6 +743,8 @@ def run(
     base_dir = base_dir.resolve()
     mode = "ENFORCE" if enforce else "DRY-RUN"
     if enforce:
+        if not _enforce_allowed():
+            return 2
         webui_base = Path(_webui().BASE_DIR).resolve()
         if webui_base != base_dir:
             logger.error("Base dir %s differs from the configured VOD_BASE_DIR %s", base_dir, webui_base)
@@ -790,6 +836,8 @@ def main(argv: list[str] | None = None) -> int:
         os.environ["VOD_BASE_DIR"] = str(Path(args.base_dir).resolve())
 
     config = _config()
+    if args.enforce and not _enforce_allowed():
+        return 2
     _worker()
     if args.enforce:
         _webui()

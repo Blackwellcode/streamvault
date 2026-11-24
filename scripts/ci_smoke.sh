@@ -42,7 +42,7 @@ expect "login" 302 "$(curl -s -o /dev/null -w '%{http_code}' -c "${JAR}" -b "${J
     --data-urlencode "csrf_token=${TOKEN}" \
     --data-urlencode "username=${SMOKE_USER}" \
     --data-urlencode "password=${SMOKE_PASS}" "${BASE}/login")"
-expect "dashboard with session" 200 "$(code -L "${BASE}/")"
+expect "dashboard with session" 200 "$(code "${BASE}/")"
 expect "dashboard without session" 302 "$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/")"
 
 # The session passes auth_request; the livebot itself answers 404 because no

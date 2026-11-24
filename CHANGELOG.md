@@ -100,8 +100,14 @@ All notable changes to this project are documented here. The format follows
   (`--logger-class WEBUI.gunicorn_logging.EscapedPathLogger`), and both access
   logs drop the query string and fragment of the referer, so requests can no
   longer forge log lines, inject terminal escapes or leak tokens through it.
-- JSON request bodies, including chunked ones, are limited to 1 MiB before
-  authentication (413); uploads are unaffected.
+- Every request body is limited to 1 MiB before authentication (413), whatever
+  its type or encoding, and forms to 5000 fields; only admin multipart uploads
+  to the upload routes may be larger.
+- Deeply nested or wrongly typed JSON no longer causes a 500 before login;
+  request paths, exception text and failed login names cannot forge lines in
+  the application log.
+- Live demand markers are 0755/0644 instead of world-writable and never follow
+  symlinks; live routes answer 404 for invalid channel names.
 - `/api/live/client-debug` accepts at most 16 KB and 60 requests per minute,
   stores only finite bounded numbers and printable text, and keeps its log
   below 1 MiB; malformed log lines are skipped and reported.
@@ -221,11 +227,16 @@ All notable changes to this project are documented here. The format follows
 - `install.sh` and `bin/streamvault` are executable, the installer keeps the
   git history of an official clone so `streamvault update` works, the site
   answers by IP address (the untouched Debian/Ubuntu placeholder site is
-  disabled) and an existing site file is backed up before it is rewritten.
-- Docker: `./data` is handed to the app user on start, so a fresh clone can
-  create its database.
+  disabled). A site file you edited is kept, and a failing `nginx -t` restores
+  the previous sites.
+- Docker: `./data` is handed to the app user on start and the recorder log
+  moved to `./data/.meta/logs`, so the stack runs from a fresh clone.
 - The README demo used `VOD_USER=admin`, which StreamVault rejects.
-- `/api/live/ready` answered 500 when the Twitch lookup failed.
+- `/api/live/ready` answered 500 when the Twitch lookup failed; outages are
+  now logged once per minute and channel.
+- Watching a configured live-only channel no longer marks it live, stopping
+  live keeps configured channels, and YouTube channels no longer trigger a
+  Twitch restream.
 - A deleted VOD or clip whose file was still on disk opened in the player:
   the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.

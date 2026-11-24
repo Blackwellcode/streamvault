@@ -33,6 +33,7 @@ import shutil
 import signal
 import socket
 import sqlite3
+import stat
 import subprocess
 import sys
 import threading
@@ -57,6 +58,8 @@ MAINTENANCE_INTERVAL_SEC = 30.0
 FIRST_BYTE_TIMEOUT_SEC = 25.0
 CLIENT_TIMEOUT_SEC = 30
 STOP_TIMEOUT_SEC = 5
+# The loop serves every channel, so one slow answer from Twitch must not hold it up.
+LIVE_CHECK_TIMEOUT_SEC = 3
 # After this many failed starts in a row a configured playlist proxy is skipped.
 PROXY_DIRECT_AFTER_FAILS = 2
 # At the channel limit an unwatched pipeline may be replaced once its marker is
@@ -173,6 +176,29 @@ def clear_channel_files(channel):
             os.rmdir(directory)
         except OSError as exc:  # the WebUI may just have written a new marker
             logger.info("HLS directory of %s kept: %s", channel, exc)
+
+
+def prepare_hls_dir(channel):
+    """Create or empty the HLS directory of a channel; OSError when it is not ours.
+
+    Local users may be able to write next to it (RAM disk): ffmpeg would follow a
+    planted symlink and overwrite its target.
+    """
+    directory = hls_dir_for(channel)
+    try:
+        os.mkdir(directory, 0o755)
+    except FileExistsError:
+        logger.debug("HLS directory of %s exists", channel)
+    info = os.lstat(directory)
+    if not stat.S_ISDIR(info.st_mode):
+        raise OSError("HLS path is a symlink or not a directory")
+    geteuid = getattr(os, "geteuid", None)
+    if geteuid is not None and info.st_uid != geteuid():
+        raise OSError(f"HLS directory belongs to uid {info.st_uid}, not to this service")
+    # Segments of the previous run would show up as a frozen picture.
+    for name in os.listdir(directory):
+        if HLS_FILE_RE.fullmatch(name):
+            os.remove(os.path.join(directory, name))  # removes a symlink, never its target
 
 
 def purge_leftovers(active):
@@ -296,6 +322,8 @@ def build_ffmpeg_command(hls_dir):
         "-flags", "low_delay",
         "-probesize", str(FFMPEG_PROBESIZE),
         "-analyzeduration", str(FFMPEG_ANALYZEDURATION_US),
+        # The stream is remote data: it must not make ffmpeg open files or URLs.
+        "-protocol_whitelist", "pipe",
         "-i", "pipe:0",
         *streams,
         "-muxdelay", "0",
@@ -307,7 +335,9 @@ def build_ffmpeg_command(hls_dir):
         "-f", "hls",
         "-hls_time", "2",
         "-hls_list_size", str(config.LIVEBOT_HLS_LIST_SIZE),
-        "-hls_flags", "delete_segments+independent_segments+temp_file",
+        # omit_endlist: at the end of the source players must reload or fail, not take
+        # the last playlist for a finished video.
+        "-hls_flags", "delete_segments+independent_segments+temp_file+omit_endlist",
         "-hls_segment_type", "mpegts",
         "-hls_segment_filename", os.path.join(hls_dir, "seg_%05d.ts"),
         os.path.join(hls_dir, "stream.m3u8"),
@@ -398,13 +428,9 @@ class StreamWorker:
             return False
         self.start_time = time.time()
         try:
-            if os.path.islink(self.hls_dir):
-                raise OSError("HLS directory is a symlink")
-            # Segments of the previous run would show up as a frozen picture.
-            clear_channel_files(self.channel)
-            os.makedirs(self.hls_dir, exist_ok=True)
+            prepare_hls_dir(self.channel)
             self._spawn(self.source_command(self.channel, use_proxy), build_ffmpeg_command(self.hls_dir))
-        except (OSError, ValueError) as exc:
+        except (OSError, ValueError, RuntimeError) as exc:  # RuntimeError: no thread available
             logger.error("Live pipeline for %s not started: %s", self.channel, exc)
             self.stop()
             return False
@@ -481,8 +507,13 @@ class StreamWorker:
         for name in ("streamlink.log", "ffmpeg.log"):
             path = os.path.join(self.hls_dir, name)
             try:
-                if os.path.getsize(path) > PIPELINE_LOG_MAX_BYTES:
-                    os.truncate(path, 0)
+                fd = os.open(path, os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0))
+                try:
+                    info = os.fstat(fd)
+                    if stat.S_ISREG(info.st_mode) and info.st_size > PIPELINE_LOG_MAX_BYTES:
+                        os.ftruncate(fd, 0)
+                finally:
+                    os.close(fd)
             except OSError as exc:
                 throttled_log(logging.WARNING, f"trim-{path}", "Log %s not trimmed: %s", path, exc)
 
@@ -500,6 +531,8 @@ class StreamWorker:
         reader = self.broadcaster.thread
         if reader is not None:
             reader.join(timeout=STOP_TIMEOUT_SEC)
+        elif self.process_ffmpeg is not None and self.process_ffmpeg.stdout is not None:
+            self.process_ffmpeg.stdout.close()  # otherwise the reader closes it
         self.process_ffmpeg = self.process_streamlink = None
         clear_channel_files(self.channel)
 
@@ -554,25 +587,53 @@ class LiveBot:
             self._schedule_retry(channel, "start failed", live=None)
             return None
 
-    def _schedule_retry(self, channel, reason, live):
+    def _schedule_retry(self, channel, reason, live, offline=None):
+        """Count a failure. ``offline`` blocks HTTP starts until Twitch was asked."""
         with self.lock:
             fails = self.retry.get(channel, {}).get("fails", 0) + 1
             delay = min(config.LIVE_RETRY_BACKOFF_CAP_SEC, 2 ** min(fails, 6))
-            if live is False:
-                delay = max(delay, config.LIVE_OFFLINE_RECHECK_SEC)
             delay += random.uniform(0, max(0.2, delay * 0.1))
-            self.retry[channel] = {"fails": fails, "next": time.time() + delay, "offline": live is False}
-        logger.warning(
-            "Live pipeline %s: %s; attempt %s failed, next in %.0fs (twitch_live=%s)",
-            channel, reason, fails, delay, live,
+            self.retry[channel] = {"fails": fails, "next": time.time() + delay, "offline": bool(offline)}
+            if offline is None:
+                self._note_live_state(channel, live)
+        logger.warning("Live pipeline %s: %s; attempt %s failed", channel, reason, fails)
+
+    def _note_live_state(self, channel, live):
+        with self.lock:
+            state = self.retry.get(channel)
+            if state is None:
+                return
+            if live is False:
+                delay = config.LIVE_OFFLINE_RECHECK_SEC
+                delay += random.uniform(0, max(0.2, delay * 0.1))
+                state["next"] = max(state["next"], time.time() + delay)
+            state["offline"] = live is False
+            wait = max(0.0, state["next"] - time.time())
+        logger.info("Live pipeline %s: next attempt in %.0fs (twitch_live=%s)", channel, wait, live)
+
+    def _live_state(self, channel):
+        """Twitch's answer, or None when it does not come in time."""
+        answer = []
+        thread = threading.Thread(
+            target=lambda: answer.append(self.is_live(channel)), daemon=True, name=f"live-check-{channel}"
         )
+        try:
+            thread.start()
+        except RuntimeError as exc:
+            logger.warning("Live check for %s not started: %s", channel, exc)
+            return None
+        thread.join(timeout=LIVE_CHECK_TIMEOUT_SEC)
+        if not answer:
+            logger.warning("Live check for %s unanswered after %ss", channel, LIVE_CHECK_TIMEOUT_SEC)
+            return None
+        return answer[0]
 
     def _still_offline(self, channel):
         """Ask Twitch before starting a channel that was offline the last time."""
         state = self.retry.get(channel, {})
         if not state.get("offline"):
             return False
-        if self.is_live(channel) is False:
+        if self._live_state(channel) is False:
             state["next"] = time.time() + config.LIVE_OFFLINE_RECHECK_SEC
             throttled_log(logging.INFO, f"offline-{channel}", "Channel %s is still offline", channel, interval=600)
             return True
@@ -605,8 +666,13 @@ class LiveBot:
         with self.lock:
             channels = list(self.streams)
         if channels:
-            with ThreadPoolExecutor(max_workers=len(channels)) as pool:
-                list(pool.map(self._stop_channel, channels))
+            try:
+                with ThreadPoolExecutor(max_workers=len(channels)) as pool:
+                    list(pool.map(self._stop_channel, channels))
+            except RuntimeError as exc:  # can't start new thread
+                logger.warning("Stopping live pipelines one by one: %s", exc)
+                for channel in channels:
+                    self._stop_channel(channel)
 
     # Loop -----------------------------------------------------------------
 
@@ -645,9 +711,12 @@ class LiveBot:
                 "Live pipeline %s: %s | ffmpeg: %s | streamlink: %s",
                 worker.channel, reason, worker.log_tail("ffmpeg.log"), worker.log_tail("streamlink.log"),
             )
+            # Before the channel leaves ``streams``: a client reconnecting during the stop
+            # or the check must find the backoff.
+            self._schedule_retry(worker.channel, reason, live=None, offline=True)
             self._stop_channel(worker.channel)
-            if has_demand(worker.channel):
-                self._schedule_retry(worker.channel, reason, self.is_live(worker.channel))
+            live = self._live_state(worker.channel) if has_demand(worker.channel) else None
+            self._note_live_state(worker.channel, live)
         elif not worker.was_ready and worker.playlist_ready():
             worker.was_ready = True
             self.retry.pop(worker.channel, None)

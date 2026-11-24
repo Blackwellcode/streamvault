@@ -38,6 +38,22 @@ class LiveReadyTests(IsolatedBaseTest):
         self.assertIsNone(data["twitch_live"])
         self.assertEqual(data["viewer_count"], 0)
 
+    def test_outage_is_logged_once_per_minute_and_channel(self):
+        from WEBUI import webui
+        webui._RATE_LIMITED_LAST.clear()
+        self.addCleanup(webui._RATE_LIMITED_LAST.clear)
+        with mock.patch.object(twitch_api, "get_stream", side_effect=OSError("offline")):
+            with self.assertLogs(level="WARNING") as logs:
+                for channel in ("demochan", "otherchan") * 3:
+                    self.assertEqual(self.client.get(f"/api/live/ready/{channel}").status_code, 200)
+            lines = [line for line in logs.output if "Live status of" in line]
+            self.assertEqual(len(lines), 2, lines)
+            self.assertTrue(all("OSError: offline" in line for line in lines))
+            webui._RATE_LIMITED_LAST["live-ready:demochan"] -= 61
+            with self.assertLogs(level="WARNING") as logs:
+                self.client.get("/api/live/ready/demochan")
+        self.assertIn("2 more since the last warning", "".join(logs.output))
+
 
 if __name__ == "__main__":
     unittest.main()

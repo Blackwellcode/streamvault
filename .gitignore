@@ -1,6 +1,7 @@
 # Environment & Secrets
 .env
-.env.local
+.env.*
+!.env.example
 credentials.json
 token.json
 cookies.txt

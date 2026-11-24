@@ -85,7 +85,12 @@ def live_hls_playlist(source_channel: str) -> str:
 
 
 def ensure_live_hls_enabled(source_channel: str) -> None:
-    """Make livebot keep an HLS buffer for chat-clip streamers while they record."""
+    """Flag a recording chat-clip channel as live (display only).
+
+    This does not start livebot: it follows the demand markers of the watch page
+    and clears the flag of an unwatched channel within about 30 s. Without a
+    viewer the clip is cut from the running recording instead of the HLS buffer.
+    """
     login = re.sub(r"[^a-z0-9_]+", "", str(source_channel or "").strip().lower())
     if not login or not clip_enabled_for(login):
         return

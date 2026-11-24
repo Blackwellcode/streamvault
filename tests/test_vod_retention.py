@@ -9,6 +9,8 @@ import importlib.util
 import os
 import shutil
 import sqlite3
+import subprocess
+import sys
 import time
 import unittest
 from pathlib import Path
@@ -608,6 +610,94 @@ class InUseTests(RetentionTestBase):
         self.assertEqual(rc, 0, out)
         self.assertIn("WOULD DELETE  alpha/alpha_old.mp4", out)
         self.assertFalse((other / "streamrecorder.db").exists())
+
+
+class EnforceNeedsDatabaseTests(RetentionTestBase):
+    """Without a usable database no upload or playback protection exists."""
+
+    # Fresh interpreter: the WebUI import (which creates the database) must not
+    # have happened yet. fcntl exists on POSIX only.
+    _RUNNER = (
+        "import runpy, sys, types\n"
+        "try:\n"
+        "    import fcntl\n"
+        "except ImportError:\n"
+        "    shim = types.ModuleType('fcntl')\n"
+        "    shim.LOCK_EX = shim.LOCK_NB = shim.LOCK_UN = shim.LOCK_SH = 0\n"
+        "    shim.flock = lambda *_args: None\n"
+        "    sys.modules['fcntl'] = shim\n"
+        "script = sys.argv[1]\n"
+        "sys.argv = sys.argv[1:]\n"
+        "runpy.run_path(script, run_name='__main__')\n"
+    )
+
+    def run_script(self, base: Path, *args: str) -> subprocess.CompletedProcess:
+        env = dict(os.environ, VOD_BASE_DIR=str(base), PYTHONDONTWRITEBYTECODE="1")
+        for name in ("VOD_META_DIR", "VOD_FILES_DIR", "VOD_HLS_DIR", "VOD_THUMB_DIR"):
+            env.pop(name, None)
+        return subprocess.run(
+            [sys.executable, "-c", self._RUNNER, str(SCRIPT_PATH),
+             "--base-dir", str(base), "--days", "14", *args],
+            cwd=str(SCRIPT_PATH.parents[1]), env=env, capture_output=True, text=True,
+            errors="replace", timeout=120)
+
+    def test_script_refuses_enforce_without_creating_a_database(self):
+        base = self.base / "fresh"
+        files = [self.touch(f"fresh/alpha/alpha_{i}.mp4", age_days=40) for i in (1, 2)]
+        result = self.run_script(base, "--enforce")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("missing", result.stderr)
+        self.assertTrue(all(path.exists() for path in files))
+        self.assertEqual(list(base.glob("streamrecorder.db*")), [])
+
+        dry = self.run_script(base)
+        self.assertEqual(dry.returncode, 0, dry.stderr)
+        self.assertIn("WOULD DELETE  alpha/alpha_1.mp4", dry.stdout)
+        self.assertIn("not checked", dry.stderr)
+        self.assertEqual(list(base.glob("streamrecorder.db*")), [])
+
+    def test_run_refuses_enforce_without_a_database(self):
+        old = self.touch("alpha/alpha_old.mp4", age_days=40)
+        for path in self.base.glob("streamrecorder.db*"):
+            path.unlink()
+        with self.assertLogs(vr.logger, level="ERROR") as logs:
+            rc, _ = self.run_quiet(self.base, 14, True)
+        self.assertEqual(rc, 2)
+        self.assertTrue(old.exists())
+        self.assertEqual(list(self.base.glob("streamrecorder.db*")), [])
+        self.assertTrue(any("missing" in line for line in logs.output))
+
+    def test_run_refuses_enforce_with_an_unusable_database(self):
+        old = self.touch("alpha/alpha_old.mp4", age_days=40)
+        db_file = self.base / "streamrecorder.db"
+
+        def empty():
+            db_file.write_bytes(b"")
+
+        def partial():
+            conn = sqlite3.connect(db_file)
+            try:
+                conn.execute("CREATE TABLE channels (name TEXT)")
+                conn.commit()
+            finally:
+                conn.close()
+
+        def corrupt():
+            db_file.write_bytes(b"not a database, just text " * 100)
+
+        for create, message in ((empty, "lacks tables"), (partial, "lacks tables"),
+                                (corrupt, "unreadable")):
+            with self.subTest(create=create.__name__):
+                for path in self.base.glob("streamrecorder.db*"):
+                    path.unlink()
+                create()
+                before = db_file.read_bytes()
+                with self.assertLogs(vr.logger, level="ERROR") as logs:
+                    rc, _ = self.run_quiet(self.base, 14, True)
+                self.assertEqual(rc, 2)
+                self.assertTrue(old.exists())
+                self.assertEqual(db_file.read_bytes(), before)
+                self.assertTrue(any(message in line for line in logs.output))
 
 
 class SystemdUnitTests(unittest.TestCase):

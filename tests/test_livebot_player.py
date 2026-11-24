@@ -153,9 +153,12 @@ const channelName = 'demochan', isMobilePlayer = false, playlistUrl = '/live/pla
 initLowLatencyHlsPlayer({}, '/live/demochan/stream.m3u8');
 const notFound = { fatal: true, type: 'networkError', details: 'manifestLoadError', response: { code: 404 } };
 handlers.error(null, notFound);
+initLowLatencyHlsPlayer({}, '/live/demochan/stream.m3u8');
+const remembered = loaded.slice();
 handlers.error(null, notFound);
 initLowLatencyHlsPlayer({}, '/live/demochan/stream.m3u8');
-console.log(JSON.stringify({ loaded: loaded, reconnects: reconnects, released: released }));
+handlers.error(null, { fatal: true, type: 'networkError', details: 'fragLoadError' });
+console.log(JSON.stringify({ remembered: remembered, loaded: loaded.slice(remembered.length), reconnects: reconnects, released: released }));
 """
 
 
@@ -264,11 +267,28 @@ class LivePlayerTests(IsolatedBaseTest):
 
     def test_missing_nginx_hls_route_uses_the_webui_playlist(self):
         out = self._node(HLS_PLAYER, "hlsSourceUrl", "shouldUseFlaskPlaylist", "initLowLatencyHlsPlayer")
-        self.assertEqual(out["loaded"], [
-            "/live/demochan/stream.m3u8", "/live/playlist/demochan", "startLoad", "/live/playlist/demochan",
+        self.assertEqual(out["remembered"], [
+            "/live/demochan/stream.m3u8", "/live/playlist/demochan", "/live/playlist/demochan",
         ])
-        self.assertEqual(out["reconnects"], 0)
-        self.assertEqual(out["released"], 2, "HLS must not stay held by the real-time player's buffering")
+        # Both playlists failed: hls.js cannot reload a manifest with startLoad(), so the
+        # player has to start over, with the direct playlist first.
+        self.assertEqual(out["reconnects"], 1)
+        self.assertEqual(out["loaded"], ["/live/demochan/stream.m3u8", "startLoad"])
+        self.assertEqual(out["released"], 3, "HLS must not stay held by the real-time player's buffering")
+
+    def test_ended_event_reconnects(self):
+        block = re.search(r"\n  video\.addEventListener\('ended', function\(\) \{.*?\n  }\);\n", self.body, re.S)
+        self.assertIsNotNone(block)
+        require_node(self)
+        out = json.loads(run_node(
+            "let ready = false, reconnects = 0, handler = null;"
+            "function dbg() {} function scheduleReconnect() { reconnects += 1; ready = false; }"
+            "const video = { addEventListener: function(name, fn) { if (name === 'ended') handler = fn; } };"
+            + block.group(0) +
+            "handler(); const idle = reconnects; ready = true; handler(); handler();"
+            "console.log(JSON.stringify([idle, reconnects]));"
+        ))
+        self.assertEqual(out, [0, 1])
 
     def test_end_of_the_realtime_stream_reconnects(self):
         handler = re.search(r"mpegts\.Events\.LOADING_COMPLETE, function\(\) \{.*?\n        \}\);", self.body, re.S)
