@@ -2066,12 +2066,14 @@ def active_recording_archives():
 
 
 def add_live_channel(channel):
+    # notify=0 marks a row that exists only for watching: livebot removes it once
+    # nobody watches. add_channel_db() (a live-only channel of the admin) sets 1.
     conn = database.get_db()
     try:
         conn.execute(
             """
-            INSERT OR IGNORE INTO channels (name, record, live, chat, platform, archive_name)
-            VALUES (?, 0, 1, 0, 'twitch', ?)
+            INSERT OR IGNORE INTO channels (name, record, live, chat, platform, archive_name, notify)
+            VALUES (?, 0, 1, 0, 'twitch', ?, 0)
             """,
             (channel, channel),
         )
