@@ -1683,6 +1683,59 @@ class RestoreSafetyTests(StorageTestBase):
             "gelöscht", database.get_storage_object(obj["id"])["last_error"]
         )
 
+    def _tombstoned_restore(self, local: bytes):
+        path, obj = self._restore_object(b"payload", remote_size=7, local=local)
+        conn = database.get_db()
+        try:
+            conn.execute("INSERT INTO channels (name, archive_name) VALUES ('source', 'streamer')")
+            conn.commit()
+        finally:
+            conn.close()
+        # The slugs the WebUI deletes under and looks up.
+        for slug in ("streamer", "streamer_", "source"):
+            database.upsert_deleted_media(slug, "file.mp4")
+        database.upsert_deleted_media("streamer", "other.mp4")
+        database.upsert_deleted_media("stranger", "file.mp4")
+        return path, obj
+
+    def _assert_visible_again(self):
+        self.assertFalse(database.is_deleted_media(
+            filename="file.mp4", streamers=["streamer", "streamer_", "source"]))
+        self.assertTrue(database.is_deleted_media(streamer="streamer", filename="other.mp4"))
+        self.assertTrue(database.is_deleted_media(streamer="stranger", filename="file.mp4"))
+
+    def test_restore_removes_the_tombstone_of_the_file(self):
+        path, obj = self._tombstoned_restore(b"old-local")
+        fake = self._FakeDownloadProvider(b"payload")
+        with mock.patch.object(service, "build_provider", return_value=fake):
+            service.run_restore({"object_id": obj["id"]})
+        self.assertEqual(path.read_bytes(), b"payload")
+        self._assert_visible_again()
+
+    def test_restore_of_a_present_file_removes_the_tombstone(self):
+        _, obj = self._tombstoned_restore(b"payload")
+        self.assertTrue(service.run_restore({"object_id": obj["id"]}).get("already_local"))
+        self._assert_visible_again()
+
+    def test_failed_restore_keeps_the_tombstone(self):
+        _, obj = self._tombstoned_restore(b"old-local")
+        fake = self._FakeDownloadProvider(error=StorageError("remote gone"))
+        with mock.patch.object(service, "build_provider", return_value=fake):
+            with self.assertRaises(StorageError):
+                service.run_restore({"object_id": obj["id"]})
+        self.assertTrue(database.is_deleted_media(streamer="streamer", filename="file.mp4"))
+
+    def test_locked_tombstone_fails_the_restore_task_for_a_retry(self):
+        _, obj = self._tombstoned_restore(b"old-local")
+        fake = self._FakeDownloadProvider(b"payload")
+        locked = sqlite3.OperationalError("database is locked")
+        with mock.patch.object(service, "build_provider", return_value=fake),                 mock.patch.object(service.database, "remove_deleted_media", side_effect=locked):
+            with self.assertRaises(sqlite3.OperationalError):
+                service.run_restore({"object_id": obj["id"]})
+        self.assertEqual(database.get_storage_object(obj["id"])["status"], "uploaded")
+        service.run_restore({"object_id": obj["id"]})
+        self._assert_visible_again()
+
     def test_enqueue_restore_dedupes_by_object_id(self):
         _, obj = self._restore_object()
         first = service.enqueue_restore(obj["id"])
