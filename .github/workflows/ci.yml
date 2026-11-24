@@ -118,6 +118,9 @@ jobs:
 
       - name: Run install.sh
         run: |
+          # The runner image ships Apache's page; a fresh VPS does not.
+          ls -A /var/www/html || true
+          sudo rm -f /var/www/html/index.html
           git checkout -q -B master
           sudo ./install.sh
 
@@ -172,6 +175,7 @@ jobs:
 
       - name: Install 0.1.1, then this version
         run: |
+          sudo rm -f /var/www/html/index.html
           git clone -q --depth 1 --branch v0.1.1 https://github.com/Blackwellcode/streamvault.git /tmp/old
           sudo bash /tmp/old/install.sh
           sudo grep '^VOD_PASS=' /etc/streamvault/env | sudo tee /tmp/pass-before > /dev/null
