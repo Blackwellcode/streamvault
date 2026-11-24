@@ -3,7 +3,16 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.1.1] - 2026-11-24
+
+### Security
+
+- Fixed reflected XSS in the clip editor: the Share button rendered the
+  `clip_name` query parameter into an inline handler. A crafted link could
+  run script in a signed-in user's session after a click on **Share**
+  (GHSA-qc69-h632-qxmg, affects 0.1.0). No configuration change is needed.
+
+## [0.1.0] - 2026-11-09
 
 ### Breaking changes
 
