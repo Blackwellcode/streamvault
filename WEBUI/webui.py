@@ -11749,11 +11749,13 @@ def api_live_ready(streamer):
     touch_live_heartbeat(channel)
     ready = live_playlist_fresh(channel)
     twitch_live = None
+    info = None
     try:
         info = twitch_api.get_stream(channel, monitored=True)
         twitch_live = bool(info.get("is_live"))
     except Exception:
-        twitch_live = None
+        # The player keeps polling; a failed lookup must not break it.
+        current_app.logger.exception("Live status of %s not available", channel)
     # Recorder/HLS can be ahead of Helix; never tell the phone "offline" while we ingest.
     if twitch_live is not True:
         if ready or current_recording_info(channel) is not None:

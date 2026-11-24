@@ -32,6 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt ruff==0.17.3
 

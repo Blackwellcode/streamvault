@@ -219,7 +219,9 @@ Group=${SERVICE_USER}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=${ENV_FILE}
 Environment="PYTHONPATH=${APP_DIR}"
-ExecStart=${VENV_DIR}/bin/python3 recorder/livebot.py
+ExecStart=${VENV_DIR}/bin/python3 -m recorder.livebot
+# Stops its streamlink/ffmpeg children first.
+TimeoutStopSec=30s
 Restart=always
 RestartSec=10s
 

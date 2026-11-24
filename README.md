@@ -186,12 +186,12 @@ Four services run side by side: `recorder`, `worker`, `livebot` and `webui`.
 
 ## Upgrading from 0.1
 
-The next release changes minimum dependency versions, session lifetime,
-overlay token handling, Docker user IDs and the Nginx site (new
-`/_live_auth` and direct live locations), and removes Whisper transcription
-and the text-to-speech overlay. Read the
-[breaking changes in CHANGELOG.md](CHANGELOG.md#breaking-changes) before you
-update.
+Release 0.2 changes minimum dependency versions, session lifetime, overlay token
+handling, Docker user IDs and the Nginx site (new `/_live_auth` and direct live
+locations), adds the `livebot` service, and removes Whisper transcription and
+the text-to-speech overlay. Installations made with `install.sh` are updated by
+running `sudo ./install.sh` from a fresh clone. Read the breaking changes in
+[CHANGELOG.md](CHANGELOG.md) before you update.
 
 ## Requirements
 

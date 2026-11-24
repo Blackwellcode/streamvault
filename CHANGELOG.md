@@ -38,9 +38,11 @@ All notable changes to this project are documented here. The format follows
   `https://example.com/alerts/overlay#token=SECRET`; browsers never send the
   fragment to the server. The overlay APIs still require the token, as a
   header unless `OVERLAY_ALLOW_QUERY_TOKEN=true`.
+- **New service `livebot`.** It feeds the live page; without it there is no
+  live playback. Add the systemd unit from INSTALL.md section 5 (or re-run
+  `install.sh`); Docker starts it automatically.
 - **The live watch page no longer embeds the Twitch player by default.**
-  Every device plays the server stream (no Twitch ads, viewer IP addresses
-  stay away from Twitch); `?embed=`/`?proxy=` have no effect and the CSP no
+  Every device plays the server stream; `?embed=`/`?proxy=` have no effect and the CSP no
   longer allows Twitch frames. `LIVE_TWITCH_EMBED=true` restores the previous
   behaviour (Docker: set it in `.env`).
 - **nginx: direct live routes need new locations.** Update your site from
@@ -110,6 +112,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `recorder/livebot.py`: demand-driven live restream for the live watch page
+  (real-time MPEG-TS with HLS fallback, no transcoding). It pulls a Twitch
+  channel only while someone watches; Streamlink removes ad segments, so
+  playback waits during ad breaks. New `LIVEBOT_*` settings in `.env.example`.
 - `scripts/vod_retention.py`: deletes local archive VODs older than
   `--days N` (dry run unless `--enforce`). Deletion uses the WebUI delete path
   (tombstone, thumbnail, HLS, chapters, shares) and removes the VOD's metadata
@@ -130,6 +136,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Live player: start buffer, rebuffering after stalls, reconnect when the stream
+  ends, fallback to HLS after repeated real-time failures and to the WebUI
+  playlist when the nginx HLS route is missing. Channels added only by watching
+  are stored with `notify=0` and removed when nobody watches; configured
+  live-only channels are kept.
 - **Privacy: fonts are self-hosted; no requests to Google Fonts.** Inter and
   IBM Plex Mono (Fontsource 5.3.0, SIL OFL 1.1, latin + latin-ext) ship in
   `WEBUI/static/fonts/`; the CSP no longer allows `fonts.googleapis.com` or
@@ -214,6 +225,7 @@ All notable changes to this project are documented here. The format follows
 - Docker: `./data` is handed to the app user on start, so a fresh clone can
   create its database.
 - The README demo used `VOD_USER=admin`, which StreamVault rejects.
+- `/api/live/ready` answered 500 when the Twitch lookup failed.
 - A deleted VOD or clip whose file was still on disk opened in the player:
   the tombstone check's `abort(404)` was swallowed by its own error handler.
 - A fresh database no longer logs a bogus `users.role` migration warning.
@@ -221,8 +233,7 @@ All notable changes to this project are documented here. The format follows
   ended in a redirect to the watch page. mpegts.js now gets an absolute URL
   (its blob: worker has no base URL: "Failed to parse URL from
   /live/<channel>.ts") and switches to LL-HLS after two failed attempts
-  before the first frame, because the MPEG-TS fan-out is an optional
-  external livebot. Native HLS (iOS/Safari) plays the session-checked
+  before the first frame. Native HLS (iOS/Safari) plays the session-checked
   `/live/playlist/<channel>`.
 
 ## [0.1.1] - 2026-11-24

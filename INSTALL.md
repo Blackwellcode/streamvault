@@ -212,7 +212,9 @@ Group=streamvault
 WorkingDirectory=/opt/streamvault/app
 EnvironmentFile=/etc/streamvault/env
 Environment="PYTHONPATH=/opt/streamvault/app"
-ExecStart=/opt/streamvault/venv/bin/python3 recorder/livebot.py
+ExecStart=/opt/streamvault/venv/bin/python3 -m recorder.livebot
+# Stops its streamlink/ffmpeg children first.
+TimeoutStopSec=30s
 Restart=always
 RestartSec=10s
 
@@ -516,7 +518,12 @@ mode (503) and missing terms consent (400) reach the player as 500, because
 The `.ts` route and the HLS files come from the `livebot` service
 (`recorder/livebot.py`, `127.0.0.1:8085`). Keep it on the loopback address: it
 trusts nginx to check the session. While it is not running the `.ts` route
-answers 502 and live playback stays empty.
+answers 502 and live playback stays empty. The livebot pulls a Twitch channel
+only while someone has its live page open, without transcoding; Streamlink
+removes ad segments, so playback waits during ad breaks. Limits:
+`LIVEBOT_MAX_CHANNELS`, `LIVEBOT_MAX_VIEWERS`; off: `LIVEBOT_ENABLED=false`.
+Whether restreaming is allowed depends on the terms of the platform; you are
+responsible for how you use it.
 The `/_protected_files/` alias is only needed for legacy archives stored below
 `VOD_FILES_DIR`; new recordings normally live directly below `VOD_BASE_DIR`.
 
