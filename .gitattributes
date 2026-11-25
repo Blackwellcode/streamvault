@@ -25,3 +25,4 @@ Dockerfile text eol=lf
 *.woff binary
 *.woff2 binary
 *.db binary
+/Dockerfile text eol=lf
