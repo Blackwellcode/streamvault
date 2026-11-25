@@ -63,7 +63,7 @@ jobs:
           persist-credentials: false
       - name: Syntax check
         run: |
-          for script in install.sh scripts/streamvault_vps.sh scripts/ci_smoke.sh bin/streamvault; do
+          for script in install.sh scripts/streamvault_vps.sh scripts/ci_smoke.sh scripts/ci_live_e2e.sh scripts/ci_fake_streamlink.sh bin/streamvault; do
             bash -n "$script"
             test -x "$script" || { echo "$script is not executable"; exit 1; }
           done
@@ -92,6 +92,24 @@ jobs:
         run: |
           SMOKE_USER=smoke SMOKE_PASS="$(grep '^VOD_PASS=' .env | tail -n 1 | cut -d= -f2)" \
             scripts/ci_smoke.sh http://localhost:8090
+
+      - name: Live playback end to end (test picture instead of Twitch)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          cat > docker-compose.override.yml <<'YML'
+          services:
+            app:
+              environment:
+                - STREAMLINK_BIN=/app/scripts/ci_fake_streamlink.sh
+              extra_hosts:
+                - "gql.twitch.tv:127.0.0.1"
+                - "api.twitch.tv:127.0.0.1"
+                - "id.twitch.tv:127.0.0.1"
+                - "www.twitch.tv:127.0.0.1"
+          YML
+          docker compose up -d
+          sleep 15
+          SMOKE_USER=smoke SMOKE_PASS="$(grep '^VOD_PASS=' .env | tail -n 1 | cut -d= -f2)"             scripts/ci_live_e2e.sh http://localhost:8090
 
       - name: Programs run and no traceback was logged
         run: |
