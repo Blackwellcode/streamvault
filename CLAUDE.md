@@ -2,12 +2,11 @@
 
 ## Project Overview
 StreamVault is an automated 24/7 multi-platform live stream recording, HLS live restreaming, VOD transcoding, and cloud archival system.
-- **Languages & Frameworks:** Python 3.10+ (Ubuntu 22.04 / Debian 12 system Python) (Flask, SQLite WAL, Streamlink, yt-dlp, FFmpeg, Whisper ASR, Boto3, PyCryptodome).
+- **Languages & Frameworks:** Python 3.10+ (Ubuntu 22.04 / Debian 12 system Python) (Flask, SQLite WAL, Streamlink, yt-dlp, FFmpeg, Boto3, PyCryptodome).
 - **Core Services:**
   - `Streamrecorder.py`: Daemon managing per-channel recording processes (`flock`-isolated).
-  - `worker.py`: Multi-threaded background job runner (IO, Remux, ASR, Cloud Storage).
+  - `worker.py`: Multi-threaded background job runner (IO, Remux, Cloud Storage).
   - `WEBUI/webui.py`: Flask dashboard, X-Accel-Redirect streaming, user traffic monitoring, supervisor health checks.
-  - `run_transcribe.py`: Isolated subprocess runner for Whisper ASR (`STREAMVAULT_IMPORT_ONLY=1`).
   - `core/storage/`: Provider-agnostic cloud storage service (AES-GCM encryption; S3, WebDAV, Google Drive, OneDrive, Dropbox).
   - `bin/streamvault`: Linux CLI for service orchestration (`start`, `stop`, `restart`, `status`, `logs`, `storage`).
 
@@ -100,14 +99,13 @@ nachtsilo-hub/
 │       └── providers/          # S3, WebDAV, Google Drive, OneDrive, Dropbox implementations
 ├── recorder/
 │   ├── Streamrecorder.py       # Multi-channel recording engine, flock locking, FFmpeg pipelines
-│   ├── worker.py               # Background task consumer (pools: io, remux, asr, storage)
+│   ├── worker.py               # Background task consumer (pools: io, remux, storage)
 │   ├── clip_engine.py          # Chat-overlay and highlight clipping
 │   └── chat_events.py          # Chat event ingestion & IRC listeners
 ├── WEBUI/
 │   ├── webui.py                # Flask application, auth, routes, X-Accel-Redirect streaming
 │   ├── templates/              # Jinja2 HTML templates
 │   └── static/                 # CSS, JS, alert audio, icons
-├── run_transcribe.py           # Subprocess wrapper for Whisper ASR to keep worker memory clean
 ├── scripts/
 │   └── streamvault_vps.sh      # VPS deploy/rollback + Linux validation (supervisor, X-Accel, HLS RAM disk)
 └── tests/                      # unittest modules (test_*.py); counts: see `unittest discover`
@@ -158,10 +156,10 @@ nachtsilo-hub/
 - **In-Progress Files:** Files ending in `.part` or `.remux.lock` that have a fresh modification timestamp (< 10 min) must **never** be deleted or pruned.
 - **Disk Space Protection:** `disk_blocks_recording(path)` walks up to the nearest existing parent directory if `path` does not exist yet. New recordings are paused if disk usage reaches `STORAGE_PAUSE_PCT` (default 90%, env `STREAM_RECORDER_STORAGE_PAUSE_PCT`) or free space falls to `STORAGE_PAUSE_FREE_GB` (default 20 GB, env `STREAM_RECORDER_STORAGE_PAUSE_FREE_GB`).
 
-### 6. Memory & Process Isolation (Whisper ASR)
-- Never load heavy ML frameworks (Whisper, PyTorch, CTranslate2) directly into the main `worker.py` process.
-- All transcription tasks must execute via `run_transcribe.py` in a separate child process.
-- `run_transcribe.py` sets `STREAMVAULT_IMPORT_ONLY=1` to prevent import-time side effects (admin creation, background threads) when loading `WEBUI.webui`.
+### 6. Import-Only Mode for CLI Scripts
+- CLI scripts that import `WEBUI.webui` (e.g. for `delete_video_file` or `resolve_media_path`) must set `STREAMVAULT_IMPORT_ONLY=1` before the import.
+- It prevents import-time side effects (admin creation, background threads); `scripts/streamvault_vps.sh validate` checks this with an import smoke test.
+- Retired worker task types (`RETIRED_TASK_TYPES` in `recorder/worker.py`, e.g. `transcribe`) are failed once with a log line; never re-add a handler or a dedicated pool for them.
 
 ### 7. Security & Cloud Storage Hygiene
 - **Credential Storage:** Provider credentials and OAuth refresh tokens must be encrypted with AES-GCM via `core.storage.crypto.encrypt_secret()`.

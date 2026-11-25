@@ -19,7 +19,7 @@ pip install -r requirements.txt ruff
 Run the app locally:
 
 ```bash
-export VOD_USER=admin VOD_PASS='choose-a-password' \
+export VOD_USER=demo VOD_PASS='choose-a-password' \
        VOD_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')" \
        VOD_BASE_DIR="$PWD/data"
 python -m WEBUI.webui --host 127.0.0.1 --port 8080
@@ -30,7 +30,7 @@ python -m WEBUI.webui --host 127.0.0.1 --port 8080
 CI runs exactly these on Python 3.10, 3.11 and 3.12:
 
 ```bash
-python -m compileall -q core recorder WEBUI bin run_transcribe.py tests
+python -m compileall -q core recorder WEBUI bin tests
 ruff check .
 python -m unittest discover -s tests -v
 ```

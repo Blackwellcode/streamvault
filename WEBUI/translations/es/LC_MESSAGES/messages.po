@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -431,12 +431,6 @@ msgstr "Mantenimiento por áreas y usuarios exentos guardados correctamente."
 msgid "At least 8 characters"
 msgstr "Al menos 8 caracteres"
 
-msgid "Audio extraction error"
-msgstr "Error en la extracción de audio"
-
-msgid "Audio extraction failed"
-msgstr "Falló la extracción de audio"
-
 msgid "August"
 msgstr "Agosto"
 
@@ -720,9 +714,6 @@ msgstr "Clips (%(count)s)"
 msgid "Close"
 msgstr "Cerrar"
 
-msgid "Close transcript"
-msgstr "Cerrar transcripción"
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr "Borrado en la nube en cola (tarea n.º %(task)s)."
@@ -830,9 +821,6 @@ msgstr "Crear nuevo usuario"
 
 msgid "Create new user group"
 msgstr "Crear nuevo grupo de usuarios"
-
-msgid "Create transcript"
-msgstr "Crear transcripción"
 
 msgid "Create user"
 msgstr "Crear usuario"
@@ -1020,9 +1008,6 @@ msgstr "Listo"
 msgid "Download"
 msgstr "Descargar"
 
-msgid "Download TXT"
-msgstr "Descargar TXT"
-
 msgid "Download all"
 msgstr "Descargar todo"
 
@@ -1157,17 +1142,11 @@ msgstr "Introduce la contraseña actual"
 msgid "Error"
 msgstr "Error"
 
-msgid "Error cancelling the transcription"
-msgstr "Error al cancelar la transcripción"
-
 msgid "Error changing the password."
 msgstr "Error al cambiar la contraseña."
 
 msgid "Error creating group"
 msgstr "Error al crear el grupo"
-
-msgid "Error creating the audio segment"
-msgstr "Error al crear el segmento de audio"
 
 msgid "Error creating the user."
 msgstr "Error al crear el usuario."
@@ -1189,9 +1168,6 @@ msgstr "Error al cargar el panel de administración. Inténtalo de nuevo más ta
 
 msgid "Error loading the traffic overview."
 msgstr "Error al cargar el resumen de tráfico."
-
-msgid "Error queuing the transcription"
-msgstr "Error al poner en cola la transcripción"
 
 msgid "Error saving group"
 msgstr "Error al guardar el grupo"
@@ -1233,9 +1209,6 @@ msgstr "Caducidad"
 msgid "Exported by StreamVault"
 msgstr "Exportado por StreamVault"
 
-msgid "Extracting audio..."
-msgstr "Extrayendo audio…"
-
 msgid "Failed"
 msgstr "Error"
 
@@ -1262,9 +1235,6 @@ msgstr "Gestor de archivos"
 
 msgid "File name"
 msgstr "Nombre del archivo"
-
-msgid "File not found"
-msgstr "Archivo no encontrado"
 
 msgid "File not found locally."
 msgstr "Archivo no encontrado localmente."
@@ -1684,9 +1654,6 @@ msgstr "Carga media (1 min / 5 min):"
 msgid "Loading chat…"
 msgstr "Cargando chat…"
 
-msgid "Loading model..."
-msgstr "Cargando modelo…"
-
 msgid "Loading streams…"
 msgstr "Cargando streams…"
 
@@ -1958,20 +1925,8 @@ msgstr "No se encontraron grabaciones."
 msgid "No results."
 msgstr "Sin resultados."
 
-msgid "No running transcription found."
-msgstr "No se encontró ninguna transcripción en curso."
-
 msgid "No streams"
 msgstr "Sin streams"
-
-msgid "No transcript output received"
-msgstr "No se recibió salida de la transcripción"
-
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
-msgstr "Aún no hay transcripción. Se genera localmente en el servidor y puede tardar en VODs largos."
-
-msgid "No transcription active"
-msgstr "Ninguna transcripción activa"
 
 msgid "No videos found."
 msgstr "No se encontraron vídeos."
@@ -2334,8 +2289,8 @@ msgstr "Errores recientes de tareas"
 msgid "Recently watched"
 msgstr "Vistos recientemente"
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
-msgstr "URLs recomendadas para la fuente de navegador. Sustituye TOKEN por el valor de TTS_OVERLAY_TOKEN o ALERT_OVERLAY_TOKEN. La parte tras # se queda en OBS y llega al servidor solo como cabecera de la petición, nunca en un registro."
+msgid "Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "URL recomendada para la fuente de navegador. Sustituye TOKEN por el valor de ALERT_OVERLAY_TOKEN. La parte tras # se queda en OBS y llega al servidor solo como cabecera de la petición, nunca en un registro."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "Recomendado. Evita la pérdida de datos por subidas incompletas."
@@ -2503,9 +2458,6 @@ msgstr "Texto de las normas"
 msgid "Running"
 msgstr "En curso"
 
-msgid "Running…"
-msgstr "En curso…"
-
 msgid "S3-compatible"
 msgstr "Compatible con S3"
 
@@ -2553,16 +2505,6 @@ msgstr "Guardado – déjalo vacío para conservarlo"
 
 msgid "Saved."
 msgstr "Guardado."
-
-msgid "Saving transcript failed"
-msgstr "Error al guardar la transcripción"
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr "Error al guardar la transcripción: %(error)s"
-
-msgid "Saving transcript..."
-msgstr "Guardando transcripción…"
 
 msgid "Saving…"
 msgstr "Guardando…"
@@ -2627,9 +2569,6 @@ msgstr "La reparación de búsqueda de posición ya está en curso (%(status)s).
 
 msgid "Seek repair queued."
 msgstr "Reparación de búsqueda de posición en cola."
-
-msgid "Segment creation failed"
-msgstr "Error al crear el segmento"
 
 msgid "Select folders to unlock:"
 msgstr "Selecciona las carpetas que quieres desbloquear:"
@@ -2731,9 +2670,6 @@ msgstr "Fuente"
 #, python-format
 msgid "Source %(name)s not found."
 msgstr "Fuente %(name)s no encontrada."
-
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "Bloqueo obsoleto eliminado, transcripción puesta en la cola del worker. El resultado aparecerá al recargar la página cuando termine."
 
 msgid "Start"
 msgstr "Iniciar"
@@ -2953,9 +2889,6 @@ msgstr "Versión de las condiciones obsoleta: recarga la página y acéptalas de
 msgid "Test"
 msgstr "Probar"
 
-msgid "Text-to-speech overlay"
-msgstr "Overlay de texto a voz"
-
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "Gracias por tu comprensión. Los usuarios autorizados pueden iniciar sesión desde la página de inicio de sesión."
 
@@ -3113,62 +3046,6 @@ msgstr "Tráfico"
 
 msgid "Traffic overview"
 msgstr "Resumen de tráfico"
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr "Transcribiendo segmento %(index)s/%(total)s (%(percent)s%%)"
-
-msgid "Transcript"
-msgstr "Transcripción"
-
-msgid "Transcript already exists"
-msgstr "La transcripción ya existe"
-
-msgid "Transcript already exists."
-msgstr "La transcripción ya existe."
-
-msgid "Transcript available"
-msgstr "Transcripción disponible"
-
-msgid "Transcript created"
-msgstr "Transcripción creada"
-
-msgid "Transcript finished"
-msgstr "Transcripción terminada"
-
-msgid "Transcript missing despite finished status"
-msgstr "Falta la transcripción pese al estado terminado"
-
-msgid "Transcript progress"
-msgstr "Progreso de la transcripción"
-
-msgid "Transcription cancelled"
-msgstr "Transcripción cancelada"
-
-msgid "Transcription cancelled."
-msgstr "Transcripción cancelada."
-
-msgid "Transcription failed"
-msgstr "Falló la transcripción"
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr "Falló la transcripción: %(error)s"
-
-msgid "Transcription is already running"
-msgstr "La transcripción ya está en curso"
-
-msgid "Transcription is already running. Please reload later."
-msgstr "La transcripción ya está en curso. Recarga más tarde."
-
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "Transcripción puesta en la cola del worker. El resultado aparecerá al recargar la página cuando termine."
-
-msgid "Transcription running..."
-msgstr "Transcripción en curso…"
-
-msgid "Transcription timed out"
-msgstr "Tiempo de transcripción agotado"
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
 msgstr "Transferir las nuevas grabaciones y las sincronizaciones periódicas del archivo a la nube."
@@ -3505,20 +3382,8 @@ msgstr "activo"
 msgid "an anonymous user"
 msgstr "un usuario anónimo"
 
-msgid "available"
-msgstr "disponible"
-
-msgid "being created"
-msgstr "creándose"
-
-msgid "cancelled"
-msgstr "cancelado"
-
 msgid "disabled"
 msgstr "desactivado"
-
-msgid "done – please reload the page"
-msgstr "listo – recarga la página"
 
 msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr "drive.file = solo archivos creados por StreamVault (recomendado). Para carpetas existentes, usa https://www.googleapis.com/auth/drive si es necesario."
@@ -3557,9 +3422,6 @@ msgstr "máx. 300 s"
 
 msgid "never"
 msgstr "nunca"
-
-msgid "not created"
-msgstr "no creado"
 
 msgid "someone"
 msgstr "alguien"

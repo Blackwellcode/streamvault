@@ -1,0 +1,19 @@
+# Example unit: copy to /etc/systemd/system/ and adjust paths.
+# Dry run by default: it only logs what would be deleted (journalctl -u
+# streamvault-vod-retention). Add --enforce to ExecStart once the report
+# looks right. The age limit is VOD_RETENTION_DAYS in /etc/streamvault/env
+# (default 90); a --days argument here would override it.
+[Unit]
+Description=StreamVault - VOD retention (dry run)
+After=network.target streamvault-worker.service
+
+[Service]
+Type=oneshot
+User=streamvault
+Group=streamvault
+WorkingDirectory=/opt/streamvault/app
+EnvironmentFile=/etc/streamvault/env
+Environment="PYTHONPATH=/opt/streamvault/app"
+ExecStart=/opt/streamvault/venv/bin/python3 scripts/vod_retention.py
+Nice=10
+IOSchedulingClass=idle

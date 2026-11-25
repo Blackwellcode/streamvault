@@ -160,6 +160,8 @@
     }
 
     function resumeIfNeeded() {
+      // The live player itself holds playback until enough is buffered.
+      if (video._streamVaultBuffering) return;
       if (!wantPlaying || intentionalPause || video.ended) return;
       if (!video.paused) {
         var alive = ensureKeepAliveAudio();
@@ -224,6 +226,7 @@
     });
 
     video.addEventListener("pause", function () {
+      if (video._streamVaultBuffering) return;
       if (intentionalPause || !wantPlaying || video.ended) return;
 
       // If page is backgrounded or recently blurred, this is an OS/Chromium suspension, NOT a user pause!

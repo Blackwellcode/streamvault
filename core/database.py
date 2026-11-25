@@ -1145,6 +1145,22 @@ def upsert_deleted_media(streamer, filename, file_id=None, deleted_by=None):
         conn.close()
 
 
+@db_retry(max_retries=5, delay=0.1, backoff=2.0)
+def remove_deleted_media(streamers, filename) -> int:
+    """Drop the tombstones of one file name in the given archives (e.g. after a restore)."""
+    name = str(filename or "").strip()
+    slugs = sorted({str(s or "").strip() for s in streamers or ()} - {""})
+    if not name or not slugs:
+        return 0
+    with db_transaction() as conn:
+        placeholders = ",".join("?" for _ in slugs)
+        cur = conn.execute(
+            f"DELETE FROM deleted_media WHERE filename=? AND streamer IN ({placeholders})",
+            (name, *slugs),
+        )
+        return int(cur.rowcount)
+
+
 def is_deleted_media(streamer=None, filename=None, file_id=None, streamers=None):
     """True if this media was admin-deleted (by file_id and/or streamer+filename)."""
     fid = str(file_id or "").strip()

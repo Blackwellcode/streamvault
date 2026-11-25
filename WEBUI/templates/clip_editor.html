@@ -126,7 +126,9 @@ async function shareClip(filename) {
       const LABEL_STOP_PREVIEW = '\u25A0 ' + {{ _('Stop preview')|tojson }};
       
       let duration = 0;
-      let clipStart = parseFloat("{{ initial_time|default(0) }}");
+      // ?t= is user input: rendered as a JS number; "nan"/"inf"/negative start at 0.
+      const initialTime = {{ initial_time|default(0)|float|tojson }};
+      let clipStart = Number.isFinite(initialTime) && initialTime > 0 ? initialTime : 0;
       let clipEnd = clipStart + 30;
       const MAX_DUR = Infinity;
       let isPreviewing = false;

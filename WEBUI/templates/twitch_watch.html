@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>LIVE {{ display_name }} · StreamVault</title>
-    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     {% include 'components/styles.html' %}
   </head>
   <body class="page-twitch-watch page-vod {{ theme_class }} ns-platform" data-channel="{{ channel }}">
@@ -37,7 +36,7 @@
               data-media-artist="{{ display_name }}"
               data-media-live="true"
             ></video>
-            {% else %}
+            {% elif player_url %}
             <iframe
               src="{{ player_url }}"
               title="{{ _('Live: %(name)s (without Twitch login)', name=display_name) }}"

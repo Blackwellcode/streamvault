@@ -23,6 +23,8 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v7
         with:
@@ -32,11 +34,13 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
           python -m pip install --upgrade pip
-          pip install -r requirements.txt ruff==0.17.3
+          # Babel 2.19 writes other .mo bytes; the committed catalogs come from 2.18.
+          pip install -r requirements.txt ruff==0.17.3 Babel==2.18.0
 
       - name: Compile (target interpreter catches PEP 701 f-strings)
-        run: python -m compileall -q core recorder WEBUI bin run_transcribe.py tests
+        run: python -m compileall -q core recorder WEBUI bin tests
 
       - name: Lint
         run: ruff check .
@@ -55,8 +59,184 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Syntax check
         run: |
-          for script in install.sh scripts/streamvault_vps.sh bin/streamvault; do
+          for script in install.sh scripts/streamvault_vps.sh scripts/ci_smoke.sh bin/streamvault; do
             bash -n "$script"
+            test -x "$script" || { echo "$script is not executable"; exit 1; }
           done
+
+  docker:
+    name: Docker stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Start the stack from a fresh clone
+        run: |
+          cp .env.example .env
+          echo "VOD_USER=smoke" >> .env
+          echo "VOD_PASS=$(openssl rand -hex 16)" >> .env
+          echo "VOD_SECRET_KEY=$(openssl rand -hex 32)" >> .env
+          docker compose up -d --build
+
+      - name: nginx configuration
+        run: docker compose exec -T nginx nginx -t
+
+      - name: Smoke test through nginx
+        run: |
+          SMOKE_USER=smoke SMOKE_PASS="$(grep '^VOD_PASS=' .env | tail -n 1 | cut -d= -f2)" \
+            scripts/ci_smoke.sh http://localhost:8090
+
+      - name: Programs run and no traceback was logged
+        run: |
+          sleep 20
+          docker compose exec -T app supervisorctl -c /etc/supervisor/conf.d/supervisord.conf status | tee status.txt
+          test "$(grep -c RUNNING status.txt)" = "4"
+          docker compose logs app > app.log 2>&1
+          if grep -nE "Traceback|PermissionError|Operation not permitted" app.log; then exit 1; fi
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail 200
+
+  installer:
+    name: Installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # "streamvault update" needs the history to fast-forward.
+          fetch-depth: 0
+
+      - name: Run install.sh
+        run: |
+          # The runner image ships Apache's page; a fresh VPS does not.
+          ls -A /var/www/html || true
+          sudo rm -f /var/www/html/index.html
+          git checkout -q -B master
+          sudo ./install.sh
+
+      - name: nginx configuration and units
+        run: |
+          sudo nginx -t
+          sleep 20
+          for unit in nginx streamvault-webui streamvault-recorder streamvault-worker streamvault-livebot; do
+            echo "$unit $(systemctl is-active "$unit") restarts=$(systemctl show -p NRestarts --value "$unit")"
+            systemctl is-active --quiet "$unit"
+            test "$(systemctl show -p NRestarts --value "$unit")" = "0"
+          done
+
+      - name: Smoke test through nginx
+        run: |
+          PASS="$(sudo grep '^VOD_PASS=' /etc/streamvault/env | cut -d= -f2)"
+          SMOKE_USER=vaultadmin SMOKE_PASS="$PASS" scripts/ci_smoke.sh http://127.0.0.1
+          curl -s "http://$(hostname -I | awk '{print $1}')/login" | grep -q StreamVault
+
+      - name: CLI and update path
+        run: |
+          sudo streamvault check
+          sudo -u streamvault git -C /opt/streamvault/app status --short | tee dirty.txt
+          test ! -s dirty.txt
+          sudo streamvault update
+
+      - name: Failed nginx test is rolled back and the next run recovers
+        run: |
+          echo 'broken {' | sudo tee /etc/nginx/conf.d/broken.conf > /dev/null
+          if sudo ./install.sh; then echo "install.sh ignored a failing nginx -t"; exit 1; fi
+          test -f /etc/nginx/sites-available/streamvault.conf.rejected
+          sudo rm /etc/nginx/conf.d/broken.conf
+          sudo nginx -t
+          sudo ./install.sh
+          test ! -e /etc/nginx/sites-available/streamvault.conf.new
+          curl -sf --retry 20 --retry-delay 2 --retry-all-errors http://127.0.0.1/login > /dev/null
+
+      - name: Large anonymous bodies are refused by nginx
+        run: |
+          head -c 3000000 /dev/zero > big.bin
+          test "$(curl -s -o /dev/null -w '%{http_code}' --data-binary @big.bin http://127.0.0.1/login)" = "413"
+
+      - name: Second run keeps an edited nginx site
+        run: |
+          sudo sed -i 's/server_name _;/server_name edited.example;/' /etc/nginx/sites-available/streamvault.conf
+          sudo ./install.sh
+          grep -q 'server_name edited.example;' /etc/nginx/sites-available/streamvault.conf
+          test -f /etc/nginx/sites-available/streamvault.conf.new
+          curl -sf --retry 20 --retry-delay 2 --retry-all-errors http://127.0.0.1/login > /dev/null
+
+      - name: No traceback was logged
+        run: |
+          if sudo journalctl --no-pager -u 'streamvault-*' | grep -nE "Traceback|PermissionError"; then exit 1; fi
+          if sudo grep -nE "Traceback|PermissionError" /var/log/streamvault/webui_error.log; then exit 1; fi
+
+      - name: Logs on failure
+        if: failure()
+        run: sudo journalctl --no-pager -u "streamvault-*" -n 2000 | grep -v "badge image download"
+
+  upgrade:
+    name: Upgrade from 0.1.1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install 0.1.1, then this version
+        run: |
+          sudo rm -f /var/www/html/index.html
+          git clone -q --depth 1 --branch v0.1.1 https://github.com/Blackwellcode/streamvault.git /tmp/old
+          sudo bash /tmp/old/install.sh
+          sudo grep '^VOD_PASS=' /etc/streamvault/env | sudo tee /tmp/pass-before > /dev/null
+          sudo systemctl start nginx
+          sudo ./install.sh
+          sudo grep '^VOD_PASS=' /etc/streamvault/env | sudo cmp - /tmp/pass-before
+
+      - name: Units and smoke test
+        run: |
+          sleep 20
+          for unit in nginx streamvault-webui streamvault-recorder streamvault-worker streamvault-livebot; do
+            systemctl is-active --quiet "$unit" || { echo "$unit is down"; exit 1; }
+          done
+          PASS="$(sudo grep '^VOD_PASS=' /etc/streamvault/env | cut -d= -f2)"
+          SMOKE_USER=vaultadmin SMOKE_PASS="$PASS" scripts/ci_smoke.sh http://127.0.0.1
+
+      - name: Logs on failure
+        if: failure()
+        run: sudo journalctl --no-pager -u "streamvault-*" -n 2000 | grep -v "badge image download"
+
+  quickstart:
+    name: README demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Commands from the README
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          python3 -m venv .venv && . .venv/bin/activate
+          pip install -q -r requirements.txt
+          python scripts/demo_seed.py --base-dir ./demo-data
+          sed -n '/^VOD_BASE_DIR=.\/demo-data/,/^python -m WEBUI.webui/p' README.md | tee demo.sh
+          test -s demo.sh
+          bash demo.sh > demo.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8080/login > /dev/null && exit 0
+            sleep 1
+          done
+          cat demo.log
+          exit 1

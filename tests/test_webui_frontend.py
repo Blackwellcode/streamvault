@@ -138,7 +138,7 @@ class OverlayTokenTransportTests(unittest.TestCase):
     COMMON = (TEMPLATES.parent / "static" / "overlay_common.js").as_posix()
 
     def test_overlay_scripts_use_the_shared_helper_and_send_headers_only(self):
-        for name, header in (("tts_overlay.js", "X-TTS-Token"), ("alerts_overlay.js", "X-Alert-Token")):
+        for name, header in (("alerts_overlay.js", "X-Alert-Token"),):
             with self.subTest(script=name):
                 source = (self.STATIC / name).read_text(encoding="utf-8")
                 self.assertIn("overlay.readToken()", source)
@@ -150,7 +150,7 @@ class OverlayTokenTransportTests(unittest.TestCase):
                 guard = source.index("if (!token) {")
                 self.assertLess(guard, source.index("overlay.createPoller("))
                 self.assertIn("return;", source[guard:guard + 200])
-        for page in ("tts_overlay.html", "alerts_overlay.html"):
+        for page in ("alerts_overlay.html",):
             html = (self.STATIC / page).read_text(encoding="utf-8")
             self.assertLess(html.index("/static/overlay_common.js"), html.index("_overlay.js\"></script>", html.index("/static/overlay_common.js") + 1))
 
@@ -159,7 +159,7 @@ class OverlayTokenTransportTests(unittest.TestCase):
         script = """
 const o = require(%s);
 const cases = [
-  "https://h/tts/overlay?streamer=a&token=Q#toast=0",
+  "https://h/alerts/overlay?streamer=a&token=Q#toast=0",
   "https://h/alerts/overlay#token=F",
   "https://h/alerts/overlay?token=Q#token=F",
   "https://h/alerts/overlay",
@@ -171,7 +171,7 @@ process.stdout.write(JSON.stringify(cases.map(function (u) {
 """ % json.dumps(self.COMMON)
         result = json.loads(run_node(script))
         self.assertEqual(result, [
-            ["Q", True, "https://h/tts/overlay?streamer=a#toast=0&token=Q", "a", "0", False],
+            ["Q", True, "https://h/alerts/overlay?streamer=a#toast=0&token=Q", "a", "0", False],
             ["F", False, "https://h/alerts/overlay#token=F", None, None, False],
             ["F", False, "https://h/alerts/overlay#token=F", None, None, False],
             ["", False, "https://h/alerts/overlay", None, None, False],
@@ -249,8 +249,9 @@ class ObsOverlayPanelTests(IsolatedBaseTest):
 
     def test_admin_panel_shows_fragment_token_urls(self):
         html = admin_test_client().get("/admin").get_data(as_text=True)
-        for field_id, path in (("obsTtsUrl", "/tts/overlay?streamer=CHANNEL#token=TOKEN"),
-                               ("obsAlertsUrl", "/alerts/overlay#token=TOKEN")):
+        self.assertNotIn('id="obsTtsUrl"', html)
+        self.assertNotIn("TTS_OVERLAY_TOKEN", html)
+        for field_id, path in (("obsAlertsUrl", "/alerts/overlay#token=TOKEN"),):
             with self.subTest(field=field_id):
                 match = re.search(r'<input id="%s"[^>]*value="([^"]+)"' % field_id, html)
                 self.assertIsNotNone(match)

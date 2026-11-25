@@ -8,10 +8,8 @@ requires-python = ">=3.10"
 dynamic = ["version"]
 
 [project.optional-dependencies]
-# Runtime dependencies live in requirements.txt. These extras are optional:
-# transcription backends and error reporting.
-transcribe = ["openai-whisper"]            # TRANSCRIBE_BACKEND=whisper (default, pulls torch)
-transcribe-fast = ["faster-whisper"]       # TRANSCRIBE_BACKEND=faster_whisper (CPU, int8)
+# Runtime dependencies live in requirements.txt. This extra is optional:
+# error reporting.
 sentry = ["sentry-sdk[flask]"]             # SENTRY_DSN
 # Development only, never installed on servers; CI pins the same version.
 dev = ["ruff==0.17.3"]

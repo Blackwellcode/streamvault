@@ -454,7 +454,7 @@
           chatList.appendChild(line);
         }
 
-        const currentStreamer = "{{ streamer }}";
+        const currentStreamer = {{ streamer|tojson }};
         const storageKey = 'live_chat_history';
         let storedData = null;
         try { storedData = JSON.parse(localStorage.getItem(storageKey)); } catch(e) {}

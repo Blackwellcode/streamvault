@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -445,12 +445,6 @@ msgstr ""
 msgid "At least 8 characters"
 msgstr ""
 
-msgid "Audio extraction error"
-msgstr ""
-
-msgid "Audio extraction failed"
-msgstr ""
-
 msgid "August"
 msgstr ""
 
@@ -738,9 +732,6 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-msgid "Close transcript"
-msgstr ""
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr ""
@@ -849,9 +840,6 @@ msgid "Create new user"
 msgstr ""
 
 msgid "Create new user group"
-msgstr ""
-
-msgid "Create transcript"
 msgstr ""
 
 msgid "Create user"
@@ -1044,9 +1032,6 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-msgid "Download TXT"
-msgstr ""
-
 msgid "Download all"
 msgstr ""
 
@@ -1191,16 +1176,10 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
-msgid "Error cancelling the transcription"
-msgstr ""
-
 msgid "Error changing the password."
 msgstr ""
 
 msgid "Error creating group"
-msgstr ""
-
-msgid "Error creating the audio segment"
 msgstr ""
 
 msgid "Error creating the user."
@@ -1222,9 +1201,6 @@ msgid "Error loading the admin panel. Please try again later."
 msgstr ""
 
 msgid "Error loading the traffic overview."
-msgstr ""
-
-msgid "Error queuing the transcription"
 msgstr ""
 
 msgid "Error saving group"
@@ -1269,9 +1245,6 @@ msgstr ""
 msgid "Exported by StreamVault"
 msgstr ""
 
-msgid "Extracting audio..."
-msgstr ""
-
 msgid "Failed"
 msgstr ""
 
@@ -1297,9 +1270,6 @@ msgid "File manager"
 msgstr ""
 
 msgid "File name"
-msgstr ""
-
-msgid "File not found"
 msgstr ""
 
 msgid "File not found locally."
@@ -1743,9 +1713,6 @@ msgstr ""
 msgid "Loading chat…"
 msgstr ""
 
-msgid "Loading model..."
-msgstr ""
-
 msgid "Loading streams…"
 msgstr ""
 
@@ -2029,21 +1996,7 @@ msgstr ""
 msgid "No results."
 msgstr ""
 
-msgid "No running transcription found."
-msgstr ""
-
 msgid "No streams"
-msgstr ""
-
-msgid "No transcript output received"
-msgstr ""
-
-msgid ""
-"No transcript yet. It is generated locally on the server and can take a "
-"while for long VODs."
-msgstr ""
-
-msgid "No transcription active"
 msgstr ""
 
 msgid "No videos found."
@@ -2412,9 +2365,9 @@ msgid "Recently watched"
 msgstr ""
 
 msgid ""
-"Recommended browser-source URLs. Replace TOKEN with the value of "
-"TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS "
-"and reaches the server only as a request header, never in a log line."
+"Recommended browser-source URL. Replace TOKEN with the value of "
+"ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server"
+" only as a request header, never in a log line."
 msgstr ""
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
@@ -2594,9 +2547,6 @@ msgstr ""
 msgid "Running"
 msgstr ""
 
-msgid "Running…"
-msgstr ""
-
 msgid "S3-compatible"
 msgstr ""
 
@@ -2643,16 +2593,6 @@ msgid "Saved – leave empty to keep"
 msgstr ""
 
 msgid "Saved."
-msgstr ""
-
-msgid "Saving transcript failed"
-msgstr ""
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr ""
-
-msgid "Saving transcript..."
 msgstr ""
 
 msgid "Saving…"
@@ -2717,9 +2657,6 @@ msgid "Seek repair is already running (%(status)s)."
 msgstr ""
 
 msgid "Seek repair queued."
-msgstr ""
-
-msgid "Segment creation failed"
 msgstr ""
 
 msgid "Select folders to unlock:"
@@ -2827,11 +2764,6 @@ msgstr ""
 
 #, python-format
 msgid "Source %(name)s not found."
-msgstr ""
-
-msgid ""
-"Stale lock removed, transcription queued in the worker. The result "
-"appears on the next page load after completion."
 msgstr ""
 
 msgid "Start"
@@ -3063,9 +2995,6 @@ msgstr ""
 msgid "Test"
 msgstr ""
 
-msgid "Text-to-speech overlay"
-msgstr ""
-
 msgid ""
 "Thanks for your understanding. Authorized users can sign in via the login"
 " page."
@@ -3244,64 +3173,6 @@ msgid "Traffic"
 msgstr ""
 
 msgid "Traffic overview"
-msgstr ""
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr ""
-
-msgid "Transcript"
-msgstr ""
-
-msgid "Transcript already exists"
-msgstr ""
-
-msgid "Transcript already exists."
-msgstr ""
-
-msgid "Transcript available"
-msgstr ""
-
-msgid "Transcript created"
-msgstr ""
-
-msgid "Transcript finished"
-msgstr ""
-
-msgid "Transcript missing despite finished status"
-msgstr ""
-
-msgid "Transcript progress"
-msgstr ""
-
-msgid "Transcription cancelled"
-msgstr ""
-
-msgid "Transcription cancelled."
-msgstr ""
-
-msgid "Transcription failed"
-msgstr ""
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr ""
-
-msgid "Transcription is already running"
-msgstr ""
-
-msgid "Transcription is already running. Please reload later."
-msgstr ""
-
-msgid ""
-"Transcription queued in the worker. The result appears on the next page "
-"load after completion."
-msgstr ""
-
-msgid "Transcription running..."
-msgstr ""
-
-msgid "Transcription timed out"
 msgstr ""
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
@@ -3647,19 +3518,7 @@ msgstr ""
 msgid "an anonymous user"
 msgstr ""
 
-msgid "available"
-msgstr ""
-
-msgid "being created"
-msgstr ""
-
-msgid "cancelled"
-msgstr ""
-
 msgid "disabled"
-msgstr ""
-
-msgid "done – please reload the page"
 msgstr ""
 
 msgid ""
@@ -3700,9 +3559,6 @@ msgid "max. 300s"
 msgstr ""
 
 msgid "never"
-msgstr ""
-
-msgid "not created"
 msgstr ""
 
 msgid "someone"

@@ -8,6 +8,7 @@ retention rules.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -1017,6 +1018,124 @@ def remote_exists(provider, remote_path: str, expected_size: int = 0) -> bool:
         return False
 
 
+def media_aliases(streamer) -> set[str]:
+    """Archive and channel names under which the WebUI may list a VOD.
+
+    Covers the trailing underscore variants, lowercase names, the channel's
+    ``archive_name`` and the channels that record into this archive.
+    """
+    slug = str(streamer or "").strip()
+    if not slug:
+        return set()
+
+    def variants(name: str) -> set[str]:
+        out = set()
+        for item in (name, name.lower()):
+            base = item.rstrip("_")
+            out.update({item, base, f"{base}_"} if base else {item})
+        return out
+
+    pairs = [
+        (str(conf.get("name") or "").strip(), str(conf.get("archive_name") or "").strip())
+        for conf in database.list_channel_configs()
+    ]
+    names = variants(slug)
+    for archive in [archive for channel, archive in pairs if channel in names]:
+        names |= variants(archive)
+    for channel in [channel for channel, archive in pairs if archive in names]:
+        names |= variants(channel)
+    return names - {""}
+
+
+def _active_storage_task(rel: str, objects: list[dict]) -> str:
+    """Type of a pending or running storage task that still needs this file."""
+    streamer, filename, _kind = classify_local_path(rel)
+    object_ids = {int(obj["id"]) for obj in objects}
+    conn = database.get_db()
+    try:
+        # No LIMIT: a large sync queues more uploads than has_active_task scans.
+        rows = conn.execute(
+            """
+            SELECT type, payload FROM tasks
+            WHERE status IN ('pending', 'running')
+              AND type IN ('storage_upload', 'storage_sync',
+                           'storage_restore', 'storage_delete')
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+    for row in rows:
+        task_type = str(row["type"])
+        try:
+            payload = json.loads(row["payload"] or "{}")
+        except ValueError as exc:
+            logger.warning("Unreadable %s task payload; %s is kept: %s", task_type, rel, exc)
+            return task_type
+        if not isinstance(payload, dict):
+            logger.warning("Unexpected %s task payload; %s is kept", task_type, rel)
+            return task_type
+        task_streamer = str(payload.get("streamer") or "").strip().lower()
+        if task_type == "storage_sync":
+            if not task_streamer or task_streamer == streamer.lower():
+                return task_type
+            continue
+        if _clean_provider_id(payload.get("object_id")) in object_ids:
+            return task_type
+        if (
+            task_streamer == streamer.lower()
+            and str(payload.get("filename") or "").strip().lower() == filename.lower()
+        ):
+            return task_type
+    return ""
+
+
+def local_delete_block_reason(local_path: str, *, verify: Optional[bool] = None) -> str:
+    """Why deleting this local archive file could lose the only copy ("" = fine).
+
+    Blocks while a cloud task still needs the file and, with auto-upload on,
+    until a current remote copy exists. ``verify`` asks the provider for that
+    copy (default: the ``verify_before_local_delete`` setting).
+    """
+    rel = relative_local_path(local_path)
+    streamer, filename, _kind = classify_local_path(rel)
+    objects = [
+        obj
+        for obj in database.list_storage_objects_for_media(streamer, filename)
+        if obj.get("local_path") == rel
+    ]
+    active = _active_storage_task(rel, objects)
+    if active:
+        return f"cloud task {active} pending or running"
+    settings = get_settings()
+    if not settings.get("auto_upload"):
+        return ""
+    info = os.stat(local_abs_path(rel))
+    current = [
+        obj
+        for obj in objects
+        if _object_is_current(obj, info)
+        and int(obj.get("remote_size") or 0) == int(info.st_size)
+    ]
+    if not current:
+        return "auto-upload is on and no uploaded copy is recorded"
+    should_verify = (
+        settings.get("verify_before_local_delete", True)
+        if verify is None
+        else bool(verify)
+    )
+    if not should_verify:
+        return ""
+    for obj in current:
+        try:
+            provider = build_provider(resolve_provider(obj["provider_id"]))
+        except StorageError as exc:
+            logger.warning("Cloud copy of %s not verifiable: %s", rel, _safe_error(exc))
+            continue
+        if remote_exists(provider, obj["remote_path"], int(info.st_size)):
+            return ""
+    return "cloud copy could not be verified"
+
+
 def delete_local_copy(object_id: int, *, verify: Optional[bool] = None) -> tuple[bool, str]:
     obj = database.get_storage_object(object_id)
     if not obj:
@@ -1322,6 +1441,15 @@ def run_delete(payload: dict) -> dict:
     return {"ok": True, "remote_path": obj["remote_path"]}
 
 
+def _forget_tombstone(obj: dict) -> None:
+    """A restored file must be visible again (see WEBUI abort_deleted_media)."""
+    removed = database.remove_deleted_media(
+        media_aliases(obj.get("streamer")), obj.get("filename")
+    )
+    if removed:
+        logger.info("Tombstone removed after restore: %s", obj.get("local_path"))
+
+
 def run_restore(payload: dict) -> dict:
     object_id = _clean_provider_id(payload.get("object_id"))
     if not object_id:
@@ -1340,6 +1468,7 @@ def run_restore(payload: dict) -> dict:
         if os.path.isfile(full):
             size = os.path.getsize(full)
             if expected > 0 and size == expected:
+                _forget_tombstone(obj)
                 database.update_storage_object(
                     object_id,
                     status="restored",
@@ -1385,6 +1514,8 @@ def run_restore(payload: dict) -> dict:
                     os.remove(temp_path)
                 except OSError:
                     pass
+        # Before the status: a failing database leaves a retryable task.
+        _forget_tombstone(obj)
         database.update_storage_object(
             object_id,
             status="restored",

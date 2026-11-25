@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: StreamVault VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:50+0100\n"
+"POT-Creation-Date: 2026-11-19 10:22+0100\n"
 "PO-Revision-Date: 2026-11-03 19:31+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
@@ -423,12 +423,6 @@ msgstr "Alan bakımı ve muaf kullanıcılar başarıyla kaydedildi."
 msgid "At least 8 characters"
 msgstr "En az 8 karakter"
 
-msgid "Audio extraction error"
-msgstr "Ses çıkarma hatası"
-
-msgid "Audio extraction failed"
-msgstr "Ses çıkarma başarısız"
-
 msgid "August"
 msgstr "Ağustos"
 
@@ -712,9 +706,6 @@ msgstr "Klipler (%(count)s)"
 msgid "Close"
 msgstr "Kapat"
 
-msgid "Close transcript"
-msgstr "Transkripti kapat"
-
 #, python-format
 msgid "Cloud deletion queued (task #%(task)s)."
 msgstr "Bulut silme işlemi kuyruğa alındı (görev #%(task)s)."
@@ -822,9 +813,6 @@ msgstr "Yeni kullanıcı oluştur"
 
 msgid "Create new user group"
 msgstr "Yeni kullanıcı grubu oluştur"
-
-msgid "Create transcript"
-msgstr "Transkript oluştur"
 
 msgid "Create user"
 msgstr "Kullanıcı oluştur"
@@ -1012,9 +1000,6 @@ msgstr "Bitti"
 msgid "Download"
 msgstr "İndir"
 
-msgid "Download TXT"
-msgstr "TXT indir"
-
 msgid "Download all"
 msgstr "Tümünü indir"
 
@@ -1149,17 +1134,11 @@ msgstr "Mevcut şifreyi girin"
 msgid "Error"
 msgstr "Hata"
 
-msgid "Error cancelling the transcription"
-msgstr "Transkripsiyon iptal edilirken hata oluştu"
-
 msgid "Error changing the password."
 msgstr "Şifre değiştirilirken hata oluştu."
 
 msgid "Error creating group"
 msgstr "Grup oluşturulurken hata oluştu"
-
-msgid "Error creating the audio segment"
-msgstr "Ses parçası oluşturulurken hata oluştu"
 
 msgid "Error creating the user."
 msgstr "Kullanıcı oluşturulurken hata oluştu."
@@ -1181,9 +1160,6 @@ msgstr "Yönetim paneli yüklenirken hata oluştu. Lütfen daha sonra tekrar den
 
 msgid "Error loading the traffic overview."
 msgstr "Trafik özeti yüklenirken hata oluştu."
-
-msgid "Error queuing the transcription"
-msgstr "Transkripsiyon kuyruğa alınırken hata oluştu"
 
 msgid "Error saving group"
 msgstr "Grup kaydedilirken hata oluştu"
@@ -1225,9 +1201,6 @@ msgstr "Bitiş"
 msgid "Exported by StreamVault"
 msgstr "StreamVault tarafından dışa aktarıldı"
 
-msgid "Extracting audio..."
-msgstr "Ses çıkarılıyor…"
-
 msgid "Failed"
 msgstr "Başarısız"
 
@@ -1254,9 +1227,6 @@ msgstr "Dosya yöneticisi"
 
 msgid "File name"
 msgstr "Dosya adı"
-
-msgid "File not found"
-msgstr "Dosya bulunamadı"
 
 msgid "File not found locally."
 msgstr "Dosya yerel olarak bulunamadı."
@@ -1676,9 +1646,6 @@ msgstr "Ortalama yük (1 dk / 5 dk):"
 msgid "Loading chat…"
 msgstr "Sohbet yükleniyor…"
 
-msgid "Loading model..."
-msgstr "Model yükleniyor…"
-
 msgid "Loading streams…"
 msgstr "Yayınlar yükleniyor…"
 
@@ -1950,20 +1917,8 @@ msgstr "Kayıt bulunamadı."
 msgid "No results."
 msgstr "Sonuç yok."
 
-msgid "No running transcription found."
-msgstr "Çalışan transkripsiyon bulunamadı."
-
 msgid "No streams"
 msgstr "Yayın yok"
-
-msgid "No transcript output received"
-msgstr "Transkript çıktısı alınamadı"
-
-msgid "No transcript yet. It is generated locally on the server and can take a while for long VODs."
-msgstr "Henüz transkript yok. Sunucuda yerel olarak oluşturulur ve uzun VOD'larda biraz zaman alabilir."
-
-msgid "No transcription active"
-msgstr "Etkin transkripsiyon yok"
 
 msgid "No videos found."
 msgstr "Video bulunamadı."
@@ -2326,8 +2281,8 @@ msgstr "Son görev hataları"
 msgid "Recently watched"
 msgstr "Son izlenenler"
 
-msgid "Recommended browser-source URLs. Replace TOKEN with the value of TTS_OVERLAY_TOKEN or ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
-msgstr "Tarayıcı kaynağı için önerilen URL'ler. TOKEN yerine TTS_OVERLAY_TOKEN veya ALERT_OVERLAY_TOKEN değerini yazın. # işaretinden sonraki kısım OBS'te kalır ve sunucuya yalnızca istek başlığı olarak ulaşır, asla günlüğe yazılmaz."
+msgid "Recommended browser-source URL. Replace TOKEN with the value of ALERT_OVERLAY_TOKEN. The part after # stays in OBS and reaches the server only as a request header, never in a log line."
+msgstr "Tarayıcı kaynağı için önerilen URL. TOKEN yerine ALERT_OVERLAY_TOKEN değerini yazın. # işaretinden sonraki kısım OBS'te kalır ve sunucuya yalnızca istek başlığı olarak ulaşır, asla günlüğe yazılmaz."
 
 msgid "Recommended. Prevents data loss from incomplete uploads."
 msgstr "Önerilir. Eksik yüklemelerden kaynaklanan veri kaybını önler."
@@ -2495,9 +2450,6 @@ msgstr "Kural metni"
 msgid "Running"
 msgstr "Çalışıyor"
 
-msgid "Running…"
-msgstr "Çalışıyor…"
-
 msgid "S3-compatible"
 msgstr "S3 uyumlu"
 
@@ -2545,16 +2497,6 @@ msgstr "Kaydedildi – korumak için boş bırakın"
 
 msgid "Saved."
 msgstr "Kaydedildi."
-
-msgid "Saving transcript failed"
-msgstr "Transkript kaydedilemedi"
-
-#, python-format
-msgid "Saving transcript failed: %(error)s"
-msgstr "Transkript kaydedilemedi: %(error)s"
-
-msgid "Saving transcript..."
-msgstr "Transkript kaydediliyor…"
 
 msgid "Saving…"
 msgstr "Kaydediliyor…"
@@ -2619,9 +2561,6 @@ msgstr "Sarma onarımı zaten çalışıyor (%(status)s)."
 
 msgid "Seek repair queued."
 msgstr "Sarma onarımı kuyruğa alındı."
-
-msgid "Segment creation failed"
-msgstr "Parça oluşturma başarısız"
 
 msgid "Select folders to unlock:"
 msgstr "Açılacak klasörleri seçin:"
@@ -2723,9 +2662,6 @@ msgstr "Kaynak"
 #, python-format
 msgid "Source %(name)s not found."
 msgstr "%(name)s kaynağı bulunamadı."
-
-msgid "Stale lock removed, transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "Eski kilit kaldırıldı, transkripsiyon worker kuyruğuna alındı. Sonuç, tamamlandıktan sonraki ilk sayfa yüklemesinde görünür."
 
 msgid "Start"
 msgstr "Başlat"
@@ -2945,9 +2881,6 @@ msgstr "Koşullar sürümü eski — sayfayı yenileyin ve yeniden kabul edin."
 msgid "Test"
 msgstr "Test et"
 
-msgid "Text-to-speech overlay"
-msgstr "Metin okuma katmanı"
-
 msgid "Thanks for your understanding. Authorized users can sign in via the login page."
 msgstr "Anlayışınız için teşekkürler. Yetkili kullanıcılar giriş sayfasından oturum açabilir."
 
@@ -3103,62 +3036,6 @@ msgstr "Trafik"
 
 msgid "Traffic overview"
 msgstr "Trafik özeti"
-
-#, python-format
-msgid "Transcribing segment %(index)s/%(total)s (%(percent)s%%)"
-msgstr "%(index)s/%(total)s parçası yazıya dökülüyor (%%%(percent)s)"
-
-msgid "Transcript"
-msgstr "Transkript"
-
-msgid "Transcript already exists"
-msgstr "Transkript zaten var"
-
-msgid "Transcript already exists."
-msgstr "Transkript zaten var."
-
-msgid "Transcript available"
-msgstr "Transkript mevcut"
-
-msgid "Transcript created"
-msgstr "Transkript oluşturuldu"
-
-msgid "Transcript finished"
-msgstr "Transkript tamamlandı"
-
-msgid "Transcript missing despite finished status"
-msgstr "Tamamlandı durumuna rağmen transkript eksik"
-
-msgid "Transcript progress"
-msgstr "Transkript ilerlemesi"
-
-msgid "Transcription cancelled"
-msgstr "Transkripsiyon iptal edildi"
-
-msgid "Transcription cancelled."
-msgstr "Transkripsiyon iptal edildi."
-
-msgid "Transcription failed"
-msgstr "Transkripsiyon başarısız"
-
-#, python-format
-msgid "Transcription failed: %(error)s"
-msgstr "Transkripsiyon başarısız: %(error)s"
-
-msgid "Transcription is already running"
-msgstr "Transkripsiyon zaten çalışıyor"
-
-msgid "Transcription is already running. Please reload later."
-msgstr "Transkripsiyon zaten çalışıyor. Lütfen daha sonra yenileyin."
-
-msgid "Transcription queued in the worker. The result appears on the next page load after completion."
-msgstr "Transkripsiyon worker kuyruğuna alındı. Sonuç, tamamlandıktan sonraki ilk sayfa yüklemesinde görünür."
-
-msgid "Transcription running..."
-msgstr "Transkripsiyon çalışıyor…"
-
-msgid "Transcription timed out"
-msgstr "Transkripsiyon zaman aşımına uğradı"
 
 msgid "Transfer new recordings and periodic archive syncs to the cloud."
 msgstr "Yeni kayıtları ve periyodik arşiv senkronizasyonlarını buluta aktarın."
@@ -3495,20 +3372,8 @@ msgstr "etkin"
 msgid "an anonymous user"
 msgstr "anonim bir kullanıcı"
 
-msgid "available"
-msgstr "mevcut"
-
-msgid "being created"
-msgstr "oluşturuluyor"
-
-msgid "cancelled"
-msgstr "iptal edildi"
-
 msgid "disabled"
 msgstr "devre dışı"
-
-msgid "done – please reload the page"
-msgstr "tamamlandı – lütfen sayfayı yenileyin"
 
 msgid "drive.file = only files created by StreamVault (recommended). For existing folders, use https://www.googleapis.com/auth/drive if needed."
 msgstr "drive.file = yalnızca StreamVault tarafından oluşturulan dosyalar (önerilen). Mevcut klasörler için gerekirse https://www.googleapis.com/auth/drive kullanın."
@@ -3547,9 +3412,6 @@ msgstr "en fazla 300 sn"
 
 msgid "never"
 msgstr "hiçbir zaman"
-
-msgid "not created"
-msgstr "oluşturulmadı"
 
 msgid "someone"
 msgstr "birisi"

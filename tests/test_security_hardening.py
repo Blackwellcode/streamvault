@@ -394,7 +394,7 @@ class SmallHardeningTests(WebTestBase):
 
     def test_ack_endpoints_reject_get(self):
         client = self.webui.app.test_client()
-        for path in ("/tts/api/ack?id=1", "/alerts/api/ack?id=1"):
+        for path in ("/alerts/api/ack?id=1",):
             with self.subTest(path=path):
                 self.assertEqual(client.get(path).status_code, 405)
 
@@ -409,7 +409,7 @@ class SmallHardeningTests(WebTestBase):
 
     def test_overlay_pages_load_without_token_but_never_leak_their_url(self):
         client = self.webui.app.test_client()
-        for path in ("/tts/overlay", "/alerts/overlay"):
+        for path in ("/alerts/overlay",):
             with self.subTest(path=path):
                 response = client.get(path)
                 self.assertEqual(response.status_code, 200)
@@ -423,18 +423,35 @@ class SmallHardeningTests(WebTestBase):
                     self.assertNotIn(secret, body)
 
     def test_overlay_apis_still_require_the_token(self):
-        from core import alert_sounds, tts_service
+        from core import alert_sounds
         client = self.webui.app.test_client()
         self.assertEqual(client.get("/alerts/api/next").status_code, 401)
-        self.assertEqual(client.get("/tts/api/next?streamer=streamer").status_code, 401)
         with mock.patch.object(alert_sounds, "token_ok", side_effect=lambda t: t == "good"), \
                 mock.patch.object(alert_sounds, "claim_next", return_value=None):
             self.assertEqual(client.get("/alerts/api/next", headers={"X-Alert-Token": "good"}).status_code, 200)
             self.assertEqual(client.get("/alerts/api/next", headers={"X-Alert-Token": "bad"}).status_code, 401)
-        with mock.patch.object(tts_service, "token_ok_for", side_effect=lambda t, s: t == "good"), \
-                mock.patch.object(tts_service, "claim_next", return_value=None):
-            ok = client.get("/tts/api/next?streamer=streamer", headers={"X-TTS-Token": "good"})
-            self.assertEqual(ok.status_code, 200)
+
+    def test_alert_audio_url_carries_no_token_and_loads_with_header(self):
+        from core import alert_sounds
+        client = self.webui.app.test_client()
+        sounds = self.base / "alert_sounds"
+        sounds.mkdir()
+        (sounds / "live.mp3").write_bytes(b"ID3fake")
+        item = {"id": "a1", "event": "live", "label": "Live"}
+        with mock.patch.object(alert_sounds, "token_ok", side_effect=lambda t: t == "good-secret"), \
+                mock.patch.object(alert_sounds, "claim_next", return_value=item), \
+                mock.patch.object(alert_sounds, "ensure_sound_files"), \
+                mock.patch.object(alert_sounds, "sounds_dir", return_value=str(sounds)):
+            body = client.get("/alerts/api/next", headers={"X-Alert-Token": "good-secret"}).get_json()
+            audio_url = body["item"]["audio_url"]
+            # The overlay fetches the audio with the header (overlay_common.js createAudio).
+            self.assertEqual(audio_url, "/alerts/audio/live.mp3")
+            self.assertNotIn("good-secret", audio_url)
+            self.assertEqual(client.get(audio_url).status_code, 401)
+            audio = client.get(audio_url, headers={"X-Alert-Token": "good-secret"})
+            self.assertEqual(audio.status_code, 200)
+            self.assertEqual(audio.get_data(), b"ID3fake")
+            audio.close()
 
     def test_anonymous_healthz_has_no_disk_data(self):
         response = self.webui.app.test_client().get("/healthz")

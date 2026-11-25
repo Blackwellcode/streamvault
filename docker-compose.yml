@@ -19,9 +19,10 @@ services:
         RUN pip install --no-cache-dir -r /tmp/requirements.txt
         RUN useradd --uid "$${APP_UID}" --create-home --shell /usr/sbin/nologin streamvault
         WORKDIR /app
-        # The hls_live volume starts root-owned; hand it to the app user, then let
-        # supervisord (root) start every program as streamvault.
-        CMD ["/bin/sh", "-c", "mkdir -p /app/data && install -d -o streamvault -g streamvault /app/.hls_live && exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+        # A fresh clone has no ./data and the hls_live volume starts root-owned;
+        # hand both to the app user, then let supervisord (root) start every
+        # program as streamvault.
+        CMD ["/bin/sh", "-c", "install -d -o streamvault -g streamvault /app/data /app/.hls_live && exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
     restart: unless-stopped
     # Must exceed the recorder's supervisord stopwaitsecs (60 s), otherwise
     # Docker SIGKILLs the container before FFmpeg finishes the MP4.
@@ -42,6 +43,8 @@ services:
       # Archives, database and caches live in ./data, never in the code tree.
       - VOD_BASE_DIR=/app/data
       - RECORDINGS_BASE_DIR=/app/data
+      # The code tree belongs to the host user and is not writable here.
+      - STREAMRECORDER_LOG_DIR=/app/data/.meta/logs
       - VOD_USER=${VOD_USER:?set VOD_USER in .env}
       - VOD_PASS=${VOD_PASS:?set VOD_PASS in .env}
       - VOD_SECRET_KEY=${VOD_SECRET_KEY:?set VOD_SECRET_KEY in .env}
@@ -51,12 +54,16 @@ services:
       - VOD_SHARE_TTL_SEC=${VOD_SHARE_TTL_SEC:-604800}
       - VOD_USE_X_ACCEL=true
       - LIVE_HLS_DIR=/app/.hls_live
+      # Reachable for the nginx container only; the port is not published.
+      - LIVEBOT_HOST=0.0.0.0
+      - LIVEBOT_ENABLED=${LIVEBOT_ENABLED:-true}
+      # Twitch player embed on the live page (default off: server stream only, no ads).
+      - LIVE_TWITCH_EMBED=${LIVE_TWITCH_EMBED:-false}
       # Public base URL for share links and OAuth callbacks, e.g. https://recorder.example.com
       - VOD_PUBLIC_BASE=${VOD_PUBLIC_BASE:-}
       # Background task pool sizing.
       - WORKER_THUMB_THREADS=${WORKER_THUMB_THREADS:-2}
       - WORKER_REMUX_THREADS=${WORKER_REMUX_THREADS:-1}
-      - WORKER_TRANSCRIBE_THREADS=${WORKER_TRANSCRIBE_THREADS:-1}
       - WORKER_STORAGE_THREADS=${WORKER_STORAGE_THREADS:-1}
       # Storage warning thresholds.
       - STORAGE_ALERT_THRESHOLD_PCT=90

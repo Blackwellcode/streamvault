@@ -66,7 +66,7 @@
         </svg>
         <span>{{ _('Sound on') }}</span>
       </button>
-      {% else %}
+      {% elif player_url %}
       <iframe
         src="{{ player_url }}"
         title="{{ _('Live: %(name)s (without Twitch login)', name=display_name) }}"

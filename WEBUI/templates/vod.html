@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ vod_display_title or filename }}</title>
-    <link rel="stylesheet" href="{{ UI_FONTS_HREF }}">
     {% include 'components/styles.html' %}
   </head>
   <body class="page-vod {{ theme_class }} ns-platform">
@@ -158,15 +157,6 @@
               >{{ _('Trim') }}</a>
               {% endif %}
               {% endif %}
-              {% if is_video and route_type == 'vod' and not is_mobile %}
-              <button
-                type="button"
-                id="btnTranscriptToggle"
-                class="vod-inline-tool"
-                aria-expanded="{% if transcript_status and transcript_status.state == 'running' %}true{% else %}false{% endif %}"
-                aria-controls="vodTranscriptPanel"
-              >{{ _('Transcript') }}</button>
-              {% endif %}
               {% if seek_profile and seek_profile.needs_repair and session.user_role == 'admin' and not is_mobile %}
               <form method="post" action="{{ url_for('vod_remux', streamer=streamer, filename=filename) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -191,60 +181,6 @@
             </div>
             </div>
         </section>
-
-
-
-        {% if is_video and route_type == 'vod' and not is_mobile %}
-        <section
-          id="vodTranscriptPanel"
-          class="vod-transcript-panel{% if transcript_status and transcript_status.state == 'running' %} is-open{% endif %}"
-          aria-labelledby="vodTranscriptTitle"
-          {% if not (transcript_status and transcript_status.state == 'running') %}hidden{% endif %}
-        >
-          <div class="vod-transcript-panel-head">
-            <div>
-              <div class="vod-transcript-kicker">StreamVault</div>
-              <h2 id="vodTranscriptTitle">{{ _('Transcript') }}</h2>
-            </div>
-            <div class="vod-transcript-panel-meta">
-              <span id="transcriptAvailability">
-                {% if transcript_text %}{{ _('available') }}{% elif transcript_status and transcript_status.state == 'running' %}{{ _('being created') }}{% else %}{{ _('not created') }}{% endif %}
-              </span>
-              <button type="button" id="btnTranscriptClose" class="vod-transcript-close" aria-label="{{ _('Close transcript') }}">{{ _('Close') }}</button>
-            </div>
-          </div>
-
-          {% if transcript_status %}
-          <div id="transcriptStatusCard" class="transcript-status-card" data-state="{{ transcript_status.state or 'idle' }}">
-            <div class="transcript-status-message" id="transcriptStatusMessage">{{ transcript_status.message or transcript_status }}</div>
-            {% if transcript_status.percent is defined %}
-            <div class="transcript-progress" role="progressbar" aria-label="{{ _('Transcript progress') }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ transcript_status.percent|int }}">
-              <div id="transcriptStatusBar" style="width:{{ transcript_status.percent }}%;"></div>
-            </div>
-            <span class="transcript-percent" id="transcriptStatusPercent">{{ transcript_status.percent }}%</span>
-            {% endif %}
-            {% if transcript_status.error %}
-            <div class="transcript-error">{{ _('Error: %(error)s', error=transcript_status.error) }}</div>
-            {% endif %}
-          </div>
-          {% endif %}
-
-          {% if transcript_text %}
-          <pre class="vod-transcript-body">{{ transcript_text }}</pre>
-          <div class="vod-transcript-actions">
-            <a href="{{ url_for('vod_transcript_download', streamer=streamer, filename=filename) }}" class="vod-transcript-download">{{ _('Download TXT') }}</a>
-          </div>
-          {% else %}
-          <p class="vod-transcript-empty">{{ _('No transcript yet. It is generated locally on the server and can take a while for long VODs.') }}</p>
-          <form method="post" action="{{ url_for('vod_transcribe', streamer=streamer, filename=filename) }}" class="vod-transcript-actions">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="vod-transcript-start"{% if transcript_status and transcript_status.state == 'running' %} disabled{% endif %}>
-              {{ _('Running…') if transcript_status and transcript_status.state == 'running' else _('Create transcript') }}
-            </button>
-          </form>
-          {% endif %}
-        </section>
-        {% endif %}
 
       </div>
       {% if show_chat %}
@@ -394,7 +330,7 @@
             settings: window.CLIP_SETTINGS
           });
         }
-        const key = 'vod_pos_v2_{{ streamer }}_{{ filename }}';
+        const key = {{ ('vod_pos_v2_' ~ streamer ~ '_' ~ filename)|tojson }};
         const doneKey = {{ done_key|tojson }};
         const RESUME_END_GUARD_SEC = 30;
         const urlParams = new URLSearchParams(window.location.search);
@@ -977,74 +913,6 @@
           btn.classList.remove('is-loading', 'is-success', 'is-error');
         }, 2000);
       }
-
-      async function pollTranscriptStatus() {
-        const statusCard = document.getElementById('transcriptStatusCard');
-        const statusMessage = document.getElementById('transcriptStatusMessage');
-        const statusPercent = document.getElementById('transcriptStatusPercent');
-        const statusBar = document.getElementById('transcriptStatusBar');
-        if (!statusCard || !statusMessage) return;
-
-        try {
-          const res = await fetch("{{ url_for('vod_transcribe_status', streamer=streamer, filename=filename) }}", {cache:'no-store'});
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.message) statusMessage.textContent = data.message;
-          if (typeof data.percent === 'number' && statusPercent) {
-            statusPercent.textContent = `${data.percent}%`;
-            if (statusBar) statusBar.style.width = `${data.percent}%`;
-          }
-          statusCard.dataset.state = data.state || 'idle';
-          if (data.state === 'finished') {
-            if (statusBar) statusBar.style.width = '100%';
-            if (statusPercent) statusPercent.textContent = '100%';
-            const availability = document.getElementById('transcriptAvailability');
-            if (availability) availability.textContent = {{ _('done – please reload the page')|tojson }};
-            window.clearInterval(transcriptPollTimer);
-            return;
-          }
-          if (data.state === 'error' || data.state === 'idle') {
-            window.clearInterval(transcriptPollTimer);
-          }
-        } catch (e) {
-          console.error('Transcript status poll failed', e);
-        }
-      }
-
-      let transcriptPollTimer = null;
-      const transcriptPanel = document.getElementById('vodTranscriptPanel');
-      const transcriptToggle = document.getElementById('btnTranscriptToggle');
-      const transcriptClose = document.getElementById('btnTranscriptClose');
-
-      function setTranscriptPanelOpen(open) {
-        if (!transcriptPanel) return;
-        transcriptPanel.classList.toggle('is-open', !!open);
-        transcriptPanel.hidden = !open;
-        if (transcriptToggle) {
-          transcriptToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-          transcriptToggle.classList.toggle('is-active', !!open);
-        }
-        if (open) {
-          transcriptPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }
-
-      if (transcriptToggle && transcriptPanel) {
-        transcriptToggle.addEventListener('click', function () {
-          setTranscriptPanelOpen(transcriptPanel.hidden);
-        });
-      }
-      if (transcriptClose) {
-        transcriptClose.addEventListener('click', function () {
-          setTranscriptPanelOpen(false);
-        });
-      }
-
-      const transcriptStatusCard = document.getElementById('transcriptStatusCard');
-      if (transcriptStatusCard && transcriptStatusCard.dataset.state === 'running') {
-        setTranscriptPanelOpen(true);
-        transcriptPollTimer = window.setInterval(pollTranscriptStatus, 5000);
-      }
       
       function copyToClipboard(text) {
         if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -1214,7 +1082,7 @@
                 const titleInput = document.getElementById('vodAdminTitleInput');
                 const titleEl = document.getElementById('vod-title');
                 if (titleEl && titleInput) {
-                  titleEl.textContent = titleInput.value.trim() || '{{ filename }}';
+                  titleEl.textContent = titleInput.value.trim() || {{ filename|tojson }};
                 }
                 if (statusSpan) {
                   statusSpan.textContent = '✓ ' + {{ _('Saved')|tojson }};
