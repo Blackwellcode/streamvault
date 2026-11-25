@@ -64,7 +64,9 @@ fi
 # 3. Directory Structure
 echo -e "${BLUE}[3/8] Creating directory structure...${NC}"
 mkdir -p "${INSTALL_DIR}" "${APP_DIR}" "${DATA_DIR}" "${LOG_DIR}" "${CONFIG_DIR}" "${RAMDISK_DIR}"
-chown -R "${SERVICE_USER}:${SERVICE_USER}" "${INSTALL_DIR}" "${DATA_DIR}" "${LOG_DIR}" "${RAMDISK_DIR}"
+# Only what does not belong to the service user yet: on a running installation
+# chown -R fails when a file (database -wal, live segment) vanishes meanwhile.
+find "${INSTALL_DIR}" "${DATA_DIR}" "${LOG_DIR}" "${RAMDISK_DIR}" -ignore_readdir_race     '(' ! -user "${SERVICE_USER}" -o ! -group "${SERVICE_USER}" ')'     -exec chown -h "${SERVICE_USER}:${SERVICE_USER}" '{}' +
 chmod 755 "${INSTALL_DIR}" "${RAMDISK_DIR}"
 # Nginx (www-data) must be able to traverse and read the archive when it
 # serves X-Accel-Redirect responses. Access is still gated by the internal
