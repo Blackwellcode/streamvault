@@ -1,0 +1,98 @@
+name: Docker image
+
+on:
+  pull_request:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Build
+        run: docker build -t streamvault:test .
+
+      - name: Refuses to start without credentials
+        run: |
+          set +e
+          docker run --rm streamvault:test > out.txt 2>&1
+          test $? = 64 && grep -q 'set VOD_USER' out.txt
+
+      - name: Start
+        run: |
+          mkdir data && sudo chown 1234:1234 data
+          echo "SMOKE_PASS=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+          docker run -d --name sv -p 8090:80 -v "$PWD/data:/app/data" \
+            --tmpfs /app/.hls_live:size=512m,mode=0755 \
+            --add-host gql.twitch.tv:127.0.0.1 --add-host api.twitch.tv:127.0.0.1 \
+            --add-host id.twitch.tv:127.0.0.1 --add-host www.twitch.tv:127.0.0.1 \
+            -e APP_UID=1234 -e VOD_USER=smoke -e VOD_PASS="$(tail -n 1 "$GITHUB_ENV" | cut -d= -f2)" \
+            -e VOD_SECRET_KEY="$(openssl rand -hex 32)" \
+            -e STREAMLINK_BIN=/app/scripts/ci_fake_streamlink.sh streamvault:test
+
+      - name: Smoke test and live playback
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          SMOKE_USER=smoke scripts/ci_smoke.sh http://localhost:8090
+          SMOKE_USER=smoke scripts/ci_live_e2e.sh http://localhost:8090
+
+      - name: Programs, user and ports
+        run: |
+          sleep 10
+          docker exec sv supervisorctl -c /etc/supervisor/conf.d/supervisord.conf status | tee status.txt
+          test "$(grep -c RUNNING status.txt)" = "5"
+          test "$(docker exec sv ps -o uid= -C gunicorn | sort -u | tr -d ' ')" = "1234"
+          test "$(stat -c %u data/streamrecorder.db)" = "1234"
+          if docker exec -u streamvault sv touch /app/core/x; then echo "code is writable"; exit 1; fi
+          docker logs sv > app.log 2>&1
+          if grep -nE "Traceback|PermissionError" app.log; then exit 1; fi
+
+      - name: Survives a restart
+        run: |
+          docker restart -t 75 sv
+          SMOKE_USER=smoke scripts/ci_smoke.sh http://localhost:8090
+
+      - name: Logs on failure
+        if: failure()
+        run: docker logs --tail 300 sv 2>&1 | grep -v "badge image download"
+
+  publish:
+    name: Publish to ghcr.io
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/blackwellcode/streamvault:latest
+            ghcr.io/blackwellcode/streamvault:${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/Blackwellcode/streamvault
+            org.opencontainers.image.licenses=MIT

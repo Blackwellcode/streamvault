@@ -1,0 +1,29 @@
+# Run StreamVault from the published image, without a clone of the repository:
+#   VOD_USER, VOD_PASS and VOD_SECRET_KEY go into a .env file next to this file.
+#   docker compose -f docker-compose.image.yml up -d
+services:
+  streamvault:
+    image: ghcr.io/blackwellcode/streamvault:${STREAMVAULT_VERSION:-latest}
+    container_name: streamvault
+    restart: unless-stopped
+    # FFmpeg needs up to 60 s to finalize running recordings.
+    stop_grace_period: 75s
+    ports:
+      - "8090:80"
+    volumes:
+      - ./data:/app/data
+    tmpfs:
+      # Live segments stay in memory.
+      - /app/.hls_live:size=512m,mode=0755
+    environment:
+      - VOD_USER=${VOD_USER:?set VOD_USER in .env}
+      - VOD_PASS=${VOD_PASS:?set VOD_PASS in .env}
+      - VOD_SECRET_KEY=${VOD_SECRET_KEY:?set VOD_SECRET_KEY in .env}
+      # Must own ./data on the host (id -u).
+      - APP_UID=${APP_UID:-1000}
+      - STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY:-}
+      # true once HTTPS is in place.
+      - VOD_SECURE_COOKIES=${VOD_SECURE_COOKIES:-false}
+      - VOD_PUBLIC_BASE=${VOD_PUBLIC_BASE:-}
+      - LIVE_TWITCH_EMBED=${LIVE_TWITCH_EMBED:-false}
+      - LIVEBOT_ENABLED=${LIVEBOT_ENABLED:-true}
