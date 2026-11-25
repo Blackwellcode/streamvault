@@ -7588,8 +7588,7 @@ def limit_request_body():
     if (request.content_length or 0) > MAX_REQUEST_BODY_BYTES:
         abort(413)
     if upload and not admin:
-        # nginx does not buffer these routes: reading even a small body would let
-        # an anonymous client that sends it slowly occupy a worker thread.
+        # Nothing to read from them: the views are admin_required.
         if request.content_length is None and request.environ.get("wsgi.input_terminated"):
             abort(413)  # chunked, size unknown
         abort(403)

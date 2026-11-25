@@ -115,7 +115,7 @@ All notable changes to this project are documented here. The format follows
   and the start time to JavaScript as JSON; the clip editor's `?t=` is parsed
   as a number.
 - nginx no longer forwards the session cookie to the livebot and accepts bodies
-  above 2 MB only on the admin upload routes, unbuffered.
+  above 2 MB only on the admin upload routes.
 
 ### Added
 

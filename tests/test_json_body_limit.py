@@ -204,7 +204,6 @@ class AnyBodyLimitTests(BodyLimitBase):
         self.assertEqual(stream.consumed, 0)
 
     def test_upload_routes_read_no_byte_from_a_non_admin(self):
-        # nginx passes these bodies on unbuffered; a slow sender must not hold a thread.
         for path in ("/files/upload", "/admin/banner/update", "/streamer/demochan/banner/update",
                      "/streamer/demochan/avatar/update"):
             for content_type in ("multipart/form-data; boundary=b", "application/x-www-form-urlencoded", "text/plain"):
