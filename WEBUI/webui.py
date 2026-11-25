@@ -7581,15 +7581,18 @@ def limit_request_body():
     the method or the path: only a logged-in admin may send more, as a multipart
     upload to one of the UPLOAD_ENDPOINTS.
     """
-    if (
-        request.mimetype == "multipart/form-data"
-        and request.endpoint in UPLOAD_ENDPOINTS
-        and session.get("logged_in")
-        and current_user_is_admin()
-    ):
+    upload = request.endpoint in UPLOAD_ENDPOINTS
+    admin = upload and bool(session.get("logged_in")) and current_user_is_admin()
+    if admin and request.mimetype == "multipart/form-data":
         return
     if (request.content_length or 0) > MAX_REQUEST_BODY_BYTES:
         abort(413)
+    if upload and not admin:
+        # nginx does not buffer these routes: reading even a small body would let
+        # an anonymous client that sends it slowly occupy a worker thread.
+        if request.content_length is None and request.environ.get("wsgi.input_terminated"):
+            abort(413)  # chunked, size unknown
+        abort(403)
     # Chunked bodies announce no size, so read at most one byte too many; the data
     # stays cached for form, files and get_json(). Request.max_content_length is no
     # substitute: it is read-only before Flask 3.1, and a full read silently

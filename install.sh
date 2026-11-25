@@ -349,8 +349,8 @@ server {
         proxy_set_header X-StreamVault-Live-Auth "";
     }
 
-    # Only these admin uploads may be large; the app checks the session before it
-    # reads them, and without request buffering nginx spools nothing to disk.
+    # Only these admin uploads may be large. Without request buffering nginx spools
+    # nothing to disk; the app refuses everybody but admins before it reads a byte.
     location ~ ^/(files/upload|admin/banner/update|streamer/[^/]+/(banner|avatar)/update)\$ {
         client_max_body_size 4G;
         proxy_request_buffering off;

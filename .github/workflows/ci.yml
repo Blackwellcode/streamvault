@@ -162,6 +162,10 @@ jobs:
         run: |
           head -c 3000000 /dev/zero > big.bin
           test "$(curl -s -o /dev/null -w '%{http_code}' --data-binary @big.bin http://127.0.0.1/login)" = "413"
+          # The upload route refuses a slow anonymous body at once instead of waiting for it.
+          (printf 'POST /files/upload HTTP/1.1\r\nHost: x\r\nContent-Type: multipart/form-data; boundary=b\r\nContent-Length: 1000\r\n\r\n--b'; sleep 10) \
+            | timeout 5 nc -q 10 127.0.0.1 80 | head -n 1 | tee upload.txt
+          grep -q ' 403 ' upload.txt
 
       - name: Second run keeps an edited nginx site
         run: |

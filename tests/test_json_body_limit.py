@@ -19,6 +19,19 @@ from core import config  # noqa: E402
 THIRTY_MB = 30 * 1024 * 1024
 
 
+class UnreadableStream:
+    """A body that counts read attempts and delivers nothing."""
+
+    def __init__(self):
+        self.reads = 0
+
+    def _count(self, *_args):
+        self.reads += 1
+        return b""
+
+    read = readline = readinto = _count
+
+
 class CountingStream(io.RawIOBase):
     """Endless-looking request body that records how much of it was read."""
 
@@ -189,6 +202,17 @@ class AnyBodyLimitTests(BodyLimitBase):
             resp = self._post("/files/upload", stream, THIRTY_MB, "multipart/form-data; boundary=b")
         self.assertEqual(resp.status_code, 413)
         self.assertEqual(stream.consumed, 0)
+
+    def test_upload_routes_read_no_byte_from_a_non_admin(self):
+        # nginx passes these bodies on unbuffered; a slow sender must not hold a thread.
+        for path in ("/files/upload", "/admin/banner/update", "/streamer/demochan/banner/update",
+                     "/streamer/demochan/avatar/update"):
+            for content_type in ("multipart/form-data; boundary=b", "application/x-www-form-urlencoded", "text/plain"):
+                with self.subTest(path=path, content_type=content_type):
+                    stream = UnreadableStream()
+                    resp = self._post(path, stream, 1000, content_type)
+                    self.assertEqual(resp.status_code, 403)
+                    self.assertEqual(stream.reads, 0)
 
     def test_admin_multipart_outside_the_upload_routes_is_bounded(self):
         self._login(config.VOD_USER, "admin")
