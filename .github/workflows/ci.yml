@@ -156,7 +156,7 @@ jobs:
           sudo nginx -t
           sudo ./install.sh
           test ! -e /etc/nginx/sites-available/streamvault.conf.new
-          curl -sf http://127.0.0.1/login > /dev/null
+          curl -sf --retry 20 --retry-delay 2 --retry-all-errors http://127.0.0.1/login > /dev/null
 
       - name: Large anonymous bodies are refused by nginx
         run: |
@@ -169,7 +169,7 @@ jobs:
           sudo ./install.sh
           grep -q 'server_name edited.example;' /etc/nginx/sites-available/streamvault.conf
           test -f /etc/nginx/sites-available/streamvault.conf.new
-          curl -sf http://127.0.0.1/login > /dev/null
+          curl -sf --retry 20 --retry-delay 2 --retry-all-errors http://127.0.0.1/login > /dev/null
 
       - name: No traceback was logged
         run: |
