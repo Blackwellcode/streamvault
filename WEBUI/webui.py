@@ -12056,6 +12056,10 @@ def api_twitch_stream(login):
 def live_view(streamer):
     if maintenance_mode_enabled("live") and not current_user_bypasses_maintenance():
         return _maintenance_response(gettext("The live stream area is currently under maintenance."))
+    if streamer.lower().endswith(".ts"):
+        # The real-time route belongs to nginx and the livebot. Without nginx a
+        # redirect would open a watch page for the channel "<name>ts".
+        abort(404)
     # Lenient on purpose: bookmarks may carry the display name.
     channel = live_channel_or_404(normalize_channel_name(streamer))
     abort_hidden_streamer(channel)

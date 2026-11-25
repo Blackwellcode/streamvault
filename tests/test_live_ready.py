@@ -54,6 +54,12 @@ class LiveReadyTests(IsolatedBaseTest):
                 self.client.get("/api/live/ready/demochan")
         self.assertIn("2 more since the last warning", "".join(logs.output))
 
+    def test_ts_route_without_nginx_is_not_a_watch_page(self):
+        for path in ("/live/demochan.ts", "/live/DemoChan.TS"):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 404)
+        self.assertEqual(self.client.get("/live/demochan").status_code, 302)
+
 
 if __name__ == "__main__":
     unittest.main()
